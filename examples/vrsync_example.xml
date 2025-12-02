@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListingDataFeed xmlns="http://www.vivareal.com/schemas/1.0/VRSync"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.vivareal.com/schemas/1.0/VRSync
+                 http://xml.vivareal.com/vrsync.xsd">
+  
+  <Header>
+    <Provider>Nome da Imobiliária</Provider>
+    <Email>contato@imobiliaria.com.br</Email>
+    <ContactName>João Silva</ContactName>
+    <Telephone>(84) 99999-9999</Telephone>
+    <PublishDate>2025-01-15T10:30:00</PublishDate>
+  </Header>
+
+  <Listings>
+    <!-- EXEMPLO 1: APARTAMENTO PARA VENDA -->
+    <Listing>
+      <ListingID>12345</ListingID>
+      <Title>Apartamento 3 Quartos em Ponta Negra</Title>
+      <TransactionType>Sale</TransactionType>
+      <Featured>true</Featured>
+      <ListDate>2025-01-10</ListDate>
+      <LastUpdateDate>2025-01-15</LastUpdateDate>
+      
+      <!-- DETALHES DO IMÓVEL -->
+      <Details>
+        <Description>
+          Apartamento amplo e bem localizado em Ponta Negra, próximo à praia. 
+          Possui 3 quartos sendo 1 suíte, sala de estar, cozinha planejada, 
+          área de serviço e 2 vagas de garagem. Condomínio com piscina, 
+          churrasqueira e salão de festas.
+        </Description>
+        
+        <PropertyType>Residential</PropertyType>
+        <PropertySubType>Apartment</PropertySubType>
+        
+        <ListPrice>450000</ListPrice>
+        <RentalPrice></RentalPrice>
+        <Currency>BRL</Currency>
+        
+        <CondominiumFee>350</CondominiumFee>
+        <PropertyTax>1200</PropertyTax>
+        
+        <LivingArea unit="square metres">85</LivingArea>
+        <LotArea unit="square metres">85</LotArea>
+        
+        <Bedrooms>3</Bedrooms>
+        <Suites>1</Suites>
+        <Bathrooms>2</Bathrooms>
+        <Garage>2</Garage>
+        
+        <YearBuilt>2018</YearBuilt>
+        <FloorNumber>5</FloorNumber>
+        <UnitFloor>5</UnitFloor>
+        
+        <!-- CARACTERÍSTICAS/COMODIDADES -->
+        <Features>
+          <Feature>Pool</Feature>
+          <Feature>Gym</Feature>
+          <Feature>Barbecue</Feature>
+          <Feature>PartyHall</Feature>
+          <Feature>Playground</Feature>
+          <Feature>Elevator</Feature>
+          <Feature>Gated</Feature>
+          <Feature>Garden</Feature>
+        </Features>
+      </Details>
+      
+      <!-- LOCALIZAÇÃO -->
+      <Location displayAddress="Neighborhood">
+        <Country abbreviation="BR">Brasil</Country>
+        <State abbreviation="RN">Rio Grande do Norte</State>
+        <City>Natal</City>
+        <Neighborhood>Ponta Negra</Neighborhood>
+        <Address>Rua das Flores</Address>
+        <StreetNumber>123</StreetNumber>
+        <Complement>Apto 501</Complement>
+        <PostalCode>59090-100</PostalCode>
+        <Latitude>-5.8814</Latitude>
+        <Longitude>-35.1732</Longitude>
+      </Location>
+      
+      <!-- MÍDIA (FOTOS E VÍDEOS) -->
+      <Media>
+        <Item medium="image" primary="true">
+          <MediaURL>https://exemplo.com/fotos/foto1.jpg</MediaURL>
+          <Caption>Sala de estar</Caption>
+        </Item>
+        <Item medium="image">
+          <MediaURL>https://exemplo.com/fotos/foto2.jpg</MediaURL>
+          <Caption>Cozinha</Caption>
+        </Item>
+        <Item medium="image">
+          <MediaURL>https://exemplo.com/fotos/foto3.jpg</MediaURL>
+          <Caption>Quarto principal</Caption>
+        </Item>
+        <Item medium="image">
+          <MediaURL>https://exemplo.com/fotos/foto4.jpg</MediaURL>
+          <Caption>Banheiro</Caption>
+        </Item>
+        <Item medium="image">
+          <MediaURL>https://exemplo.com/fotos/foto5.jpg</MediaURL>
+          <Caption>Varanda</Caption>
+        </Item>
+        <Item medium="video">
+          <MediaURL>https://youtube.com/watch?v=exemplo</MediaURL>
+          <Caption>Tour virtual</Caption>
+        </Item>
+      </Media>
+      
+      <!-- CONTATO -->
+      <ContactInfo>
+        <Name>Maria Santos</Name>
+        <Email>maria@imobiliaria.com.br</Email>
+        <Telephone>(84) 98888-7777</Telephone>
+        <Website>https://www.imobiliaria.com.br</Website>
+      </ContactInfo>
+    </Listing>
+
+    <!-- EXEMPLO 2: CASA PARA LOCAÇÃO -->
+    <Listing>
+      <ListingID>67890</ListingID>
+      <Title>Casa 4 Quartos em Capim Macio</Title>
+      <TransactionType>Rent</TransactionType>
+      <Featured>false</Featured>
+      <ListDate>2025-01-12</ListDate>
+      <LastUpdateDate>2025-01-15</LastUpdateDate>
+      
+      <Details>
+        <Description>
+          Casa espaçosa em condomínio fechado, 4 quartos sendo 2 suítes, 
+          sala ampla, cozinha americana, área gourmet com churrasqueira, 
+          quintal e 3 vagas de garagem. Segurança 24h.
+        </Description>
+        
+        <PropertyType>Residential</PropertyType>
+        <PropertySubType>House</PropertySubType>
+        
+        <ListPrice></ListPrice>
+        <RentalPrice>3500</RentalPrice>
+        <Currency>BRL</Currency>
+        
+        <CondominiumFee>450</CondominiumFee>
+        <PropertyTax>800</PropertyTax>
+        
+        <LivingArea unit="square metres">180</LivingArea>
+        <LotArea unit="square metres">250</LotArea>
+        
+        <Bedrooms>4</Bedrooms>
+        <Suites>2</Suites>
+        <Bathrooms>3</Bathrooms>
+        <Garage>3</Garage>
+        
+        <YearBuilt>2020</YearBuilt>
+        
+        <Features>
+          <Feature>Gated</Feature>
+          <Feature>Barbecue</Feature>
+          <Feature>Garden</Feature>
+          <Feature>AmericanKitchen</Feature>
+          <Feature>ServiceArea</Feature>
+          <Feature>Backyard</Feature>
+        </Features>
+      </Details>
+      
+      <Location displayAddress="Neighborhood">
+        <Country abbreviation="BR">Brasil</Country>
+        <State abbreviation="RN">Rio Grande do Norte</State>
+        <City>Natal</City>
+        <Neighborhood>Capim Macio</Neighborhood>
+        <Address>Rua dos Girassóis</Address>
+        <StreetNumber>456</StreetNumber>
+        <Complement></Complement>
+        <PostalCode>59082-400</PostalCode>
+        <Latitude>-5.8450</Latitude>
+        <Longitude>-35.1950</Longitude>
+      </Location>
+      
+      <Media>
+        <Item medium="image" primary="true">
+          <MediaURL>https://exemplo.com/fotos/casa1.jpg</MediaURL>
+          <Caption>Fachada</Caption>
+        </Item>
+        <Item medium="image">
+          <MediaURL>https://exemplo.com/fotos/casa2.jpg</MediaURL>
+          <Caption>Sala</Caption>
+        </Item>
+        <Item medium="image">
+          <MediaURL>https://exemplo.com/fotos/casa3.jpg</MediaURL>
+          <Caption>Cozinha</Caption>
+        </Item>
+      </Media>
+      
+      <ContactInfo>
+        <Name>Pedro Oliveira</Name>
+        <Email>pedro@imobiliaria.com.br</Email>
+        <Telephone>(84) 97777-6666</Telephone>
+        <Website>https://www.imobiliaria.com.br</Website>
+      </ContactInfo>
+    </Listing>
+
+    <!-- EXEMPLO 3: COMERCIAL PARA VENDA -->
+    <Listing>
+      <ListingID>11111</ListingID>
+      <Title>Sala Comercial em Lagoa Nova</Title>
+      <TransactionType>Sale</TransactionType>
+      <Featured>true</Featured>
+      <ListDate>2025-01-08</ListDate>
+      <LastUpdateDate>2025-01-15</LastUpdateDate>
+      
+      <Details>
+        <Description>
+          Sala comercial em edifício moderno, excelente localização em Lagoa Nova. 
+          Possui recepção, 2 salas, banheiro e 1 vaga de garagem. 
+          Ideal para escritório ou consultório.
+        </Description>
+        
+        <PropertyType>Commercial</PropertyType>
+        <PropertySubType>Office</PropertySubType>
+        
+        <ListPrice>280000</ListPrice>
+        <RentalPrice></RentalPrice>
+        <Currency>BRL</Currency>
+        
+        <CondominiumFee>280</CondominiumFee>
+        <PropertyTax>600</PropertyTax>
+        
+        <LivingArea unit="square metres">45</LivingArea>
+        <LotArea unit="square metres">45</LotArea>
+        
+        <Bedrooms>0</Bedrooms>
+        <Suites>0</Suites>
+        <Bathrooms>1</Bathrooms>
+        <Garage>1</Garage>
+        
+        <YearBuilt>2019</YearBuilt>
+        <FloorNumber>3</FloorNumber>
+        
+        <Features>
+          <Feature>Elevator</Feature>
+          <Feature>AirConditioning</Feature>
+          <Feature>Reception</Feature>
+        </Features>
+      </Details>
+      
+      <Location displayAddress="Neighborhood">
+        <Country abbreviation="BR">Brasil</Country>
+        <State abbreviation="RN">Rio Grande do Norte</State>
+        <City>Natal</City>
+        <Neighborhood>Lagoa Nova</Neighborhood>
+        <Address>Avenida Senador Salgado Filho</Address>
+        <StreetNumber>2000</StreetNumber>
+        <Complement>Sala 301</Complement>
+        <PostalCode>59075-000</PostalCode>
+        <Latitude>-5.8100</Latitude>
+        <Longitude>-35.2050</Longitude>
+      </Location>
+      
+      <Media>
+        <Item medium="image" primary="true">
+          <MediaURL>https://exemplo.com/fotos/comercial1.jpg</MediaURL>
+          <Caption>Recepção</Caption>
+        </Item>
+        <Item medium="image">
+          <MediaURL>https://exemplo.com/fotos/comercial2.jpg</MediaURL>
+          <Caption>Sala principal</Caption>
+        </Item>
+      </Media>
+      
+      <ContactInfo>
+        <Name>Ana Costa</Name>
+        <Email>ana@imobiliaria.com.br</Email>
+        <Telephone>(84) 96666-5555</Telephone>
+        <Website>https://www.imobiliaria.com.br</Website>
+      </ContactInfo>
+    </Listing>
+  </Listings>
+</ListingDataFeed>

@@ -1,0 +1,960 @@
+import React, { useState, useEffect } from 'react';
+import {
+    LayoutDashboard, Plus, Search, Filter, MoreVertical,
+    Phone, Mail, Calendar, DollarSign, Clock,
+    ChevronLeft, ChevronRight, User, MapPin, Home,
+    ArrowRight, AlertCircle, CheckCircle2, XCircle,
+    Eye, FileText, CheckCircle, Target, TrendingUp, Users, MessageSquare, Loader2, X, Pencil,
+    MessageCircle, Archive
+} from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
+import { useToast } from '../components/ToastContext';
+import { useAuth } from '../components/AuthContext';
+import { SalesFunnel } from '../components/SalesFunnel';
+import { QuickStats } from '../components/QuickStats';
+import {
+    DndContext,
+    DragEndEvent,
+    DragOverlay,
+    DragStartEvent,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    closestCorners,
+    DragOverEvent,
+    useDroppable,
+} from '@dnd-kit/core';
+import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
+    getOperations,
+    getPropertyTypes,
+    getSubtypes,
+    getCities,
+    getNeighborhoods,
+    findMatchingProperties,
+    PropertyMatch
+} from '../lib/leadMatchingHelper';
+
+interface Lead {
+    id: string;
+    nome: string;
+    email: string;
+    telefone: string;
+    status: 'Novo' | 'Em Contato' | 'Negociação' | 'Fechado' | 'Perdido' | 'Inativo';
+    interesse: string;
+    data_criacao: string;
+    avatar?: string;
+    prioridade?: 'alta' | 'media' | 'baixa';
+    origem?: string;
+    ultima_interacao?: string;
+    // New structured fields for matching
+    operacao_interesse?: string; // UUID
+    tipo_imovel_interesse?: string; // UUID
+    cidade_interesse?: string;
+    bairro_interesse?: string;
+    orcamento_min?: number;
+    orcamento_max?: number;
+    motivo_perda?: string;
+    data_perda?: string;
+}
+
+// Draggable Lead Card Component
+const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; onMatch?: (lead: Lead) => void; onEdit?: (lead: Lead) => void; onArchive?: (lead: Lead) => void; onStatusChange?: (leadId: string, newStatus: string) => void }> = ({ lead, isDragging = false, onMatch, onEdit, onArchive, onStatusChange }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging: isSortableDragging,
+    } = useSortable({ id: lead.id });
+
+    const [showStatusMenu, setShowStatusMenu] = React.useState(false);
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isSortableDragging ? 0.5 : 1,
+    };
+
+    const statusOptions = [
+        { value: 'Novo', label: 'Novo', color: 'text-blue-600' },
+        { value: 'Em Contato', label: 'Em Contato', color: 'text-yellow-600' },
+        { value: 'Negociação', label: 'Negociação', color: 'text-purple-600' },
+        { value: 'Fechado', label: 'Fechado', color: 'text-green-600' },
+        { value: 'Perdido', label: 'Perdido', color: 'text-red-600' },
+    ];
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className={`bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group ${isDragging ? 'shadow-2xl ring-2 ring-primary-500 scale-105' : ''
+                }`}
+        >
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                    <div>
+                        <h4 className="font-bold text-sm text-gray-900 dark:text-white">{lead.nome}</h4>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">{lead.telefone}</p>
+                    </div>
+                    {lead.prioridade && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${lead.prioridade === 'alta' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
+                            lead.prioridade === 'media' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400' :
+                                'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                            }`}>
+                            {lead.prioridade.toUpperCase()}
+                        </span>
+                    )}
+                </div>
+                <div className="flex space-x-1">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (onEdit) onEdit(lead);
+                        }}
+                        className="p-1.5 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded text-orange-600"
+                        title="Editar Lead"
+                    >
+                        <Pencil size={14} />
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`https://wa.me/55${lead.telefone.replace(/\D/g, '')}`, '_blank');
+                        }}
+                        className="p-1.5 hover:bg-green-100 dark:hover:bg-green-900/30 rounded text-green-600"
+                        title="WhatsApp"
+                    >
+                        <MessageCircle size={14} />
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            window.location.href = `mailto:${lead.email}`;
+                        }}
+                        className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded text-blue-600"
+                        title="Email"
+                    >
+                        <Mail size={14} />
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (onMatch) onMatch(lead);
+                        }}
+                        className="p-1.5 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded text-purple-600"
+                        title="Ver Imóveis Compatíveis"
+                    >
+                        <Target size={14} />
+                    </button>
+                    {lead.status !== 'Inativo' && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (onArchive) onArchive(lead);
+                            }}
+                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700/30 rounded text-gray-600"
+                            title="Arquivar Lead"
+                        >
+                            <Archive size={14} />
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="space-y-2">
+                <div className="flex items-center text-xs text-gray-600 dark:text-slate-400 bg-gray-50 dark:bg-slate-700/50 p-2 rounded">
+                    <span className="font-medium mr-1">Busca:</span> {lead.interesse}
+                </div>
+                <div className="flex justify-between items-center text-xs text-gray-500 dark:text-slate-400">
+                    <span className="flex items-center font-bold text-sm">
+                        de {lead.orcamento_min?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 })} até {lead.orcamento_max?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 })}
+                    </span>
+                    <span className="flex items-center">
+                        <Calendar size={12} className="mr-1" />
+                        {new Date(lead.data_criacao).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' })}
+                    </span>
+                </div>
+
+                {/* Mobile-Friendly Status Change */}
+                <div className="md:hidden pt-2 border-t border-gray-100 dark:border-slate-700">
+                    <div className="relative">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowStatusMenu(!showStatusMenu);
+                            }}
+                            className="w-full px-3 py-2 text-xs font-medium bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg flex items-center justify-between transition-colors"
+                        >
+                            <span>Mover para: {lead.status}</span>
+                            <ChevronRight size={14} className={`transition-transform ${showStatusMenu ? 'rotate-90' : ''}`} />
+                        </button>
+                        {showStatusMenu && (
+                            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg">
+                                {statusOptions.filter(opt => opt.value !== lead.status).map(option => (
+                                    <button
+                                        key={option.value}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (onStatusChange) {
+                                                onStatusChange(lead.id, option.value);
+                                            }
+                                            setShowStatusMenu(false);
+                                        }}
+                                        className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-gray-50 dark:hover:bg-slate-700 first:rounded-t-lg last:rounded-b-lg ${option.color}`}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Droppable Column Component
+// Droppable Column Component
+const DroppableColumn: React.FC<{
+    id: string;
+    label: string;
+    color: string;
+    darkColor: string;
+    leads: Lead[];
+    children: React.ReactNode;
+    icon?: React.ElementType;
+    description?: string;
+}> = ({ id, label, color, darkColor, leads, children, icon: Icon, description }) => {
+    const { setNodeRef } = useDroppable({
+        id: id,
+    });
+
+    return (
+        <div ref={setNodeRef} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden transition-all hover:shadow-md">
+            {/* Column Header acting as Stage Card Header */}
+            <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between bg-gray-50/50 dark:bg-slate-800/50">
+                <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-lg shadow-sm bg-white dark:bg-slate-700`}>
+                        {Icon && <Icon size={20} className={color.replace('bg-', 'text-')} />}
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-gray-900 dark:text-white text-base">{label}</h3>
+                        {description && <p className="text-xs text-gray-500 dark:text-slate-400">{description}</p>}
+                    </div>
+                </div>
+                <div className="text-right">
+                    <span className="text-xl font-bold text-gray-900 dark:text-white block">{leads.length}</span>
+                </div>
+            </div>
+
+            {/* Leads List */}
+            <div className="p-4 min-h-[100px] space-y-3 bg-gray-50 dark:bg-slate-900/20">
+                {children}
+                {leads.length === 0 && (
+                    <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg p-6 text-center">
+                        <p className="text-sm text-gray-400">Arraste leads para cá</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export const Leads: React.FC = () => {
+    const { addToast } = useToast();
+    const { user } = useAuth();
+    const [leads, setLeads] = useState<Lead[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
+    const [activeId, setActiveId] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [newLead, setNewLead] = useState({
+        nome: '',
+        email: '',
+        telefone: '',
+        interesse: '',
+        // New fields
+        operacao_interesse: '',
+        tipo_imovel_interesse: '',
+        cidade_interesse: '',
+        bairro_interesse: '',
+        orcamento_min: '',
+        orcamento_max: ''
+    });
+
+    // Custom inputs state
+    const [customCity, setCustomCity] = useState('');
+    const [customNeighborhood, setCustomNeighborhood] = useState('');
+    const [isCustomCity, setIsCustomCity] = useState(false);
+    const [isCustomNeighborhood, setIsCustomNeighborhood] = useState(false);
+
+    // Dropdown options state
+    const [operations, setOperations] = useState<{ id: string; tipo: string }[]>([]);
+    const [propertyTypes, setPropertyTypes] = useState<{ id: string; tipo: string }[]>([]);
+    const [subtypes, setSubtypes] = useState<{ id: string; subtipo: string }[]>([]); // Keep for now to avoid breaking if used elsewhere, but we won't use it for leads
+    const [cities, setCities] = useState<string[]>([]);
+    const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
+    const [loadingOptions, setLoadingOptions] = useState(false);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        })
+    );
+
+    const columns = [
+        { status: 'Novo', label: 'Novos', color: 'bg-blue-500', darkColor: 'dark:bg-blue-600', icon: Eye, description: 'Leads recém-capturados' },
+        { status: 'Em Contato', label: 'Em Contato', color: 'bg-yellow-500', darkColor: 'dark:bg-yellow-600', icon: Search, description: 'Primeiro contato realizado' },
+        { status: 'Negociação', label: 'Negociação', color: 'bg-purple-500', darkColor: 'dark:bg-purple-600', icon: FileText, description: 'Negociando proposta' },
+        { status: 'Fechado', label: 'Fechados', color: 'bg-green-500', darkColor: 'dark:bg-green-600', icon: CheckCircle, description: 'Negócio concluído' },
+        { status: 'Perdido', label: 'Perdidos', color: 'bg-red-500', darkColor: 'dark:bg-red-600', icon: XCircle, description: 'Leads perdidos' },
+    ];
+
+    useEffect(() => {
+        fetchLeads();
+        fetchOptions();
+    }, []);
+
+    useEffect(() => {
+        // Subtypes are no longer directly linked to lead creation/editing
+        // if (newLead.tipo_imovel_interesse) {
+        //     fetchSubtypes(newLead.tipo_imovel_interesse);
+        // } else {
+        //     setSubtypes([]);
+        // }
+    }, [newLead.tipo_imovel_interesse]);
+
+    useEffect(() => {
+        if (newLead.cidade_interesse && newLead.cidade_interesse !== 'outro') {
+            fetchNeighborhoods(newLead.cidade_interesse);
+            setIsCustomCity(false);
+        } else if (newLead.cidade_interesse === 'outro') {
+            setIsCustomCity(true);
+            setNeighborhoods([]);
+            setNewLead(prev => ({ ...prev, bairro_interesse: '' })); // Clear neighborhood when custom city is selected
+        } else {
+            setIsCustomCity(false);
+            setNeighborhoods([]);
+            setNewLead(prev => ({ ...prev, bairro_interesse: '' })); // Clear neighborhood when no city is selected
+        }
+    }, [newLead.cidade_interesse]);
+
+    useEffect(() => {
+        if (newLead.bairro_interesse === 'outro') {
+            setIsCustomNeighborhood(true);
+        } else {
+            setIsCustomNeighborhood(false);
+        }
+    }, [newLead.bairro_interesse]);
+
+    const fetchOptions = async () => {
+        setLoadingOptions(true);
+        try {
+            const [ops, types, cits] = await Promise.all([
+                getOperations(),
+                getPropertyTypes(),
+                getCities()
+            ]);
+            setOperations(ops);
+            setPropertyTypes(types);
+            setCities(cits);
+        } catch (error) {
+            console.error('Error fetching options:', error);
+        } finally {
+            setLoadingOptions(false);
+        }
+    };
+
+    // Subtypes are no longer directly linked to lead creation/editing
+    // const fetchSubtypes = async (typeId: string) => {
+    //     const subs = await getSubtypes(typeId);
+    //     setSubtypes(subs);
+    // };
+
+    const fetchNeighborhoods = async (city: string) => {
+        const hoods = await getNeighborhoods(city);
+        setNeighborhoods(hoods);
+    };
+
+    const fetchLeads = async () => {
+        if (!user) return;
+
+        try {
+            const { data, error } = await supabase
+                .from('leads')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('data_criacao', { ascending: false });
+
+            if (error) throw error;
+            if (data) setLeads(data);
+        } catch (error) {
+            console.error('Error fetching leads:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCreateLead = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            // Construct a summary string for the legacy 'interesse' field
+            const operationName = operations.find(op => op.id === newLead.operacao_interesse)?.tipo || '';
+            const typeName = propertyTypes.find(t => t.id === newLead.tipo_imovel_interesse)?.tipo || '';
+
+            const finalCity = isCustomCity ? customCity : newLead.cidade_interesse;
+            const finalNeighborhood = isCustomNeighborhood ? customNeighborhood : newLead.bairro_interesse;
+
+            const interestSummary = `${typeName} ${operationName ? `para ${operationName}` : ''} ${finalCity ? `em ${finalCity}` : ''}`;
+
+            const leadData = {
+                nome: newLead.nome,
+                email: newLead.email,
+                telefone: newLead.telefone,
+                // Legacy fields
+                interesse: interestSummary || newLead.interesse,
+                // New structured fields
+                operacao_interesse: newLead.operacao_interesse || null,
+                tipo_imovel_interesse: newLead.tipo_imovel_interesse || null,
+                cidade_interesse: finalCity || null,
+                bairro_interesse: finalNeighborhood || null,
+                orcamento_min: parseFloat(newLead.orcamento_min) || 0,
+                orcamento_max: parseFloat(newLead.orcamento_max) || 0,
+            };
+
+            let error;
+
+            if (editingLeadId) {
+                // Update existing lead
+                const { error: updateError } = await supabase
+                    .from('leads')
+                    .update(leadData)
+                    .eq('id', editingLeadId);
+                error = updateError;
+            } else {
+                // Create new lead
+                const { error: insertError } = await supabase
+                    .from('leads')
+                    .insert({
+                        ...leadData,
+                        status: 'Novo',
+                        user_id: user?.id
+                    });
+                error = insertError;
+            }
+
+            if (error) throw error;
+
+            setIsModalOpen(false);
+            setEditingLeadId(null);
+            setNewLead({
+                nome: '', email: '', telefone: '', interesse: '',
+                operacao_interesse: '', tipo_imovel_interesse: '',
+                cidade_interesse: '', bairro_interesse: '', orcamento_min: '', orcamento_max: ''
+            });
+            setCustomCity('');
+            setCustomNeighborhood('');
+            setIsCustomCity(false);
+            setIsCustomNeighborhood(false);
+            addToast(editingLeadId ? 'Lead atualizado com sucesso!' : 'Lead criado com sucesso!', 'success');
+            fetchLeads();
+        } catch (error) {
+            console.error('Error saving lead:', error);
+            addToast('Erro ao salvar lead.', 'error');
+        }
+    };
+
+    const handleEditLead = (lead: Lead) => {
+        setEditingLeadId(lead.id);
+        setNewLead({
+            nome: lead.nome,
+            email: lead.email,
+            telefone: lead.telefone,
+            interesse: lead.interesse,
+            operacao_interesse: lead.operacao_interesse || '',
+            tipo_imovel_interesse: lead.tipo_imovel_interesse || '',
+            cidade_interesse: lead.cidade_interesse || '',
+            bairro_interesse: lead.bairro_interesse || '',
+            orcamento_min: lead.orcamento_min?.toString() || '',
+            orcamento_max: lead.orcamento_max?.toString() || ''
+        });
+
+        // Handle custom city/neighborhood logic if needed
+        // For simplicity, we assume if it's not in the list, it's custom, but the lists are fetched async.
+        // A robust implementation would check against the lists after they load.
+        // For now, we just set the values.
+
+        setIsModalOpen(true);
+    };
+
+    const updateLeadStatus = async (id: string, newStatus: string) => {
+        try {
+            const { error } = await supabase.from('leads').update({ status: newStatus }).eq('id', id);
+            if (error) throw error;
+
+            // Update local state immediately for better UX
+            setLeads(prevLeads =>
+                prevLeads.map(lead =>
+                    lead.id === id ? { ...lead, status: newStatus as any } : lead
+                )
+            );
+
+            addToast('Lead movido com sucesso!', 'success');
+        } catch (error) {
+            console.error('Error updating status:', error);
+            addToast('Erro ao mover lead.', 'error');
+            // Revert on error
+            fetchLeads();
+        }
+    };
+
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(event.active.id as string);
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (!over) {
+            setActiveId(null);
+            return;
+        }
+
+        const activeLeadId = active.id as string;
+        const overId = over.id as string;
+
+        // Find the lead being dragged
+        const activeLead = leads.find(l => l.id === activeLeadId);
+        if (!activeLead) {
+            setActiveId(null);
+            return;
+        }
+
+        let newStatus = activeLead.status;
+
+        // Check if dropped on a column
+        const isColumn = columns.some(col => col.status === overId);
+
+        if (isColumn) {
+            newStatus = overId as any;
+        } else {
+            // Dropped on another lead?
+            const targetLead = leads.find(l => l.id === overId);
+            if (targetLead) {
+                newStatus = targetLead.status;
+            }
+        }
+
+        if (newStatus !== activeLead.status) {
+            updateLeadStatus(activeLeadId, newStatus);
+        }
+
+        setActiveId(null);
+    };
+
+    const getLeadsByStatus = (status: string) => {
+        let filtered = leads.filter(l => l.status === status);
+        if (searchTerm) {
+            filtered = filtered.filter(l =>
+                l.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                l.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                l.telefone.includes(searchTerm) ||
+                l.interesse.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+        return filtered;
+    };
+
+    // Calculate funnel metrics
+    const funnelMetrics = {
+        totalLeads: leads.filter(l => l.status !== 'Inativo').length, // Exclude inactive from total
+        byStage: {
+            novo: leads.filter(l => l.status === 'Novo').length,
+            emContato: leads.filter(l => l.status === 'Em Contato').length,
+            negociacao: leads.filter(l => l.status === 'Negociação').length,
+            fechado: leads.filter(l => l.status === 'Fechado').length,
+            perdido: leads.filter(l => l.status === 'Perdido').length,
+            inativo: leads.filter(l => l.status === 'Inativo').length,
+        },
+        totalValue: leads.filter(l => l.status !== 'Inativo').reduce((sum, l) => sum + (l.orcamento_max || l.orcamento_min || 0), 0),
+        conversionRate: leads.filter(l => l.status !== 'Inativo').length > 0 ? (leads.filter(l => l.status === 'Fechado').length / leads.filter(l => l.status !== 'Inativo').length) * 100 : 0,
+    };
+
+    // Calculate leads created today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const leadsToday = leads.filter(l => {
+        const leadDate = new Date(l.data_criacao);
+        leadDate.setHours(0, 0, 0, 0);
+        return leadDate.getTime() === today.getTime();
+    }).length;
+
+    const activeLead = leads.find(l => l.id === activeId);
+
+    // Match Modal State
+    const [matchModalOpen, setMatchModalOpen] = useState(false);
+    const [selectedLeadForMatch, setSelectedLeadForMatch] = useState<Lead | null>(null);
+    const [matchingProperties, setMatchingProperties] = useState<PropertyMatch[]>([]);
+    const [loadingMatches, setLoadingMatches] = useState(false);
+
+    const handleMatchClick = (lead: Lead) => {
+        setSelectedLeadForMatch(lead);
+        setMatchModalOpen(true);
+        fetchMatches(lead.id);
+    };
+
+    useEffect(() => {
+        // The custom event listener is no longer needed as we're using onMatch prop directly
+        // const handleOpenMatchModal = (e: any) => {
+        //     const lead = e.detail;
+        //     setSelectedLeadForMatch(lead);
+        //     setMatchModalOpen(true);
+        //     fetchMatches(lead.id);
+        // };
+
+        // window.addEventListener('openMatchModal', handleOpenMatchModal);
+        // return () => window.removeEventListener('openMatchModal', handleOpenMatchModal);
+    }, []);
+
+    const fetchMatches = async (leadId: string) => {
+        setLoadingMatches(true);
+        try {
+            const matches = await findMatchingProperties(leadId);
+            setMatchingProperties(matches);
+        } catch (error) {
+            console.error('Error fetching matches:', error);
+            addToast('Erro ao buscar imóveis compatíveis.', 'error');
+        } finally {
+            setLoadingMatches(false);
+        }
+    };
+
+    return (
+        <div className="flex flex-col">
+            {/* Controls */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Gestão de Leads</h2>
+                </div>
+                <div className="flex space-x-3">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Buscar leads..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-9 pr-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none w-48 text-gray-900 dark:text-white"
+                        />
+                    </div>
+                    <button
+                        onClick={() => {
+                            setEditingLeadId(null);
+                            setNewLead({
+                                nome: '', email: '', telefone: '', interesse: '',
+                                operacao_interesse: '', tipo_imovel_interesse: '',
+                                cidade_interesse: '', bairro_interesse: '', orcamento_min: '', orcamento_max: ''
+                            });
+                            setIsModalOpen(true);
+                        }}
+                        className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center">
+                        <Plus size={16} className="mr-2" /> Novo Lead
+                    </button>
+                </div>
+            </div>
+
+            {/* Kanban Board with Drag and Drop */}
+            {loading ? (
+                <div className="flex justify-center items-center py-20"><Loader2 className="animate-spin text-primary-500" size={32} /></div>
+            ) : (
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCorners}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                >
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                        {/* Left Column: Funnel */}
+                        <div className="lg:sticky lg:top-4">
+                            <SalesFunnel metrics={funnelMetrics} />
+                        </div>
+
+                        {/* Right Column: Vertical Kanban */}
+                        <div className="flex flex-col gap-4">
+                            {columns.map((column) => (
+                                <DroppableColumn
+                                    key={column.status}
+                                    id={column.status}
+                                    label={column.label}
+                                    color={column.color}
+                                    darkColor={column.darkColor}
+                                    leads={getLeadsByStatus(column.status)}
+                                    icon={column.icon}
+                                    description={column.description}
+                                >
+                                    <SortableContext
+                                        items={getLeadsByStatus(column.status).map(l => l.id)}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        {getLeadsByStatus(column.status)
+                                            .map((lead) => (
+                                                <LeadCard
+                                                    key={lead.id}
+                                                    lead={lead}
+                                                    onMatch={() => handleMatchClick(lead)}
+                                                    onEdit={() => handleEditLead(lead)}
+                                                    onArchive={() => updateLeadStatus(lead.id, 'Inativo')}
+                                                    onStatusChange={updateLeadStatus}
+                                                />
+                                            ))}
+                                    </SortableContext>
+                                </DroppableColumn>
+                            ))}
+                        </div>
+                    </div>
+
+                    <DragOverlay>
+                        {activeId && activeLead ? (
+                            <div className="opacity-80 rotate-3 scale-105 cursor-grabbing">
+                                <LeadCard lead={activeLead} />
+                            </div>
+                        ) : null}
+                    </DragOverlay>
+                </DndContext>
+            )}
+
+            {/* New Lead Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{editingLeadId ? 'Editar Lead' : 'Novo Lead'}</h3>
+                            <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"><X size={20} /></button>
+                        </div>
+                        <form onSubmit={handleCreateLead} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nome</label>
+                                <input type="text" required value={newLead.nome} onChange={e => setNewLead({ ...newLead, nome: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Email</label>
+                                    <input type="email" value={newLead.email} onChange={e => setNewLead({ ...newLead, email: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Telefone</label>
+                                    <input type="text" value={newLead.telefone} onChange={e => setNewLead({ ...newLead, telefone: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none" />
+                                </div>
+                            </div>
+
+                            <div className="border-t border-gray-200 dark:border-slate-700 pt-4 mt-4">
+                                <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Interesse do Cliente</h4>
+
+                                <div className="grid grid-cols-2 gap-4 mb-3">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Operação</label>
+                                        <select
+                                            value={newLead.operacao_interesse}
+                                            onChange={e => setNewLead({ ...newLead, operacao_interesse: e.target.value })}
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                        >
+                                            <option value="">Selecione...</option>
+                                            {operations.map(op => (
+                                                <option key={op.id} value={op.id}>{op.tipo}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Tipo de Imóvel</label>
+                                        <select
+                                            value={newLead.tipo_imovel_interesse}
+                                            onChange={e => setNewLead({ ...newLead, tipo_imovel_interesse: e.target.value })}
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                        >
+                                            <option value="">Selecione...</option>
+                                            {propertyTypes.map(type => (
+                                                <option key={type.id} value={type.id}>{type.tipo}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Subtipo field removed */}
+                                {/* <div className="mb-3">
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Subtipo</label>
+                                    <select
+                                        disabled={!newLead.tipo_imovel_interesse || subtypes.length === 0}
+                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm disabled:opacity-50"
+                                    >
+                                        <option value="">Selecione...</option>
+                                        {subtypes.map(sub => (
+                                            <option key={sub.id} value={sub.id}>{sub.subtipo}</option>
+                                        ))}
+                                    </select>
+                                </div> */}
+
+                                <div className="grid grid-cols-2 gap-4 mb-3">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Cidade</label>
+                                        <select
+                                            value={newLead.cidade_interesse}
+                                            onChange={e => setNewLead({ ...newLead, cidade_interesse: e.target.value, bairro_interesse: '' })}
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                        >
+                                            <option value="">Selecione...</option>
+                                            {cities.map(city => (
+                                                <option key={city} value={city}>{city}</option>
+                                            ))}
+                                            <option value="outro">Outra...</option>
+                                        </select>
+                                        {isCustomCity && (
+                                            <input
+                                                type="text"
+                                                placeholder="Digite a cidade"
+                                                value={customCity}
+                                                onChange={e => setCustomCity(e.target.value)}
+                                                className="w-full mt-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                            />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Bairro</label>
+                                        <select
+                                            value={newLead.bairro_interesse}
+                                            onChange={e => setNewLead({ ...newLead, bairro_interesse: e.target.value })}
+                                            disabled={(!newLead.cidade_interesse && !isCustomCity) || (newLead.cidade_interesse === 'outro' && !customCity)}
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm disabled:opacity-50"
+                                        >
+                                            <option value="">Selecione...</option>
+                                            {neighborhoods.map(hood => (
+                                                <option key={hood} value={hood}>{hood}</option>
+                                            ))}
+                                            <option value="outro">Outro...</option>
+                                        </select>
+                                        {isCustomNeighborhood && (
+                                            <input
+                                                type="text"
+                                                placeholder="Digite o bairro"
+                                                value={customNeighborhood}
+                                                onChange={e => setCustomNeighborhood(e.target.value)}
+                                                className="w-full mt-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Orçamento Mín (R$)</label>
+                                        <input
+                                            type="number"
+                                            value={newLead.orcamento_min}
+                                            onChange={e => setNewLead({ ...newLead, orcamento_min: e.target.value })}
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                            placeholder="0,00"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Orçamento Max (R$)</label>
+                                        <input
+                                            type="number"
+                                            value={newLead.orcamento_max}
+                                            onChange={e => setNewLead({ ...newLead, orcamento_max: e.target.value })}
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                            placeholder="0,00"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" className="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-bold transition-colors mt-4">{editingLeadId ? 'Salvar Alterações' : 'Criar Lead'}</button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Matching Properties Modal */}
+            {/* Matching Properties Modal */}
+            {matchModalOpen && selectedLeadForMatch && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+                        <button
+                            onClick={() => setMatchModalOpen(false)}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <div className="mb-6">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <Target className="text-primary-500" />
+                                Imóveis Compatíveis
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-slate-400">
+                                Sugestões para {selectedLeadForMatch.nome} com base no perfil
+                            </p>
+                        </div>
+
+                        {loadingMatches ? (
+                            <div className="flex justify-center py-12">
+                                <Loader2 className="animate-spin text-primary-500" size={32} />
+                            </div>
+                        ) : matchingProperties.length > 0 ? (
+                            <div className="space-y-4">
+                                {matchingProperties.map(prop => (
+                                    <div key={prop.id} className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-lg border border-gray-200 dark:border-slate-600 flex justify-between items-center hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                                        <div>
+                                            <h4 className="font-bold text-gray-900 dark:text-white">{prop.titulo}</h4>
+                                            <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-slate-400 mt-1">
+                                                <span>{prop.cidade} - {prop.bairro}</span>
+                                                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                                <span className="text-primary-600 dark:text-primary-400 font-medium">
+                                                    {prop.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-right">
+                                                <div className="text-xs text-gray-500 dark:text-slate-400">Match</div>
+                                                <div className={`font-bold ${prop.match_score >= 80 ? 'text-green-500' :
+                                                    prop.match_score >= 50 ? 'text-yellow-500' :
+                                                        'text-gray-500'
+                                                    }`}>
+                                                    {prop.match_score}%
+                                                </div>
+                                            </div>
+                                            <a
+                                                href={`/imoveis/${prop.id}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-2 bg-white dark:bg-slate-600 rounded-full shadow-sm hover:shadow text-primary-500 hover:text-primary-600 transition-all"
+                                                title="Ver Detalhes"
+                                            >
+                                                <ArrowRight size={18} />
+                                            </a>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-12 text-gray-500 dark:text-slate-400">
+                                <Search size={48} className="mx-auto mb-3 opacity-20" />
+                                <p>Nenhum imóvel compatível encontrado no momento.</p>
+                                <p className="text-sm mt-1">Tente ajustar os critérios do lead.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div >
+    );
+};

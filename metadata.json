@@ -1,0 +1,5 @@
+{
+  "name": "ImóvelPlat",
+  "description": "A complete real estate platform for agents and buyers, featuring a dashboard, property listings, messaging, and light/dark mode.",
+  "requestFramePermissions": []
+}

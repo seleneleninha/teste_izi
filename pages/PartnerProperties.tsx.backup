@@ -1,0 +1,152 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../components/AuthContext';
+import { useToast } from '../components/ToastContext';
+import { MapPin, Home, Bed, Bath, Car, Maximize, Handshake, AlertCircle, CheckCircle, Grid, List, Map as MapIcon, Eye } from 'lucide-react';
+import { filterPropertiesByRadius } from '../lib/distanceHelper';
+import { PropertyMap } from '../components/PropertyMap';
+import { navigateToProperty } from '../lib/propertyHelpers';
+import { navigateToProperty } from '../lib/propertyHelpers';
+
+interface Property {
+    id: string;
+    user_id: string;
+    cod_imovel: number;
+    titulo: string;
+    cidade: string;
+    bairro: string;
+    valor_venda: number | null;
+    valor_locacao: number | null;
+    fotos: string;
+    operacao: any;
+    tipo_imovel: any;
+    quartos: number;
+    banheiros: number;
+    vagas: number;
+    area_priv: number;
+    aceita_parceria: boolean;
+    isPartnership?: boolean;
+    latitude?: number | null;
+    longitude?: number | null;
+}
+
+interface PartnershipModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    property: Property | null;
+    isActivating: boolean;
+}
+
+const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onClose, onConfirm, property, isActivating }) => {
+    if (!isOpen || !property) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl max-w-md w-full p-6 shadow-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+                        <Handshake className="text-emerald-600 dark:text-emerald-400" size={24} />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {isActivating ? 'Aceitar Parceria "fifty"' : 'Remover Parceria'}
+                    </h3>
+                </div>
+
+                <div className="mb-6">
+                    {isActivating ? (
+                        <>
+                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4">
+                                <div className="flex items-start gap-2">
+                                    <AlertCircle className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" size={20} />
+                                    <div className="text-sm text-amber-800 dark:text-amber-200">
+                                        <p className="font-semibold mb-1">Como funciona a parceria?</p>
+                                        <p>Ao aceitar esta parceria, você concorda em dividir a comissão <strong>50/50</strong> com o corretor proprietário do imóvel em caso de venda ou locação.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-50 dark:bg-slate-900/50 rounded-lg p-4">
+                                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Imóvel Selecionado:</h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{property.titulo}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
+                                    <MapPin size={12} />
+                                    {property.bairro}, {property.cidade}
+                                </p>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="bg-gray-50 dark:bg-slate-900/50 rounded-lg p-4">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Tem certeza que deseja remover este imóvel das suas parcerias? Ele não aparecerá mais na sua página pública.
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex gap-3">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className={`flex-1 px-4 py-2.5 ${isActivating
+                            ? 'bg-emerald-600 hover:bg-emerald-700'
+                            : 'bg-red-600 hover:bg-red-700'
+                            } text-white rounded-lg transition-colors font-bold flex items-center justify-center gap-2`}
+                    >
+                        <Handshake size={18} />
+                        {isActivating ? 'Confirmar Parceria' : 'Remover Parceria'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const PropertyCard: React.FC<{ property: Property; onToggle: (property: Property, currentState: boolean) => void; compact?: boolean; actions?: React.ReactNode }> = ({ property, onToggle, compact, actions }) => {
+    const navigate = useNavigate();
+    const images = property.fotos ? property.fotos.split(',').filter(Boolean) : [];
+    const price = property.valor_venda || property.valor_locacao || 0;
+    const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+
+    const formatCurrency = (value: number) => {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 0,
+        }).format(value);
+    };
+
+    const getOperationLabel = (op: any) => {
+        if (!op) return '';
+        const tipo = typeof op === 'string' ? op : op.tipo || op;
+        if (tipo.toLowerCase() === 'venda') return 'Venda';
+        if (tipo.toLowerCase() === 'locação' || tipo.toLowerCase() === 'locacao') return 'Locação';
+        return tipo;
+    };
+
+    const getOperationColor = (op: any) => {
+        const label = getOperationLabel(op);
+        if (label === 'Venda') return 'bg-blue-500';
+        if (label === 'Locação') return 'bg-orange-500';
+        if (label.includes('/')) return 'bg-purple-500'; // Venda/Locação
+        return 'bg-primary-500';
+    };
+
+    const nextImage = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    };
+
+    const prevImage = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        isActivating = { isActivating }
+            />
+        </>
+    );
+};

@@ -1,0 +1,932 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../components/AuthContext';
+import { useToast } from '../components/ToastContext';
+import { User, Lock, Bell, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, AlertTriangle, ExternalLink, MapPin, Phone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { geocodeAddress } from '../lib/geocodingHelper';
+
+export const Settings: React.FC = () => {
+  const { user, signOut } = useAuth();
+  const { addToast } = useToast();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'profile' | 'slug' | 'security' | 'notifications'>('profile');
+
+  // Loading States
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [loadingCep, setLoadingCep] = useState(false);
+
+  // Profile State
+  const [profile, setProfile] = useState({
+    name: '',
+    sobrenome: '',
+    apelido: '',
+    email: '',
+    phone: '',
+    cpf: '',
+    creci: '',
+    ufCreci: '',
+    avatar: '',
+    role: '',
+    slug: '',
+    // Address
+    cep: '',
+    logradouro: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    cidade: '',
+    uf: '',
+    showAddress: false,
+    raioAtuacao: 10,
+    // Watermarks
+    watermarkLight: '',
+    watermarkDark: ''
+  });
+
+  // Password State
+  const [passwords, setPasswords] = useState({
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Notifications State
+  const [notifications, setNotifications] = useState({
+    leads: true,
+    messages: true,
+    properties: true,
+    marketing: false
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const states = [
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
+    'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+  ];
+
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('perfis')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
+
+      if (data) {
+        setProfile({
+          name: data.nome || user?.user_metadata?.name || '',
+          sobrenome: data.sobrenome || '',
+          apelido: data.apelido || '',
+          email: data.email || user?.email || '',
+          phone: data.whatsapp || '',
+          cpf: data.cpf || '',
+          creci: data.creci || '',
+          ufCreci: data.uf_creci || '',
+          avatar: data.avatar || user?.user_metadata?.avatar_url || '',
+          role: data.cargo || 'Corretor',
+          slug: data.slug || '',
+          cep: data.cep || '',
+          logradouro: data.logradouro || '',
+          numero: data.numero || '',
+          complemento: data.complemento || '',
+          bairro: data.bairro || '',
+          cidade: data.cidade || '',
+          uf: data.uf || '',
+          showAddress: data.show_address || false,
+          raioAtuacao: data.raio_atuacao || 10,
+          watermarkLight: data.watermark_light || '',
+          watermarkDark: data.watermark_dark || ''
+        });
+
+        if (data.preferencias_notificacao) {
+          setNotifications(data.preferencias_notificacao);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar perfil:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCep = async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+
+    try {
+      setLoadingCep(true);
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+
+      if (!data.erro) {
+        setProfile(prev => ({
+          ...prev,
+          logradouro: data.logradouro,
+          bairro: data.bairro,
+          cidade: data.localidade,
+          uf: data.uf
+        }));
+
+        // Automatically geocode to get lat/lng
+        try {
+          const coords = await geocodeAddress({
+            street: data.logradouro,
+            number: profile.numero || '0',
+            neighborhood: data.bairro || '',
+            city: data.localidade,
+            state: data.uf,
+            postalCode: cleanCep
+          });
+
+          if (coords && user) {
+            // Save lat/lng to database immediately
+            await supabase
+              .from('perfis')
+              .update({
+                latitude: coords.latitude,
+                longitude: coords.longitude
+              })
+              .eq('id', user.id);
+
+            addToast('Endereço e localização atualizados!', 'success');
+          }
+        } catch (geoError) {
+          console.error('Erro ao geocodificar:', geoError);
+          // Don't show error to user, just log it
+        }
+      } else {
+        addToast('CEP não encontrado.', 'error');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      addToast('Erro ao buscar CEP.', 'error');
+    } finally {
+      setLoadingCep(false);
+    }
+  };
+
+  // --- Profile Handlers ---
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    try {
+      setSaving(true);
+
+      const updates = {
+        nome: profile.name,
+        sobrenome: profile.sobrenome,
+        apelido: profile.apelido || null, // Use null for empty string to avoid unique constraint on ""
+        cargo: profile.role,
+        avatar: profile.avatar || null, // Use null instead of empty string
+        whatsapp: profile.phone,
+        cep: profile.cep,
+        logradouro: profile.logradouro,
+        numero: profile.numero,
+        complemento: profile.complemento,
+        bairro: profile.bairro,
+        cidade: profile.cidade,
+        uf: profile.uf,
+        show_address: profile.showAddress,
+        raio_atuacao: profile.raioAtuacao || null,
+        watermark_light: profile.watermarkLight || null,
+        watermark_dark: profile.watermarkDark || null,
+        preferencias_notificacao: notifications,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('perfis')
+        .update(updates)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      await supabase.auth.updateUser({
+        data: { name: profile.name, avatar_url: profile.avatar || null }
+      });
+
+      addToast('Perfil atualizado com sucesso!', 'success');
+      fetchProfile(); // Refresh to get updated slug
+    } catch (error: any) {
+      console.error('Erro ao atualizar perfil:', error);
+      if (error.code === '23505' && error.message?.includes('perfis_apelido_key')) {
+        addToast('Este apelido já está em uso. Por favor, escolha outro.', 'error');
+      } else {
+        addToast('Erro ao atualizar perfil.', 'error');
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      setUploading(true);
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar-${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      setProfile(prev => ({ ...prev, avatar: publicUrl }));
+
+      await supabase
+        .from('perfis')
+        .update({
+          avatar: publicUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      addToast('Foto de perfil atualizada!', 'success');
+
+    } catch (error) {
+      console.error('Erro ao fazer upload da foto:', error);
+      addToast('Erro ao fazer upload da foto.', 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // --- Security Handlers ---
+
+  const handleChangePassword = async () => {
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      addToast('As senhas não coincidem.', 'error');
+      return;
+    }
+
+    if (passwords.newPassword.length < 6) {
+      addToast('A senha deve ter pelo menos 6 caracteres.', 'error');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const { error } = await supabase.auth.updateUser({
+        password: passwords.newPassword
+      });
+
+      if (error) throw error;
+
+      addToast('Senha alterada com sucesso!', 'success');
+      setPasswords({ newPassword: '', confirmPassword: '' });
+    } catch (error: any) {
+      console.error('Erro ao alterar senha:', error);
+      addToast('Erro ao alterar senha: ' + error.message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!confirm('ATENÇÃO: Esta ação é irreversível. Todos os seus dados serão apagados. Tem certeza?')) return;
+
+    try {
+      setDeleting(true);
+
+      const { error } = await supabase.rpc('delete_own_account');
+
+      if (error) throw error;
+
+      addToast('Conta excluída com sucesso.', 'success');
+      await signOut();
+      navigate('/login');
+    } catch (error: any) {
+      console.error('Erro ao excluir conta:', error);
+      addToast('Erro ao excluir conta: ' + error.message, 'error');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // --- Notification Handlers ---
+
+  const toggleNotification = (key: keyof typeof notifications) => {
+    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const saveNotifications = async () => {
+    if (!user) return;
+    try {
+      setSaving(true);
+      const { error } = await supabase
+        .from('perfis')
+        .update({ preferencias_notificacao: notifications })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      addToast('Preferências salvas!', 'success');
+    } catch (error) {
+      console.error('Erro ao salvar preferências:', error);
+      addToast('Erro ao salvar preferências.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+
+  return (
+    <div className="max-w-5xl mx-auto pb-12">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Configurações da Conta</h2>
+
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* Sidebar Navigation */}
+        <div className="w-full md:w-64 shrink-0">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden sticky top-24">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`w-full flex items-center space-x-3 px-4 py-4 text-left transition-colors ${activeTab === 'profile' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-l-4 border-primary-500' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-750'}`}
+            >
+              <User size={20} />
+              <span className="font-medium">Perfil</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('slug')}
+              className={`w-full flex items-center space-x-3 px-4 py-4 text-left transition-colors ${activeTab === 'slug' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-l-4 border-primary-500' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-750'}`}
+            >
+              <MapPin size={20} />
+              <span className="font-medium">Sua Página</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('security')}
+              className={`w-full flex items-center space-x-3 px-4 py-4 text-left transition-colors ${activeTab === 'security' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-l-4 border-primary-500' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-750'}`}
+            >
+              <Lock size={20} />
+              <span className="font-medium">Segurança</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('notifications')}
+              className={`w-full flex items-center space-x-3 px-4 py-4 text-left transition-colors ${activeTab === 'notifications' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-l-4 border-primary-500' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-750'}`}
+            >
+              <Bell size={20} />
+              <span className="font-medium">Notificações</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-8 min-h-[500px]">
+
+            {activeTab === 'profile' && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300" data-tour="profile-settings">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Informações Pessoais</h3>
+
+                <div className="flex items-center mb-8">
+                  <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                    <img
+                      src={profile.avatar || `https://ui-avatars.com/api/?name=${profile.name}`}
+                      alt="Profile"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg"
+                    />
+                    <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      {uploading ? <Loader2 className="text-white animate-spin" size={24} /> : <Camera className="text-white" size={24} />}
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                    accept="image/*"
+                  />
+                  <div className="ml-6">
+                    <h4 className="font-bold text-lg text-gray-900 dark:text-white">Sua Foto de Perfil</h4>
+                    <p className="text-sm text-gray-500 dark:text-slate-400 mb-3">Faça o upload de uma nova foto.</p>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="px-4 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
+                    >
+                      {uploading ? 'Enviando...' : 'Fazer Upload'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  {/* READ-ONLY VITAL FIELDS */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                      Nome <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.name}
+                      disabled
+                      className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                      title="Este campo só pode ser alterado pelos administradores"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                      Sobrenome <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.sobrenome}
+                      disabled
+                      className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                      title="Este campo só pode ser alterado pelos administradores"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={profile.email}
+                      disabled
+                      className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                      title="Este campo só pode ser alterado pelos administradores"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                      CPF <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.cpf}
+                      disabled
+                      className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                      title="Este campo só pode ser alterado pelos administradores"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                      WhatsApp <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={profile.phone}
+                      disabled
+                      onChange={e => setProfile({ ...profile, phone: e.target.value })}
+                      placeholder="(XX) XXXXX-XXXX"
+                      className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                      CRECI <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.creci}
+                      disabled
+                      className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                      title="Este campo só pode ser alterado pelos administradores"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                      UF do CRECI <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.ufCreci}
+                      disabled
+                      className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                      title="Este campo só pode ser alterado pelos administradores"
+                    />
+                  </div>
+                </div>
+
+                {/* Aviso ADM */}
+
+                <div className="bg-red-50 dark:bg-red-900/10 p-6 rounded-xl border border-red-100 dark:border-red-900/30 mb-8">
+                  <h4 className="font-bold text-red-600 dark:text-red-400 mb-2 flex items-center">
+                    <AlertTriangle size={18} className="mr-2" /> Dados Restritos
+                  </h4>
+                  <p className="text-sm text-red-600/70 dark:text-red-400/70 mb-4">
+                    Somente Administradores poderão alterar seus dados pessoais, por questões de segurança. Fale com um Administrador clicando no botão abaixo.
+                  </p>
+                  <a
+                    href="mailto:admin@izibrokerz.com?subject=Solicitação de Alteração de Dados Pessoais&body=Olá, gostaria de solicitar a alteração dos meus dados pessoais cadastrados.%0D%0A%0D%0AMeu Nome: [SEU NOME]%0D%0AMeu Email: [SEU EMAIL]%0D%0A%0D%0ADados que preciso alterar:%0D%0A- [DESCREVA AQUI]"
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold transition-colors flex items-center w-fit"
+                  >
+                    <Phone size={16} className="mr-2" />
+                    Falar com ADMIN
+                  </a>
+                </div>
+
+
+                {/* ADDRESS SECTION */}
+                <div className="border-t border-gray-200 dark:border-slate-700 pt-6 mb-8">
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <MapPin size={20} className="mr-2 text-primary-500" /> Endereço
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">CEP</label>
+                      <input
+                        type="text"
+                        value={profile.cep}
+                        onChange={e => setProfile({ ...profile, cep: e.target.value })}
+                        onBlur={e => fetchCep(e.target.value)}
+                        placeholder="00000-000"
+                        maxLength={9}
+                        className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                      />
+                      {loadingCep && <p className="text-xs text-primary-500 mt-1">Buscando CEP...</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Logradouro</label>
+                      <input
+                        type="text"
+                        value={profile.logradouro}
+                        disabled
+                        className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Número</label>
+                      <input
+                        type="text"
+                        value={profile.numero}
+                        onChange={e => setProfile({ ...profile, numero: e.target.value })}
+                        className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Complemento</label>
+                      <input
+                        type="text"
+                        value={profile.complemento}
+                        onChange={e => setProfile({ ...profile, complemento: e.target.value })}
+                        className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Bairro</label>
+                      <input
+                        type="text"
+                        value={profile.bairro}
+                        disabled
+                        className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Cidade</label>
+                      <input
+                        type="text"
+                        value={profile.cidade}
+                        disabled
+                        className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">UF</label>
+                      <input
+                        type="text"
+                        value={profile.uf}
+                        disabled
+                        className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="showAddress"
+                        checked={profile.showAddress}
+                        onChange={e => setProfile({ ...profile, showAddress: e.target.checked })}
+                        className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                      />
+                      <label htmlFor="showAddress" className="text-sm font-medium text-gray-700 dark:text-slate-300">
+                        Exibir Endereço Em Sua Página?
+                      </label>
+                    </div>
+
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-6 border-t border-gray-100 dark:border-slate-700">
+                  <button
+                    onClick={handleSaveProfile}
+                    disabled={saving}
+                    className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-lg shadow-lg shadow-primary-500/30 flex items-center transition-colors disabled:opacity-50"
+                  >
+                    {saving ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Save size={18} className="mr-2" />}
+                    {saving ? 'Salvando...' : 'Salvar Alterações'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'slug' && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Personalize sua Página de Imóveis</h3>
+
+                {/* Slug Display and Visit Button */}
+                {profile.slug && (
+                  <div className="mb-6 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Endereço da Sua Página Pública <span className="text-red-500">*</span></p>
+                        <p className="text-primary-600 dark:text-primary-400 font-mono text-sm">
+                          {window.location.origin}/#/corretor/{profile.slug}
+                        </p>
+                      </div>
+                      <a
+                        href={`/#/corretor/${profile.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                      >
+                        Visitar Página <ExternalLink size={16} />
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-8" data-tour="logo-upload">
+                  {/* Marca D'Água Modo Claro */}
+                  <div className="p-6 bg-gray-50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700">
+                    <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Marca D'Água - Modo Claro</h4>
+                    <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">
+                      Esta marca será exibida nas fotos quando o site estiver em modo claro.
+                    </p>
+                    <div className="flex items-center gap-4">
+                      {profile.watermarkLight && (
+                        <img
+                          src={profile.watermarkLight}
+                          alt="Marca d'água modo claro"
+                          className="w-32 h-32 object-contain border border-gray-300 dark:border-slate-600 rounded-lg bg-white p-2"
+                        />
+                      )}
+                      <button
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = (e: any) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              // Upload logic here - similar to avatar upload
+                              const reader = new FileReader();
+                              reader.onload = (e) => {
+                                setProfile(prev => ({ ...prev, watermarkLight: e.target?.result as string }));
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          };
+                          input.click();
+                        }}
+                        className="px-4 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
+                      >
+                        {profile.watermarkLight ? 'Alterar Imagem' : 'Fazer Upload'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Marca D'Água Modo Escuro */}
+                  <div className="p-6 bg-gray-50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700">
+                    <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Marca D'Água - Modo Escuro</h4>
+                    <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">
+                      Esta marca será exibida nas fotos quando o site estiver em modo escuro.
+                    </p>
+                    <div className="flex items-center gap-4">
+                      {profile.watermarkDark && (
+                        <img
+                          src={profile.watermarkDark}
+                          alt="Marca d'água modo escuro"
+                          className="w-32 h-32 object-contain border border-gray-300 dark:border-slate-600 rounded-lg bg-slate-800 p-2"
+                        />
+                      )}
+                      <button
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = (e: any) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              // Upload logic here - similar to avatar upload
+                              const reader = new FileReader();
+                              reader.onload = (e) => {
+                                setProfile(prev => ({ ...prev, watermarkDark: e.target?.result as string }));
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          };
+                          input.click();
+                        }}
+                        className="px-4 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
+                      >
+                        {profile.watermarkDark ? 'Alterar Imagem' : 'Fazer Upload'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-6 border-t border-gray-100 dark:border-slate-700">
+                  <button
+                    onClick={handleSaveProfile}
+                    disabled={saving}
+                    className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-lg shadow-lg shadow-primary-500/30 flex items-center transition-colors disabled:opacity-50"
+                  >
+                    {saving ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Save size={18} className="mr-2" />}
+                    {saving ? 'Salvando...' : 'Salvar Alterações'}
+                  </button>
+                </div>
+
+              </div>
+            )}
+
+            {activeTab === 'security' && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Segurança da Conta</h3>
+
+                <div className="space-y-6">
+                  <div className="bg-gray-50 dark:bg-slate-900/50 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
+                    <h4 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                      <Lock size={18} className="mr-2 text-primary-500" /> Alterar Senha
+                    </h4>
+
+                    <div className="space-y-4 max-w-md">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nova Senha</label>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            value={passwords.newPassword}
+                            onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
+                            className="w-full px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Confirmar Nova Senha</label>
+                        <input
+                          type="password"
+                          value={passwords.confirmPassword}
+                          onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                          className="w-full px-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      <button
+                        onClick={handleChangePassword}
+                        disabled={saving || !passwords.newPassword}
+                        className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {saving ? 'Alterando...' : 'Atualizar Senha'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="bg-red-50 dark:bg-red-900/10 p-6 rounded-xl border border-red-100 dark:border-red-900/30">
+                    <h4 className="font-bold text-red-600 dark:text-red-400 mb-2 flex items-center">
+                      <AlertTriangle size={18} className="mr-2" /> Zona de Perigo
+                    </h4>
+                    <p className="text-sm text-red-600/70 dark:text-red-400/70 mb-4">
+                      Excluir sua conta é uma ação permanente e não poderá ser desfeita. Todos os seus dados, imóveis e leads serão perdidos.
+                    </p>
+                    <button
+                      onClick={handleDeleteAccount}
+                      disabled={deleting}
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold transition-colors flex items-center disabled:opacity-50"
+                    >
+                      {deleting ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Trash2 size={16} className="mr-2" />}
+                      {deleting ? 'Excluindo...' : 'Excluir Minha Conta'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'notifications' && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Preferências de Notificação</h3>
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-slate-700">
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white">Novas Leads</h4>
+                      <p className="text-xs text-gray-500">Receber notificações quando um novo lead for cadastrado.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={notifications.leads}
+                        onChange={() => toggleNotification('leads')}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-500"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-slate-700">
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white">Mensagens</h4>
+                      <p className="text-xs text-gray-500">Receber notificações de novas mensagens no chat.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={notifications.messages}
+                        onChange={() => toggleNotification('messages')}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-500"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-slate-700">
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white">Atualizações de Imóveis</h4>
+                      <p className="text-xs text-gray-500">Receber alertas sobre mudanças em seus imóveis.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={notifications.properties}
+                        onChange={() => toggleNotification('properties')}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-500"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-slate-700">
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white">Marketing e Dicas</h4>
+                      <p className="text-xs text-gray-500">Receber novidades e dicas da plataforma.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={notifications.marketing}
+                        onChange={() => toggleNotification('marketing')}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-500"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={saveNotifications}
+                    disabled={saving}
+                    className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-lg shadow-lg shadow-primary-500/30 flex items-center transition-colors disabled:opacity-50"
+                  >
+                    {saving ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Save size={18} className="mr-2" />}
+                    {saving ? 'Salvando...' : 'Salvar Preferências'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </div >
+    </div >
+  );
+};
