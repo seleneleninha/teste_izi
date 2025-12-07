@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { MapPin, Phone, Mail, Building2, Home, CheckCircle2, Search, Heart } from 'lucide-react';
+import { MapPin, Phone, Mail, Building2, Home, CheckCircle2, Search, Heart, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign } from 'lucide-react';
+import { HorizontalScroll } from '../components/HorizontalScroll';
 import { PropertyCard } from '../components/PropertyCard';
 import { useTheme } from '../components/ThemeContext';
 import { Footer } from '../components/Footer';
+import { getRandomBackground } from '../lib/backgrounds';
 
 interface BrokerProfile {
     id: string;
@@ -15,7 +17,6 @@ interface BrokerProfile {
     creci: string;
     uf_creci: string;
     avatar: string;
-    cargo: string;
     slug: string;
     cep: string;
     logradouro: string;
@@ -27,6 +28,12 @@ interface BrokerProfile {
     show_address: boolean;
     watermark_light: string;
     watermark_dark: string;
+    instagram?: string;
+    facebook?: string;
+    threads?: string;
+    youtube?: string;
+    linkedin?: string;
+    x?: string;
 }
 
 interface Property {
@@ -56,12 +63,11 @@ export const BrokerPage: React.FC = () => {
     const [ownProperties, setOwnProperties] = useState<Property[]>([]);
     const [partnerProperties, setPartnerProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
+    const [bgImage, setBgImage] = useState(getRandomBackground());
 
     useEffect(() => {
         if (slug) {
             fetchBrokerData();
-            // Salvar slug no sessionStorage para uso no PropertyDetails
-            sessionStorage.setItem('brokerSlug', slug);
         }
     }, [slug]);
 
@@ -178,23 +184,15 @@ export const BrokerPage: React.FC = () => {
             <section className="relative h-[600px] flex items-center justify-center">
                 <div className="absolute inset-0 z-0">
                     <img
-                        src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1920"
+                        src={bgImage}
                         alt="Background"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-opacity duration-500"
                     />
-                    <div className="absolute inset-0 bg-slate-900/70"></div>
+                    <div className="absolute inset-0 bg-black/70"></div>
                 </div>
 
                 <div className="container mx-auto px-4 z-10 relative">
                     <div className="text-center">
-                        {/* Logo do Corretor */}
-                        {brokerLogo && (
-                            <img
-                                src={brokerLogo}
-                                alt={`${broker.nome} ${broker.sobrenome}`}
-                                className="h-20 w-auto mx-auto mb-6 object-contain"
-                            />
-                        )}
 
                         {/* Foto de Perfil */}
                         <img
@@ -206,10 +204,9 @@ export const BrokerPage: React.FC = () => {
                         <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight text-white">
                             {broker.nome} {broker.sobrenome}
                         </h1>
-                        <p className="text-gray-200 text-xl mb-6">{broker.cargo || 'Corretor de Imóveis'}</p>
 
                         {/* Informações de Contato */}
-                        <div className="flex flex-wrap gap-6 justify-center text-white mb-8">
+                        <div className="text-xl font-bold flex flex-wrap gap-6 justify-center text-white mb-8">
                             <a
                                 href={`https://wa.me/55${broker.whatsapp.replace(/\D/g, '')}`}
                                 className="flex items-center gap-2 hover:text-emerald-400 transition-colors"
@@ -217,6 +214,12 @@ export const BrokerPage: React.FC = () => {
                                 <Phone size={18} />
                                 {broker.whatsapp}
                             </a>
+
+                            <div className="text-emerald-400 flex items-center gap-2">
+                                <Building2 size={18} />
+                                CRECI {broker.creci}/{broker.uf_creci}
+                            </div>
+
                             <a
                                 href={`mailto:${broker.email}`}
                                 className="flex items-center gap-2 hover:text-emerald-400 transition-colors"
@@ -224,15 +227,45 @@ export const BrokerPage: React.FC = () => {
                                 <Mail size={18} />
                                 {broker.email}
                             </a>
-                            <div className="flex items-center gap-2">
-                                <Building2 size={18} />
-                                CRECI {broker.creci}/{broker.uf_creci}
-                            </div>
+                        </div>
+
+                        {/* Redes Sociais */}
+                        <div className="flex items-center justify-center gap-6 mb-8">
+                            {broker.instagram && (
+                                <a href={broker.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-pink-500 transition-colors">
+                                    <Instagram size={30} />
+                                </a>
+                            )}
+                            {broker.facebook && (
+                                <a href={broker.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-blue-500 transition-colors">
+                                    <Facebook size={30} />
+                                </a>
+                            )}
+                            {broker.linkedin && (
+                                <a href={broker.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
+                                    <Linkedin size={30} />
+                                </a>
+                            )}
+                            {broker.youtube && (
+                                <a href={broker.youtube} target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition-colors">
+                                    <Youtube size={30} />
+                                </a>
+                            )}
+                            {broker.x && (
+                                <a href={broker.x} target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 transition-colors">
+                                    <Twitter size={30} />
+                                </a>
+                            )}
+                            {broker.threads && (
+                                <a href={broker.threads} target="_blank" rel="noopener noreferrer" className="hover:text-gray-200 transition-colors">
+                                    <AtSign size={30} />
+                                </a>
+                            )}
                         </div>
 
                         {/* Endereço (se habilitado) */}
                         {broker.show_address && broker.logradouro && (
-                            <div className="flex items-start gap-2 text-primary-100 justify-center">
+                            <div className="text-sm flex items-start gap-2 text-primary-100 justify-center">
                                 <MapPin size={18} className="mt-1" />
                                 <span>
                                     {broker.logradouro}, {broker.numero}
@@ -246,7 +279,7 @@ export const BrokerPage: React.FC = () => {
             </section>
 
             {/* Seção de Estatísticas */}
-            <section className="py-16 bg-slate-950 text-white">
+            <section className="py-16 bg-slate-900 text-white">
                 <div className="container mx-auto px-4">
                     <div className="grid md:grid-cols-3 gap-8 text-center">
                         <div>
@@ -265,87 +298,63 @@ export const BrokerPage: React.FC = () => {
                 </div>
             </section>
 
-            {/* Diferenciais */}
-            <section className="py-20 bg-white dark:bg-slate-900">
-                <div className="container mx-auto px-4">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Meus Diferenciais</h2>
-                        <p className="text-gray-600 dark:text-gray-400">Por que escolher trabalhar comigo?</p>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-8">
-                        {[
-                            {
-                                icon: <Search className="w-8 h-8 text-emerald-500" />,
-                                title: "Atendimento Personalizado",
-                                description: "Cada cliente é único e merece atenção especial para encontrar o imóvel perfeito."
-                            },
-                            {
-                                icon: <Home className="w-8 h-8 text-emerald-500" />,
-                                title: "Amplo Portfólio",
-                                description: "Acesso a diversos imóveis exclusivos e oportunidades únicas no mercado."
-                            },
-                            {
-                                icon: <CheckCircle2 className="w-8 h-8 text-emerald-500" />,
-                                title: "Negociação Transparente",
-                                description: "Transparência total em todas as etapas do processo de compra ou locação."
-                            }
-                        ].map((feature, index) => (
-                            <div key={index} className="bg-gray-50 dark:bg-slate-800 p-8 rounded-2xl border border-gray-100 dark:border-slate-700 hover:border-emerald-500/50 transition-colors text-center group shadow-sm hover:shadow-md">
-                                <div className="w-16 h-16 bg-emerald-100 dark:bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-500/10 transition-colors">
-                                    {feature.icon}
-                                </div>
-                                <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">{feature.title}</h3>
-                                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{feature.description}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
             {/* Imóveis em Destaque */}
             <section className="py-20 bg-gray-50 dark:bg-slate-950">
                 <div className="container mx-auto px-4">
-                    <h2 className="text-3xl font-bold mb-12 text-gray-900 dark:text-white">Meus Imóveis em Destaque</h2>
-                    {ownProperties.length === 0 ? (
-                        <div className="text-center py-16">
-                            <Home size={64} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                                Nenhum imóvel cadastrado
-                            </h3>
-                            <p className="text-gray-600 dark:text-gray-400">
-                                Em breve teremos novos imóveis disponíveis.
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="grid md:grid-cols-4 gap-6">
-                            {ownProperties.slice(0, 8).map((property) => (
-                                <PropertyCard key={property.id} property={property} />
-                            ))}
+                    <div className="flex justify-center items-center gap-3 mb-12">
+                        <Home className="text-emerald-500" size={32} />
+                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Imóveis em Destaque</h2>
+                    </div>
+
+                    <HorizontalScroll itemWidth={288} gap={24} itemsPerPage={4}>
+                        {ownProperties.map((property) => (
+                            <div key={property.id} className="flex-none w-72" style={{ scrollSnapAlign: 'start' }}>
+                                <PropertyCard property={property} brokerSlug={slug} />
+                            </div>
+                        ))}
+                    </HorizontalScroll>
+
+                    {ownProperties.length === 0 && (
+                        <div className="text-center py-10 text-gray-500 dark:text-gray-400 bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700">
+                            <Home className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                            <p className="text-lg">Nenhum imóvel cadastrado no momento.</p>
                         </div>
                     )}
                 </div>
             </section>
 
-            {/* Você Também Pode Gostar (Parcerias) */}
+            {/* Imóveis de Parceiros */}
             {partnerProperties.length > 0 && (
                 <section className="py-20 bg-white dark:bg-slate-900">
                     <div className="container mx-auto px-4">
-                        <div className="flex items-center gap-3 mb-12">
-                            <Heart className="text-red-500" size={32} />
-                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Você Também Pode Gostar</h2>
+                        <div className="flex justify-center items-center gap-3 mb-12">
+                            <CheckCircle2 className="text-emerald-500" size={32} />
+                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Imóveis de Parceiros</h2>
                         </div>
-                        <div className="grid md:grid-cols-4 gap-6">
-                            {partnerProperties.slice(0, 8).map((property) => (
-                                <PropertyCard key={property.id} property={property} />
+
+                        <HorizontalScroll itemWidth={288} gap={24} itemsPerPage={4}>
+                            {partnerProperties.map((property) => (
+                                <div key={property.id} className="flex-none w-72" style={{ scrollSnapAlign: 'start' }}>
+                                    <PropertyCard property={property} brokerSlug={slug} />
+                                </div>
                             ))}
-                        </div>
+                        </HorizontalScroll>
                     </div>
                 </section>
             )}
 
-            {/* Footer Personalizado */}
-            <Footer partner={{ name: `${broker.nome} ${broker.sobrenome}`, email: broker.email, phone: broker.whatsapp, creci: broker.creci, logo: theme === 'dark' ? broker.watermark_light : broker.watermark_dark }} />
+            <Footer
+                partner={{
+                    name: `${broker.nome} ${broker.sobrenome}`,
+                    email: broker.email,
+                    phone: broker.whatsapp,
+                    creci: `${broker.creci}/${broker.uf_creci}`,
+                    logo: broker.watermark_dark,
+                    slug: broker.slug
+                }}
+            />
+
+
         </div>
     );
 };

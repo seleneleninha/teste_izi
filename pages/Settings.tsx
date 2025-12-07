@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
-import { User, Lock, Bell, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, AlertTriangle, ExternalLink, MapPin, Phone } from 'lucide-react';
+import { User, Lock, Bell, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, AlertTriangle, ExternalLink, MapPin, Phone, Share2, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { geocodeAddress } from '../lib/geocodingHelper';
 
@@ -44,7 +44,15 @@ export const Settings: React.FC = () => {
     raioAtuacao: 10,
     // Watermarks
     watermarkLight: '',
-    watermarkDark: ''
+    watermarkDark: '',
+    marcaDagua: '',
+    // Social Media
+    instagram: '',
+    facebook: '',
+    threads: '',
+    youtube: '',
+    linkedin: '',
+    x: ''
   });
 
   // Password State
@@ -70,10 +78,10 @@ export const Settings: React.FC = () => {
   ];
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchProfile();
     }
-  }, [user]);
+  }, [user?.id]);
 
   const fetchProfile = async () => {
     try {
@@ -95,7 +103,6 @@ export const Settings: React.FC = () => {
           creci: data.creci || '',
           ufCreci: data.uf_creci || '',
           avatar: data.avatar || user?.user_metadata?.avatar_url || '',
-          role: data.cargo || 'Corretor',
           slug: data.slug || '',
           cep: data.cep || '',
           logradouro: data.logradouro || '',
@@ -107,7 +114,15 @@ export const Settings: React.FC = () => {
           showAddress: data.show_address || false,
           raioAtuacao: data.raio_atuacao || 10,
           watermarkLight: data.watermark_light || '',
-          watermarkDark: data.watermark_dark || ''
+          watermarkDark: data.watermark_dark || '',
+          watermarkDark: data.watermark_dark || '',
+          marcaDagua: data.marca_dagua || '',
+          instagram: data.instagram || '',
+          facebook: data.facebook || '',
+          threads: data.threads || '',
+          youtube: data.youtube || '',
+          linkedin: data.linkedin || '',
+          x: data.x || ''
         });
 
         if (data.preferencias_notificacao) {
@@ -188,7 +203,6 @@ export const Settings: React.FC = () => {
         nome: profile.name,
         sobrenome: profile.sobrenome,
         apelido: profile.apelido || null, // Use null for empty string to avoid unique constraint on ""
-        cargo: profile.role,
         avatar: profile.avatar || null, // Use null instead of empty string
         whatsapp: profile.phone,
         cep: profile.cep,
@@ -202,6 +216,13 @@ export const Settings: React.FC = () => {
         raio_atuacao: profile.raioAtuacao || null,
         watermark_light: profile.watermarkLight || null,
         watermark_dark: profile.watermarkDark || null,
+        marca_dagua: profile.marcaDagua || null,
+        instagram: profile.instagram || null,
+        facebook: profile.facebook || null,
+        threads: profile.threads || null,
+        youtube: profile.youtube || null,
+        linkedin: profile.linkedin || null,
+        x: profile.x || null,
         preferencias_notificacao: notifications,
         updated_at: new Date().toISOString()
       };
@@ -270,6 +291,48 @@ export const Settings: React.FC = () => {
     } catch (error) {
       console.error('Erro ao fazer upload da foto:', error);
       addToast('Erro ao fazer upload da foto.', 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleWatermarkUpload = async (file: File, type: 'light' | 'dark' | 'marca') => {
+    if (!file || !user) return;
+
+    try {
+      setUploading(true);
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `watermark-${type}-${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/watermarks/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Update profile state based on type
+      if (type === 'light') {
+        setProfile(prev => ({ ...prev, watermarkLight: publicUrl }));
+      } else if (type === 'dark') {
+        setProfile(prev => ({ ...prev, watermarkDark: publicUrl }));
+      } else {
+        setProfile(prev => ({ ...prev, marcaDagua: publicUrl }));
+      }
+
+      addToast(`${type === 'marca' ? 'Marca d\'água' : 'Logotipo'} atualizado!`, 'success');
+
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      addToast('Erro ao fazer upload da imagem.', 'error');
     } finally {
       setUploading(false);
     }
@@ -354,43 +417,70 @@ export const Settings: React.FC = () => {
 
 
   return (
-    <div className="max-w-5xl mx-auto pb-12">
+    <div className="mt-6 max-w-5xl mx-auto pb-12">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Configurações da Conta</h2>
 
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar Navigation */}
+        {/* Sidebar Navigation */}
         <div className="w-full md:w-64 shrink-0">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden sticky top-24">
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`w-full flex items-center space-x-3 px-4 py-4 text-left transition-colors ${activeTab === 'profile' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-l-4 border-primary-500' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-750'}`}
-            >
-              <User size={20} />
-              <span className="font-medium">Perfil</span>
-            </button>
+          <div className="
+            bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:bg-slate-800/95 
+            md:bg-white md:dark:bg-slate-800
+            rounded-xl md:shadow-sm md:border border-gray-200 dark:border-slate-700 
+            overflow-hidden 
+            sticky top-[68px] md:top-24 z-20 
+            md:z-0
+          ">
+            <div className="flex flex-row md:flex-col overflow-x-auto p-2 md:p-0 gap-2 md:gap-0 no-scrollbar">
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`flex items-center space-x-3 px-4 py-2.5 md:py-4 transition-all whitespace-nowrap rounded-full md:rounded-none flex-shrink-0 md:flex-shrink
+                  ${activeTab === 'profile'
+                    ? 'bg-primary-500 text-white shadow-md md:shadow-none md:bg-primary-50 md:dark:bg-primary-900/20 md:text-primary-600 md:dark:text-primary-400 md:border-l-4 md:border-primary-500 font-bold md:font-medium'
+                    : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 md:hover:bg-gray-50 md:dark:hover:bg-slate-750 font-medium'
+                  }`}
+              >
+                <User size={20} />
+                <span>Perfil</span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('slug')}
-              className={`w-full flex items-center space-x-3 px-4 py-4 text-left transition-colors ${activeTab === 'slug' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-l-4 border-primary-500' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-750'}`}
-            >
-              <MapPin size={20} />
-              <span className="font-medium">Sua Página</span>
-            </button>
+              <button
+                onClick={() => setActiveTab('slug')}
+                className={`flex items-center space-x-3 px-4 py-2.5 md:py-4 transition-all whitespace-nowrap rounded-full md:rounded-none flex-shrink-0 md:flex-shrink
+                  ${activeTab === 'slug'
+                    ? 'bg-primary-500 text-white shadow-md md:shadow-none md:bg-primary-50 md:dark:bg-primary-900/20 md:text-primary-600 md:dark:text-primary-400 md:border-l-4 md:border-primary-500 font-bold md:font-medium'
+                    : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 md:hover:bg-gray-50 md:dark:hover:bg-slate-750 font-medium'
+                  }`}
+              >
+                <MapPin size={20} />
+                <span>Sua Página</span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('security')}
-              className={`w-full flex items-center space-x-3 px-4 py-4 text-left transition-colors ${activeTab === 'security' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-l-4 border-primary-500' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-750'}`}
-            >
-              <Lock size={20} />
-              <span className="font-medium">Segurança</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('notifications')}
-              className={`w-full flex items-center space-x-3 px-4 py-4 text-left transition-colors ${activeTab === 'notifications' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-l-4 border-primary-500' : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-750'}`}
-            >
-              <Bell size={20} />
-              <span className="font-medium">Notificações</span>
-            </button>
+              <button
+                onClick={() => setActiveTab('security')}
+                className={`flex items-center space-x-3 px-4 py-2.5 md:py-4 transition-all whitespace-nowrap rounded-full md:rounded-none flex-shrink-0 md:flex-shrink
+                  ${activeTab === 'security'
+                    ? 'bg-primary-500 text-white shadow-md md:shadow-none md:bg-primary-50 md:dark:bg-primary-900/20 md:text-primary-600 md:dark:text-primary-400 md:border-l-4 md:border-primary-500 font-bold md:font-medium'
+                    : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 md:hover:bg-gray-50 md:dark:hover:bg-slate-750 font-medium'
+                  }`}
+              >
+                <Lock size={20} />
+                <span>Segurança</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('notifications')}
+                className={`flex items-center space-x-3 px-4 py-2.5 md:py-4 transition-all whitespace-nowrap rounded-full md:rounded-none flex-shrink-0 md:flex-shrink
+                  ${activeTab === 'notifications'
+                    ? 'bg-primary-500 text-white shadow-md md:shadow-none md:bg-primary-50 md:dark:bg-primary-900/20 md:text-primary-600 md:dark:text-primary-400 md:border-l-4 md:border-primary-500 font-bold md:font-medium'
+                    : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 md:hover:bg-gray-50 md:dark:hover:bg-slate-750 font-medium'
+                  }`}
+              >
+                <Bell size={20} />
+                <span>Notificações</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -655,43 +745,66 @@ export const Settings: React.FC = () => {
 
             {activeTab === 'slug' && (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Personalize sua Página de Imóveis</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Personalize sua Página de Imóveis e Redes Sociais</h3>
 
                 {/* Slug Display and Visit Button */}
+                {/* Public Page URL Display - Enhanced */}
                 {profile.slug && (
-                  <div className="mb-6 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Endereço da Sua Página Pública <span className="text-red-500">*</span></p>
-                        <p className="text-primary-600 dark:text-primary-400 font-mono text-sm">
-                          {window.location.origin}/#/corretor/{profile.slug}
+                  <div className="mb-8 flex flex-col md:flex-row md:items-center gap-4 bg-gradient-to-r from-primary-50 to-white dark:from-slate-800 dark:to-slate-900 p-6 rounded-2xl border border-primary-100 dark:border-primary-900/50 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+
+                    <div className="flex-1 min-w-0 z-10">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg text-primary-600 dark:text-primary-400">
+                          <Share2 size={20} />
+                        </div>
+                        <p className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Endereço da Sua Página</p>
+                      </div>
+                      <div className="bg-white/50 dark:bg-black/20 rounded-lg p-2 border border-gray-100 dark:border-slate-700/50 backdrop-blur-sm">
+                        <p className="text-base md:text-lg font-mono font-bold text-primary-700 dark:text-primary-400 truncate select-all">
+                          {window.location.origin}/#/corretor/{profile.slug || 'configurar-slug'}
                         </p>
                       </div>
-                      <a
-                        href={`/#/corretor/${profile.slug}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                    </div>
+
+                    <div className="flex items-center gap-3 z-10 w-full md:w-auto">
+                      <button
+                        onClick={() => {
+                          const url = `${window.location.origin}/#/corretor/${profile.slug || 'configurar-slug'}`;
+                          navigator.clipboard.writeText(url);
+                          addToast('Link colado na sua área de transferência! 📋', 'success');
+                        }}
+                        className="flex-1 md:flex-none px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        title="Copiar Link"
                       >
-                        Visitar Página <ExternalLink size={16} />
-                      </a>
+                        <Share2 size={20} />
+                      </button>
+                      <button
+                        onClick={() => window.open(`/#/corretor/${profile.slug || 'configurar-slug'}`, '_blank')}
+                        className="px-4 py-3 bg-white dark:bg-slate-800 border-2 border-primary-100 dark:border-slate-600 text-primary-600 dark:text-slate-300 font-bold rounded-xl hover:bg-primary-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+                        title="Visitar Página"
+                      >
+                        <Eye size={20} />
+                      </button>
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-8" data-tour="logo-upload">
-                  {/* Marca D'Água Modo Claro */}
+                <div className="mb-4 space-y-8" data-tour="logo-upload">
+                  {/* Logotipos Modo Claro */}
                   <div className="p-6 bg-gray-50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700">
-                    <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Marca D'Água - Modo Claro</h4>
-                    <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">
-                      Esta marca será exibida nas fotos quando o site estiver em modo claro.
+                    <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Logotipo - Modo Claro</h4>
+                    <p className="text-sm text-gray-500 dark:text-slate-400 mb-2">
+                      Sua marca será exibida na sua página e no rodapé quando o site estiver em modo claro.
                     </p>
-                    <div className="flex items-center gap-4">
+                    <p className="text-md text-blue-600 dark:text-blue-400 mb-4">
+                      💡 Dica: Use imagens PNG com fundo transparente para melhor resultado.
+                    </p>
+                    <div className="mb-4 flex items-center gap-4">
                       {profile.watermarkLight && (
                         <img
                           src={profile.watermarkLight}
-                          alt="Marca d'água modo claro"
+                          alt="Logotipo modo claro"
                           className="w-32 h-32 object-contain border border-gray-300 dark:border-slate-600 rounded-lg bg-white p-2"
                         />
                       )}
@@ -702,35 +815,24 @@ export const Settings: React.FC = () => {
                           input.accept = 'image/*';
                           input.onchange = (e: any) => {
                             const file = e.target.files?.[0];
-                            if (file) {
-                              // Upload logic here - similar to avatar upload
-                              const reader = new FileReader();
-                              reader.onload = (e) => {
-                                setProfile(prev => ({ ...prev, watermarkLight: e.target?.result as string }));
-                              };
-                              reader.readAsDataURL(file);
-                            }
+                            if (file) handleWatermarkUpload(file, 'light');
                           };
                           input.click();
                         }}
-                        className="px-4 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
+                        disabled={uploading}
+                        className="px-4 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors disabled:opacity-50"
                       >
-                        {profile.watermarkLight ? 'Alterar Imagem' : 'Fazer Upload'}
+                        {uploading ? 'Enviando...' : (profile.watermarkLight ? 'Alterar Imagem' : 'Fazer Upload')}
                       </button>
                     </div>
-                  </div>
 
-                  {/* Marca D'Água Modo Escuro */}
-                  <div className="p-6 bg-gray-50 dark:bg-slate-900/50 rounded-xl border border-gray-200 dark:border-slate-700">
-                    <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Marca D'Água - Modo Escuro</h4>
-                    <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">
-                      Esta marca será exibida nas fotos quando o site estiver em modo escuro.
-                    </p>
+                    {/* Logotipo Modo Escuro */}
+                    <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Logotipo - Modo Escuro</h4>
                     <div className="flex items-center gap-4">
                       {profile.watermarkDark && (
                         <img
                           src={profile.watermarkDark}
-                          alt="Marca d'água modo escuro"
+                          alt="Logotipo modo escuro"
                           className="w-32 h-32 object-contain border border-gray-300 dark:border-slate-600 rounded-lg bg-slate-800 p-2"
                         />
                       )}
@@ -741,21 +843,143 @@ export const Settings: React.FC = () => {
                           input.accept = 'image/*';
                           input.onchange = (e: any) => {
                             const file = e.target.files?.[0];
-                            if (file) {
-                              // Upload logic here - similar to avatar upload
-                              const reader = new FileReader();
-                              reader.onload = (e) => {
-                                setProfile(prev => ({ ...prev, watermarkDark: e.target?.result as string }));
-                              };
-                              reader.readAsDataURL(file);
-                            }
+                            if (file) handleWatermarkUpload(file, 'dark');
                           };
                           input.click();
                         }}
-                        className="px-4 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
+                        disabled={uploading}
+                        className="px-4 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors disabled:opacity-50"
                       >
-                        {profile.watermarkDark ? 'Alterar Imagem' : 'Fazer Upload'}
+                        {uploading ? 'Enviando...' : (profile.watermarkDark ? 'Alterar Imagem' : 'Fazer Upload')}
                       </button>
+                    </div>
+
+                  </div>
+
+                  {/* Marca D'Água para Fotos */}
+                  <div className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Marca D'Água para Fotos</h4>
+                    <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">
+                      Esta marca será aplicada automaticamente nas fotos dos seus imóveis para proteger suas imagens.
+                    </p>
+                    <div className="flex items-center gap-4">
+                      {profile.marcaDagua && (
+                        <img
+                          src={profile.marcaDagua}
+                          alt="Marca d'água"
+                          className="w-32 h-32 object-contain border border-blue-300 dark:border-blue-600 rounded-lg bg-white/50 p-2"
+                        />
+                      )}
+                      <button
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = (e: any) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleWatermarkUpload(file, 'marca');
+                          };
+                          input.click();
+                        }}
+                        disabled={uploading}
+                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                      >
+                        {uploading ? 'Enviando...' : (profile.marcaDagua ? 'Alterar Marca D\'água' : 'Fazer Upload')}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Redes Sociais */}
+                  <div className="p-6 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700">
+                    <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4">Redes Sociais</h4>
+                    <p className="text-sm text-gray-500 dark:text-slate-400 mb-6">
+                      Adicione os links das suas redes sociais para que apareçam na sua página.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Instagram */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                          <Instagram size={16} className="text-pink-600" /> Instagram
+                        </label>
+                        <input
+                          type="text"
+                          value={profile.instagram}
+                          onChange={e => setProfile({ ...profile, instagram: e.target.value })}
+                          placeholder="https://instagram.com/seu.usuario"
+                          className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                        />
+                      </div>
+
+                      {/* Facebook */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                          <Facebook size={16} className="text-blue-600" /> Facebook
+                        </label>
+                        <input
+                          type="text"
+                          value={profile.facebook}
+                          onChange={e => setProfile({ ...profile, facebook: e.target.value })}
+                          placeholder="https://facebook.com/sua.pagina"
+                          className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                        />
+                      </div>
+
+                      {/* LinkedIn */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                          <Linkedin size={16} className="text-blue-700" /> LinkedIn
+                        </label>
+                        <input
+                          type="text"
+                          value={profile.linkedin}
+                          onChange={e => setProfile({ ...profile, linkedin: e.target.value })}
+                          placeholder="https://linkedin.com/in/seu-perfil"
+                          className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                        />
+                      </div>
+
+                      {/* YouTube */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                          <Youtube size={16} className="text-red-600" /> YouTube
+                        </label>
+                        <input
+                          type="text"
+                          value={profile.youtube}
+                          onChange={e => setProfile({ ...profile, youtube: e.target.value })}
+                          placeholder="https://youtube.com/@seu-canal"
+                          className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                        />
+                      </div>
+
+                      {/* X / Twitter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                          <Twitter size={16} className="text-gray-800 dark:text-gray-200" /> X (Twitter)
+                        </label>
+                        <input
+                          type="text"
+                          value={profile.x}
+                          onChange={e => setProfile({ ...profile, x: e.target.value })}
+                          placeholder="https://x.com/seu_usuario"
+                          className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                        />
+                      </div>
+
+                      {/* Threads */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                          <AtSign size={16} className="text-gray-900 dark:text-white" /> Threads
+                        </label>
+                        <input
+                          type="text"
+                          value={profile.threads}
+                          onChange={e => setProfile({ ...profile, threads: e.target.value })}
+                          placeholder="https://threads.net/@seu_usuario"
+                          className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -897,7 +1121,7 @@ export const Settings: React.FC = () => {
                   <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-slate-700">
                     <div>
                       <h4 className="font-medium text-gray-900 dark:text-white">Marketing e Dicas</h4>
-                      <p className="text-xs text-gray-500">Receber novidades e dicas da plataforma.</p>
+                      <p className="text-xs text-gray-500">Receber novidades e dicas da Plataforma.</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input

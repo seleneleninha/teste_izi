@@ -26,6 +26,7 @@ interface PropertyCardProps {
     showStatus?: boolean;
     compact?: boolean;
     onClick?: () => void;
+    brokerSlug?: string; // Pass broker context for partnership navigation
 }
 
 const OPERATION_LABELS: { [key: string]: string } = {
@@ -34,7 +35,7 @@ const OPERATION_LABELS: { [key: string]: string } = {
     venda_locacao: 'Venda/Locação',
 };
 
-export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, showStatus = false, compact = false, onClick }) => {
+export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, showStatus = false, compact = false, onClick, brokerSlug }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -79,7 +80,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
         if (onClick) {
             onClick();
         } else {
-            navigate(`/${generateSlug()}`);
+            // If brokerSlug is provided, add it as query param for partnership context
+            const slug = generateSlug();
+            const url = brokerSlug ? `/${slug}?broker=${brokerSlug}` : `/${slug}`;
+            navigate(url);
         }
     };
 
@@ -87,10 +91,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
     const operationLabel = OPERATION_LABELS[property.operacao] || property.operacao;
 
     const operationTagClass = () => {
-        const op = property.operacao?.toLowerCase();
+        const op = property.operacao?.toLowerCase()?.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         if (op === 'venda') return 'bg-red-600 text-white shadow-lg shadow-red-600/20';
-        if (op === 'locação') return 'bg-blue-600 text-white shadow-lg shadow-blue-600/20';
-        return 'bg-green-600 text-white shadow-lg shadow-green-600/20';
+        if (op === 'locacao') return 'bg-blue-600 text-white shadow-lg shadow-blue-600/20';
+        if (op?.includes('venda') && op?.includes('locacao')) return 'bg-green-600 text-white shadow-lg shadow-green-600/20';
+        return 'bg-gray-600 text-white shadow-lg shadow-gray-600/20';
     };
 
     const statusColors = {

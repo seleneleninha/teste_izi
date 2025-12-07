@@ -39,6 +39,7 @@ export const PropertiesList: React.FC = () => {
         const priceParam = params.get('price') || '';
         const cidadeParam = params.get('cidade');
         const bairroParam = params.get('bairro');
+        const brokerParam = params.get('broker') || '';
 
         // If city or neighborhood params exist, use them as search term if q is empty
         if (!qParam) {
@@ -57,7 +58,7 @@ export const PropertiesList: React.FC = () => {
         setSelectedPriceRange(priceParam);
 
         // Fetch properties with these params directly to avoid race conditions
-        fetchProperties(typeParam, operacaoParam, qParam, priceParam);
+        fetchProperties(typeParam, operacaoParam, qParam, priceParam, brokerParam);
     }, [location.search, isMyProperties, user]);
 
     useEffect(() => {
@@ -84,7 +85,8 @@ export const PropertiesList: React.FC = () => {
         typeOverride?: string,
         operacaoOverride?: string,
         termOverride?: string,
-        priceOverride?: string
+        priceOverride?: string,
+        brokerSlugOverride?: string
     ) => {
         setLoading(true);
         try {
@@ -93,7 +95,148 @@ export const PropertiesList: React.FC = () => {
             const operacao = operacaoOverride !== undefined ? operacaoOverride : selectedOperation;
             const term = termOverride !== undefined ? termOverride : searchTerm;
             const priceRange = priceOverride !== undefined ? priceOverride : selectedPriceRange;
+            const brokerSlug = brokerSlugOverride !== undefined ? brokerSlugOverride : '';
 
+            // If broker slug is provided, fetch broker's properties and partnerships
+            if (brokerSlug) {
+                // First, get broker's user_id from slug
+                const { data: brokerData, error: brokerError } = await supabase
+                    .from('perfis')
+                    .select('id')
+                    .eq('slug', brokerSlug)
+                    .single();
+
+                if (brokerError || !brokerData) {
+                    console.error('Error fetching broker:', brokerError);
+                    setLoading(false);
+                    return;
+                }
+
+                const brokerId = brokerData.id;
+
+                // Fetch broker's own properties
+                let ownPropertiesQuery = supabase
+                    .from('anuncios')
+                    .select(`
+                        *,
+                        tipo_imovel!inner (
+                            tipo
+                        ),
+                        operacao (
+                            tipo
+                        )
+                    `)
+                    .eq('user_id', brokerId)
+                    .eq('status_aprovacao', 'aprovado')
+                    .order('created_at', { ascending: false });
+
+                // Fetch partnership properties
+                const { data: partnershipsData } = await supabase
+                    .from('parcerias')
+                    .select('property_id')
+                    .eq('user_id', brokerId);
+
+                const partnershipPropertyIds = partnershipsData?.map(p => p.property_id) || [];
+
+                let partnerPropertiesQuery = partnershipPropertyIds.length > 0
+                    ? supabase
+                        .from('anuncios')
+                        .select(`
+                            *,
+                            tipo_imovel!inner (
+                                tipo
+                            ),
+                            operacao (
+                                tipo
+                            )
+                        `)
+                        .in('id', partnershipPropertyIds)
+                        .eq('status_aprovacao', 'aprovado')
+                        .order('created_at', { ascending: false })
+                    : null;
+
+                // Execute queries
+                const [ownResult, partnerResult] = await Promise.all([
+                    ownPropertiesQuery,
+                    partnerPropertiesQuery
+                ]);
+
+                // Combine results
+                const combinedData = [
+                    ...(ownResult.data || []),
+                    ...(partnerResult?.data || [])
+                ];
+
+                // Remove duplicates by id
+                const uniqueData = Array.from(new Map(combinedData.map(item => [item.id, item])).values());
+
+                // Apply filters
+                let filteredData = uniqueData;
+
+                if (type) {
+                    filteredData = filteredData.filter(p =>
+                        p.tipo_imovel?.tipo?.toLowerCase().includes(type.toLowerCase())
+                    );
+                }
+
+                if (term) {
+                    const searchLower = term.toLowerCase();
+                    filteredData = filteredData.filter(p =>
+                        p.titulo?.toLowerCase().includes(searchLower) ||
+                        p.descricao?.toLowerCase().includes(searchLower) ||
+                        p.bairro?.toLowerCase().includes(searchLower) ||
+                        p.cidade?.toLowerCase().includes(searchLower) ||
+                        p.uf?.toLowerCase().includes(searchLower)
+                    );
+                }
+
+                if (operacao) {
+                    filteredData = filteredData.filter(p => {
+                        const operacaoTipo = p.operacao?.tipo?.toLowerCase();
+                        if (operacao === 'venda') {
+                            return operacaoTipo === 'venda' || operacaoTipo === 'venda/locação' || operacaoTipo === 'venda/locacao';
+                        } else if (operacao === 'locacao') {
+                            return operacaoTipo === 'locação' || operacaoTipo === 'locacao' || operacaoTipo === 'venda/locação' || operacaoTipo === 'venda/locacao';
+                        }
+                        return true;
+                    });
+                }
+
+                if (priceRange) {
+                    const [min, max] = priceRange.split('-').map(Number);
+                    filteredData = filteredData.filter(p => {
+                        const price = p.valor_venda || p.valor_locacao || 0;
+                        return price >= min && price <= max;
+                    });
+                }
+
+                const formattedProperties = filteredData.map(p => ({
+                    id: p.id,
+                    cod_imovel: p.cod_imovel,
+                    titulo: p.titulo,
+                    cidade: p.cidade,
+                    bairro: p.bairro,
+                    valor_venda: p.valor_venda,
+                    valor_locacao: p.valor_locacao,
+                    fotos: p.fotos ? p.fotos.split(',') : [],
+                    operacao: p.operacao?.tipo || p.operacao,
+                    tipo_imovel: p.tipo_imovel?.tipo || p.tipo_imovel,
+                    quartos: p.quartos,
+                    banheiros: p.banheiros,
+                    vagas: p.vagas,
+                    area_priv: p.area_priv,
+                    latitude: p.latitude,
+                    longitude: p.longitude,
+                    user_id: p.user_id,
+                    status_aprovacao: p.status_aprovacao
+                }));
+
+                setProperties(formattedProperties);
+                setLoading(false);
+                return;
+            }
+
+            // Regular query (no broker filter)
             let query = supabase
                 .from('anuncios')
                 .select(`
@@ -167,7 +310,8 @@ export const PropertiesList: React.FC = () => {
                     area_priv: p.area_priv,
                     latitude: p.latitude,
                     longitude: p.longitude,
-                    user_id: p.user_id
+                    user_id: p.user_id,
+                    status_aprovacao: p.status_aprovacao // Added status_aprovacao
                 }));
                 setProperties(formattedProperties);
             }
@@ -228,7 +372,7 @@ export const PropertiesList: React.FC = () => {
                     <div className="flex flex-wrap items-center gap-3">
 
                         {/* Filters */}
-                        <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                             <select
                                 value={selectedOperation}
                                 onChange={e => setSelectedOperation(e.target.value)}
@@ -292,9 +436,9 @@ export const PropertiesList: React.FC = () => {
                         {user && (
                             <button
                                 onClick={() => navigate('/add-property')}
-                                className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+                                className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
                             >
-                                + Adicionar
+                                + Adicionar Imóvel
                             </button>
                         )}
                     </div>
@@ -319,6 +463,7 @@ export const PropertiesList: React.FC = () => {
                                     <PropertyCard
                                         key={prop.id}
                                         property={prop}
+                                        showStatus={isMyProperties}
                                         actions={
                                             (user && prop.user_id === user.id) ? (
                                                 <>

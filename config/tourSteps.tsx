@@ -3,12 +3,12 @@ import { TourStep } from '../components/OnboardingTour';
 export const ONBOARDING_TOUR_STEPS: TourStep[] = [
     {
         target: 'body',
-        title: '👋 Bem-vindo à iziBrokerz!',
+        title: '👋 Bem-vindo(a) à iziBrokerz!',
         placement: 'center',
         content: (
             <div>
                 <p className="mb-3">
-                    Estamos felizes em ter você aqui! Vamos fazer um tour rápido para você aproveitar 100% das funcionalidades da plataforma, ok?
+                    Estamos felizes em ter você aqui! Vamos fazer um tour rápido para você aproveitar 100% das funcionalidades da Plataforma, ok?
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                     Você pode pular este tour a qualquer momento, mas recomendamos fortemente que complete-o para não perder nenhum recurso importante.
@@ -23,18 +23,18 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
         content: (
             <div>
                 <p className="mb-3">
-                    <strong>Preencher todos os dados do seu cadastro é essencial!</strong> Isso traz mais confiabilidade e profissionalismo para seus clientes.
+                    <strong>Preencher todos os dados do seu cadastro é essencial!</strong> Isso traz mais confiabilidade e profissionalismo para seus Clientes.
                 </p>
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-3">
                     <p className="text-sm font-semibold mb-2">✅ Benefícios de um perfil completo:</p>
                     <ul className="text-xs space-y-1 ml-4 list-disc">
-                        <li>Clientes confiam mais em corretores com perfil completo</li>
+                        <li>Clientes confiam mais em Corretores com perfil completo</li>
                         <li>Sua página pública fica mais profissional</li>
                         <li>Desbloqueia recursos como Imóveis Parceiros</li>
                         <li>Melhora seu ranking nos resultados de busca</li>
                     </ul>
                 </div>
-                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                <p className="text-md text-amber-600 dark:text-amber-400 font-medium">
                     💡 Dica: Informe seu endereço, bairro e cidade, isso traz credibilidade para seus Clientes!
                 </p>
             </div>
@@ -58,7 +58,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                         <li>Diferencia você da concorrência</li>
                     </ul>
                 </div>
-                <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">
+                <p className="text-md text-purple-600 dark:text-purple-400 font-medium">
                     💡 Dica: Use logos em alta qualidade (PNG com fundo transparente)
                 </p>
             </div>
@@ -76,9 +76,9 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 mb-3">
                     <p className="text-sm font-semibold mb-2">🎯 Opções disponíveis:</p>
                     <ul className="text-xs space-y-1 ml-4 list-disc">
-                        <li>1km, 3km, 5km - Para corretores que trabalham em áreas específicas</li>
+                        <li>1km, 3km, 5km - Para Corretores que trabalham em áreas específicas</li>
                         <li>10km, 20km - Para maior abrangência</li>
-                        <li>Todo o Estado - Para máxima abrangência e oportunidades</li>
+                        <li>Estado - Para máxima abrangência e oportunidades</li>
                     </ul>
                 </div>
                 <p className="text-xs text-green-600 dark:text-green-400 font-medium">
@@ -94,12 +94,12 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
         content: (
             <div>
                 <p className="mb-3">
-                    <strong>Este é um dos recursos mais atraentes da iziBrokerz!</strong> Pouquíssimas plataformas oferecem isso!
+                    <strong>Este é um dos recursos mais atraentes da iziBrokerz!</strong> Pouquíssimas Plataformas oferecem isso!
                 </p>
                 <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-lg p-3 mb-3">
                     <p className="text-sm font-semibold mb-2">✨ Como funciona:</p>
                     <ul className="text-xs space-y-1 ml-4 list-disc">
-                        <li>Veja imóveis de outros corretores da sua região</li>
+                        <li>Veja imóveis de outros Corretores da sua região</li>
                         <li>Aceite parcerias e divida a comissão 50/50 (fifty)</li>
                         <li>Amplie seu portfólio sem precisar captar novos imóveis</li>
                         <li>Aumente suas chances de fechar negócios e faturar mais</li>
@@ -118,7 +118,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
         content: (
             <div>
                 <p className="mb-3">
-                    Parabéns! Agora você conhece os principais recursos da plataforma.
+                    Parabéns! Agora você conhece os principais recursos da Plataforma.
                 </p>
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-4 mb-3">
                     <p className="text-sm font-semibold mb-2">📝 Próximos passos recomendados:</p>

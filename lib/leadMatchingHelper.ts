@@ -155,27 +155,27 @@ export function calculateMatchScore(
 ): number {
     let score = 0;
 
-    // Operation match (30 points)
+    // Field 1: Operation (20 points)
     if (lead.operacao_interesse === property.operacao) {
-        score += 30;
+        score += 20;
     }
 
-    // Property type match (20 points)
+    // Field 2: Property type (20 points)
     if (lead.tipo_imovel_interesse === property.tipo_imovel) {
         score += 20;
     }
 
-    // City match (20 points)
+    // Field 3: City (20 points)
     if (lead.cidade_interesse === property.cidade) {
         score += 20;
     }
 
-    // Neighborhood match (10 points)
+    // Field 4: Neighborhood (20 points)
     if (lead.bairro_interesse === property.bairro) {
-        score += 10;
+        score += 20;
     }
 
-    // Price range match (10 points)
+    // Field 5: Price range (20 points)
     const propertyValue = property.valor_venda || property.valor_locacao || 0;
     if (
         lead.orcamento_min &&
@@ -183,7 +183,7 @@ export function calculateMatchScore(
         propertyValue >= lead.orcamento_min &&
         propertyValue <= lead.orcamento_max
     ) {
-        score += 10;
+        score += 20;
     }
 
     return score;

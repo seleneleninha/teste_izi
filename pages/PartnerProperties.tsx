@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
-import { MapPin, Home, Bed, Bath, Car, Maximize, Handshake, AlertCircle, CheckCircle, Grid, List, Map as MapIcon, Eye } from 'lucide-react';
+import { MapPin, Home, Bed, Bath, Car, Maximize, Handshake, AlertCircle, CheckCircle, Grid, List, Map as MapIcon, Eye, ArrowDown, Square, Ruler, HandshakeIcon } from 'lucide-react';
 import { filterPropertiesByRadius } from '../lib/distanceHelper';
 import { PropertyMap } from '../components/PropertyMap';
 import { navigateToProperty } from '../lib/propertyHelpers';
+import { HorizontalScroll } from '../components/HorizontalScroll';
+import { Area } from 'recharts';
 
 interface Property {
     id: string;
@@ -20,9 +22,9 @@ interface Property {
     fotos: string;
     operacao: any;
     tipo_imovel: any;
-    quartos: number;
-    banheiros: number;
-    vagas: number;
+    quartos: number | null;
+    banheiros: number | null;
+    vagas: number | null;
     area_priv: number;
     aceita_parceria: boolean;
     isPartnership?: boolean;
@@ -107,7 +109,7 @@ const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onClose, on
     );
 };
 
-const PropertyCard: React.FC<{ property: Property; onToggle: (property: Property, currentState: boolean) => void; compact?: boolean; actions?: React.ReactNode }> = ({ property, onToggle, compact, actions }) => {
+const PropertyCard: React.FC<{ property: Property; onToggle: (property: Property, currentState: boolean) => void; compact?: boolean; actions?: React.ReactNode; isTrial?: boolean }> = ({ property, onToggle, compact, actions, isTrial = false }) => {
     const navigate = useNavigate();
     const images = property.fotos ? property.fotos.split(',').filter(Boolean) : [];
     const price = property.valor_venda || property.valor_locacao || 0;
@@ -130,11 +132,11 @@ const PropertyCard: React.FC<{ property: Property; onToggle: (property: Property
     };
 
     const getOperationColor = (op: any) => {
-        const label = getOperationLabel(op);
-        if (label === 'Venda') return 'bg-blue-500';
-        if (label === 'Locação') return 'bg-orange-500';
-        if (label.includes('/')) return 'bg-purple-500'; // Venda/Locação
-        return 'bg-primary-500';
+        const label = getOperationLabel(op).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (label === 'venda') return 'bg-red-600';
+        if (label === 'locacao') return 'bg-blue-600';
+        if (label.includes('venda') && label.includes('locacao')) return 'bg-green-600';
+        return 'bg-gray-600';
     };
 
     const nextImage = (e: React.MouseEvent) => {
@@ -199,12 +201,12 @@ const PropertyCard: React.FC<{ property: Property; onToggle: (property: Property
                         <Home size={48} className="text-gray-400" />
                     </div>
                 )}
-                <div className={`absolute top-3 right-3 ${getOperationColor(property.operacao)} text-white px-3 py-1 rounded-full text-xs font-bold`}>
+                <div className={`absolute top-3 left-3 ${getOperationColor(property.operacao)} text-white px-3 py-1 rounded-full text-xs font-bold`}>
                     {getOperationLabel(property.operacao)}
                 </div>
                 {property.isPartnership && (
-                    <div className="absolute top-3 left-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                        <CheckCircle size={12} />
+                    <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                        <HandshakeIcon size={12} />
                         Aceita
                     </div>
                 )}
@@ -268,23 +270,30 @@ const PropertyCard: React.FC<{ property: Property; onToggle: (property: Property
                             <Eye size={16} />
                             Ver Anúncio
                         </button>
-                        <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-900/50 rounded-lg">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Aceita Parceria?
-                            </span>
-                            <button
-                                onClick={() => onToggle(property, property.isPartnership || false)}
-                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${property.isPartnership
-                                    ? 'bg-emerald-600'
-                                    : 'bg-gray-300 dark:bg-gray-600'
-                                    }`}
-                            >
-                                <span
-                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${property.isPartnership ? 'translate-x-6' : 'translate-x-1'
+                        {!isTrial && (
+                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-900/50 rounded-lg">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Aceita Parceria?
+                                </span>
+                                <button
+                                    onClick={() => onToggle(property, property.isPartnership || false)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${property.isPartnership
+                                        ? 'bg-emerald-600'
+                                        : 'bg-gray-300 dark:bg-gray-600'
                                         }`}
-                                />
-                            </button>
-                        </div>
+                                >
+                                    <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${property.isPartnership ? 'translate-x-6' : 'translate-x-1'
+                                            }`}
+                                    />
+                                </button>
+                            </div>
+                        )}
+                        {isTrial && (
+                            <div className="p-2 bg-amber-50 dark:bg-amber-900/20 text-xs text-amber-700 dark:text-amber-300 rounded text-center">
+                                Faça upgrade para aceitar parcerias
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -344,6 +353,8 @@ export const PartnerProperties: React.FC = () => {
         handleTogglePartnership(property, currentState);
     };
 
+    const [isTrialUser, setIsTrialUser] = useState(false);
+
     useEffect(() => {
         if (user) {
             fetchAllProperties();
@@ -356,11 +367,13 @@ export const PartnerProperties: React.FC = () => {
 
             const { data: userProfile, error: profileError } = await supabase
                 .from('perfis')
-                .select('cidade, uf, latitude, longitude, raio_atuacao')
+                .select('cidade, uf, latitude, longitude, raio_atuacao, is_trial')
                 .eq('id', user?.id)
                 .single();
 
             if (profileError) throw profileError;
+
+            setIsTrialUser(userProfile?.is_trial || false);
 
             // Check if user has city/UF configured
             if (!userProfile?.cidade || !userProfile?.uf) {
@@ -463,6 +476,43 @@ export const PartnerProperties: React.FC = () => {
             setProcessing(true);
 
             if (isActivating) {
+                // --- Trial Enforcement Logic ---
+                const { data: profile } = await supabase
+                    .from('perfis')
+                    .select('is_trial, trial_fim')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile?.is_trial) {
+                    // Check Expiration
+                    if (new Date() > new Date(profile.trial_fim)) {
+                        addToast('Seu período de teste expirou. Faça upgrade para aceitar novas parcerias.', 'error');
+                        setProcessing(false);
+                        return;
+                    }
+
+                    // Check Quantity Limit
+                    const { data: configData } = await supabase
+                        .from('admin_config')
+                        .select('value')
+                        .eq('key', 'trial_max_partnerships')
+                        .single();
+
+                    const trialPartnershipLimit = configData ? parseInt(configData.value) : 3;
+
+                    const { count } = await supabase
+                        .from('parcerias')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('user_id', user.id);
+
+                    if (count !== null && count >= trialPartnershipLimit) {
+                        addToast(`Limite de ${trialPartnershipLimit} parcerias atingido no plano Trial. Faça upgrade para aumentar.`, 'error');
+                        setProcessing(false);
+                        return;
+                    }
+                }
+                // -------------------------------
+
                 const { error } = await supabase
                     .from('parcerias')
                     .insert({
@@ -539,12 +589,11 @@ export const PartnerProperties: React.FC = () => {
                     <p className="text-gray-600 dark:text-gray-400">
                         Aceite parcerias com outros Corretores e aumente seu Faturamento!
                     </p>
-
                 </div>
 
                 {/* Radius Filter */}
                 {userLocation && !missingCity && (
-                    <div className="mb-8 bg-white dark:bg-slate-800 rounded-xl p-6 border border-gray-200 dark:border-slate-700">
+                    <div className="mb-8 bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                 <MapPin size={20} className="text-primary-500" />
@@ -555,22 +604,22 @@ export const PartnerProperties: React.FC = () => {
                             </span>
                         </div>
 
-                        <div className="flex flex-wrap gap-3">
+                        <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
                             {[1, 3, 5, 10, 20, null].map((radius) => (
                                 <button
                                     key={radius || 'all'}
                                     onClick={() => setUserRadius(radius || 999)}
-                                    className={`px-6 py-3 rounded-lg font-medium transition-all ${(radius === null && userRadius >= 999) || userRadius === radius
+                                    className={`px-3 py-2 rounded-xl font-medium transition-all ${(radius === null && userRadius >= 999) || userRadius === radius
                                         ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
                                         : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
                                         }`}
                                 >
-                                    {radius ? `${radius}km` : 'Todo o Estado'}
+                                    {radius ? `${radius}km` : 'Estado'}
                                 </button>
                             ))}
                         </div>
 
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+                        <p className="text-md text-gray-500 dark:text-gray-400 mt-4">
                             💡 Dica: Escolha um raio menor para focar em imóveis próximos à sua região de atuação
                         </p>
                     </div>
@@ -578,7 +627,7 @@ export const PartnerProperties: React.FC = () => {
 
                 {/* Alert for missing city */}
                 {missingCity && (
-                    <div className="mb-8 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800 rounded-xl p-6">
+                    <div className="mb-8 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800 rounded-2xl p-6">
                         <div className="flex items-start gap-4">
                             <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center flex-shrink-0">
                                 <AlertCircle className="text-amber-600 dark:text-amber-400" size={24} />
@@ -593,7 +642,7 @@ export const PartnerProperties: React.FC = () => {
                                 </p>
                                 <button
                                     onClick={() => navigate('/settings')}
-                                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
                                 >
                                     <MapPin size={16} />
                                     Ir para Configurações
@@ -603,7 +652,7 @@ export const PartnerProperties: React.FC = () => {
                     </div>
                 )}
 
-                {/* Available Properties Section - MOVED TO TOP */}
+                {/* Available Properties Section */}
                 {!missingCity && availableProperties.length > 0 && (
                     <div className="mb-12">
                         <div className="flex items-center justify-between mb-6">
@@ -617,10 +666,10 @@ export const PartnerProperties: React.FC = () => {
                             </div>
 
                             {/* View Mode Toggle */}
-                            <div className="flex gap-2 bg-gray-100 dark:bg-slate-800 p-1 rounded-lg">
+                            <div className="flex gap-2 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded transition-colors ${viewMode === 'grid'
+                                    className={`p-2 rounded-lg transition-colors ${viewMode === 'grid'
                                         ? 'bg-white dark:bg-slate-700 text-primary-500 shadow'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                         }`}
@@ -630,7 +679,7 @@ export const PartnerProperties: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded transition-colors ${viewMode === 'list'
+                                    className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
                                         ? 'bg-white dark:bg-slate-700 text-primary-500 shadow'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                         }`}
@@ -640,7 +689,7 @@ export const PartnerProperties: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setViewMode('map')}
-                                    className={`p-2 rounded transition-colors ${viewMode === 'map'
+                                    className={`p-2 rounded-lg transition-colors ${viewMode === 'map'
                                         ? 'bg-white dark:bg-slate-700 text-primary-500 shadow'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                         }`}
@@ -659,6 +708,7 @@ export const PartnerProperties: React.FC = () => {
                                         key={property.id}
                                         property={property}
                                         onToggle={onToggle}
+                                        isTrial={isTrialUser}
                                     />
                                 ))}
                             </div>
@@ -666,81 +716,81 @@ export const PartnerProperties: React.FC = () => {
 
                         {/* List View */}
                         {viewMode === 'list' && (
-                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+                            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
-                                        <thead className="bg-gray-50 dark:bg-slate-900/50 border-b border-gray-200 dark:border-slate-700">
+                                        <thead className="bg-gray-50 dark:bg-slate-700/50">
                                             <tr>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => handleSort('tipo_imovel')}>
-                                                    Tipo
-                                                </th>
-                                                <th className="px-2 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => handleSort('operacao')}>
-                                                    Op.
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => handleSort('bairro')}>
-                                                    Bairro
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => handleSort('cidade')}>
-                                                    Cidade
-                                                </th>
-                                                <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => handleSort('quartos')} title="Quartos">
-                                                    <Bed size={16} className="inline" />
-                                                </th>
-                                                <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => handleSort('banheiros')} title="Banheiros">
-                                                    <Bath size={16} className="inline" />
-                                                </th>
-                                                <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => handleSort('vagas')} title="Vagas">
-                                                    <Car size={16} className="inline" />
-                                                </th>
-                                                <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => handleSort('area_priv')} title="Área">
-                                                    <Maximize size={16} className="inline" />
-                                                </th>
-                                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800" onClick={() => handleSort('valor_venda')}>
-                                                    Valor
-                                                </th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                                                    Ações
-                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('tipo_imovel')}>Tipo</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('operacao')}>Op.</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('cidade')}>Cidade</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('bairro')}>Bairro</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('area_priv')}><Maximize size={14} /></th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('quartos')}><Bed size={14} /></th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('banheiros')}><Bath size={14} /></th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('vagas')}><Car size={14} /></th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_venda')}>Valor Venda</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_locacao')}>Valor Locação</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
-                                            {sortProperties(availableProperties).map((property) => {
-                                                const price = property.valor_venda || property.valor_locacao || 0;
-                                                const operacao = property.operacao?.replace('/', '/\n') || property.operacao;
-                                                return (
-                                                    <tr key={property.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
-                                                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{property.tipo_imovel}</td>
-                                                        <td className="px-2 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">{operacao}</td>
-                                                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{property.bairro}</td>
-                                                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{property.cidade}</td>
-                                                        <td className="px-2 py-3 text-sm text-center text-gray-600 dark:text-gray-400">{property.quartos || '-'}</td>
-                                                        <td className="px-2 py-3 text-sm text-center text-gray-600 dark:text-gray-400">{property.banheiros || '-'}</td>
-                                                        <td className="px-2 py-3 text-sm text-center text-gray-600 dark:text-gray-400">{property.vagas || '-'}</td>
-                                                        <td className="px-2 py-3 text-sm text-center text-gray-600 dark:text-gray-400">{property.area_priv || '-'}</td>
-                                                        <td className="px-4 py-3 text-sm text-right font-semibold text-emerald-600 dark:text-emerald-400">
-                                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(price)}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-sm">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <button
-                                                                    onClick={() => navigateToProperty(navigate, property, true)}
-                                                                    className="p-1.5 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
-                                                                    title="Ver Anúncio"
-                                                                >
-                                                                    <Eye size={16} />
-                                                                </button>
+                                            {sortProperties(availableProperties).map((property) => (
+                                                <tr key={property.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
+                                                    <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white capitalize">{property.tipo_imovel}</td>
+                                                    <td className="px-4 py-3">
+                                                        {(() => {
+                                                            const op = (property.operacao || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                                                            const isVenda = op === 'venda';
+                                                            const isLocacao = op === 'locacao';
+                                                            const isAmbos = op.includes('venda') && op.includes('locacao');
+
+                                                            return (
+                                                                <div className={`text-xs inline-flex px-2 py-0.5 rounded-full font-medium ${isVenda ? 'bg-red-600 text-white'
+                                                                    : isLocacao ? 'bg-blue-600 text-white'
+                                                                        : isAmbos ? 'bg-green-600 text-white'
+                                                                            : 'bg-gray-600 text-white'
+                                                                    }`}>
+                                                                    {property.operacao || 'N/A'}
+                                                                </div>
+                                                            );
+                                                        })()}
+                                                    </td>
+                                                    <td className="px-4 py-3">{property.cidade}</td>
+                                                    <td className="px-4 py-3">{property.bairro}</td>
+                                                    <td className="px-4 py-3 text-center">{property.area_priv}</td>
+                                                    <td className="px-4 py-3 text-center">{property.quartos}</td>
+                                                    <td className="px-4 py-3 text-center">{property.banheiros}</td>
+                                                    <td className="px-4 py-3 text-center">{property.vagas}</td>
+                                                    <td className="px-4 py-3 text-sm text-center font-semibold text-primary-600 dark:text-primary-400">
+                                                        {property.valor_venda ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(property.valor_venda) : '-'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm text-center font-semibold text-blue-600 dark:text-blue-400">
+                                                        {property.valor_locacao ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(property.valor_locacao) : '-'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <button
+                                                                onClick={() => navigateToProperty(navigate, property, true)}
+                                                                className="p-1.5 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
+                                                                title="Ver Anúncio"
+                                                            >
+                                                                <Eye size={16} />
+                                                            </button>
+                                                            {!isTrialUser && (
                                                                 <button
                                                                     onClick={() => onToggle(property, false)}
-                                                                    className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs rounded-lg transition-colors font-medium"
+                                                                    className="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-xs rounded-lg transition-colors font-medium"
                                                                     title="Aceitar Parceria"
                                                                 >
-                                                                    <Handshake size={14} className="inline" />
+                                                                    <Handshake size={14} className="inline mr-1" />
+                                                                    Aceitar
                                                                 </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
                                         </tbody>
                                     </table>
                                 </div>
@@ -749,57 +799,12 @@ export const PartnerProperties: React.FC = () => {
 
                         {/* Map View */}
                         {viewMode === 'map' && (
-                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden" style={{ height: '600px' }}>
+                            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 overflow-hidden" style={{ height: '600px' }}>
                                 <PropertyMap
                                     properties={availableProperties as any}
                                 />
                             </div>
                         )}
-                    </div>
-                )}
-
-                {/* Accepted Partnerships Section - MOVED TO BOTTOM */}
-                {!missingCity && acceptedProperties.length > 0 && (
-                    <div className="mb-8">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                    <CheckCircle className="text-emerald-500" size={28} />
-                                    Minhas Parcerias Aceitas
-                                </h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    {acceptedProperties.length} {acceptedProperties.length === 1 ? 'parceria ativa' : 'parcerias ativas'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {acceptedProperties.map((property) => (
-                                <PropertyCard
-                                    key={property.id}
-                                    property={property}
-                                    onToggle={onToggle}
-                                    actions={
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => navigateToProperty(navigate, property, true)}
-                                                className="flex-1 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                                            >
-                                                <Eye size={16} />
-                                                Ver Anúncio
-                                            </button>
-                                            <button
-                                                onClick={() => onToggle(property, true)}
-                                                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
-                                                title="Remover Parceria"
-                                            >
-                                                <Handshake size={16} />
-                                            </button>
-                                        </div>
-                                    }
-                                />
-                            ))}
-                        </div>
                     </div>
                 )}
 
@@ -817,7 +822,53 @@ export const PartnerProperties: React.FC = () => {
                         </p>
                     </div>
                 )}
-            </div>
+
+                {/* Accepted Partnerships Section */}
+                {!missingCity && acceptedProperties.length > 0 && (
+                    <div className="mb-8">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <CheckCircle className="text-primary-500" size={28} />
+                                    Minhas Parcerias Aceitas
+                                </h2>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    {acceptedProperties.length} {acceptedProperties.length === 1 ? 'parceria ativa' : 'parcerias ativas'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <HorizontalScroll itemWidth={320} gap={24} itemsPerPage={3}>
+                            {acceptedProperties.map((property) => (
+                                <div key={property.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
+                                    <PropertyCard
+                                        property={property}
+                                        onToggle={onToggle}
+                                        actions={
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => navigateToProperty(navigate, property, true)}
+                                                    className="flex-1 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <Eye size={16} />
+                                                    Ver Anúncio
+                                                </button>
+                                                <button
+                                                    onClick={() => onToggle(property, true)}
+                                                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors"
+                                                    title="Remover Parceria"
+                                                >
+                                                    <Handshake size={16} />
+                                                </button>
+                                            </div>
+                                        }
+                                    />
+                                </div>
+                            ))}
+                        </HorizontalScroll>
+                    </div>
+                )}
+            </div >
 
             <PartnershipModal
                 isOpen={modalOpen}

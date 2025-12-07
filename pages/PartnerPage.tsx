@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Star, Users, Building2, Handshake, Zap, Shield, BarChart3, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Check, Star, Users, Building2, Handshake, Zap, Shield, BarChart3, ArrowRight, CheckCircle2, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { Footer } from '../components/Footer';
@@ -96,7 +96,6 @@ export const PartnerPage: React.FC = () => {
         try {
             // In a real scenario, we would count rows. For now, we'll use approximate real numbers or mocks.
             // const { count: propCount } = await supabase.from('anuncios').select('*', { count: 'exact', head: true });
-            // const { count: brokerCount } = await supabase.from('perfis').select('*', { count: 'exact', head: true }).eq('cargo', 'Corretor');
 
             // Mocking for "selling" effect as requested
             setStats({
@@ -115,23 +114,23 @@ export const PartnerPage: React.FC = () => {
             <section className="relative py-20 lg:py-32 overflow-hidden">
                 <div className="absolute inset-0 z-0">
                     <img
-                        src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1920"
+                        src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1920"
                         alt="Office Background"
-                        className="w-full h-full object-cover opacity-20 dark:opacity-10"
+                        className="w-full h-full object-cover opacity-50 dark:opacity-70"
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/50 to-white dark:from-slate-900/80 dark:via-slate-900/50 dark:to-slate-900"></div>
                 </div>
 
                 <div className="container mx-auto px-4 relative z-10 text-center">
-                    <span className="inline-block py-1 px-3 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-sm font-semibold mb-6 animate-fade-in-up">
-                        Para Corretores e Imobiliárias
+                    <span className="inline-block py-1 px-3 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-lg font-semibold mb-6 animate-fade-in-up">
+                        Para Corretores Autônomos de todo Brasil
                     </span>
                     <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight animate-fade-in-up delay-100">
                         Acelere suas Vendas com o Poder da <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400">Colaboração Inteligente</span>
                     </h1>
                     <p className="text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto animate-fade-in-up delay-200">
-                        Junte-se à plataforma que está revolucionando o mercado imobiliário através de parcerias estratégicas e tecnologia de ponta.
+                        Junte-se à Plataforma que está revolucionando o mercado imobiliário através de parcerias estratégicas e tecnologia de ponta.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-300">
                         <button
@@ -142,7 +141,7 @@ export const PartnerPage: React.FC = () => {
                             <ArrowRight size={20} />
                         </button>
                         <button
-                            onClick={() => navigate('/login')}
+                            onClick={() => navigate('/login?register=true')}
                             className="px-8 py-4 bg-white dark:bg-slate-800 text-gray-700 dark:text-white border border-gray-200 dark:border-slate-700 rounded-xl font-bold text-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-all"
                         >
                             Já tenho conta
@@ -177,7 +176,7 @@ export const PartnerPage: React.FC = () => {
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">Por que escolher a iziBrokerz?</h2>
                         <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                            Nossa plataforma foi desenhada por corretores para corretores, focando no que realmente importa: fechar negócios.
+                            Nossa Plataforma foi desenvolvida por Corretores PARA CORRETORES! Focando no que realmente importa: FECHAR NEGÓCIOS E COLOCAR $$$ NO SEU BOLSO!!!.
                         </p>
                     </div>
 
@@ -185,33 +184,33 @@ export const PartnerPage: React.FC = () => {
                         {[
                             {
                                 icon: <Handshake className="w-10 h-10 text-emerald-500" />,
-                                title: "Sistema de Parcerias Único",
-                                description: "Conecte-se automaticamente com corretores que têm o cliente para o seu imóvel ou o imóvel para o seu cliente. Amplie seu estoque e sua carteira instantaneamente."
+                                title: "Sistema de Parcerias",
+                                description: "Conecte-se com corretores compatíveis. Encontre o cliente para seu imóvel ou o imóvel para seu cliente e multiplique suas chances de venda."
                             },
                             {
                                 icon: <Zap className="w-10 h-10 text-emerald-500" />,
                                 title: "Intuitiva e Objetiva",
-                                description: "Interface limpa e moderna, sem complicações. Cadastre imóveis em minutos e gerencie seus leads com facilidade, tanto no desktop quanto no mobile."
+                                description: "Interface limpa e eficiente. Cadastre imóveis rapidamente, gerencie leads e foque no que realmente importa: seus resultados."
                             },
                             {
                                 icon: <Shield className="w-10 h-10 text-emerald-500" />,
                                 title: "Segurança e Credibilidade",
-                                description: "Ambiente seguro para negociações. Todos os corretores são verificados pelo CRECI, garantindo parcerias sérias e profissionais."
+                                description: "Todos os corretores parceiros são verificados no CRECI/COFECI, garantindo segurança total para suas negociações."
                             },
                             {
                                 icon: <BarChart3 className="w-10 h-10 text-emerald-500" />,
                                 title: "Gestão de Leads Inteligente",
-                                description: "Não perca mais vendas. Nosso CRM integrado ajuda você a acompanhar cada etapa do funil de vendas e qualificar seus contatos."
+                                description: "CRM integrado para acompanhar cada etapa do funil. Qualifique contatos e não perca oportunidades de venda."
                             },
                             {
-                                icon: <Users className="w-10 h-10 text-emerald-500" />,
-                                title: "Rede de Colaboração",
-                                description: "Faça parte de uma comunidade ativa. Troque experiências, indicações e cresça junto com os melhores profissionais do mercado."
+                                icon: <Target className="w-10 h-10 text-emerald-500" />,
+                                title: "Match Inteligente",
+                                description: "Receba notificações automáticas quando um imóvel compatível com o perfil do seu lead for cadastrado na plataforma."
                             },
                             {
                                 icon: <Building2 className="w-10 h-10 text-emerald-500" />,
                                 title: "Importação XML (Em Breve)",
-                                description: "Traga seus imóveis de outros portais ou CRMs automaticamente. Estamos finalizando a integração para facilitar sua migração."
+                                description: "Integração futura para importar seus imóveis de outros portais automaticamente, facilitando a gestão do seu portfólio."
                             }
                         ].map((feature, idx) => (
                             <div key={idx} className="bg-gray-50 dark:bg-slate-800 p-8 rounded-2xl hover:shadow-lg transition-all border border-gray-100 dark:border-slate-700 group">
@@ -236,8 +235,19 @@ export const PartnerPage: React.FC = () => {
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">Escolha o Plano Ideal para Você</h2>
                         <p className="text-gray-600 dark:text-gray-400 mb-8">
-                            Comece com nosso teste grátis de 14 dias. Cancele a qualquer momento.
+                            Planos flexíveis que crescem com você.
                         </p>
+
+                        {/* Free Trial CTA moved here */}
+                        <div className="bg-emerald-50 dark:bg-slate-800/50 p-4 rounded-xl border border-emerald-100 dark:border-slate-700 max-w-xl mx-auto mb-8 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/login?register=true')}>
+                            <h4 className="font-bold text-emerald-700 dark:text-emerald-400 mb-1 flex items-center justify-center gap-2">
+                                <Star className="text-yellow-400 fill-yellow-400" size={20} />
+                                Teste Grátis por 14 dias
+                            </h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Sem cartão de crédito. Cancele quando quiser. <span className="underline font-bold text-emerald-600 cursor-pointer">Começar agora</span>
+                            </p>
+                        </div>
 
                         {/* Billing Toggle */}
                         <div className="flex items-center justify-center gap-4 mb-8">
@@ -255,60 +265,61 @@ export const PartnerPage: React.FC = () => {
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {plans.map((plan) => (
-                            <div
-                                key={plan.id}
-                                className={`relative bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border transition-all hover:-translate-y-2 ${plan.destaque
+                        {plans.map((plan) => {
+                            const monthlyCost = plan.preco_mensal * 12;
+                            const annualCost = plan.preco_anual;
+                            const savings = monthlyCost - annualCost;
+                            const savingsPercent = Math.round((savings / monthlyCost) * 100);
+
+                            return (
+                                <div
+                                    key={plan.id}
+                                    className={`relative bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border transition-all hover:-translate-y-2 ${plan.destaque
                                         ? 'border-emerald-500 ring-2 ring-emerald-500/20'
                                         : 'border-gray-100 dark:border-slate-700 hover:border-emerald-300'
-                                    }`}
-                            >
-                                {plan.destaque && (
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-md">
-                                        Mais Popular
-                                    </div>
-                                )}
-
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{plan.nome}</h3>
-                                <div className="mb-6">
-                                    <span className="text-3xl font-bold text-gray-900 dark:text-white">
-                                        R$ {billingCycle === 'monthly' ? plan.preco_mensal.toFixed(2).replace('.', ',') : (plan.preco_anual / 12).toFixed(2).replace('.', ',')}
-                                    </span>
-                                    <span className="text-gray-500 text-sm">/mês</span>
-                                    {billingCycle === 'annual' && (
-                                        <div className="text-xs text-emerald-500 font-medium mt-1">
-                                            Faturado R$ {plan.preco_anual.toFixed(2).replace('.', ',')} anualmente
+                                        }`}
+                                >
+                                    {plan.destaque && (
+                                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-md">
+                                            Mais Popular
                                         </div>
                                     )}
+
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{plan.nome}</h3>
+                                    <div className="mb-6">
+                                        <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                                            R$ {billingCycle === 'monthly' ? plan.preco_mensal.toFixed(2).replace('.', ',') : (plan.preco_anual / 12).toFixed(2).replace('.', ',')}
+                                        </span>
+                                        <span className="text-gray-500 text-sm">/mês</span>
+                                        {billingCycle === 'annual' && (
+                                            <div className="font-bold text-md text-emerald-500 mt-1">
+                                                Economize R$ {savings.toFixed(2).replace('.', ',')} no ano
+                                                <p className="font-light text-sm text-slate-900 dark:text-white">Pagamento único de R$ {plan.preco_anual.toFixed(2).replace('.', ',')}</p>
+                                            </div>
+
+                                        )}
+                                    </div>
+
+                                    <button
+                                        onClick={() => navigate('/login?register=true')}
+                                        className={`w-full py-3 rounded-xl font-bold mb-6 transition-colors ${plan.destaque
+                                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25'
+                                            : 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-900 dark:text-white'
+                                            }`}>
+                                        Assinar Agora
+                                    </button>
+
+                                    <ul className="space-y-3 text-sm">
+                                        {plan.features.map((feature, idx) => (
+                                            <li key={idx} className="flex items-start gap-2 text-gray-600 dark:text-gray-300">
+                                                <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+                                                <span>{feature}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </div>
-
-                                <button className={`w-full py-3 rounded-xl font-bold mb-6 transition-colors ${plan.destaque
-                                        ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25'
-                                        : 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-900 dark:text-white'
-                                    }`}>
-                                    Assinar Agora
-                                </button>
-
-                                <ul className="space-y-3 text-sm">
-                                    {plan.features.map((feature, idx) => (
-                                        <li key={idx} className="flex items-start gap-2 text-gray-600 dark:text-gray-300">
-                                            <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
-                                            <span>{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="mt-12 text-center bg-emerald-50 dark:bg-slate-800/50 p-6 rounded-xl border border-emerald-100 dark:border-slate-700 max-w-2xl mx-auto">
-                        <h4 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center justify-center gap-2">
-                            <Star className="text-yellow-400 fill-yellow-400" size={20} />
-                            Teste Grátis por 14 dias
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Experimente qualquer plano sem compromisso. Não pedimos cartão de crédito para começar.
-                        </p>
+                            )
+                        })}
                     </div>
                 </div>
             </section>
@@ -322,10 +333,10 @@ export const PartnerPage: React.FC = () => {
                         Junte-se a centenas de corretores que já estão fechando mais negócios com a iziBrokerz.
                     </p>
                     <button
-                        onClick={() => navigate('/login')}
+                        onClick={() => navigate('/login?register=true')}
                         className="px-10 py-4 bg-white text-emerald-600 rounded-xl font-bold text-lg shadow-xl hover:bg-gray-50 transition-all transform hover:scale-105"
                     >
-                        Criar Conta Gratuita
+                        Quero Testar por 14 dias
                     </button>
                 </div>
             </section>

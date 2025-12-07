@@ -166,7 +166,7 @@ export const AgentProfile: React.FC = () => {
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Sobre</h3>
                             <div className="bg-gray-50 dark:bg-slate-900/50 p-6 rounded-xl border border-gray-100 dark:border-slate-700">
                                 <p className="text-gray-600 dark:text-slate-300 leading-relaxed">
-                                    Corretor de imóveis profissional dedicado a encontrar as melhores oportunidades para meus clientes.
+                                    Corretor de imóveis profissional dedicado a encontrar as melhores oportunidades para meus Clientes.
                                     Com experiência no mercado imobiliário, ofereço um atendimento personalizado e transparente.
                                 </p>
                             </div>

@@ -18,7 +18,7 @@ export const PublicAIAssistant: React.FC = () => {
     const [messages, setMessages] = useState<Message[]>([
         {
             role: 'assistant',
-            content: 'Olá! 👋 Olá! Sou a IzA sua assistente virtual da iziBrokerz. Posso te ajudar a encontrar o imóvel perfeito ou esclarecer dúvidas sobre nossa plataforma. Como posso ajudar?',
+            content: 'Olá! 👋 Olá! Sou a IzA sua assistente virtual da iziBrokerz. Posso te ajudar a encontrar o imóvel perfeito ou esclarecer dúvidas sobre nossa Plataforma. Como posso ajudar?',
             timestamp: new Date()
         }
     ]);
@@ -77,7 +77,7 @@ export const PublicAIAssistant: React.FC = () => {
             }, {} as Record<string, number>);
 
             return `
-CONTEXTO DA PLATAFORMA IZIBROKERZ:
+CONTEXTO DA Plataforma IZIBROKERZ:
 
 Estatísticas Atuais:
 - Total de imóveis disponíveis: ${properties.length}
@@ -94,7 +94,7 @@ Funcionalidades da Plataforma para Corretores:
 - Sistema de parcerias "fifty" (divisão 50/50 de comissão)
 - Gestão completa de anúncios com fotos e descrições
 - CRM integrado para leads
-- Sistema de mensagens com clientes
+- Sistema de mensagens com Clientes
 - Calendário de eventos e visitas
 - Gestão financeira de transações
 - Página pública personalizada para cada corretor
@@ -138,7 +138,7 @@ Diferenciais:
 
             const prompt = `Você é a IzA, assistente virtual inteligente da iziBrokerz.
 
-CONHECIMENTO DA PLATAFORMA:
+CONHECIMENTO DA Plataforma:
 - Nome: ${PLATFORM_KNOWLEDGE.platform.name}
 - Missão: ${PLATFORM_KNOWLEDGE.platform.mission}
 - Sistema "fifty": ${PLATFORM_KNOWLEDGE.fiftyFifty.description}
@@ -150,6 +150,17 @@ CONHECIMENTO DA PLATAFORMA:
 
 FUNCIONALIDADES PRINCIPAIS:
 ${PLATFORM_KNOWLEDGE.platform.diferenciais.map(d => `- ${d}`).join('\n')}
+
+GUIAS RÁPIDOS (Como Fazer):
+${Object.values(PLATFORM_KNOWLEDGE.guides).map(g => `- ${g.title}: ${g.steps.join(' -> ')}`).join('\n')}
+
+TERMOS E POLÍTICAS:
+- Termos: ${PLATFORM_KNOWLEDGE.legal.termsOfUse}
+- Privacidade: ${PLATFORM_KNOWLEDGE.legal.privacyPolicy}
+- Regras de Comissão: ${PLATFORM_KNOWLEDGE.legal.commissionRules}
+
+DICAS DE VENDAS (Para Corretores):
+${PLATFORM_KNOWLEDGE.salesTips.map(t => `- ${t}`).join('\n')}
 
 DADOS REAIS DOS IMÓVEIS:
 ${propertyContext}
@@ -182,12 +193,13 @@ INSTRUÇÕES DE RESPOSTA:
    - Exemplo: "Temos X apartamentos em [cidade] a partir de R$ [valor]. Qual seu orçamento ideal?"
    - Direcione para a busca avançada: "Acesse nossa busca para ver todos os detalhes!"
 
-2. CORRETOR INTERESSADO:
-   - Destaque: "Sistema "fifty" - você divide 50/50 a comissão com parceiros!"
-   - Mencione: CRM gratuito, página personalizada, análise IA de bairros
+2. CORRETOR INTERESSADO / DÚVIDAS TÉCNICAS:
+   - Use os "GUIAS RÁPIDOS" para explicar passo-a-passo como usar a plataforma
+   - Destaque o sistema "fifty" e as regras de comissão se perguntado
+   - Ofereça dicas de vendas se o contexto permitir
    - Incentive cadastro: "Cadastre-se grátis e comece a anunciar hoje!"
 
-3. DÚVIDAS SOBRE A PLATAFORMA:
+3. DÚVIDAS SOBRE A Plataforma:
    - Explique funcionalidades de forma clara e objetiva
    - Sempre termine com uma ação: "Quer que eu te mostre como funciona?"
 
@@ -199,7 +211,8 @@ INSTRUÇÕES DE RESPOSTA:
 
 5. EXEMPLOS DE BOAS RESPOSTAS:
    - "Temos vários imóveis disponíveis! 🏠 Você busca para comprar ou alugar? Em qual cidade?"
-   - "Nosso sistema "fifty" é único: você anuncia grátis e divide comissões com parceiros! 🤝 Quer se cadastrar?"
+   - "Para cadastrar um imóvel é fácil: Faça login, clique em 'Novo Imóvel' e preencha os dados. Quer ajuda com a descrição?"
+   - "Nosso sistema 'fifty' divide a comissão 50/50. É ótimo para ampliar suas vendas! 🤝 Quer saber mais?"
    - "Encontrei diversos imóveis à venda. Qual seu orçamento e quantos quartos precisa? 🔍"
 
 RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
@@ -226,11 +239,11 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
             if (lowerInput.includes('imóvel') || lowerInput.includes('imovel') || lowerInput.includes('casa') || lowerInput.includes('apartamento')) {
                 fallbackMessage = `Temos diversos imóveis disponíveis! 🏠 Para ver todas as opções, acesse nossa busca avançada no menu. Posso te ajudar com algo mais específico?`;
             } else if (lowerInput.includes('corretor') || lowerInput.includes('parceria') || lowerInput.includes('cadastr')) {
-                fallbackMessage = `Nossa plataforma oferece sistema "fifty" único! 🤝 Cadastre-se gratuitamente e comece a anunciar. Quer saber mais sobre as funcionalidades?`;
+                fallbackMessage = `Nossa Plataforma oferece sistema "fifty" único! 🤝 Cadastre-se gratuitamente e comece a anunciar. Quer saber mais sobre as funcionalidades?`;
             } else if (lowerInput.includes('preço') || lowerInput.includes('preco') || lowerInput.includes('valor')) {
                 fallbackMessage = `Nossos imóveis têm valores variados para todos os perfis! 💰 Use os filtros de busca para encontrar dentro do seu orçamento. Qual faixa de preço você procura?`;
             } else {
-                fallbackMessage = `Estou aqui para ajudar! 😊 Posso te auxiliar a encontrar imóveis, explicar sobre nossa plataforma ou tirar dúvidas sobre parcerias. O que você gostaria de saber?`;
+                fallbackMessage = `Estou aqui para ajudar! 😊 Posso te auxiliar a encontrar imóveis, explicar sobre nossa Plataforma ou tirar dúvidas sobre parcerias. O que você gostaria de saber?`;
             }
 
             const errorMessage: Message = {

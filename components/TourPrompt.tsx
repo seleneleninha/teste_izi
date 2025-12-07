@@ -35,7 +35,7 @@ export const TourPrompt: React.FC<TourPromptProps> = ({
                             {dismissCount === 0 ? 'Ainda com dúvidas?' : 'Precisa de ajuda?'}
                         </h3>
                         <p className="text-sm text-white/90 mb-4">
-                            Faça um tour rápido pela plataforma e descubra todos os recursos disponíveis!
+                            Faça um tour rápido pela Plataforma e descubra todos os recursos disponíveis!
                         </p>
 
                         <button

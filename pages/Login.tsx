@@ -1,15 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Facebook, Globe, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../components/ToastContext';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { addToast } = useToast();
     const [isSignUp, setIsSignUp] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        if (params.get('register') === 'true') {
+            setIsSignUp(true);
+        }
+    }, [location]);
 
     // Form State
     const [email, setEmail] = useState('');
@@ -23,6 +31,7 @@ export const Login: React.FC = () => {
     const [creci, setCreci] = useState('');
     const [ufCreci, setUfCreci] = useState('');
     const [termsAccepted, setTermsAccepted] = useState(false);
+    const [trialAccepted, setTrialAccepted] = useState(false);
 
     const states = [
         'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
@@ -58,11 +67,6 @@ export const Login: React.FC = () => {
                     setLoading(false);
                     return;
                 }
-                if (!termsAccepted) {
-                    addToast('Você precisa aceitar os termos de uso.', 'error');
-                    setLoading(false);
-                    return;
-                }
                 if (cpf.length < 14) {
                     addToast('CPF inválido.', 'error');
                     setLoading(false);
@@ -81,7 +85,7 @@ export const Login: React.FC = () => {
                             whatsapp,
                             creci,
                             uf_creci: ufCreci,
-                            cargo: 'Corretor'
+                            is_trial: trialAccepted
                         }
                     }
                 });
@@ -108,7 +112,7 @@ export const Login: React.FC = () => {
 
                     // Redirect based on role
                     if (profile?.is_admin) {
-                        navigate('/admin');
+                        navigate('/dashboard'); // Redirect to main dashboard with X-Ray
                     } else {
                         navigate('/dashboard');
                     }
@@ -137,7 +141,7 @@ export const Login: React.FC = () => {
                         I
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {isSignUp ? 'Crie sua conta' : 'Bem-vindo de volta!'}
+                        {isSignUp ? 'Crie sua conta' : 'Bem-vindo(a) de volta!'}
                     </h2>
                     <p className="text-red-500 text-sm mt-1">
                         {isSignUp ? 'Preencha todos os campos para começar.' : 'Vamos faturar muito hoje, certo?'}
@@ -276,21 +280,42 @@ export const Login: React.FC = () => {
                     )}
 
                     {isSignUp && (
-                        <div className="flex items-start mt-4">
-                            <div className="flex items-center h-5">
-                                <input
-                                    id="terms"
-                                    type="checkbox"
-                                    checked={termsAccepted}
-                                    onChange={(e) => setTermsAccepted(e.target.checked)}
-                                    required
-                                    className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
-                                />
+                        <>
+
+                            <div className="flex items-start mt-4">
+
+                                <div className="flex items-center h-5">
+                                    <input
+                                        id="terms"
+                                        type="checkbox"
+                                        checked={termsAccepted}
+                                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                                        required
+                                        className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
+                                    />
+                                </div>
+                                <label htmlFor="terms" className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                                    Ao cadastrar-se na Plataforma você concorda com nosso <Link to="/terms" className="text-primary-600 hover:underline dark:text-primary-500">TERMO DE USO</Link> e nossa <Link to="/privacy" className="text-primary-600 hover:underline dark:text-primary-500">POLÍTICA DE PRIVACIDADE</Link> de acordo com a LGPD (Lei Geral de Proteção de Dados) vigente.
+                                </label>
                             </div>
-                            <label htmlFor="terms" className="ml-2 text-xs font-medium text-gray-900 dark:text-gray-300">
-                                Ao cadastrar-se na Plataforma você concorda com nosso <Link to="/terms" className="text-primary-600 hover:underline dark:text-primary-500">TERMO DE USO</Link> e nossa <Link to="/privacy" className="text-primary-600 hover:underline dark:text-primary-500">POLÍTICA DE PRIVACIDADE</Link> de acordo com a LGPD (Lei Geral de Proteção de Dados) vigente.
-                            </label>
-                        </div>
+
+                            <div className="flex items-start mt-4 p-3 bg-red-50 dark:bg-red-900/50 border border-red-100 dark:border-red-900/30 rounded-lg">
+                                <div className="flex items-center h-5">
+                                    <input
+                                        id="trial_terms"
+                                        type="checkbox"
+                                        checked={trialAccepted}
+                                        onChange={(e) => setTrialAccepted(e.target.checked)}
+                                        className="w-4 h-4 border border-gray-300 rounded bg-white focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
+                                    />
+                                </div>
+                                <label htmlFor="trial_terms" className="p-2 ml-2 text-sm font-bold text-gray-800 dark:text-gray-200 cursor-pointer">
+                                    QUERO TESTAR A PLATAFORMA POR 14 DIAS GRATUITAMENTE.
+                                    <br /><br />
+                                    <p>Desde já tenho ciência que haverão limitações nas funcionalidades neste período de testes, <span className="underline">NADA TENDO A RECLAMAR POSTERIORMENTE.</span></p>
+                                </label>
+                            </div>
+                        </>
                     )}
 
                     <button
@@ -298,16 +323,16 @@ export const Login: React.FC = () => {
                         disabled={loading}
                         className="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-primary-500/25 mt-6 flex items-center justify-center disabled:opacity-70"
                     >
-                        {loading ? <Loader2 size={20} className="animate-spin" /> : (isSignUp ? 'Cadastrar' : 'Entrar')}
+                        {loading ? <Loader2 size={20} className="animate-spin" /> : (isSignUp ? 'CADASTRAR' : 'ENTRAR')}
                     </button>
 
                     <div className="text-center mt-4">
                         <button
                             type="button"
                             onClick={() => setIsSignUp(!isSignUp)}
-                            className="text-sm text-primary-500 hover:underline"
+                            className="text-md font-bold text-primary-500 hover:underline"
                         >
-                            {isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem conta? Cadastre-se'}
+                            {isSignUp ? 'Já tem uma conta? Entre aqui' : 'Não tem conta? CADASTRE-SE'}
                         </button>
                     </div>
                 </form>

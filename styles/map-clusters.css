@@ -2,19 +2,23 @@
 .marker-cluster-small,
 .marker-cluster-medium,
 .marker-cluster-large {
-    background-color: rgba(59, 130, 246, 0.6) !important;
+    background-color: rgb(2, 28, 69) !important;
+    border-radius: 50% !important;
 }
 
 .marker-cluster-small div,
 .marker-cluster-medium div,
 .marker-cluster-large div {
-    background-color: rgb(59, 130, 246) !important;
+    background-color: transparent !important;
     color: white !important;
     font-weight: bold !important;
-    font-size: 14px !important;
+    font-size: 16px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 50% !important;
 }
 
 .marker-cluster {

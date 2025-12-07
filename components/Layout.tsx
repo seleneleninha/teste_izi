@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { useTheme } from './ThemeContext';
 import { Sun, Moon, Bell } from 'lucide-react';
 import { NotificationDropdown } from './NotificationDropdown';
+import { TrialBanner } from './TrialBanner';
 import { AIAssistant } from './AIAssistant';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -97,21 +98,27 @@ export const DashboardLayout: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200 flex">
             {/* Mobile hamburger */}
-            <button className="md:hidden p-2 fixed top-4 left-4 z-30" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-800 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button className="bg-emerald-500 dark:bg-emerald-600 rounded-full md:hidden p-2 fixed top-4 left-4 z-30" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
             </button>
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-            <main className="flex-1 ml-0 md:ml-64 p-8 overflow-y-auto h-screen relative">
-                {/* Top Header */}
-                <header className="flex justify-between items-center mb-8">
+            {/* Main content area with margin to account for fixed sidebar */}
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden md:ml-64">
+                {/* Topbar */}
+                <header className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm z-10">
+                    <div className="flex items-center">
+                        <h1 className="p-14 text-xl font-bold text-gray-800 dark:text-white truncate">
+                            {getTitle()}
+                        </h1>
+                    </div>
 
-                    <div className="flex items-center space-x-4 ml-auto">
+                    <div className="flex items-center space-x-4">
                         <button
                             onClick={toggleTheme}
-                            className="p-2 rounded-full bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 shadow-sm transition-colors"
+                            className="p-2 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
                         >
                             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                         </button>
@@ -122,51 +129,119 @@ export const DashboardLayout: React.FC = () => {
                                 className={`p-2 rounded-full bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 shadow-sm transition-colors relative ${showNotifications ? 'ring-2 ring-primary-500' : ''}`}
                             >
                                 <Bell size={20} />
-                                {unreadCount > 0 && (
+                                {notifications.some(n => !n.lida) && (
                                     <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
                                 )}
                             </button>
+
                             {showNotifications && (
                                 <NotificationDropdown
                                     notifications={notifications}
-                                    onClose={() => setShowNotifications(false)}
                                     onMarkAsRead={markAllAsRead}
+                                    onClose={() => setShowNotifications(false)}
                                 />
                             )}
                         </div>
                     </div>
                 </header>
 
-                <Outlet />
-
-                {/* Floating AI Assistant */}
-                <AIAssistant />
-            </main>
+                {/* Main Content */}
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-slate-900 scroll-smooth">
+                    <TrialBanner />
+                    <div className="max-w-7xl mx-auto animate-in fade-in duration-500">
+                        <Outlet />
+                    </div>
+                </main>
+            </div>
         </div>
     );
 };
 
 export const PublicLayout: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
+    const navigate = useNavigate();
+    const location = useLocation();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [brokerLogo, setBrokerLogo] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Check if we're on a broker page
+    const isBrokerPage = location.pathname.startsWith('/corretor/');
+    const brokerSlug = isBrokerPage ? location.pathname.split('/corretor/')[1] : null;
+
+    useEffect(() => {
+        const fetchBrokerLogo = async () => {
+            if (!brokerSlug) {
+                setIsLoading(false);
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('perfis')
+                    .select('watermark_light, watermark_dark, marca_dagua')
+                    .eq('slug', brokerSlug)
+                    .single();
+
+                if (!error && data) {
+                    // Start with specific theme logo
+                    let logo = theme === 'light' ? data.watermark_light : data.watermark_dark;
+
+                    // Fallback 1: Try marca_dagua (often white/transparent, good for dark mode, risky for light)
+                    if (!logo && theme === 'dark') logo = data.marca_dagua;
+
+                    // Fallback 2: Try the other theme's logo
+                    if (!logo) logo = theme === 'light' ? data.watermark_dark : data.watermark_light;
+
+                    // Fallback 3: Try marca_dagua for light mode as last resort
+                    if (!logo) logo = data.marca_dagua;
+
+                    setBrokerLogo(logo || null);
+                }
+            } catch (error) {
+                console.error('Error fetching broker logo:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchBrokerLogo();
+    }, [brokerSlug, theme]);
 
     return (
         <div className="min-h-screen bg-white dark:bg-slate-900 text-gray-900 dark:text-white overflow-x-hidden">
             <nav className="border-b border-gray-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md z-50 transition-all duration-300">
-                {/* Logo */}
-                <div className="hidden dark:block">
-                    <img src="/logos/izibrokerz-escuro.png" alt="iziBrokerz" className="h-10 w-auto" />
-                </div>
-                <div className="block dark:hidden">
-                    <img src="/logos/izibrokerz-claro.png" alt="iziBrokerz" className="h-10 w-auto" />
-                </div>
+                {/* Logo - Conditional: Broker or Platform */}
+                {isBrokerPage && brokerLogo ? (
+                    <div className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.location.href = `#/corretor/${brokerSlug}`}>
+                        <img src={brokerLogo} alt="Corretor" className="h-10 w-auto" />
+                    </div>
+                ) : (
+                    <>
+                        <div className="hidden dark:block cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
+                            <img src="/logos/izibrokerz-escuro.png" alt="iziBrokerz" className="h-10 w-auto" />
+                        </div>
+                        <div className="block dark:hidden cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
+                            <img src="/logos/izibrokerz-claro.png" alt="iziBrokerz" className="h-10 w-auto" />
+                        </div>
+                    </>
+                )}
 
-                {/* Desktop Menu */}
+                {/* Desktop Menu - Conditional based on broker page */}
                 <div className="hidden md:flex items-center space-x-8 font-medium">
-                    <a href="#/" className="hover:text-primary-500">Início</a>
-                    <a href="#/search" className="hover:text-primary-500">Buscar Imóveis</a>
-                    <a href="#/partner" className="hover:text-primary-500">Anunciar</a>
-                    <a href="#/about" className="hover:text-primary-500">Sobre</a>
+                    {isBrokerPage ? (
+                        <>
+                            <a href={`#/corretor/${brokerSlug}`} className="hover:text-primary-500">Início</a>
+                            <a href={`#/search?broker=${brokerSlug}`} className="hover:text-primary-500">Buscar Imóveis</a>
+                        </>
+                    ) : (
+                        <>
+                            <a href="#/" className="hover:text-primary-500">Início</a>
+                            <a href="#/search" className="hover:text-primary-500">Buscar Imóveis</a>
+                            <a href="#/partner" className="hover:text-primary-500">Anunciar</a>
+                            <a href="#/about" className="hover:text-primary-500">Sobre</a>
+                        </>
+                    )}
                 </div>
 
                 {/* Right Side Actions */}
@@ -175,7 +250,7 @@ export const PublicLayout: React.FC = () => {
                         {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                     </button>
                     <a href="#/login" className="hidden md:block px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors font-medium">
-                        Entrar
+                        ENTRAR/CADASTRAR
                     </a>
 
                     {/* Mobile Hamburger */}
@@ -200,12 +275,21 @@ export const PublicLayout: React.FC = () => {
             {mobileMenuOpen && (
                 <div className="md:hidden fixed top-[73px] left-0 w-full bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 z-40 shadow-lg">
                     <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
-                        <a href="#/" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Início</a>
-                        <a href="#/search" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Buscar Imóveis</a>
-                        <a href="#/partner" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Anunciar</a>
-                        <a href="#/about" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Sobre</a>
+                        {isBrokerPage ? (
+                            <>
+                                <a href={`#/corretor/${brokerSlug}`} className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Início</a>
+                                <a href={`#/search?broker=${brokerSlug}`} className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Buscar Imóveis</a>
+                            </>
+                        ) : (
+                            <>
+                                <a href="#/" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Início</a>
+                                <a href="#/search" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Buscar Imóveis</a>
+                                <a href="#/partner" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Anunciar</a>
+                                <a href="#/about" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Sobre</a>
+                            </>
+                        )}
                         <a href="#/login" className="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors font-medium text-center">
-                            Entrar
+                            ENTRAR/CADASTRAR
                         </a>
                     </div>
                 </div>

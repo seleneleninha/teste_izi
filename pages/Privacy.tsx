@@ -24,10 +24,10 @@ export const Privacy: React.FC = () => {
                     <p>Coletamos informações pessoais que você nos fornece, como nome, e-mail, telefone e dados profissionais (CRECI), para fornecer nossos serviços.</p>
 
                     <h3>2. Uso das Informações</h3>
-                    <p>Utilizamos seus dados para gerenciar sua conta, processar transações, enviar notificações importantes e melhorar a experiência na plataforma.</p>
+                    <p>Utilizamos seus dados para gerenciar sua conta, processar transações, enviar notificações importantes e melhorar a experiência na Plataforma.</p>
 
                     <h3>3. Compartilhamento de Dados</h3>
-                    <p>Não vendemos ou alugamos seus dados pessoais a terceiros. Podemos compartilhar dados com parceiros de serviço apenas para fins operacionais da plataforma.</p>
+                    <p>Não vendemos ou alugamos seus dados pessoais a terceiros. Podemos compartilhar dados com parceiros de serviço apenas para fins operacionais da Plataforma.</p>
 
                     <h3>4. Segurança dos Dados</h3>
                     <p>Implementamos medidas de segurança técnicas e organizacionais para proteger seus dados contra acesso não autorizado ou perda.</p>

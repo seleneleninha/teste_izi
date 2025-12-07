@@ -111,16 +111,37 @@ export const HorizontalScroll: React.FC<HorizontalScrollProps> = ({
         scrollRef.current.scrollLeft = scrollLeft - walk;
     };
 
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (!scrollRef.current) return;
+        setIsDragging(true);
+        setStartX(e.touches[0].pageX - scrollRef.current.offsetLeft);
+        setScrollLeft(scrollRef.current.scrollLeft);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!isDragging || !scrollRef.current) return;
+        const x = e.touches[0].pageX - scrollRef.current.offsetLeft;
+        const walk = (x - startX) * 2;
+        scrollRef.current.scrollLeft = scrollLeft - walk;
+    };
+
+    const handleTouchEnd = () => {
+        setIsDragging(false);
+    };
+
     return (
         <div className="space-y-6">
             {/* Container de Scroll */}
             <div
                 ref={scrollRef}
-                className="overflow-hidden cursor-grab active:cursor-grabbing"
+                className="overflow-hidden cursor-grab active:cursor-grabbing touch-pan-y"
                 onMouseDown={handleMouseDown}
                 onMouseLeave={handleMouseLeave}
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
             >
                 <div className="flex gap-6 select-none" style={{ scrollSnapType: isDragging ? 'none' : 'x mandatory' }}>
                     {children}

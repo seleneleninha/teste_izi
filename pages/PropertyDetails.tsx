@@ -1,13 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bed, Bath, Car, MapPin, Home, Share2, Heart, Phone, Mail, Calendar, ChevronLeft, ChevronRight, Check, Compass, Coffee, GraduationCap, ShieldCheck, Square, User, Search, LayoutGrid, List, Map, HomeIcon, SearchCode, SearchIcon, MessageCircle, X, PlayCircle, Video, CheckCircle, Handshake } from 'lucide-react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Bed, Bath, Car, MapPin, Home, Share2, Heart, Phone, Mail, Calendar, ChevronLeft, ChevronRight, Check, Compass, Coffee, GraduationCap, ShieldCheck, Square, User, Search, LayoutGrid, List, Map, HomeIcon, SearchCode, SearchIcon, MessageCircle, X, PlayCircle, Video, CheckCircle, Handshake, Sparkles } from 'lucide-react';
+import { HorizontalScroll } from '../components/HorizontalScroll';
+import { PropertyCard } from '../components/PropertyCard';
 import { SearchFilter } from '../components/SearchFilter';
 import { supabase } from '../lib/supabaseClient';
 import { analyzeNeighborhood } from '../lib/geminiHelper';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet default marker icon issue
+const iconUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
+const iconShadowUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png';
+
+const DefaultIcon = L.icon({
+    iconUrl: iconUrl,
+    shadowUrl: iconShadowUrl,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 export const PropertyDetails: React.FC = () => {
     const { id, slug } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [property, setProperty] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -21,6 +40,7 @@ export const PropertyDetails: React.FC = () => {
     } | null>(null);
     const [loadingNeighborhood, setLoadingNeighborhood] = useState(false);
     const [partnershipBroker, setPartnershipBroker] = useState<any>(null);
+    const [relatedProperties, setRelatedProperties] = useState<any[]>([]);
 
     const propertyId = id;
 
@@ -64,6 +84,21 @@ export const PropertyDetails: React.FC = () => {
                 console.error('Error fetching property types:', error);
             }
         };
+        const fetchPropertyOperations = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('operacao')
+                    .select('tipo')
+                    .order('tipo');
+
+                if (error) throw error;
+                if (data) {
+                    setPropertyTypes(data.map(item => item.tipo));
+                }
+            } catch (error) {
+                console.error('Error fetching property types:', error);
+            }
+        };
 
         fetchPropertyTypes();
     }, []);
@@ -79,6 +114,8 @@ export const PropertyDetails: React.FC = () => {
                     .from('anuncios')
                     .select(`
                         *,
+                        tipo_imovel (tipo),
+                        operacao (tipo),
                         perfis:user_id (
                             nome,
                             sobrenome,
@@ -86,7 +123,7 @@ export const PropertyDetails: React.FC = () => {
                             email,
                             whatsapp,
                             creci,
-                            cargo,
+                            uf_creci,
                             slug
                         )
                     `);
@@ -116,32 +153,36 @@ export const PropertyDetails: React.FC = () => {
                     const agentData = data.perfis as any;
 
                     // Verificar se o imóvel é uma parceria
-                    // Isso acontece quando acessado via /corretor/:slug e o imóvel não pertence ao corretor da slug
-                    // Vamos verificar se existe um referrer na URL ou sessionStorage
-                    const referrerSlug = sessionStorage.getItem('brokerSlug');
+                    // Usar query param 'broker' para determinar o contexto do corretor
+                    const brokerSlugParam = searchParams.get('broker');
                     let finalAgentData = agentData;
 
-                    if (referrerSlug) {
-                        // Buscar dados do corretor da slug (referrer)
+                    if (brokerSlugParam) {
+                        // Buscar dados do corretor da URL (contexto de BrokerPage)
                         const { data: brokerData } = await supabase
                             .from('perfis')
-                            .select('id, nome, sobrenome, avatar, email, whatsapp, creci, cargo, slug')
-                            .eq('slug', referrerSlug)
+                            .select('id, nome, sobrenome, avatar, email, whatsapp, creci, uf_creci, slug')
+                            .eq('slug', brokerSlugParam)
                             .single();
 
-                        if (brokerData && brokerData.id !== data.user_id) {
-                            // Verificar se é realmente uma parceria
-                            const { data: partnershipData } = await supabase
-                                .from('parcerias')
-                                .select('id')
-                                .eq('user_id', brokerData.id)
-                                .eq('property_id', data.id)
-                                .single();
+                        if (brokerData) {
+                            // Se o corretor não é o dono do imóvel, verificar se é parceria
+                            if (brokerData.id !== data.user_id) {
+                                const { data: partnershipData } = await supabase
+                                    .from('parcerias')
+                                    .select('id')
+                                    .eq('user_id', brokerData.id)
+                                    .eq('property_id', data.id)
+                                    .single();
 
-                            if (partnershipData) {
-                                // É uma parceria! Usar dados do corretor da slug
+                                if (partnershipData) {
+                                    // É uma parceria! Usar dados do corretor da URL
+                                    finalAgentData = brokerData;
+                                    setPartnershipBroker(brokerData);
+                                }
+                            } else {
+                                // O corretor é o dono do imóvel, manter seus dados
                                 finalAgentData = brokerData;
-                                setPartnershipBroker(brokerData);
                             }
                         }
                     }
@@ -177,19 +218,24 @@ export const PropertyDetails: React.FC = () => {
                             email: finalAgentData?.email || 'contato@izibrokerz.com',
                             phone: finalAgentData?.whatsapp || '(11) 99999-9999',
                             creci: finalAgentData?.creci || '',
-                            role: finalAgentData?.cargo || 'Corretor',
+                            uf_creci: finalAgentData?.uf_creci || '',
                             slug: finalAgentData?.slug || ''
                         },
-                        // Campos adicionais
-                        tipo_imovel: data.tipo_imovel,
-                        operacao: data.operacao,
+                        // Campos adicionais - extrair texto dos joins
+                        tipo_imovel: data.tipo_imovel?.tipo || data.tipo_imovel,
+                        operacao: data.operacao?.tipo || data.operacao,
                         aceita_financiamento: data.aceita_financiamento,
                         aceita_parceria: data.aceita_parceria,
                         status_aprovacao: data.status_aprovacao,
                         video: data.video,
                         tour_virtual: data.tour_virtual,
                         observacoes: data.observacoes,
-                        isPartnership: !!partnershipBroker
+                        isPartnership: !!partnershipBroker,
+                        valor_venda: data.valor_venda,
+                        valor_locacao: data.valor_locacao,
+                        latitude: data.latitude,
+                        longitude: data.longitude,
+                        taxas_inclusas: data.taxas_inclusas
                     });
                 }
             } catch (error) {
@@ -230,6 +276,51 @@ export const PropertyDetails: React.FC = () => {
         if (property) {
             fetchNeighborhoodInfo();
         }
+    }, [property]);
+
+    // Buscar imóveis relacionados
+    useEffect(() => {
+        const fetchRelated = async () => {
+            if (!property) return;
+
+            try {
+                const { data } = await supabase
+                    .from('anuncios')
+                    .select(`
+                        *,
+                        tipo_imovel (tipo),
+                        operacao (tipo)
+                    `)
+                    .eq('cidade', property.address.city)
+                    .neq('id', property.id)
+                    .eq('status_aprovacao', 'aprovado')
+                    .limit(8);
+
+                if (data) {
+                    const transformed = data.map(p => ({
+                        id: p.id,
+                        cod_imovel: p.cod_imovel,
+                        titulo: p.titulo,
+                        cidade: p.cidade,
+                        bairro: p.bairro,
+                        valor_venda: p.valor_venda,
+                        valor_locacao: p.valor_locacao,
+                        fotos: p.fotos ? p.fotos.split(',').filter(Boolean) : [],
+                        operacao: p.operacao?.tipo || p.operacao,
+                        tipo_imovel: p.tipo_imovel?.tipo || p.tipo_imovel,
+                        quartos: p.quartos || 0,
+                        banheiros: p.banheiros || 0,
+                        vagas: p.vagas || 0,
+                        area_priv: p.area_priv || 0
+                    }));
+                    setRelatedProperties(transformed);
+                }
+            } catch (error) {
+                console.error('Erro ao buscar imóveis relacionados:', error);
+            }
+        };
+
+        fetchRelated();
     }, [property]);
 
     const nextImage = () => {
@@ -309,7 +400,7 @@ export const PropertyDetails: React.FC = () => {
                     </div>
 
                     {/* Hero Image Gallery */}
-                    <div className="relative rounded-2xl overflow-hidden h-[500px] mb-8 shadow-lg group">
+                    <div className="relative rounded-2xl overflow-hidden h-[300px] md:h-[500px] mb-8 shadow-lg group">
                         <img
                             src={property.images && property.images.length > 0 ? property.images[currentImageIndex] : 'https://picsum.photos/seed/prop1/800/600'}
                             alt={property.title}
@@ -348,6 +439,30 @@ export const PropertyDetails: React.FC = () => {
 
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 pointer-events-none">
                             <h1 className="text-4xl font-bold text-white mb-2">{property.title}</h1>
+                            <div className="flex items-center gap-2 mb-2">
+                                {/* Tipo Imovel Badge */}
+                                <span className="text-lg px-3 py-1 rounded-full font-medium bg-white/20 text-white backdrop-blur-sm">
+                                    {property.tipo_imovel || 'Imóvel'}
+                                </span>
+
+                                {/* Operação Badge */}
+                                {(() => {
+                                    const op = (property.operacao || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                                    const isVenda = op === 'venda';
+                                    const isLocacao = op === 'locacao';
+                                    const isAmbos = op.includes('venda') && op.includes('locacao');
+
+                                    return (
+                                        <span className={`text-lg px-3 py-1 rounded-full font-medium ${isVenda ? 'bg-red-600 text-white'
+                                            : isLocacao ? 'bg-blue-600 text-white'
+                                                : isAmbos ? 'bg-green-600 text-white'
+                                                    : 'bg-gray-600 text-white'
+                                            }`}>
+                                            {property.operacao || 'N/A'}
+                                        </span>
+                                    );
+                                })()}
+                            </div>
                             <div className="flex items-center text-gray-200 text-lg">
                                 <MapPin size={20} className="mr-2" />
                                 {property.location}
@@ -360,12 +475,28 @@ export const PropertyDetails: React.FC = () => {
                         <div className="lg:col-span-2 space-y-8">
 
                             {/* Stats Strip */}
-                            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 flex flex-wrap justify-between items-center gap-4">
+                            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 flex flex-wrap justify-between items-center gap-4">
                                 <div className="text-center min-w-[80px]">
                                     <p className="text-gray-500 dark:text-slate-400 text-sm uppercase tracking-wider mb-1">Preço</p>
-                                    <p className="text-2xl font-bold text-primary-500">
-                                        {property.price > 0 ? `R$${property.price.toLocaleString('pt-BR')}` : 'Sob Consulta'}
-                                    </p>
+                                    <div className="flex flex-col items-center">
+                                        {(property.valor_venda > 0) && (
+                                            <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(property.valor_venda)}
+                                                <div className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">(Venda)</div>
+                                            </p>
+                                        )}
+                                        {(property.valor_locacao > 0) && (
+                                            <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(property.valor_locacao)}
+                                                <div className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">
+                                                    (Locação{property.taxas_inclusas ? ' - Taxas Inclusas' : ''})
+                                                </div>
+                                            </p>
+                                        )}
+                                        {(!property.valor_venda && !property.valor_locacao) && (
+                                            <p className="text-2xl font-bold text-primary-500">Sob Consulta</p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {(property.area || 0) > 0 && (
@@ -456,7 +587,7 @@ export const PropertyDetails: React.FC = () => {
                             {/* Property Details Grid - Cleaned up */}
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Informações Adicionais</h2>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-8 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-8 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700">
                                     {property.iptu > 0 && (
                                         <div>
                                             <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">IPTU (Anual)</p>
@@ -498,17 +629,31 @@ export const PropertyDetails: React.FC = () => {
                             </div>
 
                             {/* Features */}
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Diferenciais</h2>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    {property.features.map((feature, idx) => (
-                                        <div key={idx} className="flex items-center text-gray-700 dark:text-slate-300 bg-gray-50 dark:bg-slate-800/50 p-3 rounded-lg">
-                                            <Check size={18} className="text-primary-500 mr-2" />
-                                            {feature}
-                                        </div>
-                                    ))}
+                            {property.features && property.features.length > 0 && (
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Diferenciais</h2>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        {property.features.map((feature: string, idx: number) => (
+                                            <div key={idx} className="flex items-center text-gray-700 dark:text-slate-300 bg-gray-50 dark:bg-slate-800/50 p-3 rounded-lg">
+                                                <Check size={18} className="text-primary-500 mr-2" />
+                                                {feature}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Observações */}
+                            {property.observacoes && (
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Observações</h2>
+                                    <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-2xl border border-amber-200 dark:border-amber-800">
+                                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                                            {property.observacoes}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Media Section */}
                             {(property.video || property.tour_virtual) && (
@@ -516,7 +661,7 @@ export const PropertyDetails: React.FC = () => {
                                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Mídia</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {property.video && (
-                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700">
+                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700">
                                                 <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                                                     <PlayCircle className="text-red-500" size={20} />
                                                     Vídeo do Imóvel
@@ -532,7 +677,7 @@ export const PropertyDetails: React.FC = () => {
                                             </div>
                                         )}
                                         {property.tour_virtual && (
-                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700">
+                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700">
                                                 <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                                                     <Video className="text-blue-500" size={20} />
                                                     Tour Virtual 360º
@@ -564,7 +709,30 @@ export const PropertyDetails: React.FC = () => {
                                         <MapPin size={18} className="text-blue-500" />
                                         Localização do Imóvel / Sobre o Bairro {property.address.neighborhood}
                                     </h4>
-                                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                    {/* Mini Map */}
+                                    {property.latitude && property.longitude && (
+                                        <div className="mt-8">
+                                            <div className="h-[300px] w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-700 shadow-md">
+                                                <MapContainer
+                                                    center={[parseFloat(property.latitude), parseFloat(property.longitude)]}
+                                                    zoom={15}
+                                                    style={{ height: '100%', width: '100%' }}
+                                                >
+                                                    <TileLayer
+                                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                    />
+                                                    <Marker position={[parseFloat(property.latitude), parseFloat(property.longitude)]}>
+                                                        <Popup>
+                                                            {property.title} <br /> {property.location}
+                                                        </Popup>
+                                                    </Marker>
+                                                </MapContainer>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <p className="mt-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                                         {neighborhoodInfo.resumo}
                                     </p>
                                 </div>
@@ -577,7 +745,7 @@ export const PropertyDetails: React.FC = () => {
 
                         {/* Sidebar / Contact */}
                         <div className="space-y-6">
-                            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 sticky top-24">
+                            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-slate-700 sticky top-24">
                                 <div className="flex items-center space-x-4 mb-6">
                                     <img src={property.agent.avatar} alt="Agent" className="w-16 h-16 rounded-full object-cover border-2 border-primary-500 p-1" />
                                     <div>
@@ -592,11 +760,11 @@ export const PropertyDetails: React.FC = () => {
                                         >
                                             {property.agent.name}
                                         </h3>
-                                        <p className="text-sm text-primary-600 dark:text-primary-400 font-medium">{property.agent.role}</p>
+                                        <p className="text-md text-primary-600 dark:text-primary-400 font-medium">WhatsApp {property.agent.phone}</p>
                                         {property.agent.creci && (
-                                            <p className="text-xs text-gray-500 dark:text-slate-500">CRECI: {property.agent.creci}</p>
+                                            <p className="text-md text-blue-500 dark:text-blue-500 font-bold">CRECI: {property.agent.creci}/{property.agent.uf_creci}</p>
                                         )}
-                                        <div className="flex text-yellow-500 text-xs mt-1">★★★★★</div>
+                                        <div className="flex text-yellow-500 text-md">★★★★★</div>
                                     </div>
                                 </div>
 
@@ -635,6 +803,23 @@ export const PropertyDetails: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Você também pode gostar */}
+                {relatedProperties.length > 0 && (
+                    <div className="mt-16">
+                        <div className="flex items-center gap-2 mb-8">
+                            <Sparkles className="text-primary-500" size={24} />
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Você também pode gostar</h2>
+                        </div>
+                        <HorizontalScroll itemWidth={288} gap={24} itemsPerPage={4}>
+                            {relatedProperties.map((prop) => (
+                                <div key={prop.id} className="flex-none w-72" style={{ scrollSnapAlign: 'start' }}>
+                                    <PropertyCard property={prop} />
+                                </div>
+                            ))}
+                        </HorizontalScroll>
+                    </div>
+                )}
             </div>
         </div >
     );

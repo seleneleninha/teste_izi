@@ -21,19 +21,19 @@ export const Terms: React.FC = () => {
                     <p>Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
 
                     <h3>1. Aceitação dos Termos</h3>
-                    <p>Ao acessar e usar a plataforma iziBrokerz, você concorda em cumprir e estar vinculado aos seguintes termos e condições de uso.</p>
+                    <p>Ao acessar e usar a Plataforma iziBrokerz, você concorda em cumprir e estar vinculado aos seguintes termos e condições de uso.</p>
 
                     <h3>2. Uso da Plataforma</h3>
-                    <p>A plataforma destina-se a facilitar a gestão imobiliária para corretores e imobiliárias. O uso indevido ou para fins ilegais é estritamente proibido.</p>
+                    <p>A Plataforma destina-se a facilitar a gestão imobiliária para Corretores e imobiliárias. O uso indevido ou para fins ilegais é estritamente proibido.</p>
 
                     <h3>3. Cadastro e Segurança</h3>
                     <p>Você é responsável por manter a confidencialidade de sua conta e senha. A iziBrokerz não se responsabiliza por perdas decorrentes do uso não autorizado de sua conta.</p>
 
                     <h3>4. Propriedade Intelectual</h3>
-                    <p>Todo o conteúdo, design e código da plataforma são propriedade exclusiva da iziBrokerz e estão protegidos por leis de direitos autorais.</p>
+                    <p>Todo o conteúdo, design e código da Plataforma são propriedade exclusiva da iziBrokerz e estão protegidos por leis de direitos autorais.</p>
 
                     <h3>5. Limitação de Responsabilidade</h3>
-                    <p>A iziBrokerz não garante que a plataforma estará livre de erros ou interrupções. O uso é por sua conta e risco.</p>
+                    <p>A iziBrokerz não garante que a Plataforma estará livre de erros ou interrupções. O uso é por sua conta e risco.</p>
                 </div>
             </div>
         </div>

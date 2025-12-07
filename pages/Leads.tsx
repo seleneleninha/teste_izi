@@ -45,7 +45,6 @@ interface Lead {
     interesse: string;
     data_criacao: string;
     avatar?: string;
-    prioridade?: 'alta' | 'media' | 'baixa';
     origem?: string;
     ultima_interacao?: string;
     // New structured fields for matching
@@ -60,7 +59,8 @@ interface Lead {
 }
 
 // Draggable Lead Card Component
-const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; onMatch?: (lead: Lead) => void; onEdit?: (lead: Lead) => void; onArchive?: (lead: Lead) => void; onStatusChange?: (leadId: string, newStatus: string) => void }> = ({ lead, isDragging = false, onMatch, onEdit, onArchive, onStatusChange }) => {
+// Draggable LeadCard Component
+const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number; onMatch?: (lead: Lead) => void; onEdit?: (lead: Lead) => void; onArchive?: (lead: Lead) => void; onStatusChange?: (leadId: string, newStatus: string) => void; locked?: boolean }> = ({ lead, isDragging = false, matchCount = 0, onMatch, onEdit, onArchive, onStatusChange, locked = false }) => {
     const {
         attributes,
         listeners,
@@ -93,91 +93,95 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; onMatch?: (lead: Le
             {...attributes}
             {...listeners}
             className={`bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group ${isDragging ? 'shadow-2xl ring-2 ring-primary-500 scale-105' : ''
-                }`}
+                } ${locked ? 'opacity-75' : ''}`}
         >
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
                     <div>
-                        <h4 className="font-bold text-sm text-gray-900 dark:text-white">{lead.nome}</h4>
-                        <p className="text-xs text-gray-500 dark:text-slate-400">{lead.telefone}</p>
+                        <h4 className="font-bold text-sm text-gray-900 dark:text-white">
+                            {locked ? 'Lead Bloqueado' : lead.nome}
+                        </h4>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">
+                            {locked ? '•••••••••••' : lead.telefone}
+                        </p>
                     </div>
-                    {lead.prioridade && (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${lead.prioridade === 'alta' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
-                            lead.prioridade === 'media' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400' :
-                                'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                            }`}>
-                            {lead.prioridade.toUpperCase()}
-                        </span>
-                    )}
                 </div>
-                <div className="flex space-x-1">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (onEdit) onEdit(lead);
-                        }}
-                        className="p-1.5 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded text-orange-600"
-                        title="Editar Lead"
-                    >
-                        <Pencil size={14} />
-                    </button>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(`https://wa.me/55${lead.telefone.replace(/\D/g, '')}`, '_blank');
-                        }}
-                        className="p-1.5 hover:bg-green-100 dark:hover:bg-green-900/30 rounded text-green-600"
-                        title="WhatsApp"
-                    >
-                        <MessageCircle size={14} />
-                    </button>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            window.location.href = `mailto:${lead.email}`;
-                        }}
-                        className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded text-blue-600"
-                        title="Email"
-                    >
-                        <Mail size={14} />
-                    </button>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (onMatch) onMatch(lead);
-                        }}
-                        className="p-1.5 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded text-purple-600"
-                        title="Ver Imóveis Compatíveis"
-                    >
-                        <Target size={14} />
-                    </button>
-                    {lead.status !== 'Inativo' && (
+                {!locked && (
+                    <div className="flex space-x-1">
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                if (onArchive) onArchive(lead);
+                                if (onEdit) onEdit(lead);
                             }}
-                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700/30 rounded text-gray-600"
-                            title="Arquivar Lead"
+                            className="p-1.5 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded text-orange-600"
+                            title="Editar Lead"
                         >
-                            <Archive size={14} />
+                            <Pencil size={14} />
                         </button>
-                    )}
-                </div>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(`https://wa.me/55${lead.telefone.replace(/\D/g, '')}`, '_blank');
+                            }}
+                            className="p-1.5 hover:bg-green-100 dark:hover:bg-green-900/30 rounded text-green-600"
+                            title="WhatsApp"
+                        >
+                            <MessageCircle size={14} />
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (onMatch) onMatch(lead);
+                            }}
+                            className="p-1.5 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded text-purple-600 relative"
+                            title="Ver Imóveis Compatíveis"
+                        >
+                            <Target size={14} />
+                            {matchCount > 0 && (
+                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white dark:border-slate-800"></span>
+                            )}
+                        </button>
+                        {lead.status !== 'Inativo' && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onArchive) onArchive(lead);
+                                }}
+                                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700/30 rounded text-gray-600"
+                                title="Arquivar Lead"
+                            >
+                                <Archive size={14} />
+                            </button>
+                        )}
+                    </div>
+                )}
+                {locked && (
+                    <div className="text-gray-400">
+                        <Archive size={14} /> {/* Placeholder icon */}
+                    </div>
+                )}
             </div>
 
             <div className="space-y-2">
                 <div className="flex items-center text-xs text-gray-600 dark:text-slate-400 bg-gray-50 dark:bg-slate-700/50 p-2 rounded">
-                    <span className="font-medium mr-1">Busca:</span> {lead.interesse}
+                    <span className="font-medium mr-1"></span> {lead.interesse}
                 </div>
                 <div className="flex justify-between items-center text-xs text-gray-500 dark:text-slate-400">
-                    <span className="flex items-center font-bold text-sm">
-                        de {lead.orcamento_min?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 })} até {lead.orcamento_max?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 })}
-                    </span>
-                    <span className="flex items-center">
-                        <Calendar size={12} className="mr-1" />
-                        {new Date(lead.data_criacao).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' })}
-                    </span>
+                    {locked ? (
+                        <span className="text-primary-500 font-bold bg-primary-50 dark:bg-primary-900/20 px-2 py-1 rounded">
+                            Faça upgrade para ver
+                        </span>
+                    ) : (
+                        <>
+                            <span className="flex items-center font-bold text-sm">
+                                de {lead.orcamento_min?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 })} até {lead.orcamento_max?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 })}
+                            </span>
+                            <span className="flex items-center">
+                                <Calendar size={12} className="mr-1" />
+                                {new Date(lead.data_criacao).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' })}
+                            </span>
+                        </>
+                    )}
                 </div>
 
                 {/* Mobile-Friendly Status Change */}
@@ -194,7 +198,7 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; onMatch?: (lead: Le
                             <ChevronRight size={14} className={`transition-transform ${showStatusMenu ? 'rotate-90' : ''}`} />
                         </button>
                         {showStatusMenu && (
-                            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg">
+                            <div className="absolute z-50 mt-1 w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg">
                                 {statusOptions.filter(opt => opt.value !== lead.status).map(option => (
                                     <button
                                         key={option.value}
@@ -236,7 +240,7 @@ const DroppableColumn: React.FC<{
     });
 
     return (
-        <div ref={setNodeRef} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden transition-all hover:shadow-md">
+        <div ref={setNodeRef} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
             {/* Column Header acting as Stage Card Header */}
             <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between bg-gray-50/50 dark:bg-slate-800/50">
                 <div className="flex items-center gap-4">
@@ -303,6 +307,9 @@ export const Leads: React.FC = () => {
     const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
     const [loadingOptions, setLoadingOptions] = useState(false);
 
+    // Match counts for each lead
+    const [matchCounts, setMatchCounts] = useState<Record<string, number>>({});
+
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
@@ -323,6 +330,13 @@ export const Leads: React.FC = () => {
         fetchLeads();
         fetchOptions();
     }, []);
+
+    // Fetch match counts when leads change
+    useEffect(() => {
+        if (leads.length > 0) {
+            fetchMatchCounts();
+        }
+    }, [leads.length]);
 
     useEffect(() => {
         // Subtypes are no longer directly linked to lead creation/editing
@@ -385,10 +399,59 @@ export const Leads: React.FC = () => {
         setNeighborhoods(hoods);
     };
 
+    const fetchMatchCounts = async () => {
+        try {
+            const counts: Record<string, number> = {};
+            // Fetch match counts for all leads in parallel
+            await Promise.all(
+                leads.map(async (lead) => {
+                    try {
+                        const matches = await findMatchingProperties(lead.id);
+                        counts[lead.id] = matches.length;
+                    } catch (error) {
+                        console.error(`Error fetching matches for lead ${lead.id}:`, error);
+                        counts[lead.id] = 0;
+                    }
+                })
+            );
+            setMatchCounts(counts);
+        } catch (error) {
+            console.error('Error fetching match counts:', error);
+        }
+    };
+
+    // Trial Logic State
+    const [isTrialLimited, setIsTrialLimited] = useState(false);
+    const [trialMaxLeads, setTrialMaxLeads] = useState(1);
+
     const fetchLeads = async () => {
         if (!user) return;
 
         try {
+            // Check Trial Status
+            const { data: profile } = await supabase
+                .from('perfis')
+                .select('is_trial, trial_fim')
+                .eq('id', user.id)
+                .single();
+
+            if (profile?.is_trial) {
+                // Fetch dynamic limit
+                const { data: configData } = await supabase
+                    .from('admin_config')
+                    .select('value')
+                    .eq('key', 'trial_max_leads')
+                    .single();
+
+                if (configData) {
+                    setTrialMaxLeads(parseInt(configData.value));
+                }
+
+                setIsTrialLimited(true);
+            } else {
+                setIsTrialLimited(false);
+            }
+
             const { data, error } = await supabase
                 .from('leads')
                 .select('*')
@@ -454,6 +517,34 @@ export const Leads: React.FC = () => {
 
             if (error) throw error;
 
+            // If creating a new lead, immediately search for matches
+            if (!editingLeadId) {
+                const { data: newLeadData } = await supabase
+                    .from('leads')
+                    .select('id')
+                    .eq('user_id', user?.id)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (newLeadData) {
+                    // Fetch matches for the new lead
+                    const matches = await findMatchingProperties(newLeadData.id);
+
+                    if (matches.length > 0) {
+                        // Show matches in modal
+                        setSelectedLeadForMatch({ ...leadData, id: newLeadData.id, status: 'Novo', data_criacao: new Date().toISOString() } as Lead);
+                        setMatchingProperties(matches);
+                        setMatchModalOpen(true);
+                        addToast(`Lead criado! Encontramos ${matches.length} imóve${matches.length > 1 ? 'is' : 'l'} compatível${matches.length > 1 ? 'is' : ''}!`, 'success');
+                    } else {
+                        addToast('Lead criado com sucesso! Nenhum imóvel compatível encontrado no momento.', 'success');
+                    }
+                }
+            } else {
+                addToast('Lead atualizado com sucesso!', 'success');
+            }
+
             setIsModalOpen(false);
             setEditingLeadId(null);
             setNewLead({
@@ -465,7 +556,15 @@ export const Leads: React.FC = () => {
             setCustomNeighborhood('');
             setIsCustomCity(false);
             setIsCustomNeighborhood(false);
-            addToast(editingLeadId ? 'Lead atualizado com sucesso!' : 'Lead criado com sucesso!', 'success');
+
+            // Don't close modal if showing matches
+            if (editingLeadId || matchingProperties.length === 0) {
+                setIsModalOpen(false);
+            } else {
+                setIsModalOpen(false);
+            }
+
+            setEditingLeadId(null);
             fetchLeads();
         } catch (error) {
             console.error('Error saving lead:', error);
@@ -641,7 +740,7 @@ export const Leads: React.FC = () => {
     return (
         <div className="flex flex-col">
             {/* Controls */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div className="mt-6 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Gestão de Leads</h2>
                 </div>
@@ -706,14 +805,16 @@ export const Leads: React.FC = () => {
                                         strategy={verticalListSortingStrategy}
                                     >
                                         {getLeadsByStatus(column.status)
-                                            .map((lead) => (
+                                            .map((lead, index) => (
                                                 <LeadCard
                                                     key={lead.id}
                                                     lead={lead}
+                                                    matchCount={matchCounts[lead.id] || 0}
                                                     onMatch={() => handleMatchClick(lead)}
                                                     onEdit={() => handleEditLead(lead)}
                                                     onArchive={() => updateLeadStatus(lead.id, 'Inativo')}
                                                     onStatusChange={updateLeadStatus}
+                                                    locked={isTrialLimited && index >= trialMaxLeads}
                                                 />
                                             ))}
                                     </SortableContext>
@@ -742,17 +843,30 @@ export const Leads: React.FC = () => {
                         </div>
                         <form onSubmit={handleCreateLead} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nome</label>
-                                <input type="text" required value={newLead.nome} onChange={e => setNewLead({ ...newLead, nome: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Email</label>
-                                    <input type="email" value={newLead.email} onChange={e => setNewLead({ ...newLead, email: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none" />
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nome</label>
+                                    <input type="text" required value={newLead.nome} onChange={e => setNewLead({ ...newLead, nome: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none mb-2" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Telefone</label>
-                                    <input type="text" value={newLead.telefone} onChange={e => setNewLead({ ...newLead, telefone: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none" />
+                                    <input
+                                        type="tel"
+                                        placeholder="(00) 00000-0000"
+                                        maxLength={15}
+                                        value={newLead.telefone}
+                                        onChange={e => {
+                                            // Remove tudo que não é número
+                                            let value = e.target.value.replace(/\D/g, '');
+                                            // Limita a 11 dígitos
+                                            value = value.slice(0, 11);
+                                            // Aplica a máscara (00) 00000-0000
+                                            if (value.length > 0) {
+                                                value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+                                                value = value.replace(/(\d{5})(\d)/, '$1-$2');
+                                            }
+                                            setNewLead({ ...newLead, telefone: value });
+                                        }}
+                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none" />
                                 </div>
                             </div>
 

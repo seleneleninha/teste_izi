@@ -5,7 +5,7 @@ export const PLATFORM_KNOWLEDGE = {
     // Informações da Plataforma
     platform: {
         name: "iziBrokerz",
-        tagline: "A plataforma inteligente que conecta você às melhores oportunidades do mercado",
+        tagline: "A Plataforma inteligente que conecta você às melhores oportunidades do mercado",
         mission: "Revolucionar o mercado imobiliário com tecnologia e parcerias estratégicas",
 
         diferenciais: [
@@ -33,7 +33,7 @@ export const PLATFORM_KNOWLEDGE = {
                 "Acesso a portfólio completo de imóveis",
                 "Comissão de 50%",
                 "Não precisa captar imóveis",
-                "Foco total em atender clientes"
+                "Foco total em atender Clientes"
             ]
         },
 
@@ -44,7 +44,7 @@ export const PLATFORM_KNOWLEDGE = {
     features: {
         crm: {
             name: "CRM Integrado",
-            description: "Sistema simples e completo de gestão de leads e clientes",
+            description: "Sistema simples e completo de gestão de leads e Clientes",
             includes: [
                 "Cadastro e organização de leads",
                 "Histórico de interações",
@@ -110,7 +110,7 @@ export const PLATFORM_KNOWLEDGE = {
                 name: "Imobiliária (Em breve)",
                 price: "Sob consulta",
                 features: [
-                    "Múltiplos corretores",
+                    "Múltiplos Corretores",
                     "Gestão centralizada",
                     "API personalizada",
                     "White label",
@@ -162,15 +162,63 @@ export const PLATFORM_KNOWLEDGE = {
         "Temporada"
     ],
 
+    // Guias Passo-a-Passo
+    guides: {
+        howToRegisterProperty: {
+            title: "Como cadastrar um imóvel",
+            steps: [
+                "1. Faça login na sua conta de Corretor",
+                "2. Clique em 'Novo Imóvel' no menu lateral",
+                "3. Preencha os dados básicos (tipo, endereço, valores)",
+                "4. Adicione fotos de alta qualidade (mínimo 5)",
+                "5. Use a IA para gerar uma descrição atrativa",
+                "6. Revise e clique em 'Enviar para Aprovação'"
+            ]
+        },
+        howToInvitePartner: {
+            title: "Como convidar um parceiro",
+            steps: [
+                "1. Acesse a área 'Parcerias'",
+                "2. Clique em 'Convidar Corretor'",
+                "3. Digite o email do colega",
+                "4. Ele receberá um convite para se cadastrar gratuitamente"
+            ]
+        },
+        howToCloseDeal: {
+            title: "Como fechar negócio no sistema fifty",
+            steps: [
+                "1. Quando um parceiro traz um cliente para seu imóvel, vocês negociam os termos",
+                "2. O contrato é fechado normalmente",
+                "3. A comissão é dividida 50/50 conforme as regras da plataforma",
+                "4. Ambos marcam o imóvel como 'Vendido' no sistema"
+            ]
+        }
+    },
+
+    // Termos e Políticas
+    legal: {
+        termsOfUse: "O uso da plataforma implica na aceitação das regras de conduta ética, veracidade das informações dos imóveis e respeito ao sistema de parcerias.",
+        privacyPolicy: "Seus dados e de seus clientes são protegidos. Não compartilhamos leads com terceiros sem autorização.",
+        commissionRules: "A plataforma sugere a divisão 50/50 (fifty) para parcerias, mas os corretores têm liberdade para negociar percentuais diferentes caso acordado previamente por escrito."
+    },
+
+    // Dicas de Vendas e Mercado
+    salesTips: [
+        "Fotos profissionais aumentam em 3x as chances de contato.",
+        "Descrições que contam histórias (storytelling) engajam mais que listas técnicas.",
+        "Responda aos leads em até 5 minutos para aumentar a conversão em 400%.",
+        "Mantenha o status dos imóveis sempre atualizado para evitar frustrações."
+    ],
+
     // Perguntas Frequentes
     faq: [
         {
             q: "Como funciona o sistema \"fifty\"?",
-            a: "Você anuncia um imóvel e outros corretores podem trazer clientes. Quando fecham negócio, vocês dividem 50/50 a comissão. Simples assim!"
+            a: "Você anuncia um imóvel e outros Corretores podem trazer Clientes. Quando fecham negócio, vocês dividem 50/50 a comissão. Simples assim!"
         },
         {
             q: "Preciso pagar para anunciar?",
-            a: "Não! Durante a fase beta, a plataforma é 100% gratuita. Você só paga comissão quando vender."
+            a: "Não! Durante a fase beta, a Plataforma é 100% gratuita. Você só paga comissão quando vender."
         },
         {
             q: "Como recebo os leads?",

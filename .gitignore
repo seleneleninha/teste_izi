@@ -12,6 +12,23 @@ dist
 dist-ssr
 *.local
 
+# Environment files (SECURITY - NEVER COMMIT!)
+.env
+.env.local
+.env.production
+.env.development
+.env.*.local
+.env.production.local
+.env.development.local
+
+# Secrets and keys
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+.secrets
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +39,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OS files
+Thumbs.db

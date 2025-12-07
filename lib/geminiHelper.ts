@@ -1,73 +1,114 @@
-// Gemini AI Configuration and Helper Functions
-// Free tier: 15 requests per minute, 1500 requests per day
+// Groq AI Configuration and Helper Functions
+// Uses Llama 3 via Groq Cloud - Extremely fast and efficient
 
-const GEMINI_API_KEY = (import.meta as any).env?.VITE_GEMINI_API_KEY || '';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+const GROQ_API_KEY = (import.meta as any).env?.VITE_GROQ_API_KEY || '';
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-interface GeminiResponse {
-    candidates?: Array<{
-        content: {
-            parts: Array<{
-                text: string;
-            }>;
+// List of models to try in order (newest to oldest/fastest)
+const GROQ_MODELS = [
+    'llama-3.3-70b-versatile',   // Latest stable (Dec 2024)
+    'llama-3.1-70b-versatile',   // Previous stable
+    'llama-3.1-8b-instant',      // Fast fallback
+];
+
+// Development warning only (no sensitive data exposed)
+if (!GROQ_API_KEY && (import.meta as any).env?.DEV) {
+    console.warn('⚠️ AI: Configure VITE_GROQ_API_KEY em .env.local para habilitar IA');
+}
+
+interface GroqResponse {
+    choices?: Array<{
+        message: {
+            content: string;
         };
     }>;
+    error?: {
+        message: string;
+        type: string;
+    };
 }
 
 /**
- * Call Gemini API to generate text
- * @param prompt - The prompt to send to Gemini
+ * Call Groq API to generate text
+ * @param prompt - The prompt to send to Groq
  * @returns Generated text or null if error
  */
 export async function callGemini(prompt: string): Promise<string | null> {
-    if (!GEMINI_API_KEY) {
-        console.error('Gemini API key not configured');
+    // Note: Function name kept as callGemini to avoid breaking imports, but uses Groq
+
+    if (!GROQ_API_KEY) {
+        console.error('❌ GROQ API: Chave API não configurada');
         return null;
     }
 
-    try {
-        const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }],
-                generationConfig: {
+    // Try each model in order until one works
+    for (let i = 0; i < GROQ_MODELS.length; i++) {
+        const model = GROQ_MODELS[i];
+
+        try {
+            console.log(`🔄 GROQ API: Tentando modelo ${model} (${i + 1}/${GROQ_MODELS.length})...`);
+
+            const response = await fetch(GROQ_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${GROQ_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [{
+                        role: 'user',
+                        content: prompt
+                    }],
                     temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 1024,
+                    max_tokens: 1024,
+                    top_p: 1,
+                    stream: false
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                console.warn(`⚠️ GROQ API: Modelo ${model} falhou (${response.status})`, error);
+
+                // If 401 (Unauthorized), stop trying (key is invalid)
+                if (response.status === 401) {
+                    console.error('❌ GROQ API: Chave API inválida. Verifique sua chave.');
+                    return null;
                 }
-            })
-        });
 
-        if (!response.ok) {
-            const error = await response.json();
-            console.error('Gemini API error:', error);
-            return null;
+                // Try next model
+                continue;
+            }
+
+            const data: GroqResponse = await response.json();
+            const text = data.choices?.[0]?.message?.content;
+
+            if (text) {
+                console.log(`✅ GROQ API: Sucesso com modelo ${model}!`);
+                return text;
+            } else {
+                console.warn(`⚠️ GROQ API: Modelo ${model} retornou resposta vazia`);
+                continue;
+            }
+        } catch (error) {
+            console.error(`❌ GROQ API: Erro ao tentar modelo ${model}`, error);
+            continue;
         }
-
-        const data: GeminiResponse = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        return text || null;
-    } catch (error) {
-        console.error('Error calling Gemini:', error);
-        return null;
     }
+
+    console.error('❌ GROQ API: Todos os modelos falharam');
+    return null;
 }
 
 /**
- * Generate property description using Gemini
+ * Generate property description using AI (Groq/Llama 3)
  */
 export async function generatePropertyDescription(propertyData: {
     tipo: string;
     subtipo?: string;
+    titulo?: string;
+    operacao?: string;
     bairro: string;
     cidade: string;
     quartos: number;
@@ -77,24 +118,33 @@ export async function generatePropertyDescription(propertyData: {
     area: number;
     caracteristicas: string[];
 }): Promise<string[]> {
-    const prompt = `Você é um especialista em marketing imobiliário. Crie 3 descrições atrativas e profissionais para um imóvel com as seguintes características:
+    const prompt = `Você é um redator especialista em marketing imobiliário. Crie 3 descrições ÚNICAS e ATRATIVAS para o seguinte imóvel:
 
+${propertyData.titulo ? `Título: ${propertyData.titulo}` : ''}
 Tipo: ${propertyData.tipo}${propertyData.subtipo ? ` - ${propertyData.subtipo}` : ''}
+${propertyData.operacao ? `Operação: ${propertyData.operacao}` : ''}
 Localização: ${propertyData.bairro}, ${propertyData.cidade}
-Quartos: ${propertyData.quartos}
-Suítes: ${propertyData.suites}
-Banheiros: ${propertyData.banheiros}
-Vagas de garagem: ${propertyData.vagas}
-Área privativa: ${propertyData.area}m²
+Quartos: ${propertyData.quartos} | Suítes: ${propertyData.suites} | Banheiros: ${propertyData.banheiros}
+Vagas: ${propertyData.vagas} | Área: ${propertyData.area}m²
 Características: ${propertyData.caracteristicas.join(', ')}
 
-IMPORTANTE:
-- Crie 3 versões DIFERENTES da descrição
-- Cada descrição deve ter entre 100-150 palavras
-- Use linguagem persuasiva mas profissional
-- Destaque os diferenciais do imóvel
-- Não invente informações que não foram fornecidas
-- Separe cada descrição com "---"
+DIRETRIZES IMPORTANTES:
+- Crie 3 versões COMPLETAMENTE DIFERENTES (não apenas variações)
+- Use linguagem ENRIQUECEDORA e PERSUASIVA que agregue valor ao anúncio
+- Destaque os DIFERENCIAIS e BENEFÍCIOS do imóvel, não apenas liste características
+- Explore o ESTILO DE VIDA que o imóvel proporciona
+- Mencione a LOCALIZAÇÃO de forma atrativa (sem inventar dados)
+- NÃO repita todas as especificações técnicas - use-as para criar uma narrativa envolvente
+- Cada descrição deve ter entre 120-180 palavras
+- Use verbos de ação e adjetivos que despertem emoção
+- Foque em como o imóvel melhora a vida do morador
+
+EXEMPLOS DE ABORDAGENS DIFERENTES:
+1ª descrição: Foque no conforto e qualidade de vida
+2ª descrição: Destaque localização e conveniência
+3ª descrição: Enfatize exclusividade e sofisticação
+
+Separe cada descrição com "---"
 
 Formato de resposta:
 [Descrição 1]
@@ -106,12 +156,17 @@ Formato de resposta:
     const response = await callGemini(prompt);
 
     if (!response) {
+        // Log warning when using fallback descriptions
+        console.warn('⚠️ GROQ API: Falha na chamada. Usando descrições genéricas como fallback.');
+
         return [
             'Excelente imóvel localizado em região privilegiada. Conta com acabamento de primeira qualidade e ótima distribuição de ambientes. Ideal para quem busca conforto e praticidade no dia a dia.',
             'Imóvel com localização estratégica e infraestrutura completa. Ambientes bem planejados que proporcionam funcionalidade e bem-estar. Perfeito para famílias que valorizam qualidade de vida.',
             'Oportunidade única! Imóvel em excelente estado de conservação, pronto para morar. Localização privilegiada com fácil acesso a comércios e serviços. Não perca esta chance!'
         ];
     }
+
+    console.log('✅ GROQ API: Descrições geradas com sucesso pela IA');
 
     // Split response into 3 descriptions
     const descriptions = response.split('---').map(d => d.trim()).filter(d => d.length > 0);
@@ -125,7 +180,7 @@ Formato de resposta:
 }
 
 /**
- * Get property price evaluation using Gemini
+ * Get property price evaluation using AI
  */
 export async function evaluatePropertyPrice(propertyData: {
     tipo: string;
@@ -201,7 +256,7 @@ JUSTIFICATIVA: [texto]`;
 }
 
 /**
- * Analyze neighborhood using Gemini
+ * Analyze neighborhood using AI
  */
 export async function analyzeNeighborhood(neighborhoodData: {
     bairro: string;

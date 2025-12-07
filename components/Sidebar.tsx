@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Building2, Settings, LogOut, Users, X, Handshake } from 'lucide-react';
+import { LayoutDashboard, Building2, Settings, LogOut, Users, X, Handshake, CreditCard, Ticket, DollarSign, CheckCircle } from 'lucide-react';
 import { IconWrapper } from './IconWrapper';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabaseClient';
 export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
   const [profile, setProfile] = useState<{ name: string; email: string; avatar: string }>({
     name: '',
     email: '',
@@ -56,17 +56,27 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/');
+    navigate('/login');
   };
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navItems = [
+  const isAdmin = role === 'Admin' || role === 'admin';
+
+  const navItems = isAdmin ? [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { label: 'Aprovar Anúncios', icon: CheckCircle, path: '/admin/approvals' },
+    { label: 'Planos', icon: CreditCard, path: '/admin/plans' },
+    { label: 'Config Trial', icon: Settings, path: '/admin/trial-settings' },
+    { label: 'Cupons', icon: Ticket, path: '/admin/coupons' },
+    { label: 'Financeiro', icon: DollarSign, path: '/admin/financial' },
+    { label: 'Configurações', icon: Settings, path: '/settings' },
+  ] : [
+    { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { label: 'Configurações', icon: Settings, path: '/settings' },
     { label: 'Meus Imóveis', icon: Building2, path: '/properties' },
     { label: 'Imóveis Parceiros', icon: Handshake, path: '/partner-properties' },
     { label: 'Leads (CRM)', icon: Users, path: '/leads' },
-    { label: 'Configurações', icon: Settings, path: '/settings' },
   ];
 
   return (

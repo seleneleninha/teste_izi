@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StatCard } from '../components/StatCard';
 import { PropertyCard } from '../components/PropertyCard';
 import { CHART_DATA } from '../constants';
-import { Plus, Edit2, Trash2, CheckCircle, ArrowUp, Loader2, Bed, Bath, Square, MapPin, Share2, ExternalLink, Home, Handshake, Building2, Users } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle, ArrowUp, Loader2, Bed, Bath, Square, MapPin, Share2, ExternalLink, Home, Handshake, Building2, Users, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
@@ -13,7 +13,7 @@ import { ONBOARDING_TOUR_STEPS } from '../config/tourSteps';
 
 export const Dashboard: React.FC = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, role } = useAuth();
     const { addToast } = useToast();
     const [loading, setLoading] = useState(true);
     const [userName, setUserName] = useState('');
@@ -24,6 +24,12 @@ export const Dashboard: React.FC = () => {
         messages: 0,
         acceptedPartnerships: 0,
         availablePartnerships: 0
+    });
+    const [adminStats, setAdminStats] = useState({
+        totalUsers: 0,
+        totalProperties: 0,
+        totalPartnerships: 0,
+        activePlans: 0
     });
     const [recentProperties, setRecentProperties] = useState<any[]>([]);
     const [notifications, setNotifications] = useState<any[]>([]);
@@ -38,13 +44,27 @@ export const Dashboard: React.FC = () => {
         if (user) {
             fetchData();
         }
-    }, [user]);
+    }, [user, role]);
 
     const fetchData = async () => {
         if (!user) return;
 
         try {
-            // Fetch counts - ONLY for current user
+            if (role?.toLowerCase() === 'admin') {
+                // Admin X-Ray Fetch
+                const { count: userCount } = await supabase.from('perfis').select('*', { count: 'exact', head: true });
+                const { count: propCount } = await supabase.from('anuncios').select('*', { count: 'exact', head: true });
+                const { count: partCount } = await supabase.from('parcerias').select('*', { count: 'exact', head: true });
+
+                setAdminStats({
+                    totalUsers: userCount || 0,
+                    totalProperties: propCount || 0,
+                    totalPartnerships: partCount || 0,
+                    activePlans: 0 // Mock for now
+                });
+            }
+
+            // Fetch counts - ONLY for current user (Standard Dashboard)
             const { count: propCount } = await supabase
                 .from('anuncios')
                 .select('*', { count: 'exact', head: true })
@@ -167,7 +187,7 @@ export const Dashboard: React.FC = () => {
                 .eq('id', user?.id);
 
             setOnboardingCompleted(true);
-            addToast('Tour concluído! Bem-vindo ao iziBrokerz! 🎉', 'success');
+            addToast('Tour concluído! Bem-vindo(a) ao iziBrokerz! 🎉', 'success');
         } catch (error) {
             console.error('Error completing tour:', error);
         }
@@ -236,184 +256,245 @@ export const Dashboard: React.FC = () => {
     }
 
     return (
-        <div className="space-y-8 pb-20 md:pb-0">
+        <div className="pt-6 space-y-8 pb-20 md:pb-0">
             <div className="mb-8">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Bem-vindo de volta, {userName}!</h2>
-                        <p className="text-gray-500 dark:text-slate-400 mt-2 text-sm md:text-base">Aqui está o resumo das suas atividades hoje.</p>
+                        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Bem-vindo(a) de volta, {userName}!</h2>
+                        {role?.toLowerCase() === 'admin' ? <p className="text-gray-500 dark:text-slate-400 mt-2 text-sm md:text-base">Acompanhe o crescimento da Plataforma.</p> : <p className="text-gray-500 dark:text-slate-400 mt-2 text-sm md:text-base">Vamos melhorar seus números e ampliar sua possibilidade de ganhos?</p>}
                     </div>
+                </div>
+            </div>
 
-                    {/* Public Page URL Display */}
-                    {user && (
-                        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700">
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Endereço da Sua Página Pública</p>
-                                <p className="text-sm font-mono text-primary-600 dark:text-primary-400 truncate">
-                                    {window.location.origin}/#/corretor/{userSlug || 'configurar-slug'}
-                                </p>
+            {/* Admin X-Ray View */}
+            {role?.toLowerCase() === 'admin' && (
+                <div className="mb-8">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <div className="w-2 h-8 bg-purple-500 rounded-full"></div>
+                        Raio-X da Plataforma
+                    </h3>
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                                    <Users size={24} className="text-blue-600 dark:text-blue-400" />
+                                </div>
                             </div>
-                            <div className="flex gap-2">
+                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Total Usuários</h3>
+                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{adminStats.totalUsers}</div>
+                        </div>
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                                    <Home size={24} className="text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Total Imóveis</h3>
+                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{adminStats.totalProperties}</div>
+                        </div>
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                                    <Handshake size={24} className="text-purple-600 dark:text-purple-400" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Total Parcerias</h3>
+                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{adminStats.totalPartnerships}</div>
+                        </div>
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                                    <Building2 size={24} className="text-amber-600 dark:text-amber-400" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Planos Ativos</h3>
+                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{adminStats.activePlans}</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* User Dashboard - Only for non-admins */}
+            {role?.toLowerCase() !== 'admin' && (
+                <>
+                    {/* Stats Grid */}
+                    {/* Public Page URL Display - Enhanced */}
+                    {user && (
+                        <div className="flex flex-col md:flex-row md:items-center gap-4 bg-gradient-to-r from-primary-50 to-white dark:from-slate-800 dark:to-slate-900 p-6 rounded-2xl border border-primary-100 dark:border-primary-900/50 shadow-sm relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+
+                            <div className="flex-1 min-w-0 z-10">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg text-primary-600 dark:text-primary-400">
+                                        <Home size={20} />
+                                    </div>
+                                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Endereço da Sua Página</p>
+                                </div>
+                                <div className="bg-white/50 dark:bg-black/20 rounded-lg p-2 border border-gray-100 dark:border-slate-700/50 backdrop-blur-sm">
+                                    <p className="text-base md:text-lg font-mono font-bold text-primary-700 dark:text-primary-400 truncate select-all">
+                                        {window.location.origin}/#/corretor/{userSlug || 'configurar-slug'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 z-10 w-full md:w-auto">
                                 <button
                                     onClick={() => {
                                         const url = `${window.location.origin}/#/corretor/${userSlug || 'configurar-slug'}`;
                                         navigator.clipboard.writeText(url);
-                                        addToast('Link copiado!', 'success');
+                                        addToast('Link colado na sua área de transferência! 📋', 'success');
                                     }}
-                                    className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                    className="flex-1 md:flex-none px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                                     title="Copiar Link"
                                 >
-                                    <Share2 size={18} className="text-gray-600 dark:text-gray-400" />
+                                    <Share2 size={20} />
+                                    <span>Copiar</span>
                                 </button>
                                 <button
                                     onClick={() => window.open(`/#/corretor/${userSlug || 'configurar-slug'}`, '_blank')}
-                                    className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                    className="px-4 py-3 bg-white dark:bg-slate-800 border-2 border-primary-100 dark:border-slate-600 text-primary-600 dark:text-slate-300 font-bold rounded-xl hover:bg-primary-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
                                     title="Visitar Página"
                                 >
-                                    <ExternalLink size={18} className="text-gray-600 dark:text-gray-400" />
+                                    <Eye size={20} />
+                                    <span>Ver Página</span>
                                 </button>
                             </div>
                         </div>
                     )}
-                </div>
-            </div>
-
-            {/* Stats Grid - Redesigned without charts */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                {/* Meus Imóveis */}
-                <div
-                    onClick={() => navigate('/properties')}
-                    className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all cursor-pointer group"
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                            <Home size={24} className="text-blue-600 dark:text-blue-400" />
-                        </div>
-                        <span className="text-xs text-green-600 dark:text-green-400 font-medium">+12.5%</span>
-                    </div>
-                    <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Meus Imóveis</h3>
-                    <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.properties}</div>
-                </div>
-
-
-                {/* Imóveis em Parceria (Accepted) */}
-                <div
-                    onClick={() => navigate('/partner-properties')}
-                    className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all cursor-pointer group"
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                            <Handshake size={24} className="text-emerald-600 dark:text-emerald-400" />
-                        </div>
-                    </div>
-                    <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Parcerias Aceitas</h3>
-                    <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.acceptedPartnerships || 0}</div>
-                </div>
-
-
-                {/* Imóveis Parceiros (Available) */}
-                <div
-                    onClick={() => navigate('/partner-properties')}
-                    className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all cursor-pointer group"
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                            <Building2 size={24} className="text-purple-600 dark:text-purple-400" />
-                        </div>
-                    </div>
-                    <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Parcerias Disponíveis</h3>
-                    <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.availablePartnerships || 0}</div>
-                </div>
-
-
-                {/* Leads */}
-                <div
-                    onClick={() => navigate('/leads')}
-                    className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all cursor-pointer group"
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
-                            <Users size={24} className="text-amber-600 dark:text-amber-400" />
-                        </div>
-                        <span className="text-xs text-red-600 dark:text-red-400 font-medium">-3.1%</span>
-                    </div>
-                    <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Leads</h3>
-                    <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.leads}</div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-3 space-y-8">
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+                        {/* Meus Imóveis */}
                         <div
-                            className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 cursor-pointer hover:shadow-md transition-all group"
-                            onClick={() => navigate('/add-property')}
+                            onClick={() => navigate('/properties')}
+                            className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all cursor-pointer group"
                         >
-                            <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <Plus size={24} className="text-primary-600 dark:text-primary-400" />
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                                    <Home size={24} className="text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+12.5%</span>
                             </div>
-                            <h4 className="font-bold text-gray-900 dark:text-white mb-1">Anunciar Imóvel</h4>
-                            <p className="text-sm text-gray-500 dark:text-slate-400">Cadastre um novo imóvel para venda, locação ou ambos.</p>
+                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Meus Imóveis</h3>
+                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.properties}</div>
                         </div>
 
+                        {/* Imóveis em Parceria (Accepted) */}
                         <div
-                            className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 cursor-pointer hover:shadow-md transition-all group"
+                            onClick={() => navigate('/partner-properties')}
+                            className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                                    <Handshake size={24} className="text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Parcerias Aceitas</h3>
+                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.acceptedPartnerships || 0}</div>
+                        </div>
+
+                        {/* Imóveis Parceiros (Available) */}
+                        <div
+                            onClick={() => navigate('/partner-properties')}
+                            className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                                    <Building2 size={24} className="text-purple-600 dark:text-purple-400" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Parcerias Disponíveis</h3>
+                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.availablePartnerships || 0}</div>
+                        </div>
+
+                        {/* Leads */}
+                        <div
                             onClick={() => navigate('/leads')}
+                            className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all cursor-pointer group"
                         >
-                            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <CheckCircle size={24} className="text-purple-600 dark:text-purple-400" />
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                                    <Users size={24} className="text-amber-600 dark:text-amber-400" />
+                                </div>
+                                <span className="text-xs text-red-600 dark:text-red-400 font-medium">-3.1%</span>
                             </div>
-                            <h4 className="font-bold text-gray-900 dark:text-white mb-1">Gerenciar Leads</h4>
-                            <p className="text-sm text-gray-500 dark:text-slate-400">Visualize seus leads no funil de vendas.</p>
-                        </div>
-
-
-                    </div>
-                    <div className="space-y-6">
-                        <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 h-full">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Notificações Recentes</h3>
-                            <div className="space-y-4">
-                                {notifications.length === 0 ? (
-                                    <p className="text-gray-500 text-sm text-center py-8">Nenhuma notificação recente.</p>
-                                ) : (
-                                    notifications.map(notif => (
-                                        <div key={notif.id} className="flex space-x-3 pb-3 border-b border-gray-100 dark:border-slate-700 last:border-0 last:pb-0">
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                                                <CheckCircle className="text-blue-600 dark:text-blue-400 w-4 h-4" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm text-gray-800 dark:text-gray-200 font-medium">{notif.titulo}</p>
-                                                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 line-clamp-2">{notif.descricao}</p>
-                                                <p className="text-[10px] text-gray-400 mt-1">{new Date(notif.created_at).toLocaleDateString()}</p>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                            <button className="w-full mt-4 text-center text-sm text-primary-500 hover:text-primary-600 font-medium">
-                                Ver Todas
-                            </button>
+                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Leads</h3>
+                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.leads}</div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Onboarding Tour */}
-            <OnboardingTour
-                steps={ONBOARDING_TOUR_STEPS}
-                isOpen={showTour}
-                onComplete={handleCompleteTour}
-                onSkip={handleSkipTour}
-            />
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-3 space-y-8">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div
+                                    className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 cursor-pointer hover:shadow-md transition-all group"
+                                    onClick={() => navigate('/add-property')}
+                                >
+                                    <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                        <Plus size={24} className="text-primary-600 dark:text-primary-400" />
+                                    </div>
+                                    <h4 className="font-bold text-gray-900 dark:text-white mb-1">Anunciar Imóvel</h4>
+                                    <p className="text-sm text-gray-500 dark:text-slate-400">Cadastre um novo imóvel para venda, locação ou ambos.</p>
+                                </div>
 
-            {/* Tour Prompt */}
-            {showTourPrompt && (
-                <TourPrompt
-                    onStartTour={handleStartTour}
-                    onDismiss={handleDismissTourPrompt}
-                    dismissCount={tourDismissCount}
-                />
+                                <div
+                                    className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 cursor-pointer hover:shadow-md transition-all group"
+                                    onClick={() => navigate('/leads')}
+                                >
+                                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                        <CheckCircle size={24} className="text-purple-600 dark:text-purple-400" />
+                                    </div>
+                                    <h4 className="font-bold text-gray-900 dark:text-white mb-1">Gerenciar Leads</h4>
+                                    <p className="text-sm text-gray-500 dark:text-slate-400">Visualize seus leads no funil de vendas.</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 h-full">
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Notificações Recentes</h3>
+                                    <div className="space-y-4">
+                                        {notifications.length === 0 ? (
+                                            <p className="text-gray-500 text-sm text-center py-8">Nenhuma notificação recente.</p>
+                                        ) : (
+                                            notifications.map(notif => (
+                                                <div key={notif.id} className="flex space-x-3 pb-3 border-b border-gray-100 dark:border-slate-700 last:border-0 last:pb-0">
+                                                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                                                        <CheckCircle className="text-blue-600 dark:text-blue-400 w-4 h-4" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm text-gray-800 dark:text-gray-200 font-medium">{notif.titulo}</p>
+                                                        <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 line-clamp-2">{notif.mensagem}</p>
+                                                        <p className="text-[10px] text-gray-400 mt-1">{new Date(notif.created_at).toLocaleDateString()}</p>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                    <button className="w-full mt-4 text-center text-sm text-primary-500 hover:text-primary-600 font-medium">
+                                        Ver Todas
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Onboarding Tour */}
+                    <OnboardingTour
+                        steps={ONBOARDING_TOUR_STEPS}
+                        isOpen={showTour}
+                        onComplete={handleCompleteTour}
+                        onSkip={handleSkipTour}
+                    />
+
+                    {/* Tour Prompt */}
+                    {showTourPrompt && (
+                        <TourPrompt
+                            onStartTour={handleStartTour}
+                            onDismiss={handleDismissTourPrompt}
+                            dismissCount={tourDismissCount}
+                        />
+                    )}
+                </>
             )}
+
         </div>
     );
 };

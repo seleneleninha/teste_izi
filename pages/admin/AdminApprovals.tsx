@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Check, X, Eye, AlertCircle, Clock, CheckCircle, XCircle, Search, ShieldCheck } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
-import { useAuth } from '../components/AuthContext';
-import { useToast } from '../components/ToastContext';
+import { Check, X, Eye, AlertCircle, Clock, CheckCircle, XCircle, Search, ShieldCheck, History, MessageSquare } from 'lucide-react';
+import { supabase } from '../../lib/supabaseClient';
+import { useAuth } from '../../components/AuthContext';
+import { useToast } from '../../components/ToastContext';
 import { useNavigate } from 'react-router-dom';
-import { PropertyCard } from '../components/PropertyCard';
+import { PropertyCard } from '../../components/PropertyCard';
+
+interface RejectionHistoryItem {
+    data: string;
+    motivo: string;
+    razoes: string[];
+    admin_id: string;
+}
 
 interface Property {
     id: string;
@@ -25,6 +32,8 @@ interface Property {
     operacao: string;
     banheiros: number;
     vagas: number;
+    historico_reprovacao?: RejectionHistoryItem[];
+    motivo_reprovacao?: string;
 }
 
 interface UserProfile {
@@ -34,7 +43,16 @@ interface UserProfile {
     whatsapp: string;
 }
 
-export const AdminDashboard: React.FC = () => {
+const REJECTION_REASONS = [
+    'Imagens em baixa resolução',
+    'Imagens comprometem a reputação (infiltrações, bagunça, etc.)',
+    'Valores discrepantes do mercado',
+    'Título ou Descrição em desacordo com a realidade',
+    'Endereço incompleto ou incorreto',
+    'Dados cadastrais inconsistentes'
+];
+
+export const AdminApprovals: React.FC = () => {
     const { user } = useAuth();
     const { addToast } = useToast();
     const navigate = useNavigate();
@@ -44,8 +62,11 @@ export const AdminDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'todos' | 'pendente' | 'aprovado' | 'reprovado'>('pendente');
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Rejection State
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-    const [rejectReason, setRejectReason] = useState('');
+    const [rejectComment, setRejectComment] = useState('');
+    const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
     const [showRejectModal, setShowRejectModal] = useState(false);
 
     // Check if user is admin
@@ -122,7 +143,7 @@ export const AdminDashboard: React.FC = () => {
         }
     };
 
-    const handleApprove = async (propertyId: string) => {
+    const handleApprove = async (property: Property) => {
         try {
             const { error } = await supabase
                 .from('anuncios')
@@ -131,9 +152,18 @@ export const AdminDashboard: React.FC = () => {
                     aprovado_por: user?.id,
                     data_aprovacao: new Date().toISOString()
                 })
-                .eq('id', propertyId);
+                .eq('id', property.id);
 
             if (error) throw error;
+
+            // Send Notification
+            await supabase.from('notificacoes').insert({
+                user_id: property.user_id,
+                titulo: 'Anúncio Aprovado! 🎉',
+                mensagem: `Seu imóvel "${property.titulo}" foi aprovado e já está publicado na plataforma e na sua página. Parabéns e vamos para o próximo!`,
+                tipo: 'aprovacao',
+                link: `/properties/${property.id}`
+            });
 
             addToast('Anúncio aprovado com sucesso!', 'success');
             fetchProperties();
@@ -144,27 +174,66 @@ export const AdminDashboard: React.FC = () => {
     };
 
     const handleReject = async () => {
-        if (!selectedProperty || !rejectReason.trim()) {
-            addToast('Por favor, informe o motivo da reprovação', 'error');
+        if (!selectedProperty) return;
+
+        if (selectedReasons.length === 0 && !rejectComment.trim()) {
+            addToast('Por favor, selecione um motivo ou descreva a razão da reprovação.', 'error');
             return;
         }
 
         try {
+            const currentHistory = selectedProperty.historico_reprovacao || [];
+            const isSecondRejection = currentHistory.length > 0;
+
+            const newRejectionEntry: RejectionHistoryItem = {
+                data: new Date().toISOString(),
+                motivo: rejectComment,
+                razoes: selectedReasons,
+                admin_id: user?.id || ''
+            };
+
+            const updatedHistory = [...currentHistory, newRejectionEntry];
+
+            // Update Property
             const { error } = await supabase
                 .from('anuncios')
                 .update({
                     status_aprovacao: 'reprovado',
                     aprovado_por: user?.id,
                     data_aprovacao: new Date().toISOString(),
-                    motivo_reprovacao: rejectReason
+                    motivo_reprovacao: rejectComment || selectedReasons.join(', '), // Legacy support
+                    historico_reprovacao: updatedHistory
                 })
                 .eq('id', selectedProperty.id);
 
             if (error) throw error;
 
-            addToast('Anúncio reprovado', 'success');
+            // Notification Message Logic
+            let notifTitle = 'Anúncio Reprovado ⚠️';
+            let notifMessage = `Seu imóvel "${selectedProperty.titulo}" precisa de ajustes. Motivos: ${selectedReasons.join(', ')}.`;
+
+            if (rejectComment) {
+                notifMessage += ` Obs: ${rejectComment}`;
+            }
+
+            if (isSecondRejection) {
+                notifTitle = 'Atenção: 2ª Reprovação 🚫';
+                notifMessage = `Seu imóvel foi reprovado novamente. Por favor, entre em contato com o suporte para alinhar os ajustes necessários.`;
+            }
+
+            // Send Notification
+            await supabase.from('notificacoes').insert({
+                user_id: selectedProperty.user_id,
+                titulo: notifTitle,
+                mensagem: notifMessage,
+                tipo: 'reprovacao',
+                link: `/properties/${selectedProperty.id}/edit` // Assuming edit route
+            });
+
+            addToast('Anúncio reprovado e notificação enviada.', 'success');
             setShowRejectModal(false);
-            setRejectReason('');
+            setRejectComment('');
+            setSelectedReasons([]);
             setSelectedProperty(null);
             fetchProperties();
         } catch (error: any) {
@@ -175,7 +244,17 @@ export const AdminDashboard: React.FC = () => {
 
     const openRejectModal = (property: Property) => {
         setSelectedProperty(property);
+        setSelectedReasons([]);
+        setRejectComment('');
         setShowRejectModal(true);
+    };
+
+    const toggleReason = (reason: string) => {
+        if (selectedReasons.includes(reason)) {
+            setSelectedReasons(selectedReasons.filter(r => r !== reason));
+        } else {
+            setSelectedReasons([...selectedReasons, reason]);
+        }
     };
 
     const filteredProperties = properties.filter(p =>
@@ -201,7 +280,7 @@ export const AdminDashboard: React.FC = () => {
                             <ShieldCheck className="text-emerald-400" size={32} />
                             <h1 className="text-3xl font-bold">Painel Administrativo</h1>
                         </div>
-                        <p className="text-slate-400">Gerenciamento e moderação de anúncios da plataforma</p>
+                        <p className="text-slate-400">Gerenciamento e moderação de anúncios da Plataforma</p>
                     </div>
                 </div>
             </div>
@@ -299,6 +378,8 @@ export const AdminDashboard: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredProperties.map(property => {
                             const owner = userProfiles[property.user_id];
+                            const historyCount = property.historico_reprovacao?.length || 0;
+
                             return (
                                 <div key={property.id} className="relative group">
                                     <PropertyCard
@@ -310,7 +391,7 @@ export const AdminDashboard: React.FC = () => {
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            handleApprove(property.id);
+                                                            handleApprove(property);
                                                         }}
                                                         className="flex-1 px-3 py-2.5 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700 flex items-center justify-center transition-colors shadow-lg shadow-green-600/20"
                                                     >
@@ -339,6 +420,17 @@ export const AdminDashboard: React.FC = () => {
                                             )
                                         }
                                     />
+
+                                    {/* History Badge if previously rejected */}
+                                    {historyCount > 0 && property.status_aprovacao === 'pendente' && (
+                                        <div className="absolute top-3 right-3 z-10">
+                                            <div className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg flex items-center gap-1">
+                                                <History size={12} />
+                                                {historyCount}x Reprovado
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Owner Info Tooltip/Card */}
                                     {owner && (
                                         <div className="absolute -top-2 -right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
@@ -356,30 +448,76 @@ export const AdminDashboard: React.FC = () => {
                 )}
 
                 {/* Reject Modal */}
-                {showRejectModal && (
+                {showRejectModal && selectedProperty && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl border border-gray-100 dark:border-slate-700 transform transition-all scale-100">
-                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
-                                <AlertCircle className="text-red-600 dark:text-red-400" size={24} />
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-gray-100 dark:border-slate-700 transform transition-all scale-100 max-h-[90vh] overflow-y-auto">
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <AlertCircle className="text-red-600 dark:text-red-400" size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                        Reprovar Anúncio
+                                    </h3>
+                                    <p className="text-sm text-gray-500 dark:text-slate-400">
+                                        {selectedProperty.titulo}
+                                    </p>
+                                </div>
                             </div>
-                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                                Reprovar Anúncio
-                            </h3>
-                            <p className="text-gray-600 dark:text-gray-400 mb-6">
-                                Por favor, descreva o motivo da reprovação para que o corretor possa corrigir o anúncio.
-                            </p>
-                            <textarea
-                                value={rejectReason}
-                                onChange={(e) => setRejectReason(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-red-500 outline-none text-gray-900 dark:text-white h-32 resize-none mb-6 text-sm"
-                                placeholder="Ex: Fotos de baixa qualidade, endereço incorreto..."
-                                autoFocus
-                            />
+
+                            {/* Previous Rejection History */}
+                            {selectedProperty.historico_reprovacao && selectedProperty.historico_reprovacao.length > 0 && (
+                                <div className="mb-6 bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-100 dark:border-orange-900/30">
+                                    <h4 className="text-sm font-bold text-orange-800 dark:text-orange-300 mb-2 flex items-center gap-2">
+                                        <History size={14} /> Histórico de Reprovações
+                                    </h4>
+                                    <div className="space-y-3 max-h-40 overflow-y-auto pr-2">
+                                        {selectedProperty.historico_reprovacao.map((item, idx) => (
+                                            <div key={idx} className="text-xs text-orange-700 dark:text-orange-400 border-b border-orange-200 dark:border-orange-800/50 last:border-0 pb-2 last:pb-0">
+                                                <p className="font-semibold">{new Date(item.data).toLocaleDateString('pt-BR')} às {new Date(item.data).toLocaleTimeString('pt-BR')}</p>
+                                                <p>Motivos: {item.razoes.join(', ')}</p>
+                                                {item.motivo && <p className="italic mt-1">"{item.motivo}"</p>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="space-y-4 mb-6">
+                                <p className="text-gray-700 dark:text-slate-300 font-medium">Selecione os motivos:</p>
+                                <div className="grid grid-cols-1 gap-2">
+                                    {REJECTION_REASONS.map(reason => (
+                                        <label key={reason} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedReasons.includes(reason)}
+                                                onChange={() => toggleReason(reason)}
+                                                className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                                            />
+                                            <span className="text-sm text-gray-700 dark:text-slate-300">{reason}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-gray-700 dark:text-slate-300 font-medium mb-2">
+                                    Observações adicionais (Opcional):
+                                </label>
+                                <textarea
+                                    value={rejectComment}
+                                    onChange={(e) => setRejectComment(e.target.value)}
+                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-red-500 outline-none text-gray-900 dark:text-white h-24 resize-none text-sm"
+                                    placeholder="Descreva detalhes específicos..."
+                                />
+                            </div>
+
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => {
                                         setShowRejectModal(false);
-                                        setRejectReason('');
+                                        setRejectComment('');
+                                        setSelectedReasons([]);
                                         setSelectedProperty(null);
                                     }}
                                     className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
