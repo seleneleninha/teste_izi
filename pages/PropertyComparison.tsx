@@ -24,7 +24,8 @@ export const PropertyComparison: React.FC = () => {
     const [properties, setProperties] = useState<Property[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const ids = searchParams.get('ids')?.split(',') || [];
+    const idsString = searchParams.get('ids');
+    const ids = idsString?.split(',') || [];
 
     useEffect(() => {
         if (ids.length > 0) {
@@ -32,7 +33,7 @@ export const PropertyComparison: React.FC = () => {
         } else {
             setLoading(false);
         }
-    }, [ids]);
+    }, [idsString]);
 
     const fetchProperties = async () => {
         try {
@@ -41,8 +42,7 @@ export const PropertyComparison: React.FC = () => {
             const { data, error } = await supabase
                 .from('anuncios')
                 .select('*')
-                .in('id', ids)
-                .eq('user_id', user?.id); // Only compare own properties
+                .in('id', ids);
 
             if (error) throw error;
 

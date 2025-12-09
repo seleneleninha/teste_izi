@@ -577,14 +577,16 @@ export const AddProperty: React.FC = () => {
                 cidade: city,
                 quartos: Number(formData.bedrooms) || 0,
                 area: Number(formData.privateArea) || 0,
-                similarProperties: mappedProps.length >= 3 ? mappedProps : [
-                    // Fallback mock data if DB is empty, to demonstrate AI capability
-                    // In production, you might want to return "insufficient data" instead
-                    { valor: 500000, area: 100, quartos: 2 },
-                    { valor: 550000, area: 110, quartos: 3 },
-                    { valor: 480000, area: 95, quartos: 2 }
-                ]
+                similarProperties: mappedProps
             });
+
+            if (evaluation) {
+                setPriceEvaluation(evaluation);
+                addToast('Avaliação de preço concluída!', 'success');
+            } else {
+                setPriceEvaluation(null); // Clear previous
+                addToast(`Dados insuficientes na região (${mappedProps.length} imóveis similares encontrados).`, 'warning');
+            }
 
             if (evaluation) {
                 setPriceEvaluation(evaluation);

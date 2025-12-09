@@ -29,9 +29,13 @@ const AdminApprovals = lazy(() => import('./pages/admin/AdminApprovals').then(mo
 const BrokerPage = lazy(() => import('./pages/BrokerPage').then(module => ({ default: module.BrokerPage })));
 const PartnerProperties = lazy(() => import('./pages/PartnerProperties').then(module => ({ default: module.PartnerProperties })));
 const About = lazy(() => import('./pages/About').then(module => ({ default: module.About })));
+const Favorites = lazy(() => import('./pages/Favorites').then(module => ({ default: module.Favorites })));
+
+const AvailabilityCheck = lazy(() => import('./pages/AvailabilityCheck').then(module => ({ default: module.AvailabilityCheck })));
 
 
 import { ToastProvider } from './components/ToastContext';
+import { MagicVerification } from './pages/MagicVerification';
 
 const App: React.FC = () => {
   return (
@@ -48,6 +52,7 @@ const App: React.FC = () => {
                   <Route path="/search" element={<PropertiesList />} />
                   <Route path="/partner" element={<PartnerPage />} />
                   <Route path="/sell" element={<PartnerPage />} /> {/* Alias for backward compatibility */}
+                  <Route path="/v/:token" element={<MagicVerification />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/agent/:id" element={<AgentProfile />} />
                   <Route path="/terms" element={<Terms />} />
@@ -61,6 +66,7 @@ const App: React.FC = () => {
 
                 {/* Protected Routes - Require Authentication */}
                 <Route element={<ProtectedRoute />}>
+                  <Route path="/availability/:id" element={<AvailabilityCheck />} />
                   <Route element={<DashboardLayout />}>
                     <Route path="/admin/approvals" element={<AdminApprovals />} />
                     <Route path="/admin/plans" element={<AdminPlans />} />
@@ -75,6 +81,7 @@ const App: React.FC = () => {
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/compare" element={<PropertyComparison />} />
                     <Route path="/leads" element={<Leads />} />
+                    <Route path="/favorites" element={<Favorites />} />
                   </Route>
                 </Route>
               </Routes>

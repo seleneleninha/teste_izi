@@ -1,101 +1,67 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Footer } from '../components/Footer';
-import { Building2, Users, TrendingUp, Award, CheckCircle, Linkedin, ArrowRight, Trophy } from 'lucide-react';
+import { Building2, Users, TrendingUp, Award, CheckCircle, Linkedin, ArrowRight, Trophy, Star, Rocket } from 'lucide-react';
 
 export const About: React.FC = () => {
     const navigate = useNavigate();
 
     const milestones = [
         {
-            year: "1998-2007",
-            company: "Início da Carreira",
-            role: "Corretor Autônomo (SP) na ABYARA, LOPES & SELLER (House da Cyrela)",
-            description: "Primeiros passos no mercado imobiliário, desenvolvendo expertise em negociação e relacionamento com clientes.",
-            icon: <Building2 className="w-6 h-6" />
+            year: "1998 - 2007",
+            title: "O Início da Jornada",
+            role: "Corretor Autônomo",
+            company: "Abyara, Lopes & Seller",
+            description: "Primeiros passos em SP, desenvolvendo a base sólida em negociação e relacionamento que fundamentaria toda a carreira.",
+            icon: <Building2 className="w-5 h-5" />
         },
         {
-            year: "2007-2009",
-            company: "Coordenação de Vendas",
-            role: "Coordenador de Vendas PLANO&PLANO",
-            description: "Coordenação de Vendas da Linha FATTO (Santo André e São Bernardo do Campo - SP) e posteriormente sendo transferido para Natal/RN em 2009, para coordenar os lançamento da nova 'joint-venture' Cyrela/Plano&Plano",
-            icon: <TrendingUp className="w-6 h-6" />
+            year: "2007 - 2010",
+            title: "Ascensão à Liderança",
+            role: "Coordenação de Vendas",
+            company: "Cyrela Plano&Plano",
+            description: "Liderança de grandes lançamentos em SP e no RN, batendo recordes de vendas com os cases: L'Acqua (+R$90 milhões vendidos em um único dia) e Stillo (100% vendido em 90 dias).",
+            icon: <TrendingUp className="w-5 h-5" />
         },
         {
-            year: "2009-2010",
-            company: "Coordenação de Vendas",
-            role: "Coordenador de Vendas CYRELA/PLANO&PLANO",
-            description: "Coordenação de Vendas dos Empreendimentos: L´ACQUA (Recorde de Vendas em um único dia '245 unidades e VGV estimado em mais de R$70milhões'), INFINITY, STYLLO (100% vendido em 90 dias) e início de vendas do VITA RESIDENCIAL 1ª Fase (Natal/RN)",
-            icon: <Trophy className="w-6 h-6" />
+            year: "2010 - 2012",
+            title: "Gestão Estratégica",
+            role: "Gestor Comercial",
+            company: "Agre Vendas & Construtora Estrutural",
+            description: "Implementação de novas culturas comerciais e estratégias agressivas que posicionaram as empresas como líderes locais.",
+            icon: <Users className="w-5 h-5" />
         },
         {
-            year: "2010-2011",
-            company: "Gestão e Liderança | RAC AGRE VENDAS",
-            role: "REC - Responsável por Equipe Comercial (AGRE VENDAS/RN)",
-            description: "Implementação da House da AGRE VENDAS em Natal, criando e liderando Equipes Comerciais, implementação de processos e estratégias de vendas que resultaram no crescimento exponencial das vendas da Empresa, combatendo Grandes Imobiliárias Locais.",
-            icon: <Users className="w-6 h-6" />
+            year: "2012 - 2015",
+            title: "Alta Execução",
+            role: "Superintendente & Diretor",
+            company: "BrasilBrokers, DWBrasil, Ecocil",
+            description: "Comando de grandes operações e 'Sales Houses', dominando o mercado potiguar com times de alta performance.",
+            icon: <Award className="w-5 h-5" />
         },
         {
-            year: "2011-2012",
-            company: "Diretor Comercial | CONSTRUTORA ESTRUTURAL",
-            role: "Diretoria Comercial",
-            description: "Liderança da Equipe Comercial, implementação de processos e estratégias de vendas para alavancar novos Empreendimentos como: VIVA NATUREZA e INOVA.",
-            icon: <Award className="w-6 h-6" />
+            year: "2015 - 2020",
+            title: "Visão de Investidor",
+            role: "Consultor de Investimentos",
+            company: "Gusmão Imóveis & Consultoria Própria",
+            description: "Foco em rentabilidade e segurança para investidores, aprimorando o olhar sobre o ativo imobiliário.",
+            icon: <CheckCircle className="w-5 h-5" />
         },
         {
-            year: "2012-2013",
-            company: "Superintendente Comercial | ABREU/BRASILBROKERS",
-            role: "Superintendência de Vendas",
-            description: "Liderança da Equipe Comercial, implementação de processos e estratégias de vendas am no crescimento exponencial das vendas da Empresa, combatendo Grandes Imobiliárias Locais.",
-            icon: <Award className="w-6 h-6" />
+            year: "2021 - 2023",
+            title: "A Era Digital",
+            role: "CEO & Co-Founder",
+            company: "ClicImob",
+            description: "Nascimento da visão tecnológica: criar uma plataforma para libertar corretores das amarras tradicionais.",
+            icon: <Rocket className="w-5 h-5" />
         },
         {
-            year: "2013",
-            company: "DWBrasil",
-            role: "Diretor Comercial",
-            description: "Liderança da Equipe Comercial, implementação de processos e estratégias de vendas.",
-            icon: <Users className="w-6 h-6" />
-        },
-        {
-            year: "2013-2015",
-            company: "ECOCIL Incorporações",
-            role: "Superintendente de Vendas/Produto e Gerente Comercial",
-            description: "Criação da 2ª House da ECOCIL, para aumentar os resultados e liderança da Empresa em Natal. Posteriormente sendo promovido à Gerência Comercial para ampliar ainda mais a dominância da Ecocil no mercado imobiliário local.",
-            icon: <TrendingUp className="w-6 h-6" />
-        },
-        {
-            year: "2015-2016",
-            company: "GUSMÃO IMÓVEIS",
-            role: "Gerente de Vendas",
-            description: "Gestão de Vendas, acompanhamento de Corretores e implementação de processos e estratégias de vendas para melhor performance e resultados.",
-            icon: <Award className="w-6 h-6" />
-        },
-        {
-            year: "2016-2020",
-            company: "CONSULTOR IMOBILIÁRIO/INVESTIMENTOS",
-            description: "Consultoria em Negócios Imobiliários para Investidores, bem como aconselhamento a Investidores no mercado imobiliário.",
-            icon: <CheckCircle className="w-6 h-6" />
-        },
-        {
-            year: "2021-2023",
-            company: "CLICIMOB",
-            role: "CEO e Co-Founder",
-            description: "Criação da Plataforma Imobiliária CLICIMOB em Natal/RN, visando otimizar o processo de negociação e gestão de imóveis para Corretores Autônomos e Pequenas Imobiliárias.",
-            icon: <Award className="w-6 h-6" />
-        },
-        {
-            year: "2023-até o momento (25 anos e 6 meses)",
+            year: "2023 - Hoje",
+            title: "A Revolução",
+            role: "CEO & Founder",
             company: "iziBrokerz",
-            role: "CEO e Co-Founder",
-            description: "Pivotando o projeto anterior e criação uma 'Nova Plataforma Imobiliária' em Natal/RN, para LITERALMENTE tirar os Corretores Autônomos das 'GARRAS DO MONOPÓLIO dos Grandes Portaos Imobiliários que exploram e dominam o mercado imobiliário",
-            icon: <TrendingUp className="w-6 h-6" />
-        },
-        {
-            year: "RESUMINDO...",
-            company: "AQUI ESTOU EU!!! Nunca desisti do meu sonho!",
-            role: "Como dizia nosso GRANDE AYRTON SENNA...",
-            description: "'Seja você quem for, seja qual for a posição social que você tenha na vida... DA MAIS ALTA OU DA MAIS BAIXA, tenha sempre como meta... MUITA FORÇA, muita DETERMINAÇÃO e sempre FAÇA TUDO COM MUITO AMOR e com MUITA FÉ EM DEUS... que um dia VOCÊ CHEGA LÁ!!! De alguma maneira... VOCÊ CHEGA LÁ!!!'",
-            icon: <Trophy className="w-6 h-6" />
+            description: "Pivotando para o futuro. Uma plataforma para empoderar o Corretor Autônomo.",
+            icon: <Star className="w-5 h-5" />
         }
     ];
 
@@ -103,193 +69,197 @@ export const About: React.FC = () => {
         { number: "+25 anos", label: "de Experiência" },
         { number: "+2mil", label: "Negócios Fechados" },
         { number: "+3mil", label: "Corretores Treinados" },
-        { number: "+R$3Bi", label: "Em VGV" }
+        { number: "+3Bi", label: "VGV Gerado" }
     ];
 
     return (
-        <div className="bg-gray-50 dark:bg-slate-900 min-h-screen">
+        <div className="bg-gray-50 dark:bg-slate-900 min-h-screen font-sans">
             {/* Hero Section */}
-            <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 text-white py-20">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1920')] opacity-10 bg-cover bg-center"></div>
-                <div className="container mx-auto px-4 relative z-10">
-                    <div className="max-w-4xl mx-auto text-center">
-                        <h1 className="text-4xl md:text-6xl font-bold mb-6">Sobre a iziBrokerz</h1>
-                        <p className="text-xl text-emerald-100 mb-8">
-                            Nascida da experiência de quem VIVE CADA DESAFIO do mercado imobiliário
-                        </p>
-                    </div>
+            <section className="relative overflow-hidden bg-slate-900 text-white py-24 lg:py-32">
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2070"
+                        alt="Background"
+                        className="w-full h-full object-cover opacity-20"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
+                </div>
+
+                <div className="container mx-auto px-6 relative z-10 text-center">
+                    <span className="inline-block py-1 px-3 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold mb-6 backdrop-blur-sm border border-emerald-500/30">
+                        Nossa Essência
+                    </span>
+                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">
+                        Excelência <span className="text-emerald-500">Acima</span> de Tudo
+                    </h1>
+                    <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+                        Nascida da experiência real de quem viveu cada desafio do mercado imobiliário brasileiro.
+                    </p>
                 </div>
             </section>
 
-            {/* Founder Section */}
-            <section className="py-20 bg-white dark:bg-slate-800">
-                <div className="container mx-auto px-4">
-                    <div className="max-w-6xl mx-auto">
-                        <div className="grid md:grid-cols-2 gap-12 items-center">
-                            <div className="order-2 md:order-1">
-                                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
-                                    Beluzzo
-                                </h2>
-                                <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">
-                                    Fundador & CEO da iziBrokerz/ClicImob
+            {/* Founder Profile */}
+            <section className="py-20 lg:py-28 relative">
+                <div className="container mx-auto px-6">
+                    <div className="flex flex-col lg:flex-row items-center gap-16">
+                        {/* Image Side */}
+                        <div className="lg:w-1/2 relative group">
+                            <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-2xl opacity-30 group-hover:opacity-50 blur-lg transition duration-500"></div>
+                            <div className="relative rounded-2xl overflow-hidden shadow-2xl transform transition hover:-translate-y-1 duration-500">
+                                <img
+                                    src="/cristiano-profile.jpg"
+                                    alt="Beluzzo"
+                                    className="w-full h-auto object-cover md:max-h-[600px]"
+                                />
+                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8">
+                                    <h3 className="text-2xl font-bold text-white">Beluzzo</h3>
+                                    <p className="text-emerald-400 font-medium">Founder & CEO</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Text Side */}
+                        <div className="lg:w-1/2">
+                            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6">
+                                A Visão por Trás da Inovação
+                            </h2>
+                            <div className="space-y-6 text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
+                                <p>
+                                    Com mais de <strong className="text-emerald-600 dark:text-emerald-400">25 anos de estrada, BELUZZO</strong> é um corretor que escalou cada degrau. De plantões de vendas, "plantões pirata", coordenações... à gerências e diretoria de grandes incorporadoras.
                                 </p>
-                                <div className="space-y-4 text-gray-700 dark:text-gray-300">
-                                    <p>
-                                        Com mais de <strong className="text-emerald-600 dark:text-emerald-400">25 anos de experiência</strong> no mercado imobiliário, <strong className="text-emerald-600 dark:text-emerald-400">BELUZZO (como é conhecido no Mercado)</strong>... construiu uma carreira sólida que vai desde a atuação como: corretor autônomo, coordenador de vendas, superintendência, gerência, diretoria comercial até a liderança de grandes equipes comerciais, Incorporadoras e Construtoras.
-                                    </p>
-                                    <p>
-                                        Ao longo de sua trajetória, identificou as principais <strong>DORES E OPORTUNIDADES</strong> do setor:
-                                        desde a dificuldade de corretores autônomos em expandir seus negócios, à falta de ferramentas tecnológicas
-                                        acessíveis e a ausência de um sistema eficiente de parcerias entre PARCEIROS.
-                                    </p>
-                                    <p>
-                                        E a <strong className="text-emerald-600 dark:text-emerald-400">iziBrokerz</strong> nasceu dessa visão:
-                                        criar uma plataforma que empodera corretores através da colaboração, tecnologia e transparência.
-                                    </p>
-                                </div>
-                                <a
-                                    href="https://www.linkedin.com/in/cristianobeluzo/"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
-                                >
-                                    <Linkedin size={20} />
-                                    Conectar no LinkedIn
-                                </a>
+                                <p>
+                                    Sua trajetória revelou uma verdade incômoda: o mercado é hostil ao profissional autônomo. Falta apoio, falta tecnologia e sobram barreiras.
+                                </p>
+                                <blockquote className="border-l-4 border-emerald-500 pl-4 py-2 italic text-gray-800 dark:text-gray-200 bg-emerald-50 dark:bg-emerald-900/10 rounded-r-lg">
+                                    "A iziBrokerz não é sobre software. <br />É sobre liberdade! <br />É DAR AOS CORRETORES AS <br />ARMAS PARA VENCER GIGANTES!"
+                                </blockquote>
                             </div>
-                            <div className="order-1 md:order-2">
-                                <div className="relative">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-2xl transform rotate-3"></div>
-                                    <img
-                                        src="/cristiano-profile.jpg"
-                                        alt="Cristiano Beluzo - Fundador da Clicimob/iziBrokerz"
-                                        className="relative rounded-2xl shadow-2xl w-full object-cover"
-                                    />
-                                </div>
-                            </div>
+
+                            <a
+                                href="https://www.linkedin.com/in/cristianobeluzo/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-3 mt-8 px-8 py-4 bg-[#0077b5] text-white rounded-xl font-semibold hover:bg-[#006396] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                            >
+                                <Linkedin size={22} />
+                                Conectar no LinkedIn
+                            </a>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Achievements */}
-            <section className="py-16 bg-slate-950 text-white">
-                <div className="container mx-auto px-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-5xl mx-auto">
-                        {achievements.map((achievement, index) => (
-                            <div key={index} className="text-center">
-                                <div className="text-4xl md:text-5xl font-bold text-emerald-400 mb-2">
-                                    {achievement.number}
+            {/* Stats grid */}
+            <section className="py-16 bg-slate-900 border-y border-slate-800">
+                <div className="container mx-auto px-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                        {achievements.map((item, idx) => (
+                            <div key={idx} className="text-center p-6 rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700 hover:border-emerald-500/50 transition-colors group">
+                                <div className="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2 group-hover:scale-110 transition-transform">
+                                    {item.number}
                                 </div>
-                                <p className="text-emerald-100 text-sm md:text-base">{achievement.label}</p>
+                                <div className="text-slate-400 font-medium text-sm md:text-base uppercase tracking-wider">
+                                    {item.label}
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* Career Roadmap */}
-            <section className="py-20 bg-gray-50 dark:bg-slate-900">
-                <div className="container mx-auto px-4">
-                    <div className="max-w-4xl mx-auto">
-                        <div className="text-center mb-16">
-                            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                                Minha história...
-                            </h2>
-                            <p className="text-gray-600 dark:text-gray-400 text-lg">
-                                Mais de duas décadas <strong>ACREDITANDO</strong> no Mercado Imobiliário Brasileiro
-                            </p>
-                        </div>
+            {/* Roadmap Timeline */}
+            <section className="py-24 bg-white dark:bg-slate-950 relative overflow-hidden">
+                <div className="container mx-auto px-6 relative z-10">
+                    <div className="text-center max-w-3xl mx-auto mb-16">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold tracking-wider text-sm uppercase">Minha Jornada</span>
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mt-2 mb-4">Um Legado em Construção</h2>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Cada passo foi um aprendizado para construir a solução definitiva para o mercado.
+                        </p>
+                    </div>
 
-                        <div className="relative">
-                            {/* Timeline Line */}
-                            <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-0.5 bg-emerald-500/30 transform md:-translate-x-1/2"></div>
+                    <div className="max-w-4xl mx-auto relative">
+                        {/* Vertical Line */}
+                        <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-emerald-200 dark:via-emerald-800 to-transparent md:-translate-x-1/2"></div>
 
-                            {milestones.map((milestone, index) => (
-                                <div key={index} className={`relative mb-12 ${index % 2 === 0 ? 'md:pr-1/2' : 'md:pl-1/2 md:text-right'}`}>
-                                    <div className={`flex ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-8`}>
-                                        {/* Timeline Dot */}
-                                        <div className="absolute left-8 md:left-1/2 w-4 h-4 bg-emerald-500 rounded-full transform md:-translate-x-1/2 ring-4 ring-gray-50 dark:ring-slate-900"></div>
+                        <div className="space-y-12">
+                            {milestones.map((item, index) => (
+                                <div key={index} className={`relative flex flex-col md:flex-row gap-8 items-start ${index % 2 === 0 ? '' : 'md:flex-row-reverse'}`}>
 
-                                        {/* Content Card */}
-                                        <div className={`ml-20 md:ml-0 flex-1 ${index % 2 === 0 ? 'md:mr-12' : 'md:ml-12'}`}>
-                                            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 hover:shadow-xl transition-shadow">
-                                                <div className={`flex items-center gap-3 mb-3 ${index % 2 === 0 ? '' : 'md:flex-row-reverse'}`}>
-                                                    <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                                                        {milestone.icon}
-                                                    </div>
-                                                    <div className={index % 2 === 0 ? '' : 'md:text-right'}>
-                                                        <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                                                            {milestone.year}
-                                                        </p>
-                                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                                            {milestone.company}
-                                                        </h3>
+                                    {/* Timeline Node */}
+                                    <div className="absolute left-4 md:left-1/2 w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-4 border-emerald-500 z-10 transform -translate-x-1/2 flex items-center justify-center shadow-lg">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className={`ml-12 md:ml-0 md:w-1/2 ${index % 2 === 0 ? 'md:pr-12 md:text-right' : 'md:pl-12 md:text-left'}`}>
+                                        <div className="inline-block px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold mb-3">
+                                            {item.year}
+                                        </div>
+                                        <div className={`p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-800 hover:shadow-xl transition-all group ${index % 2 === 0 ? 'md:ml-auto' : 'md:mr-auto'}`}>
+                                            <div className={`flex items-center gap-3 mb-4 ${index % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+                                                <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                                                    {item.icon}
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                                                        {item.title}
+                                                    </h4>
+                                                    <div className="text-sm font-medium text-emerald-600 dark:text-emerald-500">
+                                                        {item.company}
                                                     </div>
                                                 </div>
-                                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    {milestone.role}
-                                                </p>
-                                                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                                                    {milestone.description}
-                                                </p>
                                             </div>
+                                            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                                                {item.description}
+                                            </p>
                                         </div>
                                     </div>
+
+                                    {/* Spacer for the other side */}
+                                    <div className="hidden md:block md:w-1/2"></div>
                                 </div>
                             ))}
                         </div>
-                    </div>
-                </div>
-            </section>
 
-            {/* Mission & Vision */}
-            <section className="py-20 bg-white dark:bg-slate-800">
-                <div className="container mx-auto px-4">
-                    <div className="max-w-5xl mx-auto">
-                        <div className="grid md:grid-cols-2 gap-12">
-                            <div className="bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-8 rounded-2xl border border-emerald-200 dark:border-emerald-900/30">
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Nossa Missão</h3>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                    Empoderar Corretores Autônomos através de uma plataforma colaborativa,
-                                    democratizando o acesso a tecnologia de ponta e criando um ecossistema de parcerias
-                                    que multiplica oportunidades de negócio.
-                                </p>
-                            </div>
-                            <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-slate-900 dark:to-slate-800 p-8 rounded-2xl border border-blue-200 dark:border-blue-900/30">
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Nossa Visão</h3>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                    Ser a principal Plataforma de colaboração do mercado imobiliário brasileiro,
-                                    reconhecida por transformar a forma como Corretores trabalham, conectam-se e crescem profissionalmente.
-                                </p>
+                        {/* Final Quote Node */}
+                        <div className="relative pt-16 text-center">
+                            <div className="inline-flex flex-col items-center">
+                                <div className="w-16 h-16 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xl mb-6 relative z-10 animate-pulse">
+                                    <Trophy size={32} />
+                                </div>
+                                <div className="max-w-2xl px-6 py-8 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl text-white shadow-2xl relative animate-pulse">
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-slate-900 rotate-45"></div>
+                                    <p className="text-lg italic font-light opacity-90 mb-4">
+                                        "Seja você quem for, seja qual for a posição social que você tenha na vida... tenha sempre como meta MUITA FORÇA, muita DETERMINAÇÃO e sempre FAÇA TUDO COM MUITO AMOR e com MUITA FÉ EM DEUS... que um dia VOCÊ CHEGA LÁ!!!"
+                                    </p>
+                                    <span className="text-emerald-400 font-bold text-xl tracking-widest uppercase">— Ayrton Senna</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="py-20 bg-gradient-to-br from-emerald-600 to-emerald-800 text-white">
-                <div className="container mx-auto px-4 text-center">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                        Você está Pronto para Revolucionar Seus Resultados?
-                    </h2>
-                    <p className="text-xl text-emerald-100 mb-8 max-w-2xl mx-auto">
-                        Junte-se a centenas de Corretores Autônomos que já estão fechando mais negócios com a iziBrokerz.
+            {/* CTA */}
+            <section className="py-20 relative overflow-hidden">
+                <div className="absolute inset-0 bg-emerald-600">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                    <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500 rounded-full blur-3xl opacity-50"></div>
+                </div>
+
+                <div className="container mx-auto px-6 relative z-10 text-center text-white">
+                    <h2 className="text-3xl md:text-5xl font-bold mb-6">Pronto para escrever sua história?</h2>
+                    <p className="text-xl text-emerald-100 mb-10 max-w-2xl mx-auto">
+                        A tecnologia que faltava para você alcançar o próximo nível na sua carreira.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <button
                             onClick={() => navigate('/login')}
-                            className="px-8 py-4 bg-white text-emerald-600 rounded-xl font-bold hover:bg-emerald-50 transition-colors shadow-lg flex items-center justify-center gap-2"
+                            className="px-8 py-4 bg-white text-emerald-700 rounded-xl font-bold hover:shadow-2xl hover:-translate-y-1 transition-all shadow-lg flex items-center justify-center gap-2"
                         >
-                            Começar Agora
+                            Começar Gratuitamente
                             <ArrowRight size={20} />
-                        </button>
-                        <button
-                            onClick={() => navigate('/partner')}
-                            className="px-8 py-4 bg-emerald-700 text-white rounded-xl font-bold hover:bg-emerald-800 transition-colors border-2 border-white/20"
-                        >
-                            Conhecer Planos
                         </button>
                     </div>
                 </div>

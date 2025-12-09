@@ -10,6 +10,7 @@ export interface PropertyMatch {
     valor: number;
     cidade: string;
     bairro: string;
+    imagem?: string;
     match_score: number;
 }
 
@@ -248,6 +249,7 @@ export async function getPropertySuggestions(leadId: string, limit: number = 5):
             valor: prop.valor_venda || prop.valor_locacao || 0,
             cidade: prop.cidade,
             bairro: prop.bairro,
+            imagem: prop.imagem,
             match_score: calculateMatchScore(lead, prop)
         }));
 

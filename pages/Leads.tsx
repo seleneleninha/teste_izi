@@ -35,6 +35,7 @@ import {
     findMatchingProperties,
     PropertyMatch
 } from '../lib/leadMatchingHelper';
+import { PropertyDetailsModal } from '../components/PropertyDetailsModal';
 
 interface Lead {
     id: string;
@@ -279,6 +280,10 @@ export const Leads: React.FC = () => {
     const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Property Details Modal State
+    const [viewingPropertyId, setViewingPropertyId] = useState<string | null>(null);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
     const [newLead, setNewLead] = useState({
         nome: '',
         email: '',
@@ -844,11 +849,15 @@ export const Leads: React.FC = () => {
                         <form onSubmit={handleCreateLead} className="space-y-4">
                             <div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Nome</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                                        Nome <span className="text-red-500">*</span>
+                                    </label>
                                     <input type="text" required value={newLead.nome} onChange={e => setNewLead({ ...newLead, nome: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none mb-2" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Telefone</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                                        Telefone <span className="text-red-500">*</span>
+                                    </label>
                                     <input
                                         type="tel"
                                         placeholder="(00) 00000-0000"
@@ -875,7 +884,9 @@ export const Leads: React.FC = () => {
 
                                 <div className="grid grid-cols-2 gap-4 mb-3">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Operação</label>
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">
+                                            Operação <span className="text-red-500">*</span>
+                                        </label>
                                         <select
                                             value={newLead.operacao_interesse}
                                             onChange={e => setNewLead({ ...newLead, operacao_interesse: e.target.value })}
@@ -888,7 +899,9 @@ export const Leads: React.FC = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Tipo de Imóvel</label>
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">
+                                            Tipo de Imóvel <span className="text-red-500">*</span>
+                                        </label>
                                         <select
                                             value={newLead.tipo_imovel_interesse}
                                             onChange={e => setNewLead({ ...newLead, tipo_imovel_interesse: e.target.value })}
@@ -918,7 +931,9 @@ export const Leads: React.FC = () => {
 
                                 <div className="grid grid-cols-2 gap-4 mb-3">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Cidade</label>
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">
+                                            Cidade <span className="text-red-500">*</span>
+                                        </label>
                                         <select
                                             value={newLead.cidade_interesse}
                                             onChange={e => setNewLead({ ...newLead, cidade_interesse: e.target.value, bairro_interesse: '' })}
@@ -1046,15 +1061,16 @@ export const Leads: React.FC = () => {
                                                     {prop.match_score}%
                                                 </div>
                                             </div>
-                                            <a
-                                                href={`/imoveis/${prop.id}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                            <button
+                                                onClick={() => {
+                                                    setViewingPropertyId(prop.id);
+                                                    setIsDetailsModalOpen(true);
+                                                }}
                                                 className="p-2 bg-white dark:bg-slate-600 rounded-full shadow-sm hover:shadow text-primary-500 hover:text-primary-600 transition-all"
-                                                title="Ver Detalhes"
+                                                title="Ver Detalhes e Enviar"
                                             >
                                                 <ArrowRight size={18} />
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
@@ -1069,6 +1085,17 @@ export const Leads: React.FC = () => {
                     </div>
                 </div>
             )}
-        </div >
+
+            {/* Property Details & Share Modal */}
+            <PropertyDetailsModal
+                isOpen={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                propertyId={viewingPropertyId || ''}
+                lead={selectedLeadForMatch ? {
+                    nome: selectedLeadForMatch.nome,
+                    telefone: selectedLeadForMatch.telefone
+                } : undefined}
+            />
+        </div>
     );
 };

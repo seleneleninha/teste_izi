@@ -27,6 +27,9 @@ interface PropertyCardProps {
     compact?: boolean;
     onClick?: () => void;
     brokerSlug?: string; // Pass broker context for partnership navigation
+    isDashboard?: boolean; // If true, navigate to /properties/:slug (dashboard route)
+    isSelected?: boolean;
+    onSelect?: (e: React.MouseEvent) => void;
 }
 
 const OPERATION_LABELS: { [key: string]: string } = {
@@ -35,7 +38,7 @@ const OPERATION_LABELS: { [key: string]: string } = {
     venda_locacao: 'Venda/Locação',
 };
 
-export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, showStatus = false, compact = false, onClick, brokerSlug }) => {
+export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, showStatus = false, compact = false, onClick, brokerSlug, isDashboard = false, isSelected = false, onSelect }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -80,10 +83,18 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
         if (onClick) {
             onClick();
         } else {
-            // If brokerSlug is provided, add it as query param for partnership context
             const slug = generateSlug();
-            const url = brokerSlug ? `/${slug}?broker=${brokerSlug}` : `/${slug}`;
-            navigate(url);
+            // Determine the base path based on context
+            if (isDashboard) {
+                // Dashboard context: stay within protected routes
+                navigate(`/properties/${slug}`);
+            } else if (brokerSlug) {
+                // Broker page context: add broker query param
+                navigate(`/${slug}?broker=${brokerSlug}`);
+            } else {
+                // Public context: use public slug route
+                navigate(`/${slug}`);
+            }
         }
     };
 
@@ -152,7 +163,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                 )}
 
                 {/* Tags Overlay */}
-                <div className="absolute top-3 left-3 flex flex-col gap-2 items-start">
+                <div className="absolute top-3 left-3 flex flex-col gap-2 items-start z-10">
                     <div className={`px-3 py-1 text-xs font-bold rounded-lg backdrop-blur-md ${operationTagClass()}`}>
                         {operationLabel}
                     </div>
@@ -162,6 +173,24 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                         </div>
                     )}
                 </div>
+
+                {/* Selection Checkbox */}
+                {onSelect && (
+                    <div
+                        className="absolute top-3 right-3 z-20"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onSelect(e);
+                        }}
+                    >
+                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${isSelected
+                            ? 'bg-primary-500 border-primary-500 shadow-md'
+                            : 'bg-white/50 border-white hover:bg-white hover:border-white'
+                            }`}>
+                            {isSelected && <Check size={14} className="text-white" strokeWidth={3} />}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Content Section */}

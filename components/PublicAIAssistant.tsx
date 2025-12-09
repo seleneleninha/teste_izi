@@ -18,7 +18,7 @@ export const PublicAIAssistant: React.FC = () => {
     const [messages, setMessages] = useState<Message[]>([
         {
             role: 'assistant',
-            content: 'Olá! 👋 Olá! Sou a IzA sua assistente virtual da iziBrokerz. Posso te ajudar a encontrar o imóvel perfeito ou esclarecer dúvidas sobre nossa Plataforma. Como posso ajudar?',
+            content: '👋 Olá! Sou a IzA sua assistente virtual. Posso te ajudar a encontrar o imóvel perfeito ou esclarecer dúvidas sobre nossa Plataforma. Como posso ajudar?',
             timestamp: new Date()
         }
     ]);
@@ -95,10 +95,9 @@ Funcionalidades da Plataforma para Corretores:
 - Gestão completa de anúncios com fotos e descrições
 - CRM integrado para leads
 - Sistema de mensagens com Clientes
-- Calendário de eventos e visitas
-- Gestão financeira de transações
 - Página pública personalizada para cada corretor
 - Análise de bairros com IA (Gemini)
+- Descrições de imóveis com IA (Gemini)
 - Dashboard com métricas e estatísticas
 
 Diferenciais:
@@ -204,10 +203,12 @@ INSTRUÇÕES DE RESPOSTA:
    - Sempre termine com uma ação: "Quer que eu te mostre como funciona?"
 
 4. FORMATO DA RESPOSTA:
-   - Máximo 3-4 linhas
-   - Seja ESPECÍFICA com números reais dos dados acima
-   - Sempre termine com uma pergunta ou call-to-action
-   - NUNCA peça desculpas ou diga que não pode ajudar
+   - Máximo 3-4 linhas por resposta (seja concisa)
+   - Seja ESPECÍFICA com números reais dos dados fornecidos
+   - NUNCA repita introduções como "Olá", "Sou a IzA" se já estiver conversando
+   - VARIE seu vocabulário. Não use sempre as mesmas frases de fechamento
+   - Sempre termine com uma pergunta ou call-to-action relevante ao contexto
+   - NUNCA peça desculpas ou diga que não pode ajudar (busque uma alternativa)
 
 5. EXEMPLOS DE BOAS RESPOSTAS:
    - "Temos vários imóveis disponíveis! 🏠 Você busca para comprar ou alugar? Em qual cidade?"
@@ -266,9 +267,8 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
 
     const quickQuestions = [
         "Quais imóveis vocês têm disponíveis?",
-        "Como funciona o sistema \"fifty\"?",
-        "Quero me cadastrar como corretor",
-        "Busco apartamento de 2 quartos"
+        "Busco apartamento de 2 quartos",
+        "Quero me cadastrar como corretor"
     ];
 
     return (
@@ -287,7 +287,7 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
             )}
 
             {isOpen && (
-                <div className="fixed bottom-6 right-6 z-50 w-96 h-[600px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-slate-700">
+                <div className="fixed bottom-6 right-6 z-50 w-[350px] h-[500px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-slate-700">
                     <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">

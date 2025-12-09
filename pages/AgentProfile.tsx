@@ -8,7 +8,6 @@ interface AgentProfile {
     nome: string;
     email: string;
     avatar: string;
-    cargo: string;
     creci: string;
     whatsapp: string;
 }
@@ -57,7 +56,6 @@ export const AgentProfile: React.FC = () => {
                     nome: profileData.nome || 'Corretor',
                     email: profileData.email || '',
                     avatar: profileData.avatar || `https://ui-avatars.com/api/?name=${profileData.nome}`,
-                    cargo: profileData.cargo || 'Corretor',
                     creci: profileData.creci || 'N/A',
                     whatsapp: profileData.whatsapp || ''
                 });
@@ -138,7 +136,6 @@ export const AgentProfile: React.FC = () => {
                         />
                         <div className="flex-1 mb-2">
                             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{agent.nome}</h1>
-                            <p className="text-primary-500 font-medium">{agent.cargo}</p>
                             <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">CRECI: {agent.creci}</p>
                         </div>
                         <div className="flex gap-3 mb-2 w-full md:w-auto">

@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { geocodeAddress } from '../lib/geocodingHelper';
 
 export const Settings: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, role } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'profile' | 'slug' | 'security' | 'notifications'>('profile');
@@ -445,17 +445,19 @@ export const Settings: React.FC = () => {
                 <span>Perfil</span>
               </button>
 
-              <button
-                onClick={() => setActiveTab('slug')}
-                className={`flex items-center space-x-3 px-4 py-2.5 md:py-4 transition-all whitespace-nowrap rounded-full md:rounded-none flex-shrink-0 md:flex-shrink
-                  ${activeTab === 'slug'
-                    ? 'bg-primary-500 text-white shadow-md md:shadow-none md:bg-primary-50 md:dark:bg-primary-900/20 md:text-primary-600 md:dark:text-primary-400 md:border-l-4 md:border-primary-500 font-bold md:font-medium'
-                    : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 md:hover:bg-gray-50 md:dark:hover:bg-slate-750 font-medium'
-                  }`}
-              >
-                <MapPin size={20} />
-                <span>Sua Página</span>
-              </button>
+              {role !== 'Cliente' && (
+                <button
+                  onClick={() => setActiveTab('slug')}
+                  className={`flex items-center space-x-3 px-4 py-2.5 md:py-4 transition-all whitespace-nowrap rounded-full md:rounded-none flex-shrink-0 md:flex-shrink
+                      ${activeTab === 'slug'
+                      ? 'bg-primary-500 text-white shadow-md md:shadow-none md:bg-primary-50 md:dark:bg-primary-900/20 md:text-primary-600 md:dark:text-primary-400 md:border-l-4 md:border-primary-500 font-bold md:font-medium'
+                      : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 md:hover:bg-gray-50 md:dark:hover:bg-slate-750 font-medium'
+                    }`}
+                >
+                  <MapPin size={20} />
+                  <span>Sua Página</span>
+                </button>
+              )}
 
               <button
                 onClick={() => setActiveTab('security')}
@@ -469,17 +471,19 @@ export const Settings: React.FC = () => {
                 <span>Segurança</span>
               </button>
 
-              <button
-                onClick={() => setActiveTab('notifications')}
-                className={`flex items-center space-x-3 px-4 py-2.5 md:py-4 transition-all whitespace-nowrap rounded-full md:rounded-none flex-shrink-0 md:flex-shrink
-                  ${activeTab === 'notifications'
-                    ? 'bg-primary-500 text-white shadow-md md:shadow-none md:bg-primary-50 md:dark:bg-primary-900/20 md:text-primary-600 md:dark:text-primary-400 md:border-l-4 md:border-primary-500 font-bold md:font-medium'
-                    : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 md:hover:bg-gray-50 md:dark:hover:bg-slate-750 font-medium'
-                  }`}
-              >
-                <Bell size={20} />
-                <span>Notificações</span>
-              </button>
+              {role !== 'Cliente' && (
+                <button
+                  onClick={() => setActiveTab('notifications')}
+                  className={`flex items-center space-x-3 px-4 py-2.5 md:py-4 transition-all whitespace-nowrap rounded-full md:rounded-none flex-shrink-0 md:flex-shrink
+                      ${activeTab === 'notifications'
+                      ? 'bg-primary-500 text-white shadow-md md:shadow-none md:bg-primary-50 md:dark:bg-primary-900/20 md:text-primary-600 md:dark:text-primary-400 md:border-l-4 md:border-primary-500 font-bold md:font-medium'
+                      : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700 md:hover:bg-gray-50 md:dark:hover:bg-slate-750 font-medium'
+                    }`}
+                >
+                  <Bell size={20} />
+                  <span>Notificações</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -591,30 +595,34 @@ export const Settings: React.FC = () => {
                       className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-                      CRECI <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.creci}
-                      disabled
-                      className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                      title="Este campo só pode ser alterado pelos administradores"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-                      UF do CRECI <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.ufCreci}
-                      disabled
-                      className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                      title="Este campo só pode ser alterado pelos administradores"
-                    />
-                  </div>
+                  {role !== 'Cliente' && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                          CRECI <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={profile.creci}
+                          disabled
+                          className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                          title="Este campo só pode ser alterado pelos administradores"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                          UF do CRECI <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={profile.ufCreci}
+                          disabled
+                          className="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                          title="Este campo só pode ser alterado pelos administradores"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Aviso ADM */}
@@ -714,18 +722,20 @@ export const Settings: React.FC = () => {
                       />
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        id="showAddress"
-                        checked={profile.showAddress}
-                        onChange={e => setProfile({ ...profile, showAddress: e.target.checked })}
-                        className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                      />
-                      <label htmlFor="showAddress" className="text-sm font-medium text-gray-700 dark:text-slate-300">
-                        Exibir Endereço Em Sua Página?
-                      </label>
-                    </div>
+                    {role !== 'Cliente' && (
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          id="showAddress"
+                          checked={profile.showAddress}
+                          onChange={e => setProfile({ ...profile, showAddress: e.target.checked })}
+                          className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                        />
+                        <label htmlFor="showAddress" className="text-sm font-medium text-gray-700 dark:text-slate-300">
+                          Exibir Endereço Em Sua Página?
+                        </label>
+                      </div>
+                    )}
 
                   </div>
                 </div>

@@ -278,26 +278,6 @@ export const BrokerPage: React.FC = () => {
                 </div>
             </section>
 
-            {/* Seção de Estatísticas */}
-            <section className="py-16 bg-slate-900 text-white">
-                <div className="container mx-auto px-4">
-                    <div className="grid md:grid-cols-3 gap-8 text-center">
-                        <div>
-                            <div className="text-5xl font-bold mb-2 text-emerald-400">{ownProperties.length}+</div>
-                            <p className="text-xl text-emerald-100">Imóveis em Destaque</p>
-                        </div>
-                        <div>
-                            <div className="text-5xl font-bold mb-2 text-emerald-400">{partnerProperties.length}+</div>
-                            <p className="text-xl text-emerald-100">Parcerias Ativas</p>
-                        </div>
-                        <div>
-                            <div className="text-5xl font-bold mb-2 text-emerald-400">100%</div>
-                            <p className="text-xl text-emerald-100">Comprometimento</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             {/* Imóveis em Destaque */}
             <section className="py-20 bg-gray-50 dark:bg-slate-950">
                 <div className="container mx-auto px-4">
@@ -329,7 +309,7 @@ export const BrokerPage: React.FC = () => {
                     <div className="container mx-auto px-4">
                         <div className="flex justify-center items-center gap-3 mb-12">
                             <CheckCircle2 className="text-emerald-500" size={32} />
-                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Imóveis de Parceiros</h2>
+                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Veja outras opções</h2>
                         </div>
 
                         <HorizontalScroll itemWidth={288} gap={24} itemsPerPage={4}>

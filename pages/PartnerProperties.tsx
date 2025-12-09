@@ -313,7 +313,7 @@ export const PartnerProperties: React.FC = () => {
     const [isActivating, setIsActivating] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [missingCity, setMissingCity] = useState(false);
-    const [userRadius, setUserRadius] = useState<number | null>(10);
+    const [userRadius, setUserRadius] = useState<number | null>(null);
     const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
 
     // View Mode State
@@ -388,7 +388,7 @@ export const PartnerProperties: React.FC = () => {
 
             // Get user's radius preference and location
             // If radius is not set, default to 10km
-            setUserRadius(userProfile.raio_atuacao || 10);
+            setUserRadius(userProfile.raio_atuacao || null);
 
             if (userProfile.latitude && userProfile.longitude) {
                 setUserLocation({
@@ -410,7 +410,8 @@ export const PartnerProperties: React.FC = () => {
                 .select(`
           *,
           tipo_imovel (tipo),
-          operacao (tipo)
+          operacao (tipo),
+          anunciante:user_id (id, nome, sobrenome, whatsapp)
         `)
                 .eq('uf', userProfile.uf) // Filter by STATE, not city
                 .neq('user_id', user?.id)
@@ -652,6 +653,8 @@ export const PartnerProperties: React.FC = () => {
                     </div>
                 )}
 
+
+
                 {/* Available Properties Section */}
                 {!missingCity && availableProperties.length > 0 && (
                     <div className="mb-12">
@@ -829,8 +832,8 @@ export const PartnerProperties: React.FC = () => {
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                    <CheckCircle className="text-primary-500" size={28} />
-                                    Minhas Parcerias Aceitas
+                                    <Handshake className="text-emerald-500" size={28} />
+                                    Parcerias Aceitas
                                 </h2>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                     {acceptedProperties.length} {acceptedProperties.length === 1 ? 'parceria ativa' : 'parcerias ativas'}

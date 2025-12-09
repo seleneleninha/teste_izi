@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { useTheme } from './ThemeContext';
-import { Sun, Moon, Bell } from 'lucide-react';
+import { Sun, Moon, Bell, Send } from 'lucide-react';
 import { NotificationDropdown } from './NotificationDropdown';
+import { MessagesDrawer } from './MessagesDrawer';
 import { TrialBanner } from './TrialBanner';
 import { AIAssistant } from './AIAssistant';
 import { useAuth } from './AuthContext';
@@ -13,7 +14,18 @@ export const DashboardLayout: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
     const location = useLocation();
     const { user } = useAuth();
+    const [searchParams] = useSearchParams();
     const [showNotifications, setShowNotifications] = useState(false);
+    const [showMessages, setShowMessages] = useState(false);
+
+    // Open chat from URL
+    useEffect(() => {
+        const chatId = searchParams.get('openChat');
+        if (chatId) {
+            setShowMessages(true);
+        }
+    }, [searchParams]);
+
     const notifRef = useRef<HTMLDivElement>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notifications, setNotifications] = useState<any[]>([]);
@@ -98,7 +110,7 @@ export const DashboardLayout: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200 flex">
             {/* Mobile hamburger */}
-            <button className="bg-emerald-500 dark:bg-emerald-600 rounded-full md:hidden p-2 fixed top-4 left-4 z-30" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <button className="bg-emerald-500 dark:bg-emerald-600 rounded-full md:hidden p-2 fixed top-4 left-4 z-[60]" onClick={() => setSidebarOpen(!sidebarOpen)}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
@@ -107,8 +119,8 @@ export const DashboardLayout: React.FC = () => {
 
             {/* Main content area with margin to account for fixed sidebar */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden md:ml-64">
-                {/* Topbar */}
-                <header className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm z-10">
+                {/* Topbar - Increased Z-Index */}
+                <header className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm z-[50]">
                     <div className="flex items-center">
                         <h1 className="p-14 text-xl font-bold text-gray-800 dark:text-white truncate">
                             {getTitle()}
@@ -121,6 +133,16 @@ export const DashboardLayout: React.FC = () => {
                             className="p-2 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
                         >
                             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                        </button>
+
+                        {/* Messages Button */}
+                        <button
+                            onClick={() => setShowMessages(true)}
+                            className="p-2 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 shadow-sm transition-colors relative"
+                            title="Mensagens"
+                        >
+                            <Send size={20} />
+                            {/* Optional: unread count badge */}
                         </button>
 
                         <div className="relative" ref={notifRef}>
@@ -144,6 +166,12 @@ export const DashboardLayout: React.FC = () => {
                         </div>
                     </div>
                 </header>
+
+                <MessagesDrawer
+                    isOpen={showMessages}
+                    onClose={() => setShowMessages(false)}
+                    initialChatId={searchParams.get('openChat')}
+                />
 
                 {/* Main Content */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-slate-900 scroll-smooth">

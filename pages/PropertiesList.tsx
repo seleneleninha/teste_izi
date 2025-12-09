@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { MOCK_PROPERTIES } from '../constants';
-import { MapPin, Bed, Bath, Square, Filter, Search, Grid, List, Map as MapIcon, CheckSquare, Loader2, Edit2, Trash2 } from 'lucide-react';
+import { MapPin, Bed, Bath, Square, Filter, Search, Grid, Map as MapIcon, CheckSquare, Loader2, Edit2, Trash2, X } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { PropertyCard } from '../components/PropertyCard';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { PropertyMap } from '../components/PropertyMap';
 import { useToast } from '../components/ToastContext';
-
 import { useAuth } from '../components/AuthContext';
-import { useLocation } from 'react-router-dom';
+import { HorizontalScroll } from '../components/HorizontalScroll';
+import { Footer } from '../components/Footer';
 
 export const PropertiesList: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user } = useAuth();
+    const { user, role } = useAuth();
     const { addToast } = useToast();
-    const [view, setView] = useState<'grid' | 'list' | 'map'>('grid');
+    const [view, setView] = useState<'grid' | 'map'>('grid');
     const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -27,7 +27,14 @@ export const PropertiesList: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOperation, setSelectedOperation] = useState('');
 
-    const isMyProperties = location.pathname === '/properties';
+    // Determine context based on route
+    const isDashboardRoute = location.pathname === '/properties';
+
+    const searchParams = new URLSearchParams(location.search);
+    const isMarketMode = searchParams.get('mode') === 'market';
+
+    // "My Properties" mode only applies if we are on the dashboard route AND not a client AND not in market mode
+    const isMyProperties = isDashboardRoute && role !== 'Cliente' && !isMarketMode;
 
     // Consolidated effect to handle URL params and fetching
     useEffect(() => {
@@ -47,10 +54,6 @@ export const PropertiesList: React.FC = () => {
             if (bairroParam) qParam = bairroParam;
         }
 
-        // Update state from URL
-        // For type, we might need to normalize case to match dropdown options
-        // But for now, we'll just set it. The query uses ilike so it will fetch correctly.
-        // The dropdown might not show selected if case differs, we'll fix that in render.
         setSelectedType(typeParam);
         setSearchTerm(qParam);
         if (viewParam === 'map') setView('map');
@@ -311,7 +314,7 @@ export const PropertiesList: React.FC = () => {
                     latitude: p.latitude,
                     longitude: p.longitude,
                     user_id: p.user_id,
-                    status_aprovacao: p.status_aprovacao // Added status_aprovacao
+                    status_aprovacao: p.status_aprovacao
                 }));
                 setProperties(formattedProperties);
             }
@@ -355,28 +358,35 @@ export const PropertiesList: React.FC = () => {
         }
     };
 
+    const clearFilters = () => {
+        setSelectedOperation('');
+        setSelectedType('');
+        setSelectedPriceRange('');
+        setSearchTerm('');
+        fetchProperties('', '', '', '', '');
+    };
+
     return (
-        <div className="container mx-auto px-4 py-6">
-            <div className="flex flex-col h-[calc(100vh-8rem)]">
+        <div className="bg-gray-50 dark:bg-slate-900 min-h-screen flex flex-col">
+            <div className="container mx-auto px-4 py-8 flex-1">
                 {/* Header Controls */}
-                <div className="flex flex-col xl:flex-row xl:items-center justify-between mb-6 gap-4 shrink-0">
+                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                            {isMyProperties ? 'Meus Imóveis' : 'Buscar Imóveis'}
+                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                            {isMyProperties ? 'Meus Imóveis' : isMarketMode ? 'Mercado Imobiliário' : 'Buscar Imóveis'}
                         </h2>
-                        <p className="text-gray-500 dark:text-slate-400 text-sm">
-                            {isMyProperties ? 'Gerencie seus anúncios.' : 'Encontre o imóvel ideal.'}
+                        <p className="text-gray-500 dark:text-gray-400 mt-1">
+                            {isMyProperties ? 'Gerencie seus anúncios.' : 'Explore oportunidades e parcerias.'}
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
-
-                        {/* Filters */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="w-full xl:w-auto flex flex-col md:flex-row gap-4">
+                        {/* Filters Row */}
+                        <div className="flex-1 grid grid-cols-2 md:flex gap-2">
                             <select
                                 value={selectedOperation}
                                 onChange={e => setSelectedOperation(e.target.value)}
-                                className="w-full md:w-auto bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 cursor-pointer"
+                                className="col-span-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
                             >
                                 <option value="" className="dark:bg-slate-800">Operação</option>
                                 <option value="venda" className="dark:bg-slate-800">Venda</option>
@@ -385,7 +395,7 @@ export const PropertiesList: React.FC = () => {
                             <select
                                 value={selectedType}
                                 onChange={e => setSelectedType(e.target.value)}
-                                className="w-full md:w-auto bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 cursor-pointer"
+                                className="col-span-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
                             >
                                 <option value="" className="dark:bg-slate-800">Tipo</option>
                                 {propertyTypes.map((type, idx) => (
@@ -397,104 +407,169 @@ export const PropertiesList: React.FC = () => {
                             <select
                                 value={selectedPriceRange}
                                 onChange={e => setSelectedPriceRange(e.target.value)}
-                                className="w-full md:w-auto bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 cursor-pointer"
+                                className="col-span-2 md:w-auto bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
                             >
                                 <option value="" className="dark:bg-slate-800">Faixa de Preço</option>
                                 <option value="0-200000" className="dark:bg-slate-800">até R$200mil</option>
-                                <option value="200000-500000" className="dark:bg-slate-800">de R$200mil a R$500mil</option>
-                                <option value="500000-1000000" className="dark:bg-slate-800">de R$500mil a R$1M</option>
-                                <option value="1000000-2000000" className="dark:bg-slate-800">de R$1M a R$2M</option>
+                                <option value="200000-500000" className="dark:bg-slate-800">R$200k - R$500k</option>
+                                <option value="500000-1000000" className="dark:bg-slate-800">R$500k - R$1M</option>
+                                <option value="1000000-2000000" className="dark:bg-slate-800">R$1M - R$2M</option>
                                 <option value="2000000-100000000" className="dark:bg-slate-800">acima de R$2M</option>
                             </select>
-                            <button
-                                onClick={() => fetchProperties()}
-                                className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
-                            >
-                                <Search size={18} />
-                                BUSCAR
-                            </button>
                         </div>
 
-                        <div className="h-8 w-px bg-gray-300 dark:bg-slate-700 hidden md:block mx-2"></div>
+                        {/* Actions Row */}
+                        <div className="flex gap-2 items-center justify-between md:justify-start">
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => fetchProperties()}
+                                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                                >
+                                    <Search size={18} />
+                                    <span className="hidden sm:inline">Buscar</span>
+                                </button>
+                                <button
+                                    onClick={clearFilters}
+                                    className="bg-red-500 dark:bg-red-700 text-white hover:bg-red-600 dark:hover:bg-red-600 font-bold py-2 px-3 rounded-lg transition-colors flex items-center justify-center"
+                                >
+                                    <X size={18} />
+                                    <span className="hidden sm:inline">Limpar</span>
+                                </button>
+                            </div>
 
-                        {/* View Toggles */}
-                        <div className="flex bg-white dark:bg-slate-800 rounded-lg p-1 border border-gray-200 dark:border-slate-700">
-                            <button
-                                onClick={() => setView('grid')}
-                                className={`p-2 rounded-md transition-colors ${view === 'grid' ? 'bg-primary-500 text-white' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
-                            >
-                                <Grid size={25} />
-                            </button>
-                            <button
-                                onClick={() => setView('map')}
-                                className={`p-2 rounded-md transition-colors ${view === 'map' ? 'bg-primary-500 text-white' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
-                            >
-                                <MapIcon size={25} />
-                            </button>
+                            <div className="h-8 w-px bg-gray-300 dark:bg-slate-700 hidden md:block mx-1"></div>
+
+                            <div className="flex gap-2">
+                                <div className="flex bg-white dark:bg-slate-800 rounded-lg p-1 border border-gray-200 dark:border-slate-700">
+                                    <button
+                                        onClick={() => setView('grid')}
+                                        className={`p-2 rounded-md transition-all ${view === 'grid' ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
+                                        title="Visualização Horizontal"
+                                    >
+                                        <Grid size={20} />
+                                    </button>
+                                    <button
+                                        onClick={() => setView('map')}
+                                        className={`p-2 rounded-md transition-all ${view === 'map' ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
+                                        title="Mapa"
+                                    >
+                                        <MapIcon size={20} />
+                                    </button>
+                                </div>
+
+                                {user && (
+                                    <button
+                                        onClick={() => navigate('/add-property')}
+                                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors font-medium shadow-sm whitespace-nowrap"
+                                    >
+                                        + Anunciar
+                                    </button>
+                                )}
+                            </div>
                         </div>
-
-                        {user && (
-                            <button
-                                onClick={() => navigate('/add-property')}
-                                className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors"
-                            >
-                                + Adicionar Imóvel
-                            </button>
-                        )}
                     </div>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 min-h-0 overflow-y-auto">
-                    {view === 'map' ? (
-                        <div className="h-full rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700">
-                            <PropertyMap properties={properties} />
+                <div className="flex-1 min-h-[400px]">
+                    {loading ? (
+                        <div className="flex justify-center items-center h-64">
+                            <Loader2 className="animate-spin text-emerald-500" size={48} />
+                        </div>
+                    ) : properties.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+                            <Search size={48} className="mb-4 opacity-20" />
+                            <p className="text-lg font-medium">Nenhum imóvel encontrado.</p>
+                            <p className="text-sm">Tente ajustar seus filtros.</p>
                         </div>
                     ) : (
-                        <div className={`grid gap-6 pb-8 ${view === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-                            {loading ? (
-                                <div className="col-span-full flex justify-center py-10">
-                                    <Loader2 className="animate-spin text-primary-500" size={32} />
+                        <>
+                            {view === 'map' ? (
+                                <div className="h-[400px] rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-700 shadow-lg">
+                                    <PropertyMap properties={properties} />
                                 </div>
-                            ) : properties.length === 0 ? (
-                                <div className="col-span-full text-center py-12 text-gray-500">Nenhum imóvel encontrado.</div>
+                            ) : view === 'grid' ? (
+                                <div className="w-full">
+                                    {/* Horizontal Scroll Layout */}
+                                    <HorizontalScroll itemsPerPage={undefined} itemWidth={320}>
+                                        {properties.map(prop => (
+                                            <div key={prop.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
+                                                <PropertyCard
+                                                    property={prop}
+                                                    showStatus={isMyProperties}
+                                                    isDashboard={isDashboardRoute}
+                                                    actions={
+                                                        (user && prop.user_id === user.id) ? (
+                                                            <>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        navigate(`/add-property?id=${prop.id}`);
+                                                                    }}
+                                                                    className="flex-1 px-3 py-2 bg-yellow-600/10 text-yellow-700 dark:text-yellow-400 rounded-lg text-sm font-medium hover:bg-yellow-600/20 flex items-center justify-center transition-colors"
+                                                                >
+                                                                    <Edit2 size={16} className="mr-1.5" /> Editar
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeleteProperty(prop.id);
+                                                                    }}
+                                                                    className="flex-1 px-3 py-2 bg-red-600/10 text-red-700 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-600/20 flex items-center justify-center transition-colors"
+                                                                >
+                                                                    <Trash2 size={16} className="mr-1.5" /> Inativar
+                                                                </button>
+                                                            </>
+                                                        ) : undefined
+                                                    }
+                                                />
+                                            </div>
+                                        ))}
+                                    </HorizontalScroll>
+                                </div>
                             ) : (
-                                properties.map(prop => (
-                                    <PropertyCard
-                                        key={prop.id}
-                                        property={prop}
-                                        showStatus={isMyProperties}
-                                        actions={
-                                            (user && prop.user_id === user.id) ? (
-                                                <>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            navigate(`/add-property?id=${prop.id}`);
-                                                        }}
-                                                        className="flex-1 px-3 py-2 bg-yellow-600/10 text-yellow-700 dark:text-yellow-400 rounded-lg text-sm font-medium hover:bg-yellow-600/20 flex items-center justify-center transition-colors"
-                                                    >
-                                                        <Edit2 size={16} className="mr-1.5" /> Editar
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeleteProperty(prop.id);
-                                                        }}
-                                                        className="flex-1 px-3 py-2 bg-red-600/10 text-red-700 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-600/20 flex items-center justify-center transition-colors"
-                                                    >
-                                                        <Trash2 size={16} className="mr-1.5" /> Inativar
-                                                    </button>
-                                                </>
-                                            ) : undefined
-                                        }
-                                    />
-                                ))
+                                /* List View (Vertical Grid) */
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                    {properties.map(prop => (
+                                        <PropertyCard
+                                            key={prop.id}
+                                            property={prop}
+                                            showStatus={isMyProperties}
+                                            isDashboard={isDashboardRoute}
+                                            actions={
+                                                (user && prop.user_id === user.id) ? (
+                                                    <>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                navigate(`/add-property?id=${prop.id}`);
+                                                            }}
+                                                            className="flex-1 px-3 py-2 bg-yellow-600/10 text-yellow-700 dark:text-yellow-400 rounded-lg text-sm font-medium hover:bg-yellow-600/20 flex items-center justify-center transition-colors"
+                                                        >
+                                                            <Edit2 size={16} className="mr-1.5" /> Editar
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeleteProperty(prop.id);
+                                                            }}
+                                                            className="flex-1 px-3 py-2 bg-red-600/10 text-red-700 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-600/20 flex items-center justify-center transition-colors"
+                                                        >
+                                                            <Trash2 size={16} className="mr-1.5" /> Inativar
+                                                        </button>
+                                                    </>
+                                                ) : undefined
+                                            }
+                                        />
+                                    ))}
+                                </div>
                             )}
-                        </div>
+                        </>
                     )}
                 </div>
             </div>
+
+            <Footer />
         </div>
     );
 };

@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Bed, Bath, Car, MapPin, Home, Share2, Heart, Phone, Mail, Calendar, ChevronLeft, ChevronRight, Check, Compass, Coffee, GraduationCap, ShieldCheck, Square, User, Search, LayoutGrid, List, Map, HomeIcon, SearchCode, SearchIcon, MessageCircle, X, PlayCircle, Video, CheckCircle, Handshake, Sparkles } from 'lucide-react';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { ArrowLeft, Bed, Bath, Car, MapPin, Home, Share2, Heart, Phone, Mail, Calendar, ChevronLeft, ChevronRight, Check, Compass, Coffee, GraduationCap, ShieldCheck, Square, User, Search, LayoutGrid, List, Map, HomeIcon, SearchCode, SearchIcon, MessageCircle, X, PlayCircle, Video, CheckCircle, Handshake, Sparkles, AreaChart } from 'lucide-react';
 import { HorizontalScroll } from '../components/HorizontalScroll';
+import { ScheduleVisitModal } from '../components/ScheduleVisitModal';
 import { PropertyCard } from '../components/PropertyCard';
 import { SearchFilter } from '../components/SearchFilter';
 import { supabase } from '../lib/supabaseClient';
 import { analyzeNeighborhood } from '../lib/geminiHelper';
+import { useAuth } from '../components/AuthContext'; // Import useAuth
+import { useToast } from '../components/ToastContext'; // Import useToast
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -26,12 +29,17 @@ L.Marker.prototype.options.icon = DefaultIcon;
 export const PropertyDetails: React.FC = () => {
     const { id, slug } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams] = useSearchParams();
+    const { user } = useAuth();
+    const { addToast } = useToast();
     const [property, setProperty] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+    const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
     const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
+    const [isFavorite, setIsFavorite] = useState(false);
     const [neighborhoodInfo, setNeighborhoodInfo] = useState<{
         educacao: string;
         lazer: string;
@@ -67,6 +75,25 @@ export const PropertyDetails: React.FC = () => {
             slugId = slug;
         }
     }
+
+    // Check for auto-open action from URL (e.g. returning from login)
+    useEffect(() => {
+        const action = searchParams.get('action');
+        if (action === 'openSchedule' && user) {
+            setIsScheduleModalOpen(true);
+        }
+    }, [searchParams, user]);
+
+    const handleScheduleClick = () => {
+        if (!user) {
+            addToast('Faça login ou cadastre-se para agendar uma visita.', 'info');
+            // Encode the current path with the action param as the return destination
+            const returnUrl = `${location.pathname}?action=openSchedule`;
+            navigate(`/login?redirectTo=${encodeURIComponent(returnUrl)}&register=true`);
+            return;
+        }
+        setIsScheduleModalOpen(true);
+    };
 
     useEffect(() => {
         const fetchPropertyTypes = async () => {
@@ -166,23 +193,13 @@ export const PropertyDetails: React.FC = () => {
                             .single();
 
                         if (brokerData) {
-                            // Se o corretor não é o dono do imóvel, verificar se é parceria
-                            if (brokerData.id !== data.user_id) {
-                                const { data: partnershipData } = await supabase
-                                    .from('parcerias')
-                                    .select('id')
-                                    .eq('user_id', brokerData.id)
-                                    .eq('property_id', data.id)
-                                    .single();
+                            // BYPASS: Se o corretor foi passado na URL, usamos seus dados como contato principal
+                            // Isso permite enviar links para leads mesmo sem parceria formalizada no sistema ainda
+                            finalAgentData = brokerData;
 
-                                if (partnershipData) {
-                                    // É uma parceria! Usar dados do corretor da URL
-                                    finalAgentData = brokerData;
-                                    setPartnershipBroker(brokerData);
-                                }
-                            } else {
-                                // O corretor é o dono do imóvel, manter seus dados
-                                finalAgentData = brokerData;
+                            // Se não for o dono, marcamos como contexto de parceria (visual apenas)
+                            if (brokerData.id !== data.user_id) {
+                                setPartnershipBroker(brokerData);
                             }
                         }
                     }
@@ -281,7 +298,9 @@ export const PropertyDetails: React.FC = () => {
     // Buscar imóveis relacionados
     useEffect(() => {
         const fetchRelated = async () => {
-            if (!property) return;
+            // BYPASS: Se houver um corretor na URL (contexto de oferta enviada), 
+            // NÃO buscamos imóveis relacionados para evitar que o lead saia do fluxo exclusivo
+            if (!property || searchParams.get('broker')) return;
 
             try {
                 const { data } = await supabase
@@ -332,6 +351,65 @@ export const PropertyDetails: React.FC = () => {
     const prevImage = () => {
         if (property?.images) {
             setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+        }
+    };
+
+    // Check if property is in favorites
+    useEffect(() => {
+        const checkFavorite = async () => {
+            if (!user || !property) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('favoritos')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('anuncio_id', property.id)
+                    .single();
+
+                if (data) setIsFavorite(true);
+            } catch (error) {
+                // Ignore error if not found (standard Supabase behavior calls error on .single() if null)
+            }
+        };
+        checkFavorite();
+    }, [user, property]);
+
+    const toggleFavorite = async () => {
+        if (!user) {
+            // Redirect to login with return url only if NOT logged in
+            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            navigate(`/login?returnUrl=${returnUrl}&type=client`);
+            return;
+        }
+
+        if (!property) return;
+
+        try {
+            if (isFavorite) {
+                // Remove from favorites
+                const { error } = await supabase
+                    .from('favoritos')
+                    .delete()
+                    .eq('user_id', user.id)
+                    .eq('anuncio_id', property.id);
+
+                if (error) throw error;
+                setIsFavorite(false);
+                addToast('Removido dos favoritos', 'success');
+            } else {
+                // Add to favorites
+                const { error } = await supabase
+                    .from('favoritos')
+                    .insert([{ user_id: user.id, anuncio_id: property.id }]);
+
+                if (error) throw error;
+                setIsFavorite(true);
+                addToast('Adicionado aos favoritos', 'success');
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+            addToast('Erro ao atualizar favoritos', 'error');
         }
     };
 
@@ -386,15 +464,14 @@ export const PropertyDetails: React.FC = () => {
                                 <Share2 size={20} />
                             </button>
                             <button
-                                onClick={() => {
-                                    // Redirect to login with return url
-                                    const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-                                    navigate(`/login?returnUrl=${returnUrl}&type=client`);
-                                }}
-                                className="p-2 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-600 hover:text-red-500 transition-colors"
-                                title="Salvar Favorito"
+                                onClick={toggleFavorite}
+                                className={`p-2 rounded-full border transition-colors ${isFavorite
+                                    ? 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100'
+                                    : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 hover:text-red-500'
+                                    }`}
+                                title={isFavorite ? "Remover dos Favoritos" : "Salvar Favorito"}
                             >
-                                <Heart size={20} />
+                                <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
                             </button>
                         </div>
                     </div>
@@ -438,7 +515,7 @@ export const PropertyDetails: React.FC = () => {
                         )}
 
                         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 pointer-events-none">
-                            <h1 className="text-4xl font-bold text-white mb-2">{property.title}</h1>
+                            <h1 className="text-4xl font-bold text-white mb-2 truncate">{property.title}</h1>
                             <div className="flex items-center gap-2 mb-2">
                                 {/* Tipo Imovel Badge */}
                                 <span className="text-lg px-3 py-1 rounded-full font-medium bg-white/20 text-white backdrop-blur-sm">
@@ -502,8 +579,8 @@ export const PropertyDetails: React.FC = () => {
                                 {(property.area || 0) > 0 && (
                                     <>
                                         <div className="h-10 w-px bg-gray-200 dark:bg-slate-700 hidden sm:block"></div>
-                                        <div className="text-center min-w-[80px]">
-                                            <p className="text-gray-500 dark:text-slate-400 text-sm uppercase tracking-wider mb-1">Área Priv.</p>
+                                        <div className="flex flex-col items-center text-center min-w-[80px]">
+                                            <Square size={20} className="mr-2 mb-2" />
                                             <p className="text-xl font-bold text-gray-900 dark:text-white">{property.area} <span className="text-sm font-normal">m²</span></p>
                                         </div>
                                     </>
@@ -512,8 +589,8 @@ export const PropertyDetails: React.FC = () => {
                                 {(property.garage || 0) > 0 && (
                                     <>
                                         <div className="h-10 w-px bg-gray-200 dark:bg-slate-700 hidden sm:block"></div>
-                                        <div className="text-center min-w-[80px]">
-                                            <p className="text-gray-500 dark:text-slate-400 text-sm uppercase tracking-wider mb-1">Vagas</p>
+                                        <div className="flex flex-col items-center text-center min-w-[80px]">
+                                            <Car size={20} className="mr-2 mb-2" />
                                             <p className="text-xl font-bold text-gray-900 dark:text-white">{property.garage}</p>
                                         </div>
                                     </>
@@ -522,8 +599,8 @@ export const PropertyDetails: React.FC = () => {
                                 {(property.beds || 0) > 0 && (
                                     <>
                                         <div className="h-10 w-px bg-gray-200 dark:bg-slate-700 hidden sm:block"></div>
-                                        <div className="text-center min-w-[80px]">
-                                            <p className="text-gray-500 dark:text-slate-400 text-sm uppercase tracking-wider mb-1">Quartos</p>
+                                        <div className="flex flex-col items-center text-center min-w-[80px]">
+                                            <Bed size={20} className="mr-2 mb-2" />
                                             <p className="text-xl font-bold text-gray-900 dark:text-white">{property.beds}</p>
                                         </div>
                                     </>
@@ -532,8 +609,8 @@ export const PropertyDetails: React.FC = () => {
                                 {(property.baths || 0) > 0 && (
                                     <>
                                         <div className="h-10 w-px bg-gray-200 dark:bg-slate-700 hidden sm:block"></div>
-                                        <div className="text-center min-w-[80px]">
-                                            <p className="text-gray-500 dark:text-slate-400 text-sm uppercase tracking-wider mb-1">Banheiros</p>
+                                        <div className="flex flex-col items-center text-center min-w-[80px]">
+                                            <Bath size={20} className="mr-2 mb-2" />
                                             <p className="text-xl font-bold text-gray-900 dark:text-white">{property.baths}</p>
                                         </div>
                                     </>
@@ -707,7 +784,7 @@ export const PropertyDetails: React.FC = () => {
                                 <div className="mt-6 pt-6 border-t border-blue-200 dark:border-slate-600">
                                     <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                                         <MapPin size={18} className="text-blue-500" />
-                                        Localização do Imóvel / Sobre o Bairro {property.address.neighborhood}
+                                        Localização do Imóvel | Sobre o Bairro {property.address.neighborhood}
                                     </h4>
                                     {/* Mini Map */}
                                     {property.latitude && property.longitude && (
@@ -749,7 +826,7 @@ export const PropertyDetails: React.FC = () => {
                                 <div className="flex items-center space-x-4 mb-6">
                                     <img src={property.agent.avatar} alt="Agent" className="w-16 h-16 rounded-full object-cover border-2 border-primary-500 p-1" />
                                     <div>
-                                        <p className="text-sm text-gray-500 dark:text-slate-400">Anunciado por</p>
+                                        <p className="text-sm text-gray-500 dark:text-slate-400">Anunciante</p>
                                         <h3
                                             className="text-lg font-bold text-gray-900 dark:text-white cursor-pointer hover:text-primary-500 transition-colors"
                                             onClick={() => {
@@ -769,22 +846,6 @@ export const PropertyDetails: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-3">
-                                    <a
-                                        href={`https://wa.me/${property.agent.phone.replace(/\D/g, '')}?text=Olá, gostaria de mais informações sobre o imóvel: ${property.title}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-colors shadow-lg shadow-emerald-500/30 flex items-center justify-center"
-                                    >
-                                        <MessageCircle size={18} className="mr-2" /> WhatsApp
-                                    </a>
-                                    <a
-                                        href={`mailto:${property.agent.email}?subject=Interesse no imóvel: ${property.title}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center"
-                                    >
-                                        <Mail size={18} className="mr-2" /> Enviar E-mail
-                                    </a>
                                     <button
                                         onClick={() => {
                                             if (property.agent.slug) {
@@ -798,11 +859,36 @@ export const PropertyDetails: React.FC = () => {
                                     >
                                         <SearchIcon size={18} className="mr-2" />+ Imóveis Desse Corretor
                                     </button>
+                                    <a
+                                        href={`https://wa.me/${property.agent.phone.replace(/\D/g, '')}?text=Olá, gostaria de mais informações sobre o imóvel: ${property.title}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-colors shadow-lg shadow-emerald-500/30 flex items-center justify-center"
+                                    >
+                                        <MessageCircle size={18} className="mr-2" /> WhatsApp
+                                    </a>
+
+                                    <button
+                                        onClick={handleScheduleClick}
+                                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center cursor-pointer"
+                                    >
+                                        <Calendar size={18} className="mr-2" /> Agendar Visita
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <ScheduleVisitModal
+                    isOpen={isScheduleModalOpen}
+                    onClose={() => setIsScheduleModalOpen(false)}
+                    propertyId={property.id}
+                    propertyTitle={property.titulo}
+                    ownerId={property.user_id}
+                    ownerName={property.agent.name}
+                    ownerPhone={property.agent.phone}
+                />
 
                 {/* Você também pode gostar */}
                 {relatedProperties.length > 0 && (

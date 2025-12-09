@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Building2, Settings, LogOut, Users, X, Handshake, CreditCard, Ticket, DollarSign, CheckCircle } from 'lucide-react';
+import { LayoutDashboard, Building2, Settings, LogOut, Users, X, Handshake, CreditCard, Ticket, DollarSign, CheckCircle, Search, Heart, User as UserIcon, Home, Globe } from 'lucide-react';
 import { IconWrapper } from './IconWrapper';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -62,21 +62,29 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
   const isActive = (path: string) => location.pathname === path;
 
   const isAdmin = role === 'Admin' || role === 'admin';
+  const isClient = role === 'Cliente';
 
   const navItems = isAdmin ? [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+    { label: 'Mercado', icon: Globe, path: '/properties?mode=market' }, // New Link
     { label: 'Aprovar Anúncios', icon: CheckCircle, path: '/admin/approvals' },
     { label: 'Planos', icon: CreditCard, path: '/admin/plans' },
     { label: 'Config Trial', icon: Settings, path: '/admin/trial-settings' },
     { label: 'Cupons', icon: Ticket, path: '/admin/coupons' },
     { label: 'Financeiro', icon: DollarSign, path: '/admin/financial' },
     { label: 'Configurações', icon: Settings, path: '/settings' },
+  ] : isClient ? [
+    { label: 'Início', icon: Home, path: '/dashboard' },
+    { label: 'Buscar Imóveis', icon: Search, path: '/properties' },
+    { label: 'Favoritos', icon: Heart, path: '/favorites' },
+    { label: 'Meu Perfil', icon: UserIcon, path: '/settings' },
   ] : [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { label: 'Configurações', icon: Settings, path: '/settings' },
+    { label: 'Mercado', icon: Globe, path: '/properties?mode=market' }, // New Link
     { label: 'Meus Imóveis', icon: Building2, path: '/properties' },
     { label: 'Imóveis Parceiros', icon: Handshake, path: '/partner-properties' },
     { label: 'Leads (CRM)', icon: Users, path: '/leads' },
+    { label: 'Configurações', icon: Settings, path: '/settings' },
   ];
 
   return (

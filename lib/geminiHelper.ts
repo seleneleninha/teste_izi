@@ -130,19 +130,19 @@ Características: ${propertyData.caracteristicas.join(', ')}
 
 DIRETRIZES IMPORTANTES:
 - Crie 3 versões COMPLETAMENTE DIFERENTES (não apenas variações)
-- Use linguagem ENRIQUECEDORA e PERSUASIVA que agregue valor ao anúncio
+- IDIOMA: Português do Brasil (PT-BR) Impecável. NUNCA use termos em inglês desnecessários (ex: use "varanda gourmet" e não "gourmet balcony"). Termos aceitos: Closet, Living, Suite, Loft.
+- TOM DE VOZ: Profissional, encantador e persuasivo. Evite exageros como "luxo" para imóveis simples.
 - Destaque os DIFERENCIAIS e BENEFÍCIOS do imóvel, não apenas liste características
 - Explore o ESTILO DE VIDA que o imóvel proporciona
-- Mencione a LOCALIZAÇÃO de forma atrativa (sem inventar dados)
+- Mencione a LOCALIZAÇÃO de forma atrativa (use referências reais do bairro se souber, senão foque na conveniência)
 - NÃO repita todas as especificações técnicas - use-as para criar uma narrativa envolvente
 - Cada descrição deve ter entre 120-180 palavras
 - Use verbos de ação e adjetivos que despertem emoção
-- Foque em como o imóvel melhora a vida do morador
 
 EXEMPLOS DE ABORDAGENS DIFERENTES:
-1ª descrição: Foque no conforto e qualidade de vida
-2ª descrição: Destaque localização e conveniência
-3ª descrição: Enfatize exclusividade e sofisticação
+1ª descrição: "Família & Conforto" (Foco em segurança, espaço e convivência)
+2ª descrição: "Praticidade & Modernidade" (Foco em localização, facilidades e design)
+3ª descrição: "Investimento & Oportunidade" (Foco em valorização e custo-benefício)
 
 Separe cada descrição com "---"
 

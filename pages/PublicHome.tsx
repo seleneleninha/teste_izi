@@ -8,6 +8,7 @@ import { HorizontalScroll } from '../components/HorizontalScroll';
 import { supabase } from '../lib/supabaseClient';
 import { Footer } from '../components/Footer';
 import { getRandomBackground } from '../lib/backgrounds';
+import { PartnersCarousel } from '../components/PartnersCarousel';
 
 interface Property {
     id: string;
@@ -294,6 +295,9 @@ export const PublicHome: React.FC = () => {
                     </div>
                 </div>
             </section>
+
+            {/* Partners Carousel */}
+            <PartnersCarousel />
 
             {/* Footer */}
             <Footer />

@@ -65,7 +65,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ noti
   const unreadCount = notifications.filter(n => !n.lida).length;
 
   return (
-    <div className="absolute right-0 top-12 w-80 md:w-96 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 z-50 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
+    <div className="absolute right-0 top-12 w-80 md:w-96 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 z-50 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden z-index-999">
       <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/50">
         <div className="flex items-center space-x-2">
           <h3 className="font-bold text-gray-900 dark:text-white">Notificações</h3>
@@ -75,7 +75,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ noti
             </span>
           )}
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 z-index-999">
           {unreadCount > 0 && (
             <button
               onClick={onMarkAsRead}

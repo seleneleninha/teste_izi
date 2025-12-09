@@ -192,8 +192,8 @@ export function getPropertyUrl(property: any, brokerSlug?: string): string {
     const baseUrl = window.location.origin;
 
     if (brokerSlug) {
-        return `${baseUrl}/#/corretor/${brokerSlug}/imovel/${propertySlug}`;
+        return `${baseUrl}/#/${propertySlug}?broker=${brokerSlug}`;
     } else {
-        return `${baseUrl}/#/imovel/${propertySlug}`;
+        return `${baseUrl}/#/${propertySlug}`;
     }
 }

@@ -3,6 +3,7 @@ import { Check, Star, Users, Building2, Handshake, Zap, Shield, BarChart3, Arrow
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { Footer } from '../components/Footer';
+import { PartnersCarousel } from '../components/PartnersCarousel';
 
 interface Plan {
     id: string;
@@ -126,11 +127,11 @@ export const PartnerPage: React.FC = () => {
                         Para Corretores Autônomos de todo Brasil
                     </span>
                     <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight animate-fade-in-up delay-100">
-                        Acelere suas Vendas com o Poder da <br />
+                        Acelere suas Vendas com<br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400">Colaboração Inteligente</span>
                     </h1>
                     <p className="text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto animate-fade-in-up delay-200">
-                        Junte-se à Plataforma que está revolucionando o mercado imobiliário através de parcerias estratégicas e tecnologia de ponta.
+                        Junte-se à Plataforma que está revolucionando o mercado imobiliário através de parcerias estratégicas.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-300">
                         <button
@@ -150,20 +151,23 @@ export const PartnerPage: React.FC = () => {
                 </div>
             </section>
 
+            {/* Partners Carousel */}
+            <PartnersCarousel bgColor="bg-white dark:bg-slate-900" />
+
             {/* Stats Section */}
-            <section className="py-10 bg-emerald-50 dark:bg-slate-800/50 border-y border-emerald-100 dark:border-slate-700">
-                <div className="container mx-auto px-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                        <div className="p-6">
-                            <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">+{stats.properties}</div>
+            <section className="py-4 bg-emerald-50 dark:bg-slate-800/50 border-y border-emerald-100 dark:border-slate-700">
+                <div className="container mx-auto px-10">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div className="p-4">
+                            <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">+{stats.properties}</div>
                             <div className="text-gray-600 dark:text-gray-400 font-medium">Imóveis Cadastrados</div>
                         </div>
-                        <div className="p-6 border-t md:border-t-0 md:border-l border-emerald-200 dark:border-slate-600">
-                            <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">+{stats.brokers}</div>
+                        <div className="p-4 border-t md:border-t-0 md:border-l border-emerald-200 dark:border-slate-600">
+                            <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">+{stats.brokers}</div>
                             <div className="text-gray-600 dark:text-gray-400 font-medium">Corretores Parceiros</div>
                         </div>
-                        <div className="p-6 border-t md:border-t-0 md:border-l border-emerald-200 dark:border-slate-600">
-                            <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">+{stats.partnerships}</div>
+                        <div className="p-4 border-t md:border-t-0 md:border-l border-emerald-200 dark:border-slate-600">
+                            <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">+{stats.partnerships}</div>
                             <div className="text-gray-600 dark:text-gray-400 font-medium">Parcerias Realizadas</div>
                         </div>
                     </div>
@@ -325,8 +329,15 @@ export const PartnerPage: React.FC = () => {
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 bg-emerald-600 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+            <section className="py-20 bg-slate-900 relative overflow-hidden">
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="/partnership-growth.png"
+                        alt="Partnership Growth"
+                        className="w-full h-full object-cover opacity-90 mix-blend-overlay"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/90 to-slate-900/90"></div>
+                </div>
                 <div className="container mx-auto px-4 text-center relative z-10">
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Pronto para transformar seus resultados?</h2>
                     <p className="text-emerald-100 text-lg mb-10 max-w-2xl mx-auto">

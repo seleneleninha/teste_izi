@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const { data, error } = await supabase
                 .from('perfis')
-                .select('is_admin')
+                .select('is_admin, tipo_usuario')
                 .eq('id', userId)
                 .single();
 
@@ -57,6 +57,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // Use is_admin column to determine role
                 if (data.is_admin) {
                     setRole('Admin');
+                } else if (data.tipo_usuario === 'cliente') {
+                    setRole('Cliente');
                 } else {
                     setRole('Corretor');
                 }

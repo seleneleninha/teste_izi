@@ -10,12 +10,17 @@ import { useToast } from '../components/ToastContext';
 import { OnboardingTour } from '../components/OnboardingTour';
 import { TourPrompt } from '../components/TourPrompt';
 import { ONBOARDING_TOUR_STEPS } from '../config/tourSteps';
+import { ClientDashboardView } from '../components/ClientDashboardView';
 
 export const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const { user, role } = useAuth();
     const { addToast } = useToast();
     const [loading, setLoading] = useState(true);
+
+    if (role === 'Cliente') {
+        return <ClientDashboardView />;
+    }
     const [userName, setUserName] = useState('');
     const [userSlug, setUserSlug] = useState('');
     const [stats, setStats] = useState({
