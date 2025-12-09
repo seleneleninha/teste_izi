@@ -162,25 +162,26 @@ export const Navbar = () => {
             {/* Mobile Menu */}
             {mobileMenuOpen && (
                 <div className="md:hidden absolute top-full left-45 w-52 bg-white dark:bg-slate-900 shadow-xl border-t border-gray-100 dark:border-slate-800 p-4 flex flex-col gap-4">
-                    <Link href="/" className="text-right text-gray-700 dark:text-gray-200 font-medium py-2">Início</Link>
-                    <Link href="/search" className="text-right text-gray-700 dark:text-gray-200 font-medium py-2">Buscar Imóveis</Link>
-                    <Link href="/about" className="text-right text-gray-700 dark:text-gray-200 font-medium py-2">Sobre</Link>
+                    <Link href="/" onClick={() => setMobileMenuOpen(false)} className="text-right text-gray-700 dark:text-gray-200 font-medium py-2">Início</Link>
+                    <Link href="/search" onClick={() => setMobileMenuOpen(false)} className="text-right text-gray-700 dark:text-gray-200 font-medium py-2">Buscar Imóveis</Link>
+                    <Link href="/about" onClick={() => setMobileMenuOpen(false)} className="text-right text-gray-700 dark:text-gray-200 font-medium py-2">Sobre</Link>
                     <hr className="border-gray-100 dark:border-slate-800" />
-                    <button onClick={toggleTheme} className="flex justify-end gap-2 text-gray-700 dark:text-gray-200 font-medium py-2">
+                    <button onClick={() => { toggleTheme(); setMobileMenuOpen(false); }} className="flex justify-end gap-2 text-gray-700 dark:text-gray-200 font-medium py-2">
                         {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                         <span>Alternar Tema</span>
 
                     </button>
                     {user ? (
                         <>
-                            <Link href="/dashboard" className="text-emerald-500 font-bold py-2">Meu Painel</Link>
-                            <button onClick={handleSignOut} className="text-red-500 font-medium py-2 text-left">Sair</button>
+                            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-emerald-500 font-bold py-2">Meu Painel</Link>
+                            <button onClick={() => { handleSignOut(); setMobileMenuOpen(false); }} className="text-red-500 font-medium py-2 text-left">Sair</button>
                         </>
                     ) : (
-                        <Link href="/login" className="bg-emerald-500 text-white text-center font-bold py-3 rounded-lg">Entrar</Link>
+                        <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="bg-emerald-500 text-white text-center font-bold py-3 rounded-lg">Entrar</Link>
                     )}
                 </div>
             )}
+
         </nav>
     );
 };

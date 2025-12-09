@@ -117,7 +117,30 @@ const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) =
     const router = useRouter();
 
     return (
-        <MarkerClusterGroup maxClusterRadius={40}>
+        <MarkerClusterGroup
+            maxClusterRadius={40}
+            iconCreateFunction={(cluster: any) => {
+                const count = cluster.getChildCount();
+                return L.divIcon({
+                    html: `<div style="
+                        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+                        color: white;
+                        border-radius: 50%;
+                        width: 40px;
+                        height: 40px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-weight: bold;
+                        font-size: 14px;
+                        border: 3px solid white;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    ">${count}</div>`,
+                    className: 'custom-cluster-icon',
+                    iconSize: L.point(40, 40, true),
+                });
+            }}
+        >
             {properties.map((prop) => {
                 const p = prop as any;
                 // Only render marker if coords exist

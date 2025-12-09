@@ -167,7 +167,7 @@ export default function Home() {
         </div>
 
         <div className="mt-10 container mx-auto px-6 relative z-10 text-center">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">
+          <h1 className="text-white text-4xl md:text-6xl lg:text-7xl font-bold mb-6 tracking-tight">
             Seu Próximo Imóvel...
             <br />
             <span className="text-emerald-500">a Um Clique de Distância</span>

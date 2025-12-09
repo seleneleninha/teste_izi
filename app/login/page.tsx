@@ -106,11 +106,15 @@ function LoginPageContent() {
                     addToast('Login realizado com sucesso!', 'success');
 
                     const redirectTo = searchParams.get('redirectTo');
-                    if (redirectTo) {
-                        router.push(redirectTo);
-                    } else {
-                        router.push('/dashboard');
-                    }
+                    // Use replace to avoid login page in history + setTimeout to allow auth state to propagate
+                    setTimeout(() => {
+                        if (redirectTo) {
+                            router.replace(redirectTo);
+                        } else {
+                            router.replace('/dashboard');
+                        }
+                        router.refresh();
+                    }, 100);
                 }
             }
         } catch (err: any) {
