@@ -1,11 +1,13 @@
+"use client";
+
 // Public AI Assistant for iziBrokerz
 // Helps buyers/renters find properties and brokers learn about the platform
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Sparkles, Loader2 } from 'lucide-react';
-import { callGemini } from '../lib/geminiHelper';
-import { supabase } from '../lib/supabaseClient';
-import { PLATFORM_KNOWLEDGE, qualifyLead } from '../lib/platformKnowledge';
+import { X, Send, Sparkles, Loader2 } from 'lucide-react';
+import { callGemini } from '@/lib/geminiHelper';
+import { supabase } from '@/lib/supabaseClient';
+import { PLATFORM_KNOWLEDGE, qualifyLead } from '@/lib/platformKnowledge';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -56,8 +58,8 @@ export const PublicAIAssistant: React.FC = () => {
 
             if (error || !properties) return '';
 
-            const cities = [...new Set(properties.map(p => p.cidade))];
-            const neighborhoods = [...new Set(properties.map(p => p.bairro))];
+            const cities = Array.from(new Set(properties.map(p => p.cidade)));
+            const neighborhoods = Array.from(new Set(properties.map(p => p.bairro)));
             const avgPrice = properties.reduce((sum, p) => sum + (p.valor_venda || p.valor_locacao || 0), 0) / properties.length;
 
             const forSale = properties.filter(p => {
@@ -175,7 +177,7 @@ HISTÓRICO:
 ${conversationHistory}
 
 PERGUNTA DO CLIENTE:
-${input}
+${userMessage.content}
 
 PERSONALIDADE E TOM:
 - Seja amigável, profissional e SEMPRE útil
@@ -235,7 +237,7 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
 
             // Fallback inteligente baseado na pergunta
             let fallbackMessage = '';
-            const lowerInput = input.toLowerCase();
+            const lowerInput = userMessage.content.toLowerCase();
 
             if (lowerInput.includes('imóvel') || lowerInput.includes('imovel') || lowerInput.includes('casa') || lowerInput.includes('apartamento')) {
                 fallbackMessage = `Temos diversos imóveis disponíveis! 🏠 Para ver todas as opções, acesse nossa busca avançada no menu. Posso te ajudar com algo mais específico?`;

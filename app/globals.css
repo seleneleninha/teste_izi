@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Colors */
+  --color-primary-50: #F0FDF4;
+  --color-primary-100: #DCFCE7;
+  --color-primary-200: #BBF7D0;
+  --color-primary-300: #86EFAC;
+  --color-primary-400: #4ADE80;
+  --color-primary-500: #22C55E;
+  --color-primary-600: #16A34A;
+  --color-primary-700: #15803D;
+  --color-primary-800: #166534;
+  --color-primary-900: #14532D;
+  --color-primary-950: #052E16;
+
+  --color-gold-50: #FBF9F1;
+  --color-gold-100: #F5F1E0;
+  --color-gold-200: #EADFB8;
+  --color-gold-300: #DFC685;
+  --color-gold-400: #D4AF57;
+  --color-gold-500: #C69C44;
+  --color-gold-600: #A97F35;
+  --color-gold-700: #88622B;
+  --color-gold-800: #715029;
+  --color-gold-900: #5E4226;
+
+  --color-dark-900: #0B1120;
+  --color-dark-800: #151E32;
+  --color-dark-700: #2A3447;
+
+  /* Fonts */
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-outfit);
+
+  /* Shadows */
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+
+  /* Animation */
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Base Styles - Light Mode (default) */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+/* Dark Mode - Class Based */
+.dark {
+  --background: #0B1120;
+  --foreground: #ededed;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Utilities */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}

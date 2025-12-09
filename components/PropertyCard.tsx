@@ -1,7 +1,9 @@
+"use client";
+
 import React, { useState } from 'react';
-import { MapPin, ChevronLeft, ChevronRight, Home, Bed, Bath, Car, Maximize, Edit2, Trash2, Check, X, Eye } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../components/AuthContext';
+import { MapPin, ChevronLeft, ChevronRight, Home, Bed, Bath, Car, Maximize, Check, Eye } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from './AuthContext';
 
 interface PropertyCardProps {
     property: {
@@ -10,9 +12,9 @@ interface PropertyCardProps {
         titulo: string;
         cidade: string;
         bairro: string;
-        valor_venda: number;
-        valor_locacao: number;
-        fotos: string | string[]; // Support both string (comma separated) and array
+        valor_venda: number | null;
+        valor_locacao: number | null;
+        fotos: string | string[];
         operacao: string;
         tipo_imovel?: string;
         quartos?: number;
@@ -26,8 +28,8 @@ interface PropertyCardProps {
     showStatus?: boolean;
     compact?: boolean;
     onClick?: () => void;
-    brokerSlug?: string; // Pass broker context for partnership navigation
-    isDashboard?: boolean; // If true, navigate to /properties/:slug (dashboard route)
+    brokerSlug?: string;
+    isDashboard?: boolean;
     isSelected?: boolean;
     onSelect?: (e: React.MouseEvent) => void;
 }
@@ -39,7 +41,7 @@ const OPERATION_LABELS: { [key: string]: string } = {
 };
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, showStatus = false, compact = false, onClick, brokerSlug, isDashboard = false, isSelected = false, onSelect }) => {
-    const navigate = useNavigate();
+    const router = useRouter();
     const { user } = useAuth();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -84,16 +86,12 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
             onClick();
         } else {
             const slug = generateSlug();
-            // Determine the base path based on context
             if (isDashboard) {
-                // Dashboard context: stay within protected routes
-                navigate(`/properties/${slug}`);
+                router.push(`/properties/${slug}`);
             } else if (brokerSlug) {
-                // Broker page context: add broker query param
-                navigate(`/${slug}?broker=${brokerSlug}`);
+                router.push(`/${slug}?broker=${brokerSlug}`);
             } else {
-                // Public context: use public slug route
-                navigate(`/${slug}`);
+                router.push(`/${slug}`);
             }
         }
     };
@@ -109,7 +107,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
         return 'bg-gray-600 text-white shadow-lg shadow-gray-600/20';
     };
 
-    const statusColors = {
+    const statusColors: any = {
         pendente: 'bg-yellow-100 text-yellow-700 border-yellow-200',
         aprovado: 'bg-green-100 text-green-700 border-green-200',
         reprovado: 'bg-red-100 text-red-700 border-red-200'
@@ -124,6 +122,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
             <div className={`relative overflow-hidden bg-gray-200 dark:bg-slate-700 flex-shrink-0 ${compact ? 'h-40' : 'h-56'}`}>
                 {hasImages ? (
                     <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={photosArray[currentImageIndex]}
                             alt={property.titulo}
@@ -174,7 +173,6 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                     )}
                 </div>
 
-                {/* Selection Checkbox */}
                 {onSelect && (
                     <div
                         className="absolute top-3 right-3 z-20"
@@ -206,7 +204,6 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                         <MapPin size={14} className="flex-shrink-0 text-primary-500" />
                         <span className="truncate">{property.bairro}, {property.cidade}</span>
                     </p>
-
 
                     <div className="flex gap-4">
                         {(property.area_priv || 0) > 0 && (
@@ -241,7 +238,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                         <div>
                             <p className="text-xs text-primary-500 dark:text-primary-400">Valor</p>
                             <p className="text-xl font-bold text-primary-600 dark:text-primary-400">
-                                {property.valor_venda ? formatCurrency(property.valor_venda) : formatCurrency(property.valor_locacao)}
+                                {property.valor_venda ? formatCurrency(property.valor_venda) : property.valor_locacao ? formatCurrency(property.valor_locacao) : 'Consulte'}
                             </p>
                         </div>
                         {property.valor_locacao && property.valor_venda && (
