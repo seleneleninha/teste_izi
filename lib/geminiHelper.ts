@@ -1,7 +1,7 @@
 // Groq AI Configuration and Helper Functions
 // Uses Llama 3 via Groq Cloud - Extremely fast and efficient
 
-const GROQ_API_KEY = process.env.NEXT_PUBLIC_GROQ_API_KEY || '';
+const GROQ_API_KEY = (import.meta as any).env?.VITE_GROQ_API_KEY || '';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 // List of models to try in order (newest to oldest/fastest)
@@ -12,8 +12,8 @@ const GROQ_MODELS = [
 ];
 
 // Development warning only (no sensitive data exposed)
-if (!GROQ_API_KEY && process.env.NODE_ENV === 'development') {
-    console.warn('⚠️ AI: Configure NEXT_PUBLIC_GROQ_API_KEY em .env.local para habilitar IA');
+if (!GROQ_API_KEY && (import.meta as any).env?.DEV) {
+    console.warn('⚠️ AI: Configure VITE_GROQ_API_KEY em .env.local para habilitar IA');
 }
 
 interface GroqResponse {
@@ -301,11 +301,11 @@ RESUMO: [texto]`;
         };
     }
 
-    // Parse response - using [\s\S] instead of /s flag for broader compatibility
-    const educacaoMatch = response.match(/EDUCACAO:\s*([\s\S]+?)(?=LAZER:|$)/);
-    const lazerMatch = response.match(/LAZER:\s*([\s\S]+?)(?=SEGURANCA:|$)/);
-    const segurancaMatch = response.match(/SEGURANCA:\s*([\s\S]+?)(?=RESUMO:|$)/);
-    const resumoMatch = response.match(/RESUMO:\s*([\s\S]+?)$/);
+    // Parse response
+    const educacaoMatch = response.match(/EDUCACAO:\s*(.+?)(?=LAZER:|$)/s);
+    const lazerMatch = response.match(/LAZER:\s*(.+?)(?=SEGURANCA:|$)/s);
+    const segurancaMatch = response.match(/SEGURANCA:\s*(.+?)(?=RESUMO:|$)/s);
+    const resumoMatch = response.match(/RESUMO:\s*(.+?)$/s);
 
     return {
         educacao: educacaoMatch?.[1]?.trim() || 'Informação não disponível.',

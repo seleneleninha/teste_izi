@@ -1,9 +1,6 @@
-"use client";
-
 import React from 'react';
 import { useTheme } from './ThemeContext';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface FooterProps {
     partner?: {
@@ -18,14 +15,12 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ partner }) => {
     const { theme } = useTheme();
-    const pathname = usePathname();
-    const router = useRouter();
+    const navigate = useNavigate();
+    const location = useLocation();
 
     // Detect if we're on a broker page
-    // In Next.js App Router, we usually use dynamic segments. 
-    // Assuming broker page is /corretor/[slug]
-    const isBrokerPage = pathname?.startsWith('/corretor/');
-    const brokerSlug = partner?.slug || (isBrokerPage ? pathname?.split('/corretor/')[1] : null);
+    const isBrokerPage = location.pathname.startsWith('/corretor/');
+    const brokerSlug = partner?.slug || (isBrokerPage ? location.pathname.split('/corretor/')[1] : null);
 
     // O footer tem fundo escuro (slate-950), então usamos a logo clara para contraste
     const logoSrc = partner?.logo || '/logos/izibrokerz-escuro.png';
@@ -38,12 +33,11 @@ export const Footer: React.FC<FooterProps> = ({ partner }) => {
                         {partner ? (
                             <>
                                 {partner.logo ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
                                     <img
                                         src={partner.logo}
                                         alt={partner.name}
                                         className="h-12 mb-4 object-contain cursor-pointer hover:opacity-80 transition-opacity"
-                                        onClick={() => brokerSlug && router.push(`/corretor/${brokerSlug}`)}
+                                        onClick={() => brokerSlug && (window.location.href = `#/corretor/${brokerSlug}`)}
                                     />
                                 ) : (
                                     <h3 className="text-2xl font-bold mb-4">{partner.name}</h3>
@@ -51,12 +45,11 @@ export const Footer: React.FC<FooterProps> = ({ partner }) => {
                                 {partner.creci && <p className="text-gray-400 text-sm mb-2">CRECI: {partner.creci}</p>}
                             </>
                         ) : (
-                            // eslint-disable-next-line @next/next/no-img-element
                             <img
                                 src={logoSrc}
                                 alt="iziBrokerz"
                                 className="h-10 mb-4 object-contain cursor-pointer hover:opacity-80 transition-opacity"
-                                onClick={() => router.push('/')}
+                                onClick={() => navigate('/')}
                                 onError={(e) => {
                                     // Fallback se a imagem não carregar
                                     e.currentTarget.style.display = 'none';
@@ -74,12 +67,12 @@ export const Footer: React.FC<FooterProps> = ({ partner }) => {
                     <div>
                         <h4 className="font-bold text-lg mb-4">Links Rápidos</h4>
                         <ul className="space-y-2 text-gray-400 text-sm">
-                            <li><Link href={brokerSlug ? `/corretor/${brokerSlug}` : "/"} className="hover:text-emerald-400 transition-colors">Início</Link></li>
-                            <li><Link href={brokerSlug ? `/search?broker=${brokerSlug}` : "/search"} className="hover:text-emerald-400 transition-colors">Buscar Imóveis</Link></li>
+                            <li><a href={brokerSlug ? `#/corretor/${brokerSlug}` : "#/"} className="hover:text-emerald-400 transition-colors">Início</a></li>
+                            <li><a href={brokerSlug ? `#/search?broker=${brokerSlug}` : "#/search"} className="hover:text-emerald-400 transition-colors">Buscar Imóveis</a></li>
                             {!brokerSlug && (
                                 <>
-                                    <li><Link href="/about" className="hover:text-emerald-400 transition-colors">Sobre</Link></li>
-                                    <li><Link href="/login" className="hover:text-emerald-400 transition-colors">Login</Link></li>
+                                    <li><a href="#/about" className="hover:text-emerald-400 transition-colors">Sobre</a></li>
+                                    <li><a href="#/login" className="hover:text-emerald-400 transition-colors">Login</a></li>
                                 </>
                             )}
                         </ul>
@@ -87,8 +80,8 @@ export const Footer: React.FC<FooterProps> = ({ partner }) => {
                     <div>
                         <h4 className="font-bold text-lg mb-4">Suporte</h4>
                         <ul className="space-y-2 text-gray-400 text-sm">
-                            <li><Link href="/terms" className="hover:text-emerald-400 transition-colors">Termos de Uso</Link></li>
-                            <li><Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacidade</Link></li>
+                            <li><a href="#/terms" className="hover:text-emerald-400 transition-colors">Termos de Uso</a></li>
+                            <li><a href="#/privacy" className="hover:text-emerald-400 transition-colors">Privacidade</a></li>
                         </ul>
                     </div>
                     <div>

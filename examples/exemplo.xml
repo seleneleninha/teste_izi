@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListingDataFeed xmlns="http://www.vivareal.com/schemas/1.0/VRSync"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.vivareal.com/schemas/1.0/VRSync http://xml.vivareal.com/vrsync.xsd">
+
+    <!-- Cabeçalho do arquivo, geralmente contém informações sobre a origem/geração -->
+    <Header>
+        <Provider name="Nome do Integrador" />
+        <FeedGeneratedDate>2025-11-24T10:20:00-03:00</FeedGeneratedDate>
+    </Header>
+
+    <!-- Lista de imóveis (Listings) -->
+    <Listings>
+        <!-- Um imóvel individual (Listing) -->
+        <Listing id="ID_DO_IMOVEL_123">
+            <ListingType>Used</ListingType> <!-- Novo, Usado, etc. -->
+            <TransactionType>Sale</TransactionType> <!-- Venda, Aluguel, etc. -->
+            <PublicationType>Standard</PublicationType> <!-- Destaque, Padrão, etc. -->
+            <UniversalReference>REF123456</UniversalReference>
+            
+            <Details>
+                <Title>Bela Casa com Piscina e Área Gourmet</Title>
+                <Description>Descrição detalhada do imóvel, com todas as características.</Description>
+                <TotalArea unit="M2">250</TotalArea>
+                <UsefulArea unit="M2">200</UsefulArea>
+                <Bedrooms>3</Bedrooms>
+                <Bathrooms>2</Bathrooms>
+                <ParkingSpaces>2</ParkingSpaces>
+                <Suites>1</Suites>
+                <!-- Outros detalhes como Amenidades, Preços, Endereço, etc. -->
+            </Details>
+
+            <!-- Localização -->
+            <Location>
+                <Street>Rua Exemplo</Street>
+                <Number>123</Number>
+                <Complement>Apto 101</Complement>
+                <Neighborhood>Centro</Neighborhood>
+                <City>São Paulo</City>
+                <State>SP</State>
+                <ZipCode>01000-000</ZipCode>
+                <Country>BR</Country>
+                <Latitude>-23.5505</Latitude>
+                <Longitude>-46.6333</Longitude>
+            </Location>
+
+            <!-- Mídias (Imagens, Vídeos) -->
+            <Medias>
+                <Media url="http://link.para.imagem1.jpg" type="Picture" order="1"/>
+                <Media url="http://link.para.imagem2.jpg" type="Picture" order="2"/>
+                <!-- Mais mídias... -->
+            </Medias>
+        </Listing>
+
+        <!-- Outros imóveis podem ser listados aqui... -->
+    </Listings>
+</ListingDataFeed>

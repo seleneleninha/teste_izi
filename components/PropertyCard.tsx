@@ -1,9 +1,7 @@
-"use client";
-
 import React, { useState } from 'react';
-import { MapPin, ChevronLeft, ChevronRight, Home, Bed, Bath, Car, Maximize, Check, Eye } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from './AuthContext';
+import { MapPin, ChevronLeft, ChevronRight, Home, Bed, Bath, Car, Maximize, Edit2, Trash2, Check, X, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../components/AuthContext';
 
 interface PropertyCardProps {
     property: {
@@ -12,9 +10,11 @@ interface PropertyCardProps {
         titulo: string;
         cidade: string;
         bairro: string;
-        valor_venda: number | null;
-        valor_locacao: number | null;
-        fotos: string | string[];
+        valor_venda: number;
+        valor_locacao: number;
+        valor_diaria?: number;  // Temporada
+        valor_mensal?: number;  // Temporada
+        fotos: string | string[]; // Support both string (comma separated) and array
         operacao: string;
         tipo_imovel?: string;
         quartos?: number;
@@ -28,8 +28,8 @@ interface PropertyCardProps {
     showStatus?: boolean;
     compact?: boolean;
     onClick?: () => void;
-    brokerSlug?: string;
-    isDashboard?: boolean;
+    brokerSlug?: string; // Pass broker context for partnership navigation
+    isDashboard?: boolean; // If true, navigate to /properties/:slug (dashboard route)
     isSelected?: boolean;
     onSelect?: (e: React.MouseEvent) => void;
 }
@@ -38,10 +38,11 @@ const OPERATION_LABELS: { [key: string]: string } = {
     venda: 'Venda',
     locacao: 'Locação',
     venda_locacao: 'Venda/Locação',
+    temporada: 'Temporada',
 };
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, showStatus = false, compact = false, onClick, brokerSlug, isDashboard = false, isSelected = false, onSelect }) => {
-    const router = useRouter();
+    const navigate = useNavigate();
     const { user } = useAuth();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -86,12 +87,16 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
             onClick();
         } else {
             const slug = generateSlug();
+            // Determine the base path based on context
             if (isDashboard) {
-                router.push(`/properties/${slug}`);
+                // Dashboard context: stay within protected routes
+                navigate(`/properties/${slug}`);
             } else if (brokerSlug) {
-                router.push(`/${slug}?broker=${brokerSlug}`);
+                // Broker page context: add broker query param
+                navigate(`/${slug}?broker=${brokerSlug}`);
             } else {
-                router.push(`/${slug}`);
+                // Public context: use public slug route
+                navigate(`/${slug}`);
             }
         }
     };
@@ -103,11 +108,12 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
         const op = property.operacao?.toLowerCase()?.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         if (op === 'venda') return 'bg-red-600 text-white shadow-lg shadow-red-600/20';
         if (op === 'locacao') return 'bg-blue-600 text-white shadow-lg shadow-blue-600/20';
+        if (op === 'temporada') return 'bg-orange-500 text-white shadow-lg shadow-orange-500/20';
         if (op?.includes('venda') && op?.includes('locacao')) return 'bg-green-600 text-white shadow-lg shadow-green-600/20';
         return 'bg-gray-600 text-white shadow-lg shadow-gray-600/20';
     };
 
-    const statusColors: any = {
+    const statusColors = {
         pendente: 'bg-yellow-100 text-yellow-700 border-yellow-200',
         aprovado: 'bg-green-100 text-green-700 border-green-200',
         reprovado: 'bg-red-100 text-red-700 border-red-200'
@@ -122,7 +128,6 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
             <div className={`relative overflow-hidden bg-gray-200 dark:bg-slate-700 flex-shrink-0 ${compact ? 'h-40' : 'h-56'}`}>
                 {hasImages ? (
                     <>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={photosArray[currentImageIndex]}
                             alt={property.titulo}
@@ -173,6 +178,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                     )}
                 </div>
 
+                {/* Selection Checkbox */}
                 {onSelect && (
                     <div
                         className="absolute top-3 right-3 z-20"
@@ -205,6 +211,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                         <span className="truncate">{property.bairro}, {property.cidade}</span>
                     </p>
 
+
                     <div className="flex gap-4">
                         {(property.area_priv || 0) > 0 && (
                             <div className="flex flex-col items-center justify-center p-2">
@@ -235,19 +242,50 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
 
                 <div className="pt-4 border-t border-gray-100 dark:border-slate-700 mt-1">
                     <div className="flex items-end justify-between mb-2">
-                        <div>
-                            <p className="text-xs text-primary-500 dark:text-primary-400">Valor</p>
-                            <p className="text-xl font-bold text-primary-600 dark:text-primary-400">
-                                {property.valor_venda ? formatCurrency(property.valor_venda) : property.valor_locacao ? formatCurrency(property.valor_locacao) : 'Consulte'}
-                            </p>
-                        </div>
-                        {property.valor_locacao && property.valor_venda && (
-                            <div className="text-right">
-                                <p className="text-xs text-gray-500 dark:text-gray-400">Locação</p>
-                                <p className="text-xl font-bold text-gray-600 dark:text-gray-400">
-                                    {formatCurrency(property.valor_locacao)}
-                                </p>
-                            </div>
+                        {/* Temporada: Show Diária/Mensal */}
+                        {property.operacao?.toLowerCase() === 'temporada' ? (
+                            <>
+                                {property.valor_diaria && (
+                                    <div>
+                                        <p className="text-xs text-orange-500">Diária</p>
+                                        <p className="text-xl font-bold text-orange-500">
+                                            {formatCurrency(property.valor_diaria)}
+                                        </p>
+                                    </div>
+                                )}
+                                {property.valor_mensal && (
+                                    <div className="text-right">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Mensal</p>
+                                        <p className="text-lg font-bold text-gray-600 dark:text-gray-400">
+                                            {formatCurrency(property.valor_mensal)}
+                                        </p>
+                                    </div>
+                                )}
+                                {!property.valor_diaria && !property.valor_mensal && (
+                                    <div>
+                                        <p className="text-xs text-gray-500">Valor</p>
+                                        <p className="text-xl font-bold text-gray-400">Consulte</p>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            /* Venda/Locação: Normal display */
+                            <>
+                                <div>
+                                    <p className="text-xs text-primary-500 dark:text-primary-400">Valor</p>
+                                    <p className="text-xl font-bold text-primary-600 dark:text-primary-400">
+                                        {property.valor_venda ? formatCurrency(property.valor_venda) : formatCurrency(property.valor_locacao)}
+                                    </p>
+                                </div>
+                                {property.valor_locacao && property.valor_venda && (
+                                    <div className="text-right">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Locação</p>
+                                        <p className="text-xl font-bold text-gray-600 dark:text-gray-400">
+                                            {formatCurrency(property.valor_locacao)}
+                                        </p>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
 

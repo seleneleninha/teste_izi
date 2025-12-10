@@ -1,10 +1,8 @@
-"use client";
-
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { useTheme } from '@/components/ThemeContext';
+import { supabase } from '../lib/supabaseClient';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../components/ThemeContext';
 import { UserCheck } from 'lucide-react';
-import Link from 'next/link';
 
 interface Partner {
     id: string;
@@ -24,6 +22,7 @@ interface PartnersCarouselProps {
 export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) => {
     const [partners, setPartners] = useState<Partner[]>([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
     const { theme } = useTheme();
 
     useEffect(() => {
@@ -98,13 +97,11 @@ export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) =
                                 key={`${partner.id}-${index}`}
                                 className="w-[200px] flex-shrink-0 flex items-center justify-center px-6"
                             >
-                                <Link
-                                    href={`/corretor/${partner.slug}`}
-                                    target="_blank"
+                                <div
+                                    onClick={() => window.open(`#/corretor/${partner.slug}`, '_blank')}
                                     className="group cursor-pointer flex flex-col items-center justify-center p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-300 w-full h-32 grayscale hover:grayscale-0 opacity-70 hover:opacity-100"
                                 >
                                     {logoSrc ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
                                         <img
                                             src={logoSrc}
                                             alt={`${partner.nome} ${partner.sobrenome}`}
@@ -126,14 +123,14 @@ export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) =
                                             {partner.nome}
                                         </span>
                                     </div>
-                                </Link>
+                                </div>
                             </div>
                         );
                     })}
                 </div>
             </div>
 
-            <style jsx global>{`
+            <style>{`
                 @keyframes scroll {
                     0% { transform: translateX(0); }
                     100% { transform: translateX(-50%); }

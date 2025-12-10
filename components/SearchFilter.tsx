@@ -1,9 +1,7 @@
-"use client";
-
 import React, { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { Search, Map } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
 
 export const SearchFilter = () => {
     const [activeTab, setActiveTab] = useState<'buy' | 'rent'>('buy');
@@ -11,7 +9,7 @@ export const SearchFilter = () => {
     const [selectedType, setSelectedType] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [showMap, setShowMap] = useState(false);
-    const router = useRouter();
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchPropertyTypes();
@@ -46,7 +44,7 @@ export const SearchFilter = () => {
         if (searchTerm) params.append('q', searchTerm);
         if (showMap) params.append('view', 'map');
 
-        router.push(`/search?${params.toString()}`);
+        navigate(`/search?${params.toString()}`);
     };
 
     return (

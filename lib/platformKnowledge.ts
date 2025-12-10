@@ -6,50 +6,156 @@ export const PLATFORM_KNOWLEDGE = {
     platform: {
         name: "iziBrokerz",
         tagline: "A Plataforma inteligente que conecta você às melhores oportunidades do mercado",
-        mission: "Revolucionar o mercado imobiliário com tecnologia e parcerias estratégicas",
+        mission: "Revolucionar o mercado imobiliário com tecnologia, parcerias e inteligência artificial",
 
         diferenciais: [
-            "Sistema de parcerias \"fifty\" entre Corretores Parceiros",
-            "IA integrada para análise de bairros e precificação (com base nos anúncios ativos)",
-            "CRM simples, completo e gratuito para Corretores",
+            "Teste Grátis de 14 dias - sem compromisso!",
+            "Sistema de parcerias entre Corretores Parceiros",
+            "IA integrada para análise de bairros e precificação",
+            "Sistema MATCH: busca automática de imóveis para seus clientes",
+            "CRM simplificado e objetivo",
             "Página personalizada para cada Corretor Parceiro",
-            "Busca inteligente com filtros avançados"
+            "Verificação CRECI/COFECI de todos os Parceiros"
         ]
     },
 
-    // Sistema "fifty"
-    fiftyFifty: {
-        description: "Sistema de parcerias entre Corretores Parceiros",
-        howItWorks: "Corretor A anuncia um imóvel. Corretor B traz o cliente. Ambos dividem 50% da comissão.",
+    // GANCHO PRINCIPAL - Teste Grátis
+    trialOffer: {
+        duration: "14 dias",
+        description: "Teste grátis de 14 dias sem compromisso! Experimente todas as funcionalidades da plataforma.",
+        callToAction: "Cadastre-se agora e comece seu teste grátis!",
+        noCardRequired: true,
+        benefits: [
+            "Acesso limitado às funcionalidades",
+            "Anúncios limitados",
+            "Página personalizada",
+            "Sistema de parcerias (somente visualização)"
+        ]
+    },
 
-        benefits: {
-            forAdvertiser: [
-                "Maior alcance para seus imóveis",
-                "Rede de Parceiros trabalhando para você e vice-versa",
-                "Sem custo adicional - só paga se vender",
-                "Multiplica suas chances de venda"
-            ],
-            forPartner: [
-                "Acesso a portfólio completo de imóveis",
-                "Comissão de 50%",
-                "Não precisa captar imóveis",
-                "Foco total em atender Clientes"
-            ]
+    // Pitch para Corretores (Atualizado)
+    brokerPitch: {
+        headline: "Mais Leads. Mais Imóveis. Mais Parcerias. Mais Resultados!",
+
+        mainBenefits: [
+            {
+                title: "Página Personalizada com IA",
+                description: "Seu site profissional com assistente virtual que atende seus clientes 24h",
+                icon: "🏠"
+            },
+            {
+                title: "Sistema de Parcerias Inteligente",
+                description: "Amplie sua carteira de imóveis trabalhando em parceria com outros Corretores da sua região",
+                icon: "🤝"
+            },
+            {
+                title: "MATCH Automático",
+                description: "Cadastrou um cliente? Buscamos automaticamente imóveis compatíveis em toda nossa Plataforma!",
+                icon: "🎯"
+            },
+            {
+                title: "Notificações em Tempo Real",
+                description: "Novo imóvel compatível com seu cliente? Avisamos você pelo WhatsApp!",
+                icon: "📲"
+            },
+            {
+                title: "CRM Simplificado",
+                description: "Sem firulas! Funil de vendas direto ao ponto, focado no que gera resultado",
+                icon: "📊"
+            },
+            {
+                title: "Importação XML (Em breve)",
+                description: "Importe seus imóveis de outras plataformas com poucos cliques",
+                icon: "📥"
+            }
+        ],
+
+        security: {
+            title: "Rede Segura e Verificada",
+            description: "Todos os Corretores Parceiros são verificados no sistema CRECI/COFECI",
+            icon: "🔒"
         },
 
-        example: "Imóvel de R$ 500.000 com 6% de comissão (R$ 30.000). Cada corretor recebe R$ 15.000."
+        focus: [
+            "MAIS LEADS",
+            "MAIS IMÓVEIS",
+            "MAIS PARCERIAS",
+            "MAIS POSSIBILIDADES DE GANHO",
+            "MATCH INTELIGENTE",
+            "INTEGRAÇÕES QUE FUNCIONAM"
+        ],
+
+        ctaPage: "/anunciar",
+        ctaText: "Começar Teste Grátis de 14 dias"
+    },
+
+    // Fluxo para Compradores/Locatários
+    buyerFlow: {
+        // Palavras-chave para detectar operação
+        operacaoKeywords: {
+            venda: ["comprar", "compra", "compro", "adquirir", "venda", "à venda", "a venda", "pra comprar", "alugar", "aluguel", "aluga", "locação", "locacao", "pra alugar", "para alugar"],
+            locacao: ["alugar", "aluguel", "aluga", "locação", "locacao", "pra alugar", "para alugar", "arrendar"],
+            temporada: ["temporada", "temporário", "temporario", "veraneio", "férias", "ferias"]
+        },
+
+        // Palavras-chave para tipo de imóvel
+        tipoImovelKeywords: {
+            apartamento: ["apartamento", "apartamentos", "apto", "aptos", "ap"],
+            casa: ["casa", "casas", "residência", "residencia"],
+            terreno: ["terreno", "terrenos", "lote", "lotes"],
+            comercial: ["comercial", "loja", "lojas", "sala comercial", "ponto comercial"],
+            kitnet: ["kitnet", "kitnets", "kitinete", "quitinete", "studio", "estudio", "estúdio"],
+            sobrado: ["sobrado", "sobrados", "assobradada", "assobradadas", "assobradado", "assobradados"],
+            cobertura: ["cobertura", "coberturas", "duplex", "triplex", "penthouse"],
+            chacara: ["chácara", "chacara", "chácaras", "sítio", "sitio", "granja", "granjas"],
+            fazenda: ["fazenda", "fazendas", "propriedade rural", "granja", "granjas"],
+            galpao: ["galpão", "galpao", "barracão", "barracao"]
+        },
+
+        // Campos para match score (60% = 3 de 5)
+        matchFields: ["operacao", "tipoImovel", "cidade", "bairro", "valor"],
+        matchThreshold: 0.6, // 60%
+
+        // Mensagens para quando não encontra imóveis
+        noResultsMessage: "Ainda não temos imóveis nessa região, mas posso sugerir bairros próximos ou você pode explorar nosso mapa interativo!",
+
+        // Sugestões para clientes indecisos
+        undecidedSuggestion: "Que tal explorar no mapa? 🗺️ Navegue pela região e descubra oportunidades incríveis!"
+    },
+
+    // Sistema de Parcerias (simplificado)
+    partnerships: {
+        description: "Amplie sua carteira trabalhando em parceria com outros Corretores",
+        benefits: [
+            "Acesso a mais imóveis para oferecer aos seus clientes",
+            "Mais chances de fechar negócios",
+            "Rede de Corretores verificados",
+            "Divisão de comissão transparente (50/50)"
+        ]
+    },
+
+    // Sistema MATCH
+    matchSystem: {
+        name: "Sistema MATCH",
+        description: "Busca inteligente de imóveis para seus clientes",
+        howItWorks: [
+            "Cadastre seu cliente com as preferências dele",
+            "Nosso sistema busca imóveis compatíveis automaticamente",
+            "Quando encontramos, você recebe notificação no WhatsApp",
+            "Novos imóveis cadastrados também são verificados"
+        ]
     },
 
     // Funcionalidades para Corretores
     features: {
         crm: {
-            name: "CRM Integrado",
-            description: "Sistema simples e completo de gestão de leads e Clientes",
+            name: "CRM Simplificado",
+            description: "Gestão de leads sem complicação",
             includes: [
-                "Cadastro e organização de leads",
-                "Histórico de interações",
+                "Cadastro rápido de leads",
                 "Funil de vendas visual",
-                "Relatórios de performance"
+                "Histórico de interações",
+                "Sem campos desnecessários"
             ]
         },
 
@@ -59,8 +165,7 @@ export const PLATFORM_KNOWLEDGE = {
             includes: [
                 "Upload múltiplo de fotos",
                 "Descrições otimizadas com IA",
-                "Análise de precificação",
-                "Status de aprovação",
+                "Status em tempo real",
                 "Edição rápida"
             ]
         },
@@ -70,52 +175,48 @@ export const PLATFORM_KNOWLEDGE = {
             description: "Seu próprio site profissional",
             url: "izibrokerz.com/corretor/[seu-slug]",
             includes: [
-                "Design profissional",
                 "Seus imóveis em destaque",
-                "Anúncios dos Parceiros na seção Você também pode gostar...",
-                "Formulário de contato",
+                "Imóveis de parceiros como Outras Opções",
                 "Integração com WhatsApp",
-                "SEO otimizado"
+                "Integração com IA (consulte planos)"
             ]
         },
 
         aiTools: {
-            name: "Ferramentas de IA",
+            name: "Ferramentas de IA (consulte os planos)",
             description: "Inteligência artificial a seu favor",
             includes: [
-                "Análise de bairros (educação, lazer, segurança)",
+                "Análise de bairros",
                 "Sugestão de preços",
-                "Geração de descrições atrativas",
-                "Insights de mercado"
+                "Geração de descrições do imóvel com um clique",
+                "IzA - Nossa Assistente Virtual na sua página"
             ]
         }
     },
 
-    // Planos e Preços
+    // Preços
     pricing: {
-        current: "FREEmium",
-        future: "Teste grátis por 7 dias",
-
+        trial: {
+            name: "Teste Grátis",
+            duration: "14 dias",
+            price: "R$ 0",
+            features: "Acesso limitado sem compromisso"
+        },
         plans: {
-            free: {
-                features: [
-                    "Anúncios ilimitados",
-                    "CRM simples e completo",
-                    "IA ilimitada",
-                    "Suporte prioritário",
-                    "Analytics avançado"
-                ]
+            starter: {
+                name: "Starter",
+                price: "Em breve",
+                features: ["Anúncios limitados", "CRM básico"]
+            },
+            pro: {
+                name: "Profissional",
+                price: "Em breve",
+                features: ["Anúncios ilimitados", "CRM completo", "IA ilimitada", "Página personalizada"]
             },
             enterprise: {
-                name: "Imobiliária (Em breve)",
+                name: "Imobiliária",
                 price: "Sob consulta",
-                features: [
-                    "Múltiplos Corretores",
-                    "Gestão centralizada",
-                    "API personalizada",
-                    "White label",
-                    "Treinamento dedicado"
-                ]
+                features: ["Múltiplos corretores", "Gestão centralizada", "API personalizada"]
             }
         }
     },
@@ -123,114 +224,41 @@ export const PLATFORM_KNOWLEDGE = {
     // Processo de Cadastro
     onboarding: {
         steps: [
-            "1. Acesse izibrokerz.com e clique em 'Cadastrar'",
-            "2. Escolha 'Sou Corretor'",
-            "3. Preencha seus dados (nome, email, CRECI, telefone)",
-            "4. Confirme seu email",
-            "5. Complete seu perfil",
-            "6. Comece a anunciar!"
+            "1. Clique em 'Anunciar' ou 'Teste Grátis'",
+            "2. Preencha seus dados (nome, email, CRECI, telefone, etc.)",
+            "3. Confirme seu email",
+            "4. Complete seu perfil em Configurações",
+            "5. Comece a anunciar!"
         ],
         requirements: [
             "CRECI ativo",
             "Email válido",
-            "Telefone para contato"
+            "WhatsApp para contato"
         ],
         time: "Menos de 5 minutos"
     },
 
-    // Tipos de Imóveis
-    propertyTypes: [
-        "Apartamento",
-        "Casa",
-        "Cobertura",
-        "Kitnet/Studio",
-        "Loft",
-        "Sobrado",
-        "Terreno",
-        "Chácara",
-        "Fazenda",
-        "Comercial/Loja",
-        "Sala Comercial",
-        "Galpão",
-        "Prédio Comercial"
-    ],
-
-    // Operações
-    operations: [
-        "Venda",
-        "Locação",
-        "Temporada"
-    ],
-
-    // Guias Passo-a-Passo
-    guides: {
-        howToRegisterProperty: {
-            title: "Como cadastrar um imóvel",
-            steps: [
-                "1. Faça login na sua conta de Corretor",
-                "2. Clique em 'Novo Imóvel' no menu lateral",
-                "3. Preencha os dados básicos (tipo, endereço, valores)",
-                "4. Adicione fotos de alta qualidade (mínimo 5)",
-                "5. Use a IA para gerar uma descrição atrativa",
-                "6. Revise e clique em 'Enviar para Aprovação'"
-            ]
-        },
-        howToInvitePartner: {
-            title: "Como convidar um parceiro",
-            steps: [
-                "1. Acesse a área 'Parcerias'",
-                "2. Clique em 'Convidar Corretor'",
-                "3. Digite o email do colega",
-                "4. Ele receberá um convite para se cadastrar gratuitamente"
-            ]
-        },
-        howToCloseDeal: {
-            title: "Como fechar negócio no sistema fifty",
-            steps: [
-                "1. Quando um parceiro traz um cliente para seu imóvel, vocês negociam os termos",
-                "2. O contrato é fechado normalmente",
-                "3. A comissão é dividida 50/50 conforme as regras da plataforma",
-                "4. Ambos marcam o imóvel como 'Vendido' no sistema"
-            ]
-        }
-    },
-
-    // Termos e Políticas
-    legal: {
-        termsOfUse: "O uso da plataforma implica na aceitação das regras de conduta ética, veracidade das informações dos imóveis e respeito ao sistema de parcerias.",
-        privacyPolicy: "Seus dados e de seus clientes são protegidos. Não compartilhamos leads com terceiros sem autorização.",
-        commissionRules: "A plataforma sugere a divisão 50/50 (fifty) para parcerias, mas os corretores têm liberdade para negociar percentuais diferentes caso acordado previamente por escrito."
-    },
-
-    // Dicas de Vendas e Mercado
-    salesTips: [
-        "Fotos profissionais aumentam em 3x as chances de contato.",
-        "Descrições que contam histórias (storytelling) engajam mais que listas técnicas.",
-        "Responda aos leads em até 5 minutos para aumentar a conversão em 400%.",
-        "Mantenha o status dos imóveis sempre atualizado para evitar frustrações."
-    ],
-
     // Perguntas Frequentes
     faq: [
         {
-            q: "Como funciona o sistema \"fifty\"?",
-            a: "Você anuncia um imóvel e outros Corretores podem trazer Clientes. Quando fecham negócio, vocês dividem 50/50 a comissão. Simples assim!"
+            q: "O teste grátis é realmente sem compromisso?",
+            a: "Sim! São 14 dias de acesso limitado sem precisar de cartão de crédito. Cancele quando quiser!"
+        },
+        {
+            q: "Como funciona o sistema de parcerias?",
+            a: "Você acessa imóveis de outros Corretores da rede e eles acessam os seus. Mais opções para seus clientes, mais chances de fechar negócio!"
+        },
+        {
+            q: "O que é o sistema MATCH?",
+            a: "Quando você cadastra um cliente, buscamos automaticamente imóveis compatíveis em nossa base de dados. E se outro Corretor cadastrar um imóvel ideal, você é notificado!"
         },
         {
             q: "Preciso pagar para anunciar?",
-            a: "Não! Durante a fase beta, a Plataforma é 100% gratuita. Você só paga comissão quando vender."
+            a: "Não! Você pode começar com o teste grátis de 14 dias! Se gostar, depois você pode escolher o plano ideal para você."
         },
         {
-            q: "Como recebo os leads?",
-            a: "Leads chegam direto no seu CRM e você recebe notificação por email e WhatsApp em tempo real."
-        },
-        {
-            q: "Posso usar minha própria marca?",
-            a: "Sim! Sua página personalizada destaca sua marca e identidade visual."
-        },
-        {
-            q: "Quanto tempo leva para aprovar um anúncio?",
-            a: "Em média 24 horas. Anúncios com fotos de qualidade e descrições completas são aprovados mais rápido."
+            q: "Como vocês verificam os Corretores?",
+            a: "Todos os cadastros são verificados no sistema CRECI/COFECI. Sua segurança é nossa prioridade!"
         }
     ],
 
@@ -240,6 +268,20 @@ export const PLATFORM_KNOWLEDGE = {
         whatsapp: "(11) 9999-9999",
         hours: "Segunda a Sexta, 9h às 18h",
         responseTime: "Até 24 horas"
+    },
+
+    // Tom de voz
+    voiceTone: {
+        style: "Clara, objetiva, polida, convidativa, educada e extrovertida",
+        rules: [
+            "Seja direto e evite rodeios",
+            "Use linguagem amigável e acessível",
+            "Mostre entusiasmo genuíno",
+            "Personalize com o contexto da conversa",
+            "Use emojis com moderação (1-2 por mensagem)",
+            "Sempre termine com uma ação ou pergunta relevante",
+            "Se possível, chegando próximo do final da conversa, direcione o cliente com um CTA (anúncio de imóvel ou direcione para uma página da plataforma"
+        ]
     }
 };
 
@@ -250,6 +292,131 @@ export interface LeadQualification {
     readyToContact: boolean;
     missingInfo: string[];
     notes: string;
+}
+
+// Estado da Conversa
+export interface ConversationState {
+    clientType: 'buyer' | 'broker' | null;
+    operacao: string | null;
+    tipoImovel: string | null;
+    cidade: string | null;
+    bairro: string | null;
+    valorMin: number | null;
+    valorMax: number | null;
+    quartos: number | null;
+    answeredQuestions: string[];
+}
+
+export function createEmptyConversationState(): ConversationState {
+    return {
+        clientType: null,
+        operacao: null,
+        tipoImovel: null,
+        cidade: null,
+        bairro: null,
+        valorMin: null,
+        valorMax: null,
+        quartos: null,
+        answeredQuestions: []
+    };
+}
+
+export function extractInfoFromMessage(message: string, state: ConversationState): ConversationState {
+    const lowerMessage = message.toLowerCase();
+    const newState = { ...state };
+
+    // Detectar operação
+    if (!newState.operacao) {
+        for (const [operacao, keywords] of Object.entries(PLATFORM_KNOWLEDGE.buyerFlow.operacaoKeywords)) {
+            if (keywords.some(kw => lowerMessage.includes(kw))) {
+                newState.operacao = operacao;
+                if (!newState.answeredQuestions.includes('operacao')) {
+                    newState.answeredQuestions.push('operacao');
+                }
+                break;
+            }
+        }
+    }
+
+    // Detectar tipo de imóvel
+    if (!newState.tipoImovel) {
+        for (const [tipo, keywords] of Object.entries(PLATFORM_KNOWLEDGE.buyerFlow.tipoImovelKeywords)) {
+            if (keywords.some(kw => lowerMessage.includes(kw))) {
+                newState.tipoImovel = tipo;
+                if (!newState.answeredQuestions.includes('tipoImovel')) {
+                    newState.answeredQuestions.push('tipoImovel');
+                }
+                break;
+            }
+        }
+    }
+
+    // Detectar valor (padrões: R$ X, X mil, X milhão, até X, de X a Y)
+    const valorPatterns = [
+        /r\$\s*([\d.,]+)\s*(mil|milhão|milhao)?/gi,
+        /([\d.,]+)\s*(mil|milhão|milhao)/gi,
+        /até\s*([\d.,]+)\s*(mil|milhão|milhao)?/gi,
+        /de\s*([\d.,]+)\s*a\s*([\d.,]+)/gi
+    ];
+
+    for (const pattern of valorPatterns) {
+        const match = pattern.exec(lowerMessage);
+        if (match) {
+            let valor = parseFloat(match[1].replace(/\./g, '').replace(',', '.'));
+            const multiplicador = match[2];
+
+            if (multiplicador?.includes('mil')) valor *= 1000;
+            if (multiplicador?.includes('milh')) valor *= 1000000;
+
+            if (!newState.valorMax || valor > newState.valorMax) {
+                newState.valorMax = valor;
+            }
+            if (!newState.valorMin) {
+                newState.valorMin = valor * 0.8; // 20% abaixo como mínimo
+            }
+            if (!newState.answeredQuestions.includes('valor')) {
+                newState.answeredQuestions.push('valor');
+            }
+            break;
+        }
+    }
+
+    // Detectar quartos
+    const quartosMatch = lowerMessage.match(/(\d+)\s*(quarto|quartos|dormitório|dormitórios|dorm)/);
+    if (quartosMatch && !newState.quartos) {
+        newState.quartos = parseInt(quartosMatch[1]);
+        if (!newState.answeredQuestions.includes('quartos')) {
+            newState.answeredQuestions.push('quartos');
+        }
+    }
+
+    return newState;
+}
+
+export function calculateMatchScore(state: ConversationState): number {
+    const fields = ['operacao', 'tipoImovel', 'cidade', 'bairro', 'valorMax'];
+    let filledCount = 0;
+
+    if (state.operacao) filledCount++;
+    if (state.tipoImovel) filledCount++;
+    if (state.cidade) filledCount++;
+    if (state.bairro) filledCount++;
+    if (state.valorMax) filledCount++;
+
+    return filledCount / fields.length;
+}
+
+export function generateSmartSearchLink(state: ConversationState): string {
+    const params = new URLSearchParams();
+
+    if (state.operacao) params.append('operacao', state.operacao);
+    if (state.tipoImovel) params.append('tipo', state.tipoImovel);
+    if (state.cidade) params.append('cidade', state.cidade);
+    if (state.bairro) params.append('bairro', state.bairro);
+    if (state.valorMax) params.append('valorMax', state.valorMax.toString());
+    if (state.quartos) params.append('quartos', state.quartos.toString());
+
+    return `/search?${params.toString()}`;
 }
 
 export function qualifyLead(conversation: string[]): LeadQualification {
@@ -306,10 +473,11 @@ export function qualifyLead(conversation: string[]): LeadQualification {
 
 function generateLeadNotes(score: number, level: string, missingInfo: string[]): string {
     if (level === 'hot') {
-        return `Lead qualificado! Cliente demonstrou interesse claro e forneceu informações importantes. ${missingInfo.length > 0 ? `Falta apenas: ${missingInfo.join(', ')}.` : 'Pronto para contato!'}`;
+        return `Lead qualificado! Cliente demonstrou interesse claro. ${missingInfo.length > 0 ? `Falta: ${missingInfo.join(', ')}.` : 'Pronto para contato!'}`;
     } else if (level === 'warm') {
-        return `Lead com potencial. Cliente interessado mas precisa de mais informações: ${missingInfo.join(', ')}.`;
+        return `Lead com potencial. Precisa de: ${missingInfo.join(', ')}.`;
     } else {
-        return `Lead inicial. Continuar qualificando com perguntas sobre: ${missingInfo.join(', ')}.`;
+        return `Lead inicial. Qualificar: ${missingInfo.join(', ')}.`;
     }
 }
+

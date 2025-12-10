@@ -1,32 +1,60 @@
-"use client";
-
 // Public AI Assistant for iziBrokerz
 // Helps buyers/renters find properties and brokers learn about the platform
 
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Sparkles, Loader2 } from 'lucide-react';
-import { callGemini } from '@/lib/geminiHelper';
-import { supabase } from '@/lib/supabaseClient';
-import { PLATFORM_KNOWLEDGE, qualifyLead } from '@/lib/platformKnowledge';
+import { useNavigate } from 'react-router-dom';
+import { X, Send, Sparkles, Loader2, ExternalLink } from 'lucide-react';
+import { callGemini } from '../lib/geminiHelper';
+import { supabase } from '../lib/supabaseClient';
+import {
+    PLATFORM_KNOWLEDGE,
+    qualifyLead,
+    ConversationState,
+    createEmptyConversationState,
+    extractInfoFromMessage,
+    calculateMatchScore,
+    generateSmartSearchLink
+} from '../lib/platformKnowledge';
 
 interface Message {
     role: 'user' | 'assistant';
     content: string;
     timestamp: Date;
+    links?: { text: string; url: string }[];
+}
+
+interface PropertyMatch {
+    id: string;
+    titulo: string;
+    cidade: string;
+    bairro: string;
+    valor_venda: number | null;
+    valor_locacao: number | null;
+    operacao: string;
+    tipo_imovel: string;
+    slug?: string;
 }
 
 export const PublicAIAssistant: React.FC = () => {
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
             role: 'assistant',
-            content: '👋 Olá! Sou a IzA sua assistente virtual. Posso te ajudar a encontrar o imóvel perfeito ou esclarecer dúvidas sobre nossa Plataforma. Como posso ajudar?',
+            content: '👋 Olá! Sou a IzA, sua assistente virtual! Como posso te ajudar hoje?',
             timestamp: new Date()
         }
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
+    const [conversationState, setConversationState] = useState<ConversationState>(createEmptyConversationState());
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Quick questions - Just 2 options
+    const quickQuestions = [
+        "Quero Comprar ou Alugar um imóvel",
+        "Sou Corretor e quero virar Parceiro"
+    ];
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -36,82 +64,165 @@ export const PublicAIAssistant: React.FC = () => {
         scrollToBottom();
     }, [messages]);
 
-    const getPropertyContext = async (): Promise<string> => {
+    // Get available cities and neighborhoods from database
+    const getAvailableLocations = async (): Promise<{ cities: string[], neighborhoods: string[] }> => {
         try {
-            const { data: properties, error } = await supabase
+            const { data } = await supabase
+                .from('anuncios')
+                .select('cidade, bairro')
+                .eq('status_aprovacao', 'aprovado');
+
+            if (data) {
+                const cities = [...new Set(data.map(p => p.cidade).filter(Boolean))];
+                const neighborhoods = [...new Set(data.map(p => p.bairro).filter(Boolean))];
+                return { cities, neighborhoods };
+            }
+        } catch (error) {
+            console.error('Error fetching locations:', error);
+        }
+        return { cities: [], neighborhoods: [] };
+    };
+
+    // Search properties matching conversation state
+    const searchMatchingProperties = async (state: ConversationState): Promise<PropertyMatch[]> => {
+        try {
+            let query = supabase
                 .from('anuncios')
                 .select(`
-                    id,
-                    titulo,
-                    cidade,
-                    bairro,
-                    valor_venda,
-                    valor_locacao,
-                    quartos,
-                    banheiros,
-                    area_priv,
-                    operacao(tipo),
-                    tipo_imovel(tipo)
+                    id, titulo, cidade, bairro, valor_venda, valor_locacao,
+                    operacao(tipo), tipo_imovel(tipo)
                 `)
                 .eq('status_aprovacao', 'aprovado')
-                .limit(50);
+                .limit(5);
 
-            if (error || !properties) return '';
+            // Add filters based on state
+            if (state.cidade) {
+                query = query.ilike('cidade', `%${state.cidade}%`);
+            }
+            if (state.bairro) {
+                query = query.ilike('bairro', `%${state.bairro}%`);
+            }
+            if (state.valorMax) {
+                if (state.operacao === 'venda') {
+                    query = query.lte('valor_venda', state.valorMax);
+                } else if (state.operacao === 'locacao') {
+                    query = query.lte('valor_locacao', state.valorMax);
+                }
+            }
 
-            const cities = Array.from(new Set(properties.map(p => p.cidade)));
-            const neighborhoods = Array.from(new Set(properties.map(p => p.bairro)));
-            const avgPrice = properties.reduce((sum, p) => sum + (p.valor_venda || p.valor_locacao || 0), 0) / properties.length;
+            const { data, error } = await query;
 
-            const forSale = properties.filter(p => {
-                const op = p.operacao as any;
-                return op && op.tipo && op.tipo.toLowerCase() === 'venda';
-            }).length;
+            if (error || !data) return [];
 
-            const forRent = properties.filter(p => {
-                const op = p.operacao as any;
-                return op && op.tipo && op.tipo.toLowerCase() === 'locação';
-            }).length;
+            return data.map(p => ({
+                ...p,
+                operacao: (p.operacao as any)?.tipo || '',
+                tipo_imovel: (p.tipo_imovel as any)?.tipo || ''
+            })).filter(p => {
+                // Filter by operacao if specified
+                if (state.operacao) {
+                    const opLower = p.operacao.toLowerCase();
+                    if (state.operacao === 'venda' && !opLower.includes('venda')) return false;
+                    if (state.operacao === 'locacao' && !opLower.includes('locação') && !opLower.includes('locacao')) return false;
+                }
+                // Filter by tipo if specified
+                if (state.tipoImovel) {
+                    const tipoLower = p.tipo_imovel.toLowerCase();
+                    if (!tipoLower.includes(state.tipoImovel)) return false;
+                }
+                return true;
+            });
+        } catch (error) {
+            console.error('Error searching properties:', error);
+            return [];
+        }
+    };
 
-            const propertyTypes = properties.reduce((acc, p) => {
-                const tipo = (p.tipo_imovel as any)?.tipo || 'Outro';
-                acc[tipo] = (acc[tipo] || 0) + 1;
-                return acc;
-            }, {} as Record<string, number>);
+    // Generate property link
+    const generatePropertyLink = (property: PropertyMatch): string => {
+        const tipoSlug = (property.tipo_imovel || 'imovel').toLowerCase().replace(/\s+/g, '-');
+        const bairroSlug = (property.bairro || '').toLowerCase().replace(/\s+/g, '-');
+        const cidadeSlug = (property.cidade || '').toLowerCase().replace(/\s+/g, '-');
+        return `/${tipoSlug}-${bairroSlug}-${cidadeSlug}-${property.id}`;
+    };
+
+    // Format currency
+    const formatCurrency = (value: number): string => {
+        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 });
+    };
+
+    // Get property context for AI
+    const getPropertyContext = async (state: ConversationState): Promise<string> => {
+        try {
+            const { data: properties } = await supabase
+                .from('anuncios')
+                .select(`
+                    id, titulo, cidade, bairro, valor_venda, valor_locacao, quartos,
+                    operacao(tipo), tipo_imovel(tipo)
+                `)
+                .eq('status_aprovacao', 'aprovado')
+                .limit(30);
+
+            if (!properties) return '';
+
+            const cities = [...new Set(properties.map(p => p.cidade))].filter(Boolean);
+            const neighborhoods = [...new Set(properties.map(p => p.bairro))].filter(Boolean);
+
+            const forSale = properties.filter(p => (p.operacao as any)?.tipo?.toLowerCase().includes('venda')).length;
+            const forRent = properties.filter(p => (p.operacao as any)?.tipo?.toLowerCase().includes('locação')).length;
 
             return `
-CONTEXTO DA Plataforma IZIBROKERZ:
+DADOS DA PLATAFORMA:
+- Total de imóveis: ${properties.length}
+- Cidades: ${cities.join(', ')}
+- Bairros: ${neighborhoods.slice(0, 15).join(', ')}
+- À venda: ${forSale} | Para locação: ${forRent}
 
-Estatísticas Atuais:
-- Total de imóveis disponíveis: ${properties.length}
-- Cidades atendidas: ${cities.join(', ')}
-- Bairros principais: ${neighborhoods.slice(0, 10).join(', ')}
-- Imóveis à venda: ${forSale}
-- Imóveis para locação: ${forRent}
-- Preço médio: R$ ${avgPrice.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
-
-Tipos de imóveis disponíveis:
-${Object.entries(propertyTypes).map(([tipo, count]) => `- ${tipo}: ${count} imóveis`).join('\n')}
-
-Funcionalidades da Plataforma para Corretores:
-- Sistema de parcerias "fifty" (divisão 50/50 de comissão)
-- Gestão completa de anúncios com fotos e descrições
-- CRM integrado para leads
-- Sistema de mensagens com Clientes
-- Página pública personalizada para cada corretor
-- Análise de bairros com IA (Gemini)
-- Descrições de imóveis com IA (Gemini)
-- Dashboard com métricas e estatísticas
-
-Diferenciais:
-- Busca inteligente com filtros avançados
-- Tour virtual 360° (em breve)
-- Consultoria especializada
-- Tecnologia de ponta com IA
+INFORMAÇÕES JÁ COLETADAS DO CLIENTE:
+- Operação: ${state.operacao || 'Não informada'}
+- Tipo de imóvel: ${state.tipoImovel || 'Não informado'}
+- Cidade: ${state.cidade || 'Não informada'}
+- Bairro: ${state.bairro || 'Não informado'}
+- Valor máximo: ${state.valorMax ? formatCurrency(state.valorMax) : 'Não informado'}
+- Quartos: ${state.quartos || 'Não informado'}
+- Perguntas já respondidas: ${state.answeredQuestions.join(', ') || 'Nenhuma'}
 `;
         } catch (error) {
             console.error('Error getting property context:', error);
             return '';
         }
+    };
+
+    // Detect location from message
+    const detectLocation = async (message: string, state: ConversationState): Promise<ConversationState> => {
+        const lowerMessage = message.toLowerCase();
+        const newState = { ...state };
+
+        const { cities, neighborhoods } = await getAvailableLocations();
+
+        // Check for city match
+        for (const city of cities) {
+            if (lowerMessage.includes(city.toLowerCase())) {
+                newState.cidade = city;
+                if (!newState.answeredQuestions.includes('cidade')) {
+                    newState.answeredQuestions.push('cidade');
+                }
+                break;
+            }
+        }
+
+        // Check for neighborhood match
+        for (const neighborhood of neighborhoods) {
+            if (lowerMessage.includes(neighborhood.toLowerCase())) {
+                newState.bairro = neighborhood;
+                if (!newState.answeredQuestions.includes('bairro')) {
+                    newState.answeredQuestions.push('bairro');
+                }
+                break;
+            }
+        }
+
+        return newState;
     };
 
     const handleSend = async () => {
@@ -124,101 +235,120 @@ Diferenciais:
         };
 
         setMessages(prev => [...prev, userMessage]);
+        const currentInput = input;
         setInput('');
         setLoading(true);
 
         try {
-            const propertyContext = await getPropertyContext();
+            // Extract information from user message
+            let newState = extractInfoFromMessage(currentInput, conversationState);
+
+            // Detect client type from quick questions
+            const lowerInput = currentInput.toLowerCase();
+            if (lowerInput.includes('comprar') || lowerInput.includes('alugar') || lowerInput.includes('imóvel')) {
+                newState.clientType = 'buyer';
+            } else if (lowerInput.includes('corretor') || lowerInput.includes('parceiro')) {
+                newState.clientType = 'broker';
+            }
+
+            // Detect location from database
+            newState = await detectLocation(currentInput, newState);
+
+            setConversationState(newState);
+
+            // Calculate match score for buyers
+            const matchScore = calculateMatchScore(newState);
+
+            // Search for matching properties if buyer and has some info
+            let matchingProperties: PropertyMatch[] = [];
+            let propertyLinks: { text: string; url: string }[] = [];
+
+            if (newState.clientType === 'buyer' && matchScore >= 0.6) {
+                matchingProperties = await searchMatchingProperties(newState);
+                propertyLinks = matchingProperties.map(p => ({
+                    text: `${p.tipo_imovel} em ${p.bairro} - ${formatCurrency(p.valor_venda || p.valor_locacao || 0)}`,
+                    url: generatePropertyLink(p)
+                }));
+            }
+
+            // Get context for AI
+            const propertyContext = await getPropertyContext(newState);
             const conversationHistory = messages
-                .slice(-4)
+                .slice(-6)
                 .map(m => `${m.role === 'user' ? 'Cliente' : 'IzA'}: ${m.content}`)
                 .join('\n');
 
-            // Qualificar lead baseado na conversa
-            const leadQualification = qualifyLead(messages.map(m => m.content));
+            // Build prompt based on client type
+            let specificInstructions = '';
 
-            const prompt = `Você é a IzA, assistente virtual inteligente da iziBrokerz.
+            if (newState.clientType === 'broker') {
+                specificInstructions = `
+CLIENTE É CORRETOR - use o pitch de vendas:
+${PLATFORM_KNOWLEDGE.brokerPitch.headline}
 
-CONHECIMENTO DA Plataforma:
-- Nome: ${PLATFORM_KNOWLEDGE.platform.name}
-- Missão: ${PLATFORM_KNOWLEDGE.platform.mission}
-- Sistema "fifty": ${PLATFORM_KNOWLEDGE.fiftyFifty.description}
-- Como funciona: ${PLATFORM_KNOWLEDGE.fiftyFifty.howItWorks}
-- Exemplo prático: ${PLATFORM_KNOWLEDGE.fiftyFifty.example}
-- Plano atual: ${PLATFORM_KNOWLEDGE.pricing.current}
-- Cadastro: ${PLATFORM_KNOWLEDGE.onboarding.time}
-- Suporte: ${PLATFORM_KNOWLEDGE.support.email} | ${PLATFORM_KNOWLEDGE.support.whatsapp}
+PRINCIPAIS BENEFÍCIOS para enfatizar:
+${PLATFORM_KNOWLEDGE.brokerPitch.mainBenefits.map(b => `- ${b.icon} ${b.title}: ${b.description}`).join('\n')}
 
-FUNCIONALIDADES PRINCIPAIS:
-${PLATFORM_KNOWLEDGE.platform.diferenciais.map(d => `- ${d}`).join('\n')}
+GANCHO PRINCIPAL: ${PLATFORM_KNOWLEDGE.trialOffer.description}
+CTA: Direcione para a página /anunciar com o Teste Grátis de 14 dias!
 
-GUIAS RÁPIDOS (Como Fazer):
-${Object.values(PLATFORM_KNOWLEDGE.guides).map(g => `- ${g.title}: ${g.steps.join(' -> ')}`).join('\n')}
+SEGURANÇA: ${PLATFORM_KNOWLEDGE.brokerPitch.security.description}
 
-TERMOS E POLÍTICAS:
-- Termos: ${PLATFORM_KNOWLEDGE.legal.termsOfUse}
-- Privacidade: ${PLATFORM_KNOWLEDGE.legal.privacyPolicy}
-- Regras de Comissão: ${PLATFORM_KNOWLEDGE.legal.commissionRules}
+FOCO na mensagem: ${PLATFORM_KNOWLEDGE.brokerPitch.focus.join(' | ')}
+`;
+            } else {
+                // Buyer flow
+                const missingInfo = [];
+                if (!newState.operacao) missingInfo.push('operação (comprar ou alugar)');
+                if (!newState.tipoImovel) missingInfo.push('tipo de imóvel');
+                if (!newState.cidade && !newState.bairro) missingInfo.push('cidade ou bairro');
+                if (!newState.valorMax) missingInfo.push('faixa de valor');
 
-DICAS DE VENDAS (Para Corretores):
-${PLATFORM_KNOWLEDGE.salesTips.map(t => `- ${t}`).join('\n')}
+                specificInstructions = `
+CLIENTE É COMPRADOR/LOCATÁRIO
 
-DADOS REAIS DOS IMÓVEIS:
+${matchScore >= 0.6 && matchingProperties.length > 0 ? `
+ÓTIMA NOTÍCIA! Encontrei ${matchingProperties.length} imóveis compatíveis!
+Mostre os imóveis encontrados e incentive o cliente a clicar nos links.
+` : ''}
+
+${missingInfo.length > 0 ? `
+INFORMAÇÕES QUE AINDA FALTAM (NÃO repita perguntas já respondidas):
+${missingInfo.map(i => `- ${i}`).join('\n')}
+
+Faça APENAS UMA pergunta por vez, sobre: ${missingInfo[0]}
+` : ''}
+
+${newState.cidade && matchingProperties.length === 0 ? `
+Não encontramos imóveis em ${newState.cidade}. Sugira explorar o mapa ou bairros próximos!
+` : ''}
+
+PARA CLIENTES INDECISOS, sugira: "${PLATFORM_KNOWLEDGE.buyerFlow.undecidedSuggestion}"
+`;
+            }
+
+            const prompt = `Você é a IzA, assistente virtual da iziBrokerz.
+
+TOM DE VOZ: ${PLATFORM_KNOWLEDGE.voiceTone.style}
+REGRAS:
+${PLATFORM_KNOWLEDGE.voiceTone.rules.map(r => `- ${r}`).join('\n')}
+
 ${propertyContext}
 
-QUALIFICAÇÃO DO LEAD:
-- Score: ${leadQualification.score}/100
-- Nível: ${leadQualification.level.toUpperCase()}
-- Pronto para contato: ${leadQualification.readyToContact ? 'SIM' : 'NÃO'}
-- Informações faltantes: ${leadQualification.missingInfo.join(', ') || 'Nenhuma'}
-- Notas: ${leadQualification.notes}
+${specificInstructions}
 
 HISTÓRICO:
 ${conversationHistory}
 
 PERGUNTA DO CLIENTE:
-${userMessage.content}
+${currentInput}
 
-PERSONALIDADE E TOM:
-- Seja amigável, profissional e SEMPRE útil
-- Use linguagem natural e conversacional
-- Seja PROATIVA em oferecer soluções
-- NUNCA diga que não pode ajudar
-- Use emojis sutilmente (1-2 por mensagem)
+${matchingProperties.length > 0 ? `
+IMÓVEIS ENCONTRADOS (mencione-os na resposta e diga que o cliente pode clicar para ver):
+${matchingProperties.map((p, i) => `${i + 1}. ${p.tipo_imovel} em ${p.bairro}, ${p.cidade} - ${formatCurrency(p.valor_venda || p.valor_locacao || 0)}`).join('\n')}
+` : ''}
 
-INSTRUÇÕES DE RESPOSTA:
-
-1. CLIENTE BUSCANDO IMÓVEL:
-   - Pergunte: tipo de imóvel, cidade preferida, orçamento, número de quartos
-   - Sugira imóveis específicos baseados nos dados acima
-   - Exemplo: "Temos X apartamentos em [cidade] a partir de R$ [valor]. Qual seu orçamento ideal?"
-   - Direcione para a busca avançada: "Acesse nossa busca para ver todos os detalhes!"
-
-2. CORRETOR INTERESSADO / DÚVIDAS TÉCNICAS:
-   - Use os "GUIAS RÁPIDOS" para explicar passo-a-passo como usar a plataforma
-   - Destaque o sistema "fifty" e as regras de comissão se perguntado
-   - Ofereça dicas de vendas se o contexto permitir
-   - Incentive cadastro: "Cadastre-se grátis e comece a anunciar hoje!"
-
-3. DÚVIDAS SOBRE A Plataforma:
-   - Explique funcionalidades de forma clara e objetiva
-   - Sempre termine com uma ação: "Quer que eu te mostre como funciona?"
-
-4. FORMATO DA RESPOSTA:
-   - Máximo 3-4 linhas por resposta (seja concisa)
-   - Seja ESPECÍFICA com números reais dos dados fornecidos
-   - NUNCA repita introduções como "Olá", "Sou a IzA" se já estiver conversando
-   - VARIE seu vocabulário. Não use sempre as mesmas frases de fechamento
-   - Sempre termine com uma pergunta ou call-to-action relevante ao contexto
-   - NUNCA peça desculpas ou diga que não pode ajudar (busque uma alternativa)
-
-5. EXEMPLOS DE BOAS RESPOSTAS:
-   - "Temos vários imóveis disponíveis! 🏠 Você busca para comprar ou alugar? Em qual cidade?"
-   - "Para cadastrar um imóvel é fácil: Faça login, clique em 'Novo Imóvel' e preencha os dados. Quer ajuda com a descrição?"
-   - "Nosso sistema 'fifty' divide a comissão 50/50. É ótimo para ampliar suas vendas! 🤝 Quer saber mais?"
-   - "Encontrei diversos imóveis à venda. Qual seu orçamento e quantos quartos precisa? 🔍"
-
-RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
+RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
 
             const response = await callGemini(prompt);
 
@@ -226,7 +356,8 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
                 const assistantMessage: Message = {
                     role: 'assistant',
                     content: response,
-                    timestamp: new Date()
+                    timestamp: new Date(),
+                    links: propertyLinks.length > 0 ? propertyLinks : undefined
                 };
                 setMessages(prev => [...prev, assistantMessage]);
             } else {
@@ -235,18 +366,16 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
         } catch (error) {
             console.error('Error sending message:', error);
 
-            // Fallback inteligente baseado na pergunta
+            // Intelligent fallback
             let fallbackMessage = '';
-            const lowerInput = userMessage.content.toLowerCase();
+            const lowerInput = currentInput.toLowerCase();
 
-            if (lowerInput.includes('imóvel') || lowerInput.includes('imovel') || lowerInput.includes('casa') || lowerInput.includes('apartamento')) {
-                fallbackMessage = `Temos diversos imóveis disponíveis! 🏠 Para ver todas as opções, acesse nossa busca avançada no menu. Posso te ajudar com algo mais específico?`;
-            } else if (lowerInput.includes('corretor') || lowerInput.includes('parceria') || lowerInput.includes('cadastr')) {
-                fallbackMessage = `Nossa Plataforma oferece sistema "fifty" único! 🤝 Cadastre-se gratuitamente e comece a anunciar. Quer saber mais sobre as funcionalidades?`;
-            } else if (lowerInput.includes('preço') || lowerInput.includes('preco') || lowerInput.includes('valor')) {
-                fallbackMessage = `Nossos imóveis têm valores variados para todos os perfis! 💰 Use os filtros de busca para encontrar dentro do seu orçamento. Qual faixa de preço você procura?`;
+            if (conversationState.clientType === 'broker' || lowerInput.includes('corretor') || lowerInput.includes('parceiro')) {
+                fallbackMessage = `Que ótimo ter você aqui! 🤝 A iziBrokerz oferece Teste Grátis de 14 dias com acesso completo: parcerias, CRM, página personalizada e muito mais! Acesse /anunciar e comece agora!`;
+            } else if (lowerInput.includes('imóvel') || lowerInput.includes('comprar') || lowerInput.includes('alugar')) {
+                fallbackMessage = `Temos ótimas opções para você! 🏠 Me conta: você está buscando para comprar ou alugar? E qual tipo de imóvel prefere?`;
             } else {
-                fallbackMessage = `Estou aqui para ajudar! 😊 Posso te auxiliar a encontrar imóveis, explicar sobre nossa Plataforma ou tirar dúvidas sobre parcerias. O que você gostaria de saber?`;
+                fallbackMessage = `Estou aqui para ajudar! 😊 Você está buscando um imóvel ou é Corretor interessado em parcerias?`;
             }
 
             const errorMessage: Message = {
@@ -267,11 +396,10 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
         }
     };
 
-    const quickQuestions = [
-        "Quais imóveis vocês têm disponíveis?",
-        "Busco apartamento de 2 quartos",
-        "Quero me cadastrar como corretor"
-    ];
+    const handleLinkClick = (url: string) => {
+        navigate(url);
+        setIsOpen(false);
+    };
 
     return (
         <>
@@ -289,14 +417,16 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
             )}
 
             {isOpen && (
-                <div className="fixed bottom-6 right-6 z-50 w-[350px] h-[500px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-slate-700">
+                <div className="fixed bottom-6 right-6 z-50 w-[380px] h-[520px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-slate-700">
+                    {/* Header */}
                     <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                                 <Sparkles size={20} />
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg">Assistente IzA</h3>
+                                <h3 className="font-bold text-lg">IzA</h3>
+                                <p className="text-xs text-emerald-100">Assistente Virtual</p>
                             </div>
                         </div>
                         <button
@@ -307,6 +437,7 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
                         </button>
                     </div>
 
+                    {/* Messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-slate-900">
                         {messages.map((message, index) => (
                             <div
@@ -314,12 +445,30 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
                                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
                                 <div
-                                    className={`max-w-[80%] rounded-2xl px-4 py-2 ${message.role === 'user'
+                                    className={`max-w-[85%] rounded-2xl px-4 py-2 ${message.role === 'user'
                                         ? 'bg-emerald-500 text-white rounded-br-none'
                                         : 'bg-white dark:bg-slate-800 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-bl-none'
                                         }`}
                                 >
                                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+
+                                    {/* Property Links */}
+                                    {message.links && message.links.length > 0 && (
+                                        <div className="mt-3 space-y-2">
+                                            <p className="text-xs opacity-70 font-medium">Clique para ver:</p>
+                                            {message.links.map((link, linkIndex) => (
+                                                <button
+                                                    key={linkIndex}
+                                                    onClick={() => handleLinkClick(link.url)}
+                                                    className="flex items-center gap-2 text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-3 py-2 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors w-full text-left"
+                                                >
+                                                    <ExternalLink size={14} />
+                                                    <span className="truncate">{link.text}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
                                     <p className="text-xs opacity-60 mt-1">
                                         {message.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                     </p>
@@ -328,23 +477,27 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
                         ))}
                         {loading && (
                             <div className="flex justify-start">
-                                <div className="bg-white dark:bg-slate-800 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-2xl rounded-bl-none px-4 py-2">
-                                    <Loader2 size={16} className="animate-spin" />
+                                <div className="bg-white dark:bg-slate-800 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-2xl rounded-bl-none px-4 py-3">
+                                    <div className="flex items-center gap-2">
+                                        <Loader2 size={16} className="animate-spin" />
+                                        <span className="text-sm">Digitando...</span>
+                                    </div>
                                 </div>
                             </div>
                         )}
                         <div ref={messagesEndRef} />
                     </div>
 
+                    {/* Quick Questions - Only show at start */}
                     {messages.length === 1 && (
                         <div className="p-3 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Perguntas rápidas:</p>
-                            <div className="flex flex-wrap gap-2">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium">Como posso ajudar?</p>
+                            <div className="flex flex-col gap-2">
                                 {quickQuestions.map((question, index) => (
                                     <button
                                         key={index}
                                         onClick={() => setInput(question)}
-                                        className="text-xs bg-gray-100 dark:bg-slate-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-full transition-colors"
+                                        className="text-sm bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-900/30 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-4 py-3 rounded-xl transition-all font-medium text-left"
                                     >
                                         {question}
                                     </button>
@@ -353,6 +506,7 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
                         </div>
                     )}
 
+                    {/* Input */}
                     <div className="p-4 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
                         <div className="flex gap-2">
                             <input
@@ -361,13 +515,13 @@ RESPONDA AGORA de forma DIRETA, ÚTIL e PROATIVA:`;
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyPress={handleKeyPress}
                                 placeholder="Digite sua mensagem..."
-                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                                className="flex-1 px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm"
                                 disabled={loading}
                             />
                             <button
                                 onClick={handleSend}
                                 disabled={!input.trim() || loading}
-                                className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 dark:disabled:bg-slate-600 text-white rounded-full p-2 transition-colors disabled:cursor-not-allowed"
+                                className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 dark:disabled:bg-slate-600 text-white rounded-full p-3 transition-colors disabled:cursor-not-allowed"
                             >
                                 <Send size={20} />
                             </button>

@@ -1,4 +1,5 @@
-"use client";
+// Horizontal Scroll with Pagination
+// Componente reutilizável para scroll horizontal com paginação numérica
 
 import React, { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -133,7 +134,7 @@ export const HorizontalScroll: React.FC<HorizontalScrollProps> = ({
             {/* Container de Scroll */}
             <div
                 ref={scrollRef}
-                className="overflow-hidden cursor-grab active:cursor-grabbing touch-pan-y scrollbar-hide"
+                className="overflow-hidden cursor-grab active:cursor-grabbing touch-pan-y"
                 onMouseDown={handleMouseDown}
                 onMouseLeave={handleMouseLeave}
                 onMouseUp={handleMouseUp}
@@ -177,3 +178,4 @@ export const HorizontalScroll: React.FC<HorizontalScrollProps> = ({
         </div>
     );
 };
+
