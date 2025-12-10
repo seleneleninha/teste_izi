@@ -140,8 +140,8 @@ export const Navbar = () => {
                             <Link
                                 href="/login"
                                 className={`px-6 py-2 rounded-full font-bold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${scrolled
-                                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'
-                                    : 'bg-white text-emerald-600 hover:bg-gray-100'
+                                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/20'
+                                    : 'bg-white text-red-600 hover:bg-gray-100'
                                     }`}
                             >
                                 Entrar

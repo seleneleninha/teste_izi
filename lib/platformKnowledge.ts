@@ -224,7 +224,7 @@ export const PLATFORM_KNOWLEDGE = {
     // Processo de Cadastro
     onboarding: {
         steps: [
-            "1. Clique em 'Anunciar' ou 'Teste Grátis'",
+            "1. Clique em 'http://localhost:3000/#/partner' e veja porquê você deve ser um Parceiro iziBrokerz",
             "2. Preencha seus dados (nome, email, CRECI, telefone, etc.)",
             "3. Confirme seu email",
             "4. Complete seu perfil em Configurações",

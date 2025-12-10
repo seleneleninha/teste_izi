@@ -366,7 +366,7 @@ export const Login: React.FC = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-primary-500/25 mt-6 flex items-center justify-center disabled:opacity-70"
+                        className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl transition-colors shadow-lg shadow-red-500/25 mt-6 flex items-center justify-center disabled:opacity-70"
                     >
                         {loading ? <Loader2 size={20} className="animate-spin" /> : (isSignUp ? 'CADASTRAR' : 'ENTRAR')}
                     </button>

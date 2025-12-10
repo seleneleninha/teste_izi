@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Building2, Building, MapPinHouse, MapPinned, Tractor, Map as MapIcon, Map } from 'lucide-react';
+import { MapPin, Building2, Building, MapPinHouse, MapPinned, Tractor, Map as MapIcon, Map, Trees, TreePalm } from 'lucide-react';
 import { SearchFilter } from '../components/SearchFilter';
 import { PropertyCard } from '../components/PropertyCard';
 import { PublicAIAssistant } from '../components/PublicAIAssistant';
@@ -54,10 +54,11 @@ export const PublicHome: React.FC = () => {
 
     const fetchCategoryCounts = async () => {
         try {
-            const types = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno', 'Temporada'];
+            // Tipos de imóvel (buscados na tabela tipo_imovel)
+            const propertyTypes = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno'];
             const counts: Record<string, number> = {};
 
-            for (const type of types) {
+            for (const type of propertyTypes) {
                 const { data: typeData } = await supabase
                     .from('tipo_imovel')
                     .select('id')
@@ -76,6 +77,27 @@ export const PublicHome: React.FC = () => {
                     counts[type.toLowerCase()] = 0;
                 }
             }
+
+            // Temporada é uma OPERAÇÃO, não um tipo de imóvel
+            // Buscar pela tabela operação
+            const { data: temporadaOp } = await supabase
+                .from('operacao')
+                .select('id')
+                .ilike('tipo', 'temporada')
+                .single();
+
+            if (temporadaOp) {
+                const { count } = await supabase
+                    .from('anuncios')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('operacao', temporadaOp.id)
+                    .eq('status_aprovacao', 'aprovado');
+
+                counts['temporada'] = count || 0;
+            } else {
+                counts['temporada'] = 0;
+            }
+
             setCategoryCounts(counts);
         } catch (error) {
             console.error('Error fetching category counts:', error);
@@ -190,9 +212,9 @@ export const PublicHome: React.FC = () => {
                             { label: 'Apartamentos', type: 'apartamento', icon: <Building size={32} /> },
                             { label: 'Casas', type: 'casa', icon: <MapPinHouse size={32} /> },
                             { label: 'Comercial', type: 'comercial', icon: <Building2 size={32} /> },
-                            { label: 'Rural', type: 'rural', icon: <Tractor size={32} /> },
+                            { label: 'Rural', type: 'rural', icon: <Trees size={32} /> },
+                            { label: 'Temporada', type: 'temporada', icon: <TreePalm size={32} /> },
                             { label: 'Terrenos', type: 'terreno', icon: <MapPinned size={32} /> },
-                            { label: 'Temporada', type: 'temporada', icon: <Map size={32} /> }
                         ].map((category, idx) => (
                             <div
                                 key={idx}

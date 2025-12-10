@@ -1043,19 +1043,18 @@ export const Leads: React.FC = () => {
                                     <div key={prop.id} className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-lg border border-gray-200 dark:border-slate-600 flex justify-between items-center hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
                                         <div>
                                             <h4 className="font-bold text-gray-900 dark:text-white">{prop.titulo}</h4>
-                                            <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-slate-400 mt-1">
+                                            <div className="gap-3 text-sm text-gray-500 dark:text-slate-400 mt-1">
                                                 <span>{prop.cidade} - {prop.bairro}</span>
-                                                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                                <span className="text-primary-600 dark:text-primary-400 font-medium">
+                                                <p className="text-xl text-primary-600 dark:text-primary-400 font-bold">
                                                     {prop.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                                </span>
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
                                             <div className="text-right">
                                                 <div className="text-xs text-gray-500 dark:text-slate-400">Match</div>
-                                                <div className={`font-bold ${prop.match_score >= 80 ? 'text-green-500' :
-                                                    prop.match_score >= 50 ? 'text-yellow-500' :
+                                                <div className={`text-xl font-bold ${prop.match_score >= 80 ? 'text-green-500' :
+                                                    prop.match_score >= 60 ? 'text-yellow-500' :
                                                         'text-gray-500'
                                                     }`}>
                                                     {prop.match_score}%

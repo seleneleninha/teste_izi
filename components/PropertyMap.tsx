@@ -7,6 +7,7 @@ import { Property } from '../types';
 import { useNavigate } from 'react-router-dom';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatCurrency, formatArea } from '../lib/formatters';
 
 // Fix Leaflet default marker icon issue
 const iconUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
@@ -105,7 +106,9 @@ const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) =
           return null;
         }
 
-        const price = p.valor_venda || p.valor_locacao || 0;
+        // Determinar o preço a exibir
+        const priceValue = p.valor_venda || p.valor_locacao || p.valor_diaria || p.valor_mensal || 0;
+        const priceLabel = p.valor_diaria ? '/dia' : (p.valor_mensal ? '/mês' : '');
         const operation = p.operacao;
         const type = p.tipo_imovel;
         const location = `${p.bairro}, ${p.cidade}`;
@@ -129,7 +132,7 @@ const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) =
           const cidade = (p.cidade || '').toLowerCase().replace(/\s+/g, '-');
           const area = p.area_priv || 0;
           const operacaoSlug = (operation || '').toLowerCase().replace('_', '-').replace('/', '-');
-          const valor = p.valor_venda || p.valor_locacao || 0;
+          const valor = p.valor_venda || p.valor_locacao || p.valor_diaria || p.valor_mensal || 0;
           const garagem = (p.vagas || 0) > 0 ? '-com-garagem' : '';
           const codigo = p.cod_imovel || p.id;
 
@@ -167,12 +170,14 @@ const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) =
                     const isVenda = op === 'venda';
                     const isLocacao = op === 'locacao';
                     const isAmbos = op.includes('venda') && op.includes('locacao');
+                    const isTemporada = op.includes('temporada');
 
                     return (
                       <span className={`text-[16px] px-2 py-0.5 rounded-full font-medium ${isVenda ? 'bg-red-600 text-white'
                         : isLocacao ? 'bg-blue-600 text-white'
                           : isAmbos ? 'bg-green-600 text-white'
-                            : 'bg-gray-600 text-white'
+                            : isTemporada ? 'bg-orange-600 text-white'
+                              : 'bg-gray-600 text-white'
                         }`}>
                         {operation || 'N/A'}
                       </span>
@@ -184,7 +189,7 @@ const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) =
 
                 <div className="flex justify-between items-center mt-2">
                   <span className="font-bold text-primary-600 text-lg">
-                    R$ {price.toLocaleString('pt-BR')}
+                    {priceValue > 0 ? formatCurrency(priceValue) + priceLabel : 'Sob Consulta'}
                   </span>
                   <button
                     onClick={() => navigate(`/${generateSlug()}`)}

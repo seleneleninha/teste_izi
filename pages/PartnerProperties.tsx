@@ -9,6 +9,7 @@ import { PropertyMap } from '../components/PropertyMap';
 import { navigateToProperty } from '../lib/propertyHelpers';
 import { HorizontalScroll } from '../components/HorizontalScroll';
 import { Area } from 'recharts';
+import { formatCurrency, formatArea } from '../lib/formatters';
 
 interface Property {
     id: string;
@@ -19,6 +20,8 @@ interface Property {
     bairro: string;
     valor_venda: number | null;
     valor_locacao: number | null;
+    valor_diaria: number | null;
+    valor_mensal: number | null;
     fotos: string;
     operacao: any;
     tipo_imovel: any;
@@ -112,7 +115,8 @@ const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onClose, on
 const PropertyCard: React.FC<{ property: Property; onToggle: (property: Property, currentState: boolean) => void; compact?: boolean; actions?: React.ReactNode; isTrial?: boolean }> = ({ property, onToggle, compact, actions, isTrial = false }) => {
     const navigate = useNavigate();
     const images = property.fotos ? property.fotos.split(',').filter(Boolean) : [];
-    const price = property.valor_venda || property.valor_locacao || 0;
+    const price = property.valor_venda || property.valor_locacao || property.valor_diaria || property.valor_mensal || 0;
+
     const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
 
     const formatCurrency = (value: number) => {
@@ -663,11 +667,8 @@ export const PartnerProperties: React.FC = () => {
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    Disponíveis para Parceria
+                                    {availableProperties.length} {availableProperties.length === 1 ? 'imóvel disponível' : 'imóveis disponíveis para Parceria'}
                                 </h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    {availableProperties.length} {availableProperties.length === 1 ? 'imóvel disponível' : 'imóveis disponíveis'}
-                                </p>
                             </div>
 
                             {/* View Mode Toggle */}
@@ -734,8 +735,10 @@ export const PartnerProperties: React.FC = () => {
                                                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('quartos')}><Bed size={14} /></th>
                                                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('banheiros')}><Bath size={14} /></th>
                                                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('vagas')}><Car size={14} /></th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_venda')}>Valor Venda</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_locacao')}>Valor Locação</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_venda')}>Venda</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_locacao')}>Locação</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_diaria')}>Diária</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_mensal')}>Mensal</th>
                                                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
                                             </tr>
                                         </thead>
@@ -765,15 +768,21 @@ export const PartnerProperties: React.FC = () => {
                                                     </td>
                                                     <td className="px-4 py-3">{property.cidade}</td>
                                                     <td className="px-4 py-3">{property.bairro}</td>
-                                                    <td className="px-4 py-3 text-center">{property.area_priv}</td>
+                                                    <td className="px-4 py-3 text-center">{formatArea(property.area_priv)}</td>
                                                     <td className="px-4 py-3 text-center">{property.quartos}</td>
                                                     <td className="px-4 py-3 text-center">{property.banheiros}</td>
                                                     <td className="px-4 py-3 text-center">{property.vagas}</td>
                                                     <td className="px-4 py-3 text-sm text-center font-semibold text-primary-600 dark:text-primary-400">
-                                                        {property.valor_venda ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(property.valor_venda) : '-'}
+                                                        {property.valor_venda ? formatCurrency(property.valor_venda) : '-'}
                                                     </td>
                                                     <td className="px-4 py-3 text-sm text-center font-semibold text-blue-600 dark:text-blue-400">
-                                                        {property.valor_locacao ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(property.valor_locacao) : '-'}
+                                                        {property.valor_locacao ? formatCurrency(property.valor_locacao) : '-'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm text-center font-semibold text-orange-600 dark:text-orange-400">
+                                                        {property.valor_diaria ? formatCurrency(property.valor_diaria) : '-'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm text-center font-semibold text-orange-600 dark:text-orange-400">
+                                                        {property.valor_mensal ? formatCurrency(property.valor_mensal) : '-'}
                                                     </td>
                                                     <td className="px-4 py-3 text-center">
                                                         <div className="flex items-center justify-center gap-2">
@@ -837,11 +846,8 @@ export const PartnerProperties: React.FC = () => {
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                     <Handshake className="text-emerald-500" size={28} />
-                                    Parcerias Aceitas
-                                </h2>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                     {acceptedProperties.length} {acceptedProperties.length === 1 ? 'parceria ativa' : 'parcerias ativas'}
-                                </p>
+                                </h2>
                             </div>
                         </div>
 

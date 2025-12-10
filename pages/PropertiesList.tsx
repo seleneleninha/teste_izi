@@ -19,7 +19,10 @@ export const PropertiesList: React.FC = () => {
     const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
+    const [propertyTypes, setPropertyTypes] = useState<{ tipo: string; disponivel_temporada: boolean }[]>([]);
+
+    // Tipos padrão para Comprar/Alugar (sem temporada)
+    const standardTypes = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno'];
 
     // Filters
     const [selectedType, setSelectedType] = useState('');
@@ -72,17 +75,28 @@ export const PropertiesList: React.FC = () => {
         try {
             const { data, error } = await supabase
                 .from('tipo_imovel')
-                .select('tipo')
+                .select('tipo, disponivel_temporada')
                 .order('tipo');
 
             if (error) throw error;
             if (data) {
-                setPropertyTypes(data.map(item => item.tipo));
+                setPropertyTypes(data);
             }
         } catch (error) {
             console.error('Error fetching property types:', error);
         }
     };
+
+    // Filtrar tipos baseado na operação selecionada
+    const filteredPropertyTypes = propertyTypes.filter(type => {
+        if (selectedOperation === 'temporada') {
+            // Temporada: mostrar apenas tipos com disponivel_temporada = true
+            return type.disponivel_temporada === true;
+        } else {
+            // Comprar/Alugar: mostrar apenas os 5 tipos padrão
+            return standardTypes.some(st => st.toLowerCase() === type.tipo.toLowerCase());
+        }
+    });
 
     const fetchProperties = async (
         typeOverride?: string,
@@ -391,6 +405,7 @@ export const PropertiesList: React.FC = () => {
                                 <option value="" className="dark:bg-slate-800">Operação</option>
                                 <option value="venda" className="dark:bg-slate-800">Venda</option>
                                 <option value="locacao" className="dark:bg-slate-800">Locação</option>
+                                <option value="temporada" className="dark:bg-slate-800">Temporada</option>
                             </select>
                             <select
                                 value={selectedType}
@@ -398,9 +413,9 @@ export const PropertiesList: React.FC = () => {
                                 className="col-span-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
                             >
                                 <option value="" className="dark:bg-slate-800">Tipo</option>
-                                {propertyTypes.map((type, idx) => (
-                                    <option key={idx} value={type} className="dark:bg-slate-800">
-                                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                                {filteredPropertyTypes.map((type, idx) => (
+                                    <option key={idx} value={type.tipo} className="dark:bg-slate-800">
+                                        {type.tipo.charAt(0).toUpperCase() + type.tipo.slice(1)}
                                     </option>
                                 ))}
                             </select>

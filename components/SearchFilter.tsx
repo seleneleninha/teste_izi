@@ -3,43 +3,69 @@ import { Search, Map } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 
+interface PropertyType {
+    tipo: string;
+    disponivel_temporada: boolean;
+}
+
 export const SearchFilter = () => {
-    const [activeTab, setActiveTab] = useState<'buy' | 'rent'>('buy');
-    const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
+    const [activeTab, setActiveTab] = useState<'buy' | 'rent' | 'temporada'>('buy');
+    const [allPropertyTypes, setAllPropertyTypes] = useState<PropertyType[]>([]);
     const [selectedType, setSelectedType] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [showMap, setShowMap] = useState(false);
     const navigate = useNavigate();
 
+    // Tipos padrão para Comprar/Alugar (sem temporada)
+    const standardTypes = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno'];
+
     useEffect(() => {
         fetchPropertyTypes();
     }, []);
+
+    // Reset tipo selecionado quando muda de operação
+    useEffect(() => {
+        setSelectedType('');
+    }, [activeTab]);
 
     const fetchPropertyTypes = async () => {
         try {
             const { data, error } = await supabase
                 .from('tipo_imovel')
-                .select('tipo')
+                .select('tipo, disponivel_temporada')
                 .order('tipo');
 
             if (error) throw error;
             if (data) {
-                setPropertyTypes(data.map(item => item.tipo));
+                setAllPropertyTypes(data);
             }
         } catch (error) {
             console.error('Error fetching property types:', error);
         }
     };
 
+    // Filtrar tipos baseado na operação selecionada
+    const filteredPropertyTypes = allPropertyTypes.filter(type => {
+        if (activeTab === 'temporada') {
+            // Temporada: mostrar apenas tipos com disponivel_temporada = true
+            return type.disponivel_temporada === true;
+        } else {
+            // Comprar/Alugar: mostrar apenas os 5 tipos padrão
+            return standardTypes.some(st => st.toLowerCase() === type.tipo.toLowerCase());
+        }
+    });
+
     const handleSearch = () => {
         const params = new URLSearchParams();
-        // Alugar = locacao + venda/locacao
-        // Comprar = venda + venda/locacao
+
         if (activeTab === 'rent') {
             params.append('operacao', 'locacao');
-        } else {
+        } else if (activeTab === 'buy') {
             params.append('operacao', 'venda');
+        } else if (activeTab === 'temporada') {
+            params.append('operacao', 'temporada');
         }
+
         if (selectedType) params.append('tipo', selectedType);
         if (searchTerm) params.append('q', searchTerm);
         if (showMap) params.append('view', 'map');
@@ -74,6 +100,18 @@ export const SearchFilter = () => {
                         <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-500 rounded-full"></span>
                     )}
                 </button>
+                <button
+                    className={`pb-2 font-semibold text-lg transition-colors relative ${activeTab === 'temporada'
+                        ? 'text-orange-500'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                        }`}
+                    onClick={() => setActiveTab('temporada')}
+                >
+                    Temporada
+                    {activeTab === 'temporada' && (
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-500 rounded-full"></span>
+                    )}
+                </button>
             </div>
 
             <div className="flex flex-col md:flex-row gap-4">
@@ -84,9 +122,9 @@ export const SearchFilter = () => {
                         className="w-full bg-transparent outline-none text-gray-700 dark:text-gray-200 cursor-pointer"
                     >
                         <option value="" className="dark:bg-slate-800">Tipo de Imóvel</option>
-                        {propertyTypes.map((type, idx) => (
-                            <option key={idx} value={type} className="dark:bg-slate-800">
-                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                        {filteredPropertyTypes.map((type, idx) => (
+                            <option key={idx} value={type.tipo} className="dark:bg-slate-800">
+                                {type.tipo.charAt(0).toUpperCase() + type.tipo.slice(1)}
                             </option>
                         ))}
                     </select>
@@ -105,7 +143,10 @@ export const SearchFilter = () => {
 
                 <button
                     onClick={handleSearch}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg transition-all transform hover:scale-105 uppercase tracking-wide shadow-lg shadow-emerald-500/20"
+                    className={`font-bold py-3 px-8 rounded-lg transition-all transform hover:scale-105 uppercase tracking-wide shadow-lg ${activeTab === 'temporada'
+                            ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20'
+                            : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'
+                        }`}
                 >
                     Buscar
                 </button>

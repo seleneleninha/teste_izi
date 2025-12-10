@@ -8,6 +8,7 @@ import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
 import { geocodeAddress } from '../lib/geocodingHelper';
 import { DraggableMap } from '../components/DraggableMap';
+import { formatCurrencyInput, formatAreaInput } from '../lib/formatters';
 
 // Interface for the form data
 interface PropertyFormData {
@@ -405,9 +406,26 @@ export const AddProperty: React.FC = () => {
         { num: 5, label: 'Revisão', icon: Check }
     ];
 
+    // Campos que devem receber formatação de moeda (R$ 1.000.000)
+    const currencyFields = ['salePrice', 'rentPrice', 'condoFee', 'iptu', 'valorDiaria', 'valorMensal'];
+    // Campos que devem receber formatação de área (1.500 m²)
+    const areaFields = ['privateArea', 'totalArea'];
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+
+        let formattedValue = value;
+
+        // Aplicar formatação para campos monetários
+        if (currencyFields.includes(name)) {
+            formattedValue = formatCurrencyInput(value);
+        }
+        // Aplicar formatação para campos de área
+        else if (areaFields.includes(name)) {
+            formattedValue = formatAreaInput(value);
+        }
+
+        setFormData(prev => ({ ...prev, [name]: formattedValue }));
     };
 
     const handleFeatureToggle = (feature: string) => {
@@ -1138,11 +1156,11 @@ export const AddProperty: React.FC = () => {
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Área Privativa (m²) <span className="text-red-500">*</span></label>
-                                <input type="number" name="privateArea" value={formData.privateArea} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="text" inputMode="numeric" name="privateArea" value={formData.privateArea} onChange={handleInputChange} placeholder="120" className="w-full px-4 py-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Área Total (m²)</label>
-                                <input type="number" name="totalArea" value={formData.totalArea} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="text" inputMode="numeric" name="totalArea" value={formData.totalArea} onChange={handleInputChange} placeholder="150" className="w-full px-4 py-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                         </div>
 

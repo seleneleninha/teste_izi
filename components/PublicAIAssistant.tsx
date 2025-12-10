@@ -50,10 +50,11 @@ export const PublicAIAssistant: React.FC = () => {
     const [conversationState, setConversationState] = useState<ConversationState>(createEmptyConversationState());
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Quick questions - Just 2 options
+    // Quick questions - Just 3 options
     const quickQuestions = [
-        "Quero Comprar ou Alugar um imóvel",
-        "Sou Corretor e quero virar Parceiro"
+        "Quero ALUGAR um imóvel",
+        "Quero COMPRAR um imóvel",
+        "Sou CORRETOR e quero virar PARCEIRO"
     ];
 
     const scrollToBottom = () => {

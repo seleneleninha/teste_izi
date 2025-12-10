@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MapPin, ChevronLeft, ChevronRight, Home, Bed, Bath, Car, Maximize, Edit2, Trash2, Check, X, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
+import { formatCurrency, formatArea } from '../lib/formatters';
 
 interface PropertyCardProps {
     property: {
@@ -51,8 +52,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
         ? property.fotos
         : (property.fotos ? property.fotos.split(',') : []);
 
-    const formatCurrency = (value: number) =>
-        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(value);
+    // Usando formatCurrency e formatArea do lib/formatters
 
     const nextImage = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -216,7 +216,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                         {(property.area_priv || 0) > 0 && (
                             <div className="flex flex-col items-center justify-center p-2">
                                 <Maximize size={16} className="text-gray-400 mb-1" />
-                                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{property.area_priv}m²</span>
+                                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{formatArea(property.area_priv)}m²</span>
                             </div>
                         )}
                         {(property.quartos || 0) > 0 && (
@@ -256,7 +256,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                                 {property.valor_mensal && (
                                     <div className="text-right">
                                         <p className="text-xs text-gray-500 dark:text-gray-400">Mensal</p>
-                                        <p className="text-lg font-bold text-gray-600 dark:text-gray-400">
+                                        <p className="text-md font-bold text-gray-600 dark:text-gray-400">
                                             {formatCurrency(property.valor_mensal)}
                                         </p>
                                     </div>
@@ -264,7 +264,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                                 {!property.valor_diaria && !property.valor_mensal && (
                                     <div>
                                         <p className="text-xs text-gray-500">Valor</p>
-                                        <p className="text-xl font-bold text-gray-400">Consulte</p>
+                                        <p className="text-md font-bold text-gray-400">Consulte</p>
                                     </div>
                                 )}
                             </>
@@ -273,14 +273,14 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                             <>
                                 <div>
                                     <p className="text-xs text-primary-500 dark:text-primary-400">Valor</p>
-                                    <p className="text-xl font-bold text-primary-600 dark:text-primary-400">
+                                    <p className="text-xl font-bold text-primary-600 dark:text-primary-500">
                                         {property.valor_venda ? formatCurrency(property.valor_venda) : formatCurrency(property.valor_locacao)}
                                     </p>
                                 </div>
                                 {property.valor_locacao && property.valor_venda && (
                                     <div className="text-right">
                                         <p className="text-xs text-gray-500 dark:text-gray-400">Locação</p>
-                                        <p className="text-xl font-bold text-gray-600 dark:text-gray-400">
+                                        <p className="text-md font-bold text-gray-600 dark:text-gray-400">
                                             {formatCurrency(property.valor_locacao)}
                                         </p>
                                     </div>
