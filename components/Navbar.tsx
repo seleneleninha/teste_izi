@@ -151,7 +151,7 @@ export const Navbar = () => {
 
                     {/* Mobile Menu Button */}
                     <button
-                        className="md:hidden p-2 text-white"
+                        className="md:hidden p-2 text-red-500"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                     >
                         {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}

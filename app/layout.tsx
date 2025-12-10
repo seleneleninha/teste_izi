@@ -3,7 +3,7 @@ import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 
 import { Providers } from "@/components/Providers";
-import { Navbar } from "@/components/Navbar";
+import { ConditionalNavbar } from "@/components/ConditionalNavbar";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -31,10 +31,11 @@ export default function RootLayout({
         className={`${inter.variable} ${outfit.variable} antialiased bg-gray-50 dark:bg-dark-900 text-gray-900 dark:text-white`}
       >
         <Providers>
-          <Navbar />
+          <ConditionalNavbar />
           {children}
         </Providers>
       </body>
     </html>
   );
 }
+

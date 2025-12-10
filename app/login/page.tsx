@@ -103,24 +103,16 @@ function LoginPageContent() {
                 if (error) throw error;
 
                 if (data?.user) {
-                    addToast('Login realizado com sucesso!', 'success');
-
+                    addToast('Redirecionando...', 'success');
                     const redirectTo = searchParams.get('redirectTo');
-                    // Use replace to avoid login page in history + setTimeout to allow auth state to propagate
-                    setTimeout(() => {
-                        if (redirectTo) {
-                            router.replace(redirectTo);
-                        } else {
-                            router.replace('/dashboard');
-                        }
-                        router.refresh();
-                    }, 100);
+                    // Redirect immediately - keep loading state to prevent UI interaction
+                    window.location.href = redirectTo || '/dashboard';
+                    return; // Don't continue, we're navigating away
                 }
             }
         } catch (err: any) {
             console.error(err);
             addToast(err.message || 'Ocorreu um erro ao tentar autenticar.', 'error');
-        } finally {
             setLoading(false);
         }
     };

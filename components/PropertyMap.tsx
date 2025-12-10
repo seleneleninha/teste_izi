@@ -123,7 +123,7 @@ const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) =
                 const count = cluster.getChildCount();
                 return L.divIcon({
                     html: `<div style="
-                        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+                        background: linear-gradient(135deg, #390404ff, #ff0000ff);
                         color: white;
                         border-radius: 50%;
                         width: 40px;

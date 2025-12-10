@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 // Environment variables - DO NOT hardcode credentials here!
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -12,4 +12,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
     }
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+// Use createBrowserClient for proper SSR cookie handling
+export const supabase = createBrowserClient(supabaseUrl || '', supabaseAnonKey || '');
+
