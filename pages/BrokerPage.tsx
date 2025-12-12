@@ -290,7 +290,7 @@ export const BrokerPage: React.FC = () => {
 
                                 {/* CRECI */}
                                 <span className="text-white font-medium text-center">
-                                    CRECI <p className="text-white font-bold uppercase">{broker.creci}/{broker.uf_creci}</p>
+                                    CRECI <span className="text-white font-bold uppercase">{broker.creci}/{broker.uf_creci}</span>
                                 </span>
 
                                 {/* WhatsApp Button - Inline */}

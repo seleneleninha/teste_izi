@@ -375,7 +375,7 @@ Vamos agendar uma visita?`;
                                     <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-medium">
                                         {currentImageIndex + 1} / {photos.length}
                                     </div>
-                                </>
+                                </div>
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-400">
                                     Sem fotos
