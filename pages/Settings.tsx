@@ -52,7 +52,10 @@ export const Settings: React.FC = () => {
     threads: '',
     youtube: '',
     linkedin: '',
-    x: ''
+    x: '',
+    // Welcome Messages
+    boasVindas1: '',
+    boasVindas2: ''
   });
 
   // Password State
@@ -122,7 +125,9 @@ export const Settings: React.FC = () => {
           threads: data.threads || '',
           youtube: data.youtube || '',
           linkedin: data.linkedin || '',
-          x: data.x || ''
+          x: data.x || '',
+          boasVindas1: data.mensagem_boasvindas || '',
+          boasVindas2: data.boasvindas2 || ''
         });
 
         if (data.preferencias_notificacao) {
@@ -223,6 +228,8 @@ export const Settings: React.FC = () => {
         youtube: profile.youtube || null,
         linkedin: profile.linkedin || null,
         x: profile.x || null,
+        mensagem_boasvindas: profile.boasVindas1 || null,
+        boasvindas2: profile.boasVindas2 || null,
         preferencias_notificacao: notifications,
         updated_at: new Date().toISOString()
       };
@@ -884,6 +891,72 @@ export const Settings: React.FC = () => {
                   >
                     {uploading ? 'Enviando...' : (profile.marcaDagua ? 'Alterar Marca D\'água' : 'Fazer Upload')}
                   </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Welcome Messages Section */}
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800 mb-6">
+              <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <span className="text-2xl">👋</span> Mensagens de Boas-Vindas
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-slate-400 mb-6">
+                Personalize as mensagens que seus clientes verão ao acessar sua página. Use duas frases curtas e impactantes!
+              </p>
+
+              {/* First Message - White */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                  Mensagem Principal (máximo 40 caracteres) - <span className="text-gray-500">Cor: Branca</span>
+                </label>
+                <input
+                  type="text"
+                  value={profile.boasVindas1}
+                  onChange={e => {
+                    const value = e.target.value;
+                    if (value.length <= 40) {
+                      setProfile({ ...profile, boasVindas1: value });
+                    }
+                  }}
+                  placeholder="Ex: Os Melhores Imóveis em Natal"
+                  maxLength={40}
+                  className="w-full px-4 py-3 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 focus:ring-2 focus:ring-emerald-500 outline-none text-gray-900 dark:text-white"
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-xs text-gray-500 dark:text-slate-400">
+                    💡 Frase curta e chamativa
+                  </p>
+                  <p className={`text-xs font-medium ${profile.boasVindas1.length >= 35 ? 'text-orange-600' : 'text-gray-500'}`}>
+                    {profile.boasVindas1.length}/40
+                  </p>
+                </div>
+              </div>
+
+              {/* Second Message - Emerald */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                  Mensagem de Destaque (máximo 40 caracteres) - <span className="text-emerald-600 font-bold">Cor: Verde (Destaque)</span>
+                </label>
+                <input
+                  type="text"
+                  value={profile.boasVindas2}
+                  onChange={e => {
+                    const value = e.target.value;
+                    if (value.length <= 40) {
+                      setProfile({ ...profile, boasVindas2: value });
+                    }
+                  }}
+                  placeholder="Ex: Encontre seu lar dos sonhos!"
+                  maxLength={40}
+                  className="w-full px-4 py-3 rounded-lg bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 focus:ring-2 focus:ring-emerald-500 outline-none text-gray-900 dark:text-white"
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                    ✨ Esta mensagem aparecerá em verde (destaque)
+                  </p>
+                  <p className={`text-xs font-medium ${profile.boasVindas2.length >= 35 ? 'text-orange-600' : 'text-gray-500'}`}>
+                    {profile.boasVindas2.length}/40
+                  </p>
                 </div>
               </div>
             </div>

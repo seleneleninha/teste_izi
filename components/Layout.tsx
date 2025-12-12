@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { useTheme } from './ThemeContext';
-import { Sun, Moon, Bell, Send } from 'lucide-react';
+import { Bell, Send } from 'lucide-react';
 import { NotificationDropdown } from './NotificationDropdown';
 import { MessagesDrawer } from './MessagesDrawer';
 import { TrialBanner } from './TrialBanner';
@@ -11,7 +11,7 @@ import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
 
 export const DashboardLayout: React.FC = () => {
-    const { theme, toggleTheme } = useTheme();
+    const { theme } = useTheme();
     const location = useLocation();
     const { user } = useAuth();
     const [searchParams] = useSearchParams();
@@ -108,9 +108,9 @@ export const DashboardLayout: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200 flex">
+        <div className="min-h-screen bg-gray-50 dark:bg-midnight-950 transition-colors duration-200 flex">
             {/* Mobile hamburger */}
-            <button className="bg-emerald-500 dark:bg-emerald-600 rounded-full md:hidden p-2 fixed top-6 left-6 z-[60]" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <button className="bg-emerald-500 dark:bg-emerald-600 rounded-full md:hidden p-2 fixed top-6 left-6 z-[60] shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform" onClick={() => setSidebarOpen(!sidebarOpen)}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
@@ -128,12 +128,7 @@ export const DashboardLayout: React.FC = () => {
                     </div>
 
                     <div className="flex items-center space-x-4">
-                        <button
-                            onClick={toggleTheme}
-                            className="p-2 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
-                        >
-                            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                        </button>
+
 
                         {/* Messages Button */}
                         <button
@@ -186,7 +181,7 @@ export const DashboardLayout: React.FC = () => {
 };
 
 export const PublicLayout: React.FC = () => {
-    const { theme, toggleTheme } = useTheme();
+    const { theme } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -237,7 +232,7 @@ export const PublicLayout: React.FC = () => {
     }, [brokerSlug, theme]);
 
     return (
-        <div className="min-h-screen bg-white dark:bg-slate-900 text-gray-900 dark:text-white overflow-x-hidden">
+        <div className="min-h-screen bg-gray-50 dark:bg-midnight-950 text-gray-900 dark:text-white overflow-x-hidden">
             <nav className="border-b border-gray-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md z-50 transition-all duration-300">
                 {/* Logo - Conditional: Broker or Platform */}
                 {isBrokerPage && brokerLogo ? (
@@ -274,9 +269,6 @@ export const PublicLayout: React.FC = () => {
 
                 {/* Right Side Actions */}
                 <div className="flex items-center space-x-4">
-                    <button onClick={toggleTheme} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full">
-                        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-                    </button>
                     <a href="#/login" className="hidden md:block px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium">
                         ENTRAR/CADASTRAR
                     </a>

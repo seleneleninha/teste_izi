@@ -73,7 +73,7 @@ export const About: React.FC = () => {
     ];
 
     return (
-        <div className="bg-gray-50 dark:bg-slate-900 min-h-screen font-sans">
+        <div className="bg-slate-900 min-h-screen font-sans">
             {/* Hero Section */}
             <section className="relative overflow-hidden bg-slate-900 text-white py-24 lg:py-32">
                 <div className="absolute inset-0 z-0">
@@ -120,17 +120,17 @@ export const About: React.FC = () => {
 
                         {/* Text Side */}
                         <div className="lg:w-1/2">
-                            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6">
+                            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
                                 A Visão por Trás da Inovação
                             </h2>
-                            <div className="space-y-6 text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
+                            <div className="space-y-6 text-lg text-gray-300 leading-relaxed">
                                 <p>
-                                    Com mais de <strong className="text-emerald-600 dark:text-emerald-400">25 anos de estrada, BELUZZO</strong> é um corretor que escalou cada degrau. De plantões de vendas, "plantões pirata", coordenações... à gerências e diretoria de grandes incorporadoras.
+                                    Com mais de <strong className="text-emerald-400">25 anos de estrada, BELUZZO</strong> é um corretor que escalou cada degrau. De plantões de vendas, "plantões pirata", coordenações... à gerências e diretoria de grandes incorporadoras.
                                 </p>
                                 <p>
                                     Sua trajetória revelou uma verdade incômoda: o mercado é hostil ao profissional autônomo. Falta apoio, falta tecnologia e sobram barreiras.
                                 </p>
-                                <blockquote className="border-l-4 border-emerald-500 pl-4 py-2 italic text-gray-800 dark:text-gray-200 bg-emerald-50 dark:bg-emerald-900/10 rounded-r-lg">
+                                <blockquote className="border-l-4 border-emerald-500 pl-4 py-2 italic text-gray-200 bg-emerald-900/10 rounded-r-lg">
                                     "A iziBrokerz não é sobre software. <br />É sobre liberdade! <br />É DAR AOS CORRETORES AS <br />ARMAS PARA VENCER GIGANTES!"
                                 </blockquote>
                             </div>
@@ -168,49 +168,49 @@ export const About: React.FC = () => {
             </section>
 
             {/* Roadmap Timeline */}
-            <section className="py-24 bg-white dark:bg-slate-950 relative overflow-hidden">
+            <section className="py-24 bg-slate-950 relative overflow-hidden">
                 <div className="container mx-auto px-6 relative z-10">
                     <div className="text-center max-w-3xl mx-auto mb-16">
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold tracking-wider text-sm uppercase">Minha Jornada</span>
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mt-2 mb-4">Um Legado em Construção</h2>
-                        <p className="text-gray-600 dark:text-gray-400">
+                        <span className="text-emerald-400 font-semibold tracking-wider text-sm uppercase">Minha Jornada</span>
+                        <h2 className="text-3xl md:text-4xl font-bold text-white mt-2 mb-4">Um Legado em Construção</h2>
+                        <p className="text-gray-400">
                             Cada passo foi um aprendizado para construir a solução definitiva para o mercado.
                         </p>
                     </div>
 
                     <div className="max-w-4xl mx-auto relative">
                         {/* Vertical Line */}
-                        <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-emerald-200 dark:via-emerald-800 to-transparent md:-translate-x-1/2"></div>
+                        <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-emerald-800 to-transparent md:-translate-x-1/2"></div>
 
                         <div className="space-y-12">
                             {milestones.map((item, index) => (
                                 <div key={index} className={`relative flex flex-col md:flex-row gap-8 items-start ${index % 2 === 0 ? '' : 'md:flex-row-reverse'}`}>
 
                                     {/* Timeline Node */}
-                                    <div className="absolute left-4 md:left-1/2 w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-4 border-emerald-500 z-10 transform -translate-x-1/2 flex items-center justify-center shadow-lg">
+                                    <div className="absolute left-4 md:left-1/2 w-8 h-8 rounded-full bg-slate-900 border-4 border-emerald-500 z-10 transform -translate-x-1/2 flex items-center justify-center shadow-lg">
                                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
                                     </div>
 
                                     {/* Content */}
                                     <div className={`ml-12 md:ml-0 md:w-1/2 ${index % 2 === 0 ? 'md:pr-12 md:text-right' : 'md:pl-12 md:text-left'}`}>
-                                        <div className="inline-block px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold mb-3">
+                                        <div className="inline-block px-3 py-1 rounded-full bg-emerald-900/40 text-emerald-300 text-xs font-bold mb-3">
                                             {item.year}
                                         </div>
-                                        <div className={`p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-800 hover:shadow-xl transition-all group ${index % 2 === 0 ? 'md:ml-auto' : 'md:mr-auto'}`}>
+                                        <div className={`p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-800 hover:shadow-xl transition-all group ${index % 2 === 0 ? 'md:ml-auto' : 'md:mr-auto'}`}>
                                             <div className={`flex items-center gap-3 mb-4 ${index % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
-                                                <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                                                <div className="p-2.5 rounded-lg bg-slate-800 text-emerald-400 group-hover:scale-110 transition-transform">
                                                     {item.icon}
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                                                    <h4 className="text-lg font-bold text-white leading-tight">
                                                         {item.title}
                                                     </h4>
-                                                    <div className="text-sm font-medium text-emerald-600 dark:text-emerald-500">
+                                                    <div className="text-sm font-medium text-emerald-500">
                                                         {item.company}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                                            <p className="text-gray-400 text-sm leading-relaxed">
                                                 {item.description}
                                             </p>
                                         </div>

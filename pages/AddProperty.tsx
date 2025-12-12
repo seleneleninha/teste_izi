@@ -760,38 +760,38 @@ export const AddProperty: React.FC = () => {
     return (
         <div className="mt-6 max-w-5xl mx-auto pb-12">
             <div className="mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{editingId ? 'Editar Imóvel' : 'Cadastrar Novo Imóvel'}</h2>
-                <p className="text-gray-500 dark:text-slate-400 mt-1">Preencha os dados do imóvel. Nossa IA ajudará em etapas chave.</p>
+                <h2 className="text-3xl font-bold text-white">{editingId ? 'Editar Imóvel' : 'Cadastrar Novo Imóvel'}</h2>
+                <p className="text-slate-400 mt-1">Preencha os dados do imóvel. Nossa IA ajudará em etapas chave.</p>
             </div>
 
             {/* Rejection Banner */}
             {rejectionData && propertyStatus === 'reprovado' && (
-                <div className="mb-8 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-6 rounded-r-xl shadow-sm animate-in slide-in-from-top-2">
+                <div className="mb-8 bg-red-900/20 border-l-4 border-red-500 p-6 rounded-r-xl shadow-sm animate-in slide-in-from-top-2">
                     <div className="flex items-start">
-                        <AlertTriangle className="text-red-600 dark:text-red-400 mr-4 flex-shrink-0 mt-1" size={24} />
+                        <AlertTriangle className="text-red-400 mr-4 flex-shrink-0 mt-1" size={24} />
                         <div className="flex-1">
-                            <h3 className="text-lg font-bold text-red-800 dark:text-red-200 mb-2">
+                            <h3 className="text-lg font-bold text-red-200 mb-2">
                                 Atenção: Este anúncio foi reprovado
                             </h3>
-                            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-red-100 dark:border-red-900/30 mb-4">
-                                <p className="font-bold text-red-700 dark:text-red-300 mb-1">Motivo da Reprovação:</p>
-                                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                            <div className="bg-slate-800 p-4 rounded-lg border border-red-900/30 mb-4">
+                                <p className="font-bold text-red-300 mb-1">Motivo da Reprovação:</p>
+                                <p className="text-gray-300 whitespace-pre-line">
                                     {rejectionData.reason}
                                 </p>
                             </div>
-                            <p className="text-sm text-red-700 dark:text-red-300">
+                            <p className="text-sm text-red-300">
                                 Por favor, corrija os problemas apontados abaixo e salve o anúncio novamente.
                                 Ele será enviado automaticamente para uma nova análise.
                             </p>
 
                             {rejectionData.history && rejectionData.history.length > 0 && (
-                                <div className="mt-4 pt-4 border-t border-red-200 dark:border-red-800">
-                                    <p className="text-md font-bold text-red-600 dark:text-red-400 uppercase mb-2 flex items-center">
+                                <div className="mt-4 pt-4 border-t border-red-800">
+                                    <p className="text-md font-bold text-red-400 uppercase mb-2 flex items-center">
                                         <History size={12} className="mr-1" /> Histórico de Reprovações
                                     </p>
                                     <div className="space-y-3">
                                         {rejectionData.history.map((item: any, idx: number) => (
-                                            <div key={idx} className="text-md text-gray-600 dark:text-gray-400 border-b border-gray-100 dark:border-slate-700 pb-2 last:border-0">
+                                            <div key={idx} className="text-md text-gray-400 border-b border-slate-700 pb-2 last:border-0">
                                                 <div className="font-bold mb-1">{new Date(item.data).toLocaleDateString()}</div>
                                                 {item.razoes && item.razoes.length > 0 && (
                                                     <div className="mb-1">
@@ -814,10 +814,10 @@ export const AddProperty: React.FC = () => {
             )}
 
             {/* Stepper - Mobile Horizontal Scroll / Desktop Centered */}
-            <div className="mb-8 sticky top-[68px] z-20 md:static md:z-auto bg-gray-50 dark:bg-slate-900 py-2 md:py-0 -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="mb-8 sticky top-[68px] z-20 md:static md:z-auto bg-slate-900 py-2 md:py-0 -mx-4 px-4 md:mx-0 md:px-0">
                 <div className="flex flex-row md:justify-between items-center overflow-x-auto no-scrollbar gap-4 md:gap-0 snap-x">
                     {/* Connecting Line (Desktop Only) */}
-                    <div className="hidden md:block absolute top-[26px] left-0 w-full h-1 bg-gray-200 dark:bg-slate-700 -z-10 rounded"></div>
+                    <div className="hidden md:block absolute top-[26px] left-0 w-full h-1 bg-slate-700 -z-10 rounded"></div>
 
                     {steps.map((s) => {
                         // Check validation status for this step (simplified logic for UI)
@@ -833,14 +833,14 @@ export const AddProperty: React.FC = () => {
                                 <div
                                     className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold border-2 md:border-4 transition-all duration-300 
                                     ${isCompleted || isCurrent
-                                            ? 'bg-primary-500 border-primary-500 text-white shadow-md'
-                                            : 'bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-400 group-hover:border-primary-300'
+                                            ? 'bg-emerald-500 text-white'
+                                            : 'bg-slate-800 border-slate-600 text-gray-400 group-hover:border-primary-300'
                                         }`}
                                 >
                                     {isCompleted ? <Check size={20} /> : <s.icon size={18} />}
                                 </div>
                                 <span className={`mt-2 text-[10px] md:text-xs font-bold uppercase tracking-wider whitespace-nowrap 
-                                    ${isCompleted || isCurrent ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400'}`}>
+                                    ${isCompleted || isCurrent ? 'text-primary-400' : 'text-gray-400'}`}>
                                     {s.label}
                                 </span>
 
@@ -855,31 +855,31 @@ export const AddProperty: React.FC = () => {
             </div>
 
             {/* Form Content */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 md:p-8 shadow-lg border border-gray-200 dark:border-slate-700 min-h-[450px] animate-in fade-in duration-300">
+            <div className="bg-slate-800 rounded-2xl p-6 md:p-8 shadow-lg border border-gray-200 dark:border-slate-700 min-h-[450px] animate-in fade-in duration-300">
 
                 {/* STEP 1: LOCALIZAÇÃO E DADOS BÁSICOS */}
                 {step === 1 && (
                     <div className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Título do Anúncio <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-bold text-gray-300 mb-2">Título do Anúncio <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     name="title"
                                     value={formData.title}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all"
+                                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                     placeholder="Ex: Lindo Apartamento no Centro com Vista Mar"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Operação <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-bold text-gray-300 mb-2">Operação <span className="text-red-500">*</span></label>
                                 <select
                                     name="operacaoId"
                                     value={formData.operacaoId}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 pr-10 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                                    className="w-full px-4 py-3 pr-10 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
                                 >
                                     <option value="">Selecione...</option>
                                     {operacoes.map(op => (
@@ -889,12 +889,12 @@ export const AddProperty: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Tipo de Imóvel <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-bold text-gray-300 mb-2">Tipo de Imóvel <span className="text-red-500">*</span></label>
                                 <select
                                     name="tipoImovelId"
                                     value={formData.tipoImovelId}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 pr-10 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                                    className="w-full px-4 py-3 pr-10 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
                                 >
                                     <option value="">Selecione...</option>
                                     {tiposDisponiveis.map(tipo => (
@@ -907,12 +907,12 @@ export const AddProperty: React.FC = () => {
                             {/* Subtipo - Hidden for Temporada */}
                             {!isTemporada && (
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Subtipo <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-bold text-gray-300 mb-2">Subtipo <span className="text-red-500">*</span></label>
                                     <select
                                         name="subtipoImovelId"
                                         value={formData.subtipoImovelId}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 pr-10 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                                        className="w-full px-4 py-3 pr-10 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
                                     >
                                         <option value="">Selecione...</option>
                                         {subtiposImovel
@@ -925,14 +925,14 @@ export const AddProperty: React.FC = () => {
                             )}
                         </div>
 
-                        <div className="border-t border-gray-100 dark:border-slate-700 pt-6">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+                        <div className="border-t border-slate-700 pt-6">
+                            <h3 className="text-lg font-bold text-white mb-4 flex items-center">
                                 <MapPin className="mr-2 text-primary-500" /> Endereço do Imóvel
                             </h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">CEP <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-bold text-gray-300 mb-2">CEP <span className="text-red-500">*</span></label>
                                     <div className="relative">
                                         <input
                                             type="text"
@@ -941,7 +941,7 @@ export const AddProperty: React.FC = () => {
                                             onChange={handleInputChange}
                                             onBlur={handleCepBlur}
                                             maxLength={9}
-                                            className={`w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all ${cepError ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'}`}
+                                            className={`w-full px-4 py-3 rounded-xl bg-slate-900 border focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all ${cepError ? 'border-red-500' : 'border-slate-600'}`}
                                             placeholder="00000-000"
                                         />
                                         {isLoadingCep && <Loader2 className="absolute right-3 top-3.5 animate-spin text-primary-500" size={18} />}
@@ -950,72 +950,72 @@ export const AddProperty: React.FC = () => {
                                 </div>
 
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Endereço <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-bold text-gray-300 mb-2">Endereço <span className="text-red-500">*</span></label>
                                     <input
                                         type="text"
                                         name="address"
                                         value={formData.address}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="Rua, Avenida..."
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Número</label>
+                                    <label className="block text-sm font-bold text-gray-300 mb-2">Número</label>
                                     <input
                                         type="text"
                                         name="number"
                                         value={formData.number}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="123"
                                     />
                                 </div>
 
                                 <div className="md:col-span-1">
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Complemento</label>
+                                    <label className="block text-sm font-bold text-gray-300 mb-2">Complemento</label>
                                     <input
                                         type="text"
                                         name="complement"
                                         value={formData.complement}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="Apto 101"
                                     />
                                 </div>
 
                                 <div className="md:col-span-1">
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Bairro <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-bold text-gray-300 mb-2">Bairro <span className="text-red-500">*</span></label>
                                     <input
                                         type="text"
                                         name="neighborhood"
                                         value={formData.neighborhood}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                     />
                                 </div>
 
                                 <div className="md:col-span-1">
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Cidade <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-bold text-gray-300 mb-2">Cidade <span className="text-red-500">*</span></label>
                                     <input
                                         type="text"
                                         name="city"
                                         value={formData.city}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                     />
                                 </div>
 
                                 <div className="md:col-span-1">
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">UF <span className="text-red-500">*</span></label>
+                                    <label className="block text-sm font-bold text-gray-300 mb-2">UF <span className="text-red-500">*</span></label>
                                     <input
                                         type="text"
                                         name="state"
                                         value={formData.state}
                                         onChange={handleInputChange}
                                         maxLength={2}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all uppercase"
+                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all uppercase"
                                     />
                                 </div>
                             </div>
@@ -1023,7 +1023,7 @@ export const AddProperty: React.FC = () => {
                             {/* Manual Geocoding Test Button (if automatic fails) */}
                             {formData.city && !formData.latitude && (
                                 <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-                                    <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
+                                    <p className="text-sm text-amber-200 mb-3">
                                         <strong>⚠️ Buscando coordenadas automaticamente, um momento...</strong><br />
                                         Clique no botão abaixo para tentar buscar manualmente:
                                     </p>
@@ -1081,7 +1081,7 @@ export const AddProperty: React.FC = () => {
 
                             {/* Coordinate Info */}
                             {formData.latitude && formData.longitude && (
-                                <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center text-sm text-emerald-700 dark:text-emerald-300">
+                                <div className="mt-4 p-3 bg-emerald-900/20 border-emerald-800 rounded-lg flex items-center text-sm text-emerald-300">
                                     <MapPin size={16} className="mr-2 flex-shrink-0" />
                                     <div>
                                         <strong>Coordenadas localizadas:</strong><br />
@@ -1093,7 +1093,7 @@ export const AddProperty: React.FC = () => {
                             {/* Interactive Map - Shows automatically after coordinates are fetched */}
                             {formData.latitude && formData.longitude && (
                                 <div className="mt-6">
-                                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Localização no Mapa</h4>
+                                    <h4 className="text-lg font-bold text-white mb-4">Localização no Mapa</h4>
                                     <DraggableMap
                                         latitude={parseFloat(formData.latitude)}
                                         longitude={parseFloat(formData.longitude)}
@@ -1121,7 +1121,7 @@ export const AddProperty: React.FC = () => {
                             )}
 
                             {formData.latitude && (
-                                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-lg flex items-center text-sm text-blue-700 dark:text-blue-300">
+                                <div className="mt-4 p-3 bg-blue-900/20 border-blue-900/30 rounded-lg flex items-center text-sm text-blue-300">
                                     <MapPin size={16} className="mr-2" />
                                     Coordenadas localizadas: {formData.latitude}, {formData.longitude}
                                 </div>
@@ -1135,40 +1135,40 @@ export const AddProperty: React.FC = () => {
                 {/* STEP 2: DETALHES DO IMÓVEL */}
                 {step === 2 && (
                     <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Características e Descrição</h3>
+                        <h3 className="text-xl font-bold text-white mb-6">Características e Descrição</h3>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Quartos</label>
-                                <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Quartos</label>
+                                <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Suítes</label>
-                                <input type="number" name="suites" value={formData.suites} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Suítes</label>
+                                <input type="number" name="suites" value={formData.suites} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Banheiros</label>
-                                <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Banheiros</label>
+                                <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Vagas</label>
-                                <input type="number" name="garage" value={formData.garage} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Vagas</label>
+                                <input type="number" name="garage" value={formData.garage} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Área Privativa (m²) <span className="text-red-500">*</span></label>
-                                <input type="text" inputMode="numeric" name="privateArea" value={formData.privateArea} onChange={handleInputChange} placeholder="120" className="w-full px-4 py-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Área Privativa (m²) <span className="text-red-500">*</span></label>
+                                <input type="text" inputMode="numeric" name="privateArea" value={formData.privateArea} onChange={handleInputChange} placeholder="120" className="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2">Área Total (m²)</label>
-                                <input type="text" inputMode="numeric" name="totalArea" value={formData.totalArea} onChange={handleInputChange} placeholder="150" className="w-full px-4 py-2 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Área Total (m²)</label>
+                                <input type="text" inputMode="numeric" name="totalArea" value={formData.totalArea} onChange={handleInputChange} placeholder="150" className="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                         </div>
 
                         <div className="mb-8">
-                            <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-3">Comodidades e Infraestrutura</label>
+                            <label className="block text-sm font-bold text-gray-300 mb-3">Comodidades e Infraestrutura</label>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 {availableFeatures.map(feature => (
-                                    <label key={feature.id} className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${formData.features.includes(feature.nome) ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-500 text-primary-700 dark:text-primary-300' : 'border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'}`}>
+                                    <label key={feature.id} className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${formData.features.includes(feature.nome) ? 'bg-primary-900/20 border-primary-500 text-primary-300' : 'border-slate-700 hover:bg-slate-700'}`}>
                                         <input
                                             type="checkbox"
                                             className="hidden"
@@ -1186,11 +1186,11 @@ export const AddProperty: React.FC = () => {
 
                         <div className="relative">
                             <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-bold text-gray-700 dark:text-slate-300">Descrição do Imóvel <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-bold text-gray-300">Descrição do Imóvel <span className="text-red-500">*</span></label>
                                 <button
                                     onClick={generateDescription}
                                     disabled={isGeneratingDesc}
-                                    className="flex items-center text-xs px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                                    className="flex items-center text-xs px-3 py-1.5 bg-blue-900/30 text-blue-400 rounded-lg hover:bg-blue-900/50 transition-colors"
                                 >
                                     {isGeneratingDesc ? <Loader2 size={14} className="animate-spin mr-1.5" /> : <Wand2 size={14} className="mr-1.5" />}
                                     Gerar Texto Inteligente
@@ -1200,14 +1200,14 @@ export const AddProperty: React.FC = () => {
                                 name="description"
                                 value={formData.description}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white h-40 resize-none transition-all text-sm leading-relaxed"
+                                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-40 resize-none transition-all text-sm leading-relaxed"
                                 placeholder="Descreva os pontos fortes do imóvel..."
                             ></textarea>
 
                             {/* Generated Description Options */}
                             {generatedDescriptions.length > 0 && (
                                 <div className="mt-4 space-y-3">
-                                    <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase">Opções Geradas pela IA - Clique para usar:</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase">Opções Geradas pela IA - Clique para usar:</p>
                                     {generatedDescriptions.map((desc, idx) => (
                                         <button
                                             key={idx}
@@ -1215,14 +1215,14 @@ export const AddProperty: React.FC = () => {
                                             onClick={() => setFormData(prev => ({ ...prev, description: desc }))}
                                             className={`w-full text-left p-4 rounded-lg border-2 transition-all ${formData.description === desc
                                                 ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                                                : 'border-gray-200 dark:border-slate-700 hover:border-primary-300 dark:hover:border-primary-700'
+                                                : 'border-gray-200 dark:border-slate-700 hover:border-primary-700'
                                                 }`}
                                         >
                                             <div className="flex items-start">
                                                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-500 text-white text-xs flex items-center justify-center mr-3 mt-0.5">
                                                     {idx + 1}
                                                 </span>
-                                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{desc}</p>
+                                                <p className="text-sm text-gray-300 leading-relaxed">{desc}</p>
                                             </div>
                                         </button>
                                     ))}
@@ -1235,7 +1235,7 @@ export const AddProperty: React.FC = () => {
                 {/* STEP 3: FINANCEIRO */}
                 {step === 3 && (
                     <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Valores e Taxas</h3>
+                        <h3 className="text-xl font-bold text-white mb-6">Valores e Taxas</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                             {/* Lógica para determinar visibilidade baseada na operação */}
@@ -1251,33 +1251,33 @@ export const AddProperty: React.FC = () => {
                                             {isTemporada && (
                                                 <>
                                                     <div>
-                                                        <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">🏖️ Valor da Diária</label>
+                                                        <label className="block text-sm font-bold text-gray-300 mb-2">🏖️ Valor da Diária</label>
                                                         <div className="relative">
-                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-slate-400">R$</span>
+                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
                                                             <input
                                                                 type="text"
                                                                 name="valorDiaria"
                                                                 value={formData.valorDiaria}
                                                                 onChange={handleInputChange}
-                                                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white font-medium text-lg"
+                                                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
                                                                 placeholder="500,00"
                                                             />
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">📅 Valor Mensal (opcional)</label>
+                                                        <label className="block text-sm font-bold text-gray-300 mb-2">📅 Valor Mensal (opcional)</label>
                                                         <div className="relative">
-                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-slate-400">R$</span>
+                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
                                                             <input
                                                                 type="text"
                                                                 name="valorMensal"
                                                                 value={formData.valorMensal}
                                                                 onChange={handleInputChange}
-                                                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white font-medium text-lg"
+                                                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
                                                                 placeholder="8.000,00"
                                                             />
                                                         </div>
-                                                        <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">Para estadias longas ou mensalistas</p>
+                                                        <p className="text-xs text-slate-400 mt-1">Para estadias longas ou mensalistas</p>
                                                     </div>
                                                 </>
                                             )}
@@ -1285,15 +1285,15 @@ export const AddProperty: React.FC = () => {
                                             {/* Venda Fields */}
                                             {isVenda && (
                                                 <div>
-                                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Valor de Venda</label>
+                                                    <label className="block text-sm font-bold text-gray-300 mb-2">Valor de Venda</label>
                                                     <div className="relative">
-                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-slate-400">R$</span>
+                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
                                                         <input
                                                             type="text"
                                                             name="salePrice"
                                                             value={formData.salePrice}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white font-medium text-lg"
+                                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
                                                             placeholder="1.000.000,00"
                                                         />
                                                     </div>
@@ -1303,15 +1303,15 @@ export const AddProperty: React.FC = () => {
                                             {/* Locação Fields */}
                                             {isLocacao && (
                                                 <div>
-                                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Valor de Locação</label>
+                                                    <label className="block text-sm font-bold text-gray-300 mb-2">Valor de Locação</label>
                                                     <div className="relative">
-                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-slate-400">R$</span>
+                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
                                                         <input
                                                             type="text"
                                                             name="rentPrice"
                                                             value={formData.rentPrice}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white font-medium text-lg"
+                                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
                                                             placeholder="5.000,00"
                                                         />
                                                     </div>
@@ -1323,15 +1323,15 @@ export const AddProperty: React.FC = () => {
                                             {/* Hide Condo/IPTU/Taxas for Temporada */}
                                             {!isTemporada && isLocacao && (
                                                 <div>
-                                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Condomínio (Mês)</label>
+                                                    <label className="block text-sm font-bold text-gray-300 mb-2">Condomínio (Mês)</label>
                                                     <div className="relative">
-                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-slate-400">R$</span>
+                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
                                                         <input
                                                             type="text"
                                                             name="condoFee"
                                                             value={formData.condoFee}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
                                                             placeholder="800,00"
                                                         />
                                                     </div>
@@ -1340,15 +1340,15 @@ export const AddProperty: React.FC = () => {
 
                                             {!isTemporada && (
                                                 <div>
-                                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">IPTU (Ano)</label>
+                                                    <label className="block text-sm font-bold text-gray-300 mb-2">IPTU (Ano)</label>
                                                     <div className="relative">
-                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-slate-400">R$</span>
+                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
                                                         <input
                                                             type="text"
                                                             name="iptu"
                                                             value={formData.iptu}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white"
+                                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
                                                             placeholder="2.500,00"
                                                         />
                                                     </div>
@@ -1365,7 +1365,7 @@ export const AddProperty: React.FC = () => {
                                                             className="sr-only peer"
                                                         />
                                                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-500"></div>
-                                                        <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                        <span className="ml-3 text-sm font-medium text-gray-300">
                                                             Taxas inclusas no valor?
                                                         </span>
                                                     </label>
@@ -1382,7 +1382,7 @@ export const AddProperty: React.FC = () => {
                                                             className="sr-only peer"
                                                         />
                                                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-500"></div>
-                                                        <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                        <span className="ml-3 text-sm font-medium text-gray-300">
                                                             Aceita Financiamento?
                                                         </span>
                                                     </label>
@@ -1391,8 +1391,8 @@ export const AddProperty: React.FC = () => {
 
                                             {/* Temporada info box */}
                                             {isTemporada && (
-                                                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/50 rounded-xl">
-                                                    <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                                                <div className="p-4 bg-emerald-900/20 border-emerald-900/50 rounded-xl">
+                                                    <p className="text-sm text-emerald-300">
                                                         🏖️ <strong>Imóvel para Temporada</strong><br />
                                                         O valor da diária será exibido no anúncio. Se houver valor mensal, também será mostrado como opção para estadias longas.
                                                     </p>
@@ -1405,11 +1405,11 @@ export const AddProperty: React.FC = () => {
                         </div>
 
                         {/* Partnership Field */}
-                        <div className="mt-8 p-6 bg-slate-50 dark:bg-slate-900/50 border-2 border-slate-200 dark:border-slate-700 rounded-xl">
+                        <div className="mt-8 p-6 bg-slate-900/50 border-slate-700 rounded-xl">
                             <div className="flex items-center justify-between mb-4">
                                 <div>
-                                    <h4 className="text-lg font-bold text-gray-900 dark:text-white">Aceita Parceria neste Imóvel?</h4>
-                                    <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Permitir que outros Corretores trabalhem este imóvel</p>
+                                    <h4 className="text-lg font-bold text-white">Aceita Parceria neste Imóvel?</h4>
+                                    <p className="text-sm text-slate-400 mt-1">Permitir que outros Corretores trabalhem este imóvel</p>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
                                     <input
@@ -1426,8 +1426,8 @@ export const AddProperty: React.FC = () => {
                             </div>
 
                             {formData.aceitaParceria && (
-                                <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded">
-                                    <p className="text-sm text-red-800 dark:text-red-200 leading-relaxed">
+                                <div className="mt-4 p-4 bg-red-900/20 border-l-4 border-red-500 rounded">
+                                    <p className="text-sm text-red-200 leading-relaxed">
                                         <strong>ATENÇÃO:</strong> Caso você aceite a parceria com outros Corretores neste imóvel,
                                         desde já <strong>VOCÊ CONCORDA E ACEITA</strong> a divisão do comissionamento padrão
                                         (<strong>"fifty" 50/50</strong>), sem nada a reclamar posteriormente.
@@ -1438,14 +1438,14 @@ export const AddProperty: React.FC = () => {
                             )}
                         </div>
 
-                        <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/30 rounded-xl flex items-start justify-between items-center bg-white dark:bg-slate-800 shadow-sm">
+                        <div className="mt-8 p-4 bg-yellow-900/20 border-yellow-900/30 rounded-xl flex items-start justify-between items-center bg-slate-800 shadow-sm">
                             <div className="flex items-start">
-                                <Info className="text-yellow-600 dark:text-yellow-400 mt-0.5 mr-3 shrink-0" />
+                                <Info className="text-yellow-400 mt-0.5 mr-3 shrink-0" />
                                 <div>
-                                    <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
+                                    <p className="text-sm text-yellow-200 font-medium">
                                         {priceEvaluation ? 'Avaliação de Preço (IA)' : 'Sugestão de Preço (IA)'}
                                     </p>
-                                    <p className="text-sm text-yellow-800/80 dark:text-yellow-200/80 mt-1">
+                                    <p className="text-sm text-yellow-200/80 mt-1">
                                         {priceEvaluation ? priceEvaluation.suggestion : 'Clique para obter uma sugestão baseada em imóveis similares e análise de mercado.'}
                                         {priceEvaluation && priceEvaluation.min > 0 && (
                                             <span className="block mt-1 font-bold">
@@ -1459,7 +1459,7 @@ export const AddProperty: React.FC = () => {
                                 type="button"
                                 onClick={handleEvaluatePrice}
                                 disabled={isEvaluating}
-                                className="ml-4 px-4 py-2 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 text-sm font-bold rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900 transition-colors flex items-center whitespace-nowrap border border-yellow-200 dark:border-yellow-700"
+                                className="ml-4 px-4 py-2 bg-yellow-900/40 text-yellow-300 text-sm font-bold rounded-lg hover:bg-yellow-900 transition-colors flex items-center whitespace-nowrap border-yellow-700"
                             >
                                 {isEvaluating ? <Loader2 size={16} className="animate-spin mr-2" /> : <Sparkles size={16} className="mr-2" />}
                                 {isEvaluating ? 'Avaliando...' : 'Avaliar'}
@@ -1471,9 +1471,9 @@ export const AddProperty: React.FC = () => {
                 {/* STEP 4: FOTOS E MÍDIA */}
                 {step === 4 && (
                     <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Galeria de Imagens</h3>
+                        <h3 className="text-xl font-bold text-white mb-6">Galeria de Imagens</h3>
 
-                        <label className="border-2 border-dashed border-gray-300 dark:border-slate-600 hover:border-primary-500 dark:hover:border-primary-500 bg-gray-50 dark:bg-slate-900/50 rounded-2xl p-10 text-center mb-8 cursor-pointer transition-colors group block">
+                        <label className="border-2 border-dashed border-slate-600 hover:border-primary-500 bg-slate-900/50 rounded-2xl p-10 text-center mb-8 cursor-pointer transition-colors group block">
                             <input
                                 type="file"
                                 multiple
@@ -1482,13 +1482,13 @@ export const AddProperty: React.FC = () => {
                                 onChange={handleImageUpload}
                                 disabled={uploading}
                             />
-                            <div className="w-16 h-16 bg-white dark:bg-slate-800 text-gray-400 group-hover:text-primary-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm transition-colors">
+                            <div className="w-16 h-16 bg-slate-800 text-gray-400 group-hover:text-primary-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm transition-colors">
                                 {uploading ? <Loader2 size={32} className="animate-spin" /> : <UploadCloud size={32} />}
                             </div>
-                            <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                            <h4 className="text-lg font-bold text-white">
                                 {uploading ? 'Enviando fotos e aplicando marca d\'água (se houver)...' : 'Clique para fazer upload'}
                             </h4>
-                            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Ou arraste e solte seus arquivos JPG, PNG (Max 10mb por Imagem)</p>
+                            <p className="text-sm text-slate-400 mt-1">Ou arraste e solte seus arquivos JPG, PNG (Max 10mb por Imagem)</p>
                         </label>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -1510,24 +1510,24 @@ export const AddProperty: React.FC = () => {
                         </div>
 
                         {/* Media Section */}
-                        <div className="mb-8 border-t border-gray-100 dark:border-slate-700 pt-8">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Mídias</h3>
+                        <div className="mb-8 border-t border-slate-700 pt-8">
+                            <h3 className="text-xl font-bold text-white mb-6">Mídias</h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Vídeo do Imóvel (YouTube/Vimeo)</label>
+                                    <label className="block text-sm font-bold text-gray-300 mb-2">Vídeo do Imóvel (YouTube/Vimeo)</label>
                                     <input
                                         type="text"
                                         name="videoUrl"
                                         value={formData.videoUrl}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="https://youtube.com/watch?v=..."
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Tour 360º (Arquivo Max 50MB)</label>
+                                    <label className="block text-sm font-bold text-gray-300 mb-2">Tour 360º (Arquivo Max 50MB)</label>
                                     <div className="relative">
                                         <input
                                             type="file"
@@ -1540,8 +1540,8 @@ export const AddProperty: React.FC = () => {
                                         <label
                                             htmlFor="tour-upload"
                                             className={`flex items-center justify-center w-full px-4 py-3 rounded-xl border-2 border-dashed cursor-pointer transition-all ${formData.tourVirtualUrl
-                                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
-                                                : 'border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-900 hover:border-primary-500'
+                                                ? 'border-green-500 bg-green-900/20 text-green-400'
+                                                : 'border-slate-600 bg-slate-900 hover:border-primary-500'
                                                 }`}
                                         >
                                             {uploadingTour ? (
@@ -1565,25 +1565,25 @@ export const AddProperty: React.FC = () => {
 
                         {/* Observações */}
                         <div className="mb-8">
-                            <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Observações Adicionais</label>
+                            <label className="block text-sm font-bold text-gray-300 mb-2">Observações Adicionais</label>
                             <textarea
                                 name="observacoes"
                                 value={formData.observacoes}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white h-24 resize-none transition-all text-sm leading-relaxed"
+                                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-24 resize-none transition-all text-sm leading-relaxed"
                                 placeholder="Informações adicionais sobre o imóvel que não constam no formulário..."
                             ></textarea>
-                            <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">💡 Este campo será exibido publicamente no anúncio.</p>
+                            <p className="text-xs text-slate-400 mt-1">💡 Este campo será exibido publicamente no anúncio.</p>
                         </div>
 
                         {detectedTags.length > 0 && (
-                            <div className="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-xl border border-indigo-100 dark:border-indigo-900/30 animate-in fade-in slide-in-from-top-2">
-                                <h4 className="text-sm font-bold text-indigo-700 dark:text-indigo-300 mb-3 flex items-center">
+                            <div className="bg-indigo-900/20 border-indigo-900/30 animate-in fade-in slide-in-from-top-2">
+                                <h4 className="text-sm font-bold text-indigo-300 mb-3 flex items-center">
                                     <Sparkles size={16} className="mr-2" /> Características Detectadas pela IA
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
                                     {detectedTags.map((tag, idx) => (
-                                        <span key={idx} className="px-3 py-1.5 bg-white dark:bg-slate-800 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-full border border-indigo-200 dark:border-indigo-800 flex items-center shadow-sm">
+                                        <span key={idx} className="px-3 py-1.5 bg-slate-800 text-sm font-medium text-gray-300 rounded-full border border-indigo-200 dark:border-indigo-800 flex items-center shadow-sm">
                                             <Tag size={12} className="mr-1.5 text-indigo-500" /> {tag}
                                         </span>
                                     ))}
@@ -1597,11 +1597,11 @@ export const AddProperty: React.FC = () => {
                 {step === 5 && (
                     <div className="space-y-6">
                         <div className="text-center mb-8">
-                            <div className="w-20 h-20 bg-primary-100 dark:bg-primary-900/30 text-primary-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="w-20 h-20 bg-primary-900/30 text-primary-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <ShieldCheck size={40} />
                             </div>
-                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Revisão e Validação</h3>
-                            <p className="text-gray-500 dark:text-slate-400 max-w-2xl mx-auto">
+                            <h3 className="text-2xl font-bold text-white mb-2">Revisão e Validação</h3>
+                            <p className="text-slate-400 max-w-2xl mx-auto">
                                 Verifique se todas as etapas obrigatórias foram preenchidas antes de enviar o imóvel para aprovação.
                             </p>
                         </div>
@@ -1621,13 +1621,13 @@ export const AddProperty: React.FC = () => {
                                     formData.neighborhood;
 
                                 return (
-                                    <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800' : 'bg-amber-50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-800'}`}>
-                                        <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+                                    <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
+                                        <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-amber-900/30 text-amber-400'}`}>
                                             {isValid ? <Check size={16} /> : <AlertTriangle size={16} />}
                                         </div>
                                         <div>
-                                            <h4 className={`font-bold ${isValid ? 'text-green-800 dark:text-green-300' : 'text-amber-800 dark:text-amber-300'}`}>Localização e Dados Básicos</h4>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                            <h4 className={`font-bold ${isValid ? 'text-green-300' : 'text-amber-300'}`}>Localização e Dados Básicos</h4>
+                                            <p className="text-sm text-gray-400 mt-1">
                                                 {isValid ? 'Todos os dados obrigatórios preenchidos.' : 'Faltam dados obrigatórios (Título, Tipo, Endereço).'}
                                             </p>
                                             {!isValid && (
@@ -1644,13 +1644,13 @@ export const AddProperty: React.FC = () => {
                             {(() => {
                                 const isValid = formData.description && formData.description.length > 10;
                                 return (
-                                    <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800' : 'bg-blue-50 border-blue-200 dark:bg-blue-900/10 dark:border-blue-800'}`}>
-                                        <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
+                                    <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-blue-900/10 border-blue-800'}`}>
+                                        <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-blue-900/30 text-blue-400'}`}>
                                             {isValid ? <Check size={16} /> : <Info size={16} />}
                                         </div>
                                         <div>
-                                            <h4 className={`font-bold ${isValid ? 'text-green-800 dark:text-green-300' : 'text-blue-800 dark:text-blue-300'}`}>Detalhes do Imóvel</h4>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                            <h4 className={`font-bold ${isValid ? 'text-green-300' : 'text-blue-300'}`}>Detalhes do Imóvel</h4>
+                                            <p className="text-sm text-gray-400 mt-1">
                                                 {isValid ? 'Descrição preenchida.' : 'Adicione uma descrição detalhada para atrair mais clientes.'}
                                             </p>
                                             {!isValid && (
@@ -1685,13 +1685,13 @@ export const AddProperty: React.FC = () => {
                                 }
 
                                 return (
-                                    <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800' : 'bg-amber-50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-800'}`}>
-                                        <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+                                    <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
+                                        <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-amber-900/30 text-amber-400'}`}>
                                             {isValid ? <Check size={16} /> : <AlertTriangle size={16} />}
                                         </div>
                                         <div>
-                                            <h4 className={`font-bold ${isValid ? 'text-green-800 dark:text-green-300' : 'text-amber-800 dark:text-amber-300'}`}>Financeiro</h4>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                            <h4 className={`font-bold ${isValid ? 'text-green-300' : 'text-amber-300'}`}>Financeiro</h4>
+                                            <p className="text-sm text-gray-400 mt-1">
                                                 {msg}
                                             </p>
                                             {!isValid && (
@@ -1708,13 +1708,13 @@ export const AddProperty: React.FC = () => {
                             {(() => {
                                 const isValid = images.length >= 1; // Require at least 1 photo
                                 return (
-                                    <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-50 border-green-200 dark:bg-green-900/10 dark:border-green-800' : 'bg-red-50 border-red-200 dark:bg-red-900/10 dark:border-red-800'}`}>
-                                        <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                    <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-red-900/10 border-red-800'}`}>
+                                        <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
                                             {isValid ? <Check size={16} /> : <AlertCircle size={16} />}
                                         </div>
                                         <div>
-                                            <h4 className={`font-bold ${isValid ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'}`}>Fotos</h4>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                            <h4 className={`font-bold ${isValid ? 'text-green-300' : 'text-red-300'}`}>Fotos</h4>
+                                            <p className="text-sm text-gray-400 mt-1">
                                                 {isValid ? `${images.length} fotos carregadas.` : 'É obrigatório enviar pelo menos 1 foto.'}
                                             </p>
                                             {!isValid && (
@@ -1760,7 +1760,7 @@ export const AddProperty: React.FC = () => {
                                            px-12 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all
                                            ${isFormValid
                                                 ? 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white transform hover:scale-105'
-                                                : 'bg-gray-300 dark:bg-slate-700 text-gray-500 cursor-not-allowed'}
+                                                : 'bg-slate-700 text-gray-500 cursor-not-allowed'}
                                        `}
                                     >
                                         {loading ? (
@@ -1788,7 +1788,7 @@ export const AddProperty: React.FC = () => {
                         <div className="flex justify-between mt-8">
                             <button
                                 onClick={() => step > 1 ? changeStep(step - 1) : navigate('/dashboard')}
-                                className="px-6 py-3 rounded-xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                                className="px-6 py-3 rounded-xl bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-200 font-medium hover:bg-slate-700 transition-colors"
                             >
                                 {step === 1 ? 'Cancelar' : 'Voltar'}
                             </button>

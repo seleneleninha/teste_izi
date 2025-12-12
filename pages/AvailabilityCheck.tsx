@@ -210,8 +210,8 @@ export const AvailabilityCheck: React.FC = () => {
                                     <XCircle size={20} />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-red-800">Não, já foi negociado</h4>
-                                    <p className="text-xs text-red-600">O imóvel será marcado como indisponível/removido.</p>
+                                    <h4 className="font-bold text-red-800">Não, já foi negociado.</h4>
+                                    <p className="text-xs text-red-600">O imóvel será marcado como inativo.</p>
                                 </div>
                             </button>
                         </>

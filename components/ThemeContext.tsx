@@ -10,16 +10,18 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('dark'); // Default to dark based on screenshots
+  // Hardcoded to 'dark' for Midnight Lux standard
+  const theme: Theme = 'dark';
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-  }, [theme]);
+    root.classList.remove('light');
+    root.classList.add('dark');
+  }, []);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+    // No-op: Theme is permanently dark
+    console.log('Theme styling is locked to Midnight Lux (Dark Mode).');
   };
 
   return (

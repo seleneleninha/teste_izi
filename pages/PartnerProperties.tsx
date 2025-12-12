@@ -8,6 +8,7 @@ import { filterPropertiesByRadius } from '../lib/distanceHelper';
 import { PropertyMap } from '../components/PropertyMap';
 import { navigateToProperty } from '../lib/propertyHelpers';
 import { HorizontalScroll } from '../components/HorizontalScroll';
+import { PropertyCard } from '../components/PropertyCard';
 import { Area } from 'recharts';
 import { formatCurrency, formatArea } from '../lib/formatters';
 
@@ -112,200 +113,7 @@ const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onClose, on
     );
 };
 
-const PropertyCard: React.FC<{ property: Property; onToggle: (property: Property, currentState: boolean) => void; compact?: boolean; actions?: React.ReactNode; isTrial?: boolean }> = ({ property, onToggle, compact, actions, isTrial = false }) => {
-    const navigate = useNavigate();
-    const images = property.fotos ? property.fotos.split(',').filter(Boolean) : [];
-    const price = property.valor_venda || property.valor_locacao || property.valor_diaria || property.valor_mensal || 0;
 
-    const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
-
-    const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL',
-            minimumFractionDigits: 0,
-        }).format(value);
-    };
-
-    const getOperationLabel = (op: any) => {
-        if (!op) return '';
-        const tipo = typeof op === 'string' ? op : op.tipo || op;
-        if (tipo.toLowerCase() === 'venda') return 'Venda';
-        if (tipo.toLowerCase() === 'locação' || tipo.toLowerCase() === 'locacao') return 'Locação';
-        if (tipo.toLowerCase() === 'temporada') return 'Temporada';
-        return tipo;
-    };
-
-    const getOperationColor = (op: any) => {
-        const label = getOperationLabel(op).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        if (label === 'venda') return 'bg-red-600';
-        if (label === 'locacao') return 'bg-blue-600';
-        if (label === 'temporada') return 'bg-orange-500';
-        if (label.includes('venda') && label.includes('locacao')) return 'bg-green-600';
-        return 'bg-gray-600';
-    };
-
-    const nextImage = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    };
-
-    const prevImage = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-    };
-
-    return (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md hover:shadow-xl transition-all overflow-hidden border border-gray-200 dark:border-slate-700 flex flex-col h-full">
-            {/* Imagem com Carrossel */}
-            <div
-                className={`relative ${compact ? 'h-32' : 'h-48'} bg-gray-200 dark:bg-slate-700 cursor-pointer group`}
-                onClick={() => navigateToProperty(navigate, property, true)}
-            >
-                {images.length > 0 ? (
-                    <>
-                        <img
-                            src={images[currentImageIndex]}
-                            alt={property.titulo}
-                            className="w-full h-full object-cover"
-                        />
-                        {images.length > 1 && (
-                            <>
-                                {/* Botão Anterior */}
-                                <button
-                                    onClick={prevImage}
-                                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </button>
-                                {/* Botão Próximo */}
-                                <button
-                                    onClick={nextImage}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-                                {/* Indicadores */}
-                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                                    {images.map((_, idx) => (
-                                        <div
-                                            key={idx}
-                                            className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentImageIndex ? 'bg-white w-4' : 'bg-white/50'
-                                                }`}
-                                        />
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                    </>
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <Home size={48} className="text-gray-400" />
-                    </div>
-                )}
-                <div className={`absolute top-3 left-3 ${getOperationColor(property.operacao)} text-white px-3 py-1 rounded-full text-xs font-bold`}>
-                    {getOperationLabel(property.operacao)}
-                </div>
-                {property.isPartnership && (
-                    <div className="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                        <HandshakeIcon size={12} />
-                        Aceita
-                    </div>
-                )}
-            </div>
-
-            {/* Conteúdo */}
-            <div className={`p-4 flex flex-col flex-grow ${compact ? 'p-3' : 'p-4'}`}>
-                <div className="mb-auto cursor-pointer" onClick={() => navigateToProperty(navigate, property, true)}>
-                    <h3 className={`font-bold text-gray-900 dark:text-white line-clamp-1 ${compact ? 'text-base' : 'text-lg'}`}>
-                        {property.titulo}
-                    </h3>
-                    <p className="text-xs text-gray-900 dark:text-white mb-1 flex items-center gap-1 truncate">
-                        {property.tipo_imovel} para {property.operacao}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-1 truncate">
-                        <MapPin size={14} />
-                        {property.bairro}, {property.cidade}
-                    </p>
-                </div>
-
-                {/* Características */}
-                <div className="flex gap-3 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    {property.quartos > 0 && (
-                        <div className="flex items-center gap-1" title="Quartos">
-                            <Bed size={16} />
-                            {property.quartos}
-                        </div>
-                    )}
-                    {property.banheiros > 0 && (
-                        <div className="flex items-center gap-1" title="Banheiros">
-                            <Bath size={16} />
-                            {property.banheiros}
-                        </div>
-                    )}
-                    {property.vagas > 0 && (
-                        <div className="flex items-center gap-1" title="Vagas">
-                            <Car size={16} />
-                            {property.vagas}
-                        </div>
-                    )}
-                    {property.area_priv > 0 && (
-                        <div className="flex items-center gap-1" title="Área Privativa">
-                            <Maximize size={16} />
-                            {property.area_priv}m²
-                        </div>
-                    )}
-                </div>
-
-                {/* Preço */}
-                <p className="text-emerald-600 dark:text-emerald-400 font-bold text-xl mb-4">
-                    {formatCurrency(price)}
-                </p>
-
-                {/* Actions */}
-                {actions ? actions : (
-                    <div className="flex flex-col gap-2 mt-auto">
-                        <button
-                            onClick={() => navigateToProperty(navigate, property, true)}
-                            className="w-full px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                        >
-                            <Eye size={16} />
-                            Ver Anúncio
-                        </button>
-                        {!isTrial && (
-                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-900/50 rounded-lg">
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Aceita Parceria?
-                                </span>
-                                <button
-                                    onClick={() => onToggle(property, property.isPartnership || false)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${property.isPartnership
-                                        ? 'bg-emerald-600'
-                                        : 'bg-gray-300 dark:bg-gray-600'
-                                        }`}
-                                >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${property.isPartnership ? 'translate-x-6' : 'translate-x-1'
-                                            }`}
-                                    />
-                                </button>
-                            </div>
-                        )}
-                        {isTrial && (
-                            <div className="p-2 bg-amber-50 dark:bg-amber-900/20 text-xs text-amber-700 dark:text-amber-300 rounded text-center">
-                                Faça upgrade para aceitar parcerias
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
 
 export const PartnerProperties: React.FC = () => {
     const navigate = useNavigate();
@@ -713,8 +521,35 @@ export const PartnerProperties: React.FC = () => {
                                     <PropertyCard
                                         key={property.id}
                                         property={property}
-                                        onToggle={onToggle}
-                                        isTrial={isTrialUser}
+                                        isDashboard={true}
+                                        actions={
+                                            <div className="flex flex-col gap-2 w-full">
+                                                <button
+                                                    onClick={() => navigateToProperty(navigate, property, true)}
+                                                    className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <Eye size={16} />
+                                                    Ver Anúncio
+                                                </button>
+                                                {!isTrialUser && (
+                                                    <button
+                                                        onClick={() => onToggle(property, property.isPartnership || false)}
+                                                        className={`px-4 py-2 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 ${property.isPartnership
+                                                            ? 'bg-red-500 hover:bg-red-600 text-white'
+                                                            : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/50'
+                                                            }`}
+                                                    >
+                                                        <Handshake size={16} />
+                                                        {property.isPartnership ? 'Remover Parceria' : 'Aceitar Parceria'}
+                                                    </button>
+                                                )}
+                                                {isTrialUser && (
+                                                    <div className="p-2 bg-amber-500/20 text-xs text-amber-300 rounded-xl text-center border border-amber-500/30">
+                                                        Faça upgrade para aceitar parcerias
+                                                    </div>
+                                                )}
+                                            </div>
+                                        }
                                     />
                                 ))}
                             </div>

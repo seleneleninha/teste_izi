@@ -70,27 +70,33 @@ export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) =
     const displayPartners = partners.length < 10 ? [...partners, ...partners, ...partners] : [...partners, ...partners];
 
     return (
-        <section className={`py-16 border-t border-gray-100 dark:border-slate-800 overflow-hidden ${bgColor || 'bg-white dark:bg-slate-800'}`}>
-            <div className="container mx-auto px-4 mb-10 text-center">
-                <span className="text-emerald-500 font-semibold tracking-wider text-xl uppercase bg-emerald-100 dark:bg-emerald-500/20 px-3 py-1 rounded-full">
-                    Confiança
+        <section className={`py-24 border-t border-white/5 overflow-hidden bg-midnight-950`}>
+            <div className="container mx-auto px-4 mb-12 text-center">
+                <span className="text-emerald-400 font-semibold tracking-wider text-sm uppercase bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20">
+                    Confiança & Credibilidade
                 </span>
-                <h2 className="text-3xl font-bold mt-4 text-gray-900 dark:text-white">
-                    Nossos Parceiros
+                <h2 className="text-3xl md:text-4xl font-heading font-bold mt-6 text-white">
+                    Nossos <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">Parceiros</span>
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400 mt-2">
-                    Corretores que utilizam a iziBrokerz para impulsionar seus negócios
+                <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
+                    Os melhores profissionais do mercado utilizam nossa tecnologia para realizar sonhos.
                 </p>
             </div>
 
-            <div className="relative w-full overflow-hidden">
-                {/* Gradient Masks */}
-                <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white dark:from-slate-900 to-transparent z-10 pointer-events-none"></div>
-                <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white dark:from-slate-900 to-transparent z-10 pointer-events-none"></div>
+            <div className="relative w-full overflow-hidden group">
+                {/* Gradient Masks (Midnight) */}
+                <div className="absolute left-0 top-0 bottom-0 w-32 md:w-64 bg-gradient-to-r from-midnight-950 to-transparent z-10 pointer-events-none"></div>
+                <div className="absolute right-0 top-0 bottom-0 w-32 md:w-64 bg-gradient-to-l from-midnight-950 to-transparent z-10 pointer-events-none"></div>
 
-                <div className="flex animate-scroll hover:pause" style={{ width: `${displayPartners.length * 200}px` }}>
+                <div className="flex animate-scroll group-hover:pause" style={{ width: `${displayPartners.length * 200}px` }}>
                     {displayPartners.map((partner, index) => {
-                        const logoSrc = getLogo(partner);
+                        // Force logic for Dark Background: Prevails watermark_dark (which usually means Logo for Dark Mode? or Logo that is Dark?)
+                        // Testing assumption: watermark_light is for light theme (dark logo). watermark_dark is for dark theme (light logo).
+                        // Let's use the naming convention usually adopted: 
+                        // If Layout.tsx used theme==='light' ? watermark_light : watermark_dark 
+                        // PROBABLY watermark_light = logo for light theme. watermark_dark = logo for dark theme.
+                        // Since background is Midnight (Dark), we need watermark_dark.
+                        const logoSrc = partner.watermark_dark || partner.avatar || partner.marca_dagua;
 
                         return (
                             <div
@@ -99,27 +105,26 @@ export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) =
                             >
                                 <div
                                     onClick={() => window.open(`#/corretor/${partner.slug}`, '_blank')}
-                                    className="group cursor-pointer flex flex-col items-center justify-center p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-300 w-full h-32 grayscale hover:grayscale-0 opacity-70 hover:opacity-100"
+                                    className="cursor-pointer flex flex-col items-center justify-center p-4 rounded-2xl hover:bg-white/5 transition-all duration-300 w-full h-32 opacity-50 hover:opacity-100 hover:scale-105"
                                 >
                                     {logoSrc ? (
                                         <img
                                             src={logoSrc}
                                             alt={`${partner.nome} ${partner.sobrenome}`}
-                                            className="max-h-16 max-w-full object-contain drop-shadow-sm group-hover:drop-shadow-md transition-all group-hover:scale-110"
+                                            className="max-h-16 max-w-full object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300 group-hover:scale-110"
                                             onError={(e) => {
-                                                // Fallback to icon if image fails
                                                 e.currentTarget.style.display = 'none';
                                                 e.currentTarget.parentElement?.querySelector('.fallback-icon')?.classList.remove('hidden');
                                             }}
                                         />
                                     ) : null}
 
-                                    {/* Fallback Icon / Name (Shown if no logo or error) */}
+                                    {/* Fallback Icon / Name */}
                                     <div className={`fallback-icon flex flex-col items-center ${logoSrc ? 'hidden' : ''}`}>
-                                        <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-2">
+                                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-emerald-400 mb-2">
                                             <UserCheck size={24} />
                                         </div>
-                                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 text-center truncate w-full px-2">
+                                        <span className="text-sm font-semibold text-gray-300 text-center truncate w-full px-2">
                                             {partner.nome}
                                         </span>
                                     </div>
@@ -136,9 +141,9 @@ export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) =
                     100% { transform: translateX(-50%); }
                 }
                 .animate-scroll {
-                    animation: scroll 40s linear infinite;
+                    animation: scroll 60s linear infinite;
                 }
-                .hover\\:pause:hover {
+                .group:hover .animate-scroll {
                     animation-play-state: paused;
                 }
             `}</style>

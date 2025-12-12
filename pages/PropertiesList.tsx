@@ -214,6 +214,8 @@ export const PropertiesList: React.FC = () => {
                             return operacaoTipo === 'venda' || operacaoTipo === 'venda/locação' || operacaoTipo === 'venda/locacao';
                         } else if (operacao === 'locacao') {
                             return operacaoTipo === 'locação' || operacaoTipo === 'locacao' || operacaoTipo === 'venda/locação' || operacaoTipo === 'venda/locacao';
+                        } else if (operacao === 'temporada') {
+                            return operacaoTipo === 'temporada';
                         }
                         return true;
                     });
@@ -235,6 +237,8 @@ export const PropertiesList: React.FC = () => {
                     bairro: p.bairro,
                     valor_venda: p.valor_venda,
                     valor_locacao: p.valor_locacao,
+                    valor_diaria: p.valor_diaria,
+                    valor_mensal: p.valor_mensal,
                     fotos: p.fotos ? p.fotos.split(',') : [],
                     operacao: p.operacao?.tipo || p.operacao,
                     tipo_imovel: p.tipo_imovel?.tipo || p.tipo_imovel,
@@ -298,6 +302,8 @@ export const PropertiesList: React.FC = () => {
                             return operacaoTipo === 'venda' || operacaoTipo === 'venda/locação' || operacaoTipo === 'venda/locacao';
                         } else if (operacao === 'locacao') {
                             return operacaoTipo === 'locação' || operacaoTipo === 'locacao' || operacaoTipo === 'venda/locação' || operacaoTipo === 'venda/locacao';
+                        } else if (operacao === 'temporada') {
+                            return operacaoTipo === 'temporada';
                         }
                         return true;
                     });
@@ -318,6 +324,8 @@ export const PropertiesList: React.FC = () => {
                     bairro: p.bairro,
                     valor_venda: p.valor_venda,
                     valor_locacao: p.valor_locacao,
+                    valor_diaria: p.valor_diaria,
+                    valor_mensal: p.valor_mensal,
                     fotos: p.fotos ? p.fotos.split(',') : [],
                     operacao: p.operacao?.tipo || p.operacao,
                     tipo_imovel: p.tipo_imovel?.tipo || p.tipo_imovel,

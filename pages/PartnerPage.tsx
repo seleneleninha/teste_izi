@@ -142,7 +142,7 @@ export const PartnerPage: React.FC = () => {
                             <ArrowRight size={20} />
                         </button>
                         <button
-                            onClick={() => navigate('/login?register=true')}
+                            onClick={() => navigate('/login')}
                             className="px-8 py-4 bg-white dark:bg-slate-800 text-gray-700 dark:text-white border border-gray-200 dark:border-slate-700 rounded-xl font-bold text-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-all"
                         >
                             Já tenho conta
@@ -238,18 +238,19 @@ export const PartnerPage: React.FC = () => {
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">Escolha o Plano Ideal para Você</h2>
-                        <p className="text-gray-600 dark:text-gray-400 mb-8">
+                        <p className="text-xl text-gray-600 dark:text-gray-400 mb-8">
                             Planos flexíveis que crescem com você.
                         </p>
 
                         {/* Free Trial CTA moved here */}
-                        <div className="bg-emerald-50 dark:bg-slate-800/50 p-4 rounded-xl border border-emerald-100 dark:border-slate-700 max-w-xl mx-auto mb-8 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/login?register=true')}>
+                        <div className="bg-emerald-500/40 p-4 rounded-xl border border-emerald-100 dark:border-slate-700 max-w-xl mx-auto mb-8 cursor-pointer hover:shadow-md transition-shadow animate-pulse" onClick={() => navigate('/login?register=true')}>
                             <h4 className="font-bold text-emerald-700 dark:text-emerald-400 mb-1 flex items-center justify-center gap-2">
-                                <Star className="text-yellow-400 fill-yellow-400" size={20} />
-                                Teste Grátis por 14 dias
+                                <Star className="text-yellow-400 fill-yellow-400" size={28} />
+                                <p className="text-center text-lg">TESTE GRÁTIS POR 14 DIAS</p>
                             </h4>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Sem cartão de crédito. Cancele quando quiser. <span className="underline font-bold text-emerald-600 cursor-pointer">Começar agora</span>
+                                Sem cartão de crédito. Cancele quando quiser.
+                                <p className="underline font-bold text-emerald-500 cursor-pointer text-lg">CLIQUE AQUI!</p>
                             </p>
                         </div>
 

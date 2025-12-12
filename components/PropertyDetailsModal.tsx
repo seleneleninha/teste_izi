@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, MapPin, Bed, Bath, Car, Square, Share2, MessageCircle, ChevronLeft, ChevronRight, Loader2, Clock, XCircle, ShieldCheck } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
 import { getPropertyUrl } from '../lib/propertyHelpers';
 import { useAuth } from './AuthContext';
@@ -14,11 +15,33 @@ interface PropertyDetailsModalProps {
     isOpen: boolean;
 }
 
+const variants = {
+    enter: (direction: number) => ({
+        x: direction > 0 ? 1000 : -1000,
+        opacity: 0
+    }),
+    center: {
+        zIndex: 1,
+        x: 0,
+        opacity: 1
+    },
+    exit: (direction: number) => ({
+        zIndex: 0,
+        x: direction < 0 ? 1000 : -1000,
+        opacity: 0
+    })
+};
+
+const swipeConfidenceThreshold = 10000;
+const swipePower = (offset: number, velocity: number) => {
+    return Math.abs(offset) * velocity;
+};
+
 export const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({ propertyId, lead, onClose, isOpen }) => {
     const { user } = useAuth();
     const [property, setProperty] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    // const [currentImageIndex, setCurrentImageIndex] = useState(0); // Replaced by page/direction
     const [currentUserSlug, setCurrentUserSlug] = useState<string | null>(null);
     const [availabilityStatus, setAvailabilityStatus] = useState<'unknown' | 'pendente' | 'disponivel' | 'analise' | 'indisponivel'>('unknown');
     const [requestLoading, setRequestLoading] = useState(false);
@@ -231,14 +254,27 @@ export const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({ prop
 
     const photos = property?.fotos ? property.fotos.split(',') : [];
 
-    const nextImage = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCurrentImageIndex((prev) => (prev + 1) % photos.length);
+    // Variant definitions inside or outside? Outside is better perf but inside allows closure if needed (not needed).
+    // I need to add them. I'll add them inside for simplicity of this Replace block or just assume I can add them before component...
+    // Actually, I should have added them with imports. I will add them inside component at top or just use them.
+    // Let's add them at line 16 (before export).
+
+    const [[page, direction], setPage] = useState([0, 0]);
+    const imageIndex = Math.abs(page % photos.length);
+    const currentImageIndex = imageIndex; // alias
+
+    const paginate = (newDirection: number) => {
+        setPage([page + newDirection, newDirection]);
     };
 
-    const prevImage = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setCurrentImageIndex((prev) => (prev - 1 + photos.length) % photos.length);
+    const nextImage = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        paginate(1);
+    };
+
+    const prevImage = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        paginate(-1);
     };
 
     const handleWhatsAppShare = () => {
@@ -274,7 +310,7 @@ Vamos agendar uma visita?`;
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 z-10 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+                    className="absolute top-4 right-4 z-[30] p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
                 >
                     <X size={20} />
                 </button>
@@ -288,12 +324,36 @@ Vamos agendar uma visita?`;
                         {/* Image Gallery - Left Side (Desktop) or Top (Mobile) */}
                         <div className="w-full md:w-1/2 bg-gray-100 dark:bg-slate-900 relative min-h-[300px] md:min-h-full">
                             {photos.length > 0 ? (
-                                <>
-                                    <img
-                                        src={photos[currentImageIndex]}
-                                        alt={property.titulo}
-                                        className="w-full h-full object-cover absolute inset-0"
-                                    />
+                                <div className="absolute inset-0 overflow-hidden">
+                                    <AnimatePresence initial={false} custom={direction}>
+                                        <motion.img
+                                            key={page}
+                                            src={photos[imageIndex]}
+                                            custom={direction}
+                                            variants={variants}
+                                            initial="enter"
+                                            animate="center"
+                                            exit="exit"
+                                            transition={{
+                                                x: { type: "spring", stiffness: 300, damping: 30 },
+                                                opacity: { duration: 0.2 }
+                                            }}
+                                            drag="x"
+                                            dragConstraints={{ left: 0, right: 0 }}
+                                            dragElastic={1}
+                                            onDragEnd={(e, { offset, velocity }) => {
+                                                const swipe = swipePower(offset.x, velocity.x);
+
+                                                if (swipe < -swipeConfidenceThreshold) {
+                                                    paginate(1);
+                                                } else if (swipe > swipeConfidenceThreshold) {
+                                                    paginate(-1);
+                                                }
+                                            }}
+                                            alt={property.titulo}
+                                            className="w-full h-full object-cover absolute inset-0"
+                                        />
+                                    </AnimatePresence>
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none md:hidden" />
 
                                     {photos.length > 1 && (

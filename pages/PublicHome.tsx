@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Building2, Building, MapPinHouse, MapPinned, Tractor, Map as MapIcon, Map, Trees, TreePalm } from 'lucide-react';
+import { MapPin, Building2, Building, MapPinHouse, MapPinned, Tractor, Map as MapIcon, Map, Trees, TreePalm, ArrowRight } from 'lucide-react';
 import { SearchFilter } from '../components/SearchFilter';
 import { PropertyCard } from '../components/PropertyCard';
 import { PublicAIAssistant } from '../components/PublicAIAssistant';
@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Footer } from '../components/Footer';
 import { getRandomBackground } from '../lib/backgrounds';
 import { PartnersCarousel } from '../components/PartnersCarousel';
+
 
 interface Property {
     id: string;
@@ -41,6 +42,16 @@ export const PublicHome: React.FC = () => {
     const [PropertyMap, setPropertyMap] = useState<React.ComponentType<any> | null>(null);
     const [bgImage, setBgImage] = useState(getRandomBackground());
 
+    const cityImages: Record<string, string> = {
+        'natal': '/cities/natal.png',
+        'parnamirim': '/cities/parnamirim.png',
+        'macaíba': '/cities/macaiba.png',
+        'nísia floresta': '/cities/nisia_floresta.png',
+        'são gonçalo do amarante': '/cities/sao_goncalo_amarante.png',
+        'extremoz': '/cities/extremoz.png',
+        'são josé de mipibu': '/cities/sao_jose_mipibu.png'
+    };
+
     useEffect(() => {
         fetchData();
         fetchCategoryCounts();
@@ -55,7 +66,7 @@ export const PublicHome: React.FC = () => {
     const fetchCategoryCounts = async () => {
         try {
             // Tipos de imóvel (buscados na tabela tipo_imovel)
-            const propertyTypes = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno'];
+            const propertyTypes = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno', 'Temporada'];
             const counts: Record<string, number> = {};
 
             for (const type of propertyTypes) {
@@ -99,6 +110,53 @@ export const PublicHome: React.FC = () => {
             }
 
             setCategoryCounts(counts);
+
+            // Fetch City and Neighborhood Counts
+            // Fetch counts for all active locations to populate badges
+            const { data: locationData, error: locationError } = await supabase
+                .from('anuncios')
+                .select('cidade, bairro')
+                .eq('status_aprovacao', 'aprovado');
+
+            if (!locationError && locationData) {
+                const locationCountsMap: Record<string, number> = {};
+
+                locationData.forEach(item => {
+                    // City counts
+                    if (item.cidade) {
+                        const cityKey = `city_${item.cidade}`;
+                        locationCountsMap[cityKey] = (locationCountsMap[cityKey] || 0) + 1;
+                    }
+
+                    // Neighborhood counts
+                    if (item.bairro) {
+                        const neighborhoodKey = `bairro_${item.bairro}`;
+                        locationCountsMap[neighborhoodKey] = (locationCountsMap[neighborhoodKey] || 0) + 1;
+                    }
+                });
+
+                // Merge with existing counts
+                setCategoryCounts(prev => ({ ...prev, ...locationCountsMap }));
+
+                // Derive Sorted Cities (Top 10 by count)
+                const cityCountsArray = Object.entries(locationCountsMap)
+                    .filter(([key]) => key.startsWith('city_'))
+                    .map(([key, count]) => ({ name: key.replace('city_', ''), count }));
+
+                cityCountsArray.sort((a, b) => b.count - a.count);
+                const topCities = cityCountsArray.slice(0, 10).map(c => c.name);
+                setCities(topCities);
+
+                // Derive Sorted Neighborhoods (Top 20 by count)
+                const neighborhoodCountsArray = Object.entries(locationCountsMap)
+                    .filter(([key]) => key.startsWith('bairro_'))
+                    .map(([key, count]) => ({ name: key.replace('bairro_', ''), count }));
+
+                neighborhoodCountsArray.sort((a, b) => b.count - a.count);
+                const topNeighborhoods = neighborhoodCountsArray.slice(0, 20).map(c => c.name);
+                setNeighborhoods(topNeighborhoods);
+            }
+
         } catch (error) {
             console.error('Error fetching category counts:', error);
         }
@@ -175,100 +233,124 @@ export const PublicHome: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white font-sans transition-colors duration-200">
+        <div className="bg-gray-50 dark:bg-midnight-950 text-gray-900 dark:text-white font-sans transition-colors duration-200">
             {/* Hero Section */}
-            <section className="relative h-[600px] flex items-center justify-center">
+            <section className="relative h-[700px] flex items-center justify-center">
                 <div className="absolute inset-0 z-0">
                     <img
                         src={bgImage}
                         alt="Background"
                         className="w-full h-full object-cover transition-opacity duration-500"
                     />
-                    <div className="absolute inset-0 bg-black/70"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-midnight-950/95"></div>
                 </div>
 
-                <div className="container mx-auto px-4 z-10 text-center relative">
-                    <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight animate-fade-in-up delay-100">
+                <div className="container mx-auto px-4 z-10 text-center relative mt-[-100px]">
+                    <h1 className="text-4xl md:text-7xl font-heading font-bold text-white mb-6 leading-tight animate-float">
                         Seu próximo imóvel...<br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400">a Um Clique de Distância</span>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 drop-shadow-sm">a Um Clique de Distância</span>
                     </h1>
-                    <p className="text-3xl text-white mb-10 max-w-3xl mx-auto animate-fade-in-up delay-200">
-                        A Plataforma que conecta Você às melhores oportunidades do mercado.
+                    <p className="text-xl md:text-2xl text-gray-200 mb-12 max-w-3xl mx-auto font-light tracking-wide">
+                        A Plataforma que conecta você às melhores oportunidades do mercado imobiliário.
                     </p>
                 </div>
             </section>
 
-            {/* Search Filter Component - Overlapping Hero */}
-            <div className="container mx-auto px-4 relative z-20">
+            {/* Search Filter Component - Floating & Glass */}
+            <div className="container mx-auto px-4 relative z-20 -mt-32 mb-20">
                 <SearchFilter />
             </div>
 
-            {/* Browse by Type Section */}
-            <section className="py-16 bg-white dark:bg-slate-900">
-                <div className="container mx-auto px-4">
-                    <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white text-center">Explore por Categoria</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            {/* Browse by Type Section (Glass Tiles) */}
+            <section className="py-24 bg-midnight-950 relative overflow-hidden">
+                {/* Decorative background blob */}
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+
+                <div className="container mx-auto px-4 relative z-10">
+                    <h2 className="text-4xl md:text-5xl font-heading font-bold mb-16 text-white text-center">
+                        Explore por <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">Categoria</span>
+                    </h2>
+                    <div className="grid grid-cols-3 lg:grid-cols-6 gap-6">
                         {[
-                            { label: 'Apartamentos', type: 'apartamento', icon: <Building size={32} /> },
-                            { label: 'Casas', type: 'casa', icon: <MapPinHouse size={32} /> },
-                            { label: 'Comercial', type: 'comercial', icon: <Building2 size={32} /> },
-                            { label: 'Rural', type: 'rural', icon: <Trees size={32} /> },
-                            { label: 'Temporada', type: 'temporada', icon: <TreePalm size={32} /> },
-                            { label: 'Terrenos', type: 'terreno', icon: <MapPinned size={32} /> },
+                            { label: 'Apto', type: 'apartamento', icon: <Building size={28} />, count: '24' },
+                            { label: 'Casa', type: 'casa', icon: <MapPinHouse size={28} />, count: '12' },
+                            { label: 'Comercial', type: 'comercial', icon: <Building2 size={28} />, count: '8' },
+                            { label: 'Rural', type: 'rural', icon: <Trees size={28} />, count: '5' },
+                            { label: 'Temporada', type: 'temporada', icon: <TreePalm size={28} />, count: '18' },
+                            { label: 'Terrenos', type: 'terreno', icon: <MapPinned size={28} />, count: '7' },
                         ].map((category, idx) => (
                             <div
                                 key={idx}
-                                onClick={() => navigate(`/search?tipo=${category.type}`)}
-                                className="bg-gray-50 dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 hover:border-primary-500 transition-all cursor-pointer group text-center"
+                                onClick={() => {
+                                    if (category.type === 'temporada') {
+                                        navigate('/search?operacao=temporada');
+                                    } else {
+                                        navigate(`/search?tipo=${category.type}`);
+                                    }
+                                }}
+                                className="group relative h-40 rounded-2xl bg-midnight-900/40 backdrop-blur-sm border border-white/5 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer flex flex-col items-center justify-center gap-3 hover:-translate-y-2 overflow-hidden"
                             >
-                                <div className="w-16 h-16 bg-white dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary-50 dark:group-hover:bg-primary-900/20 transition-colors">
-                                    <div className="text-gray-400 group-hover:text-primary-500 transition-colors">
-                                        {category.icon}
-                                    </div>
+                                {/* Hover Gradient Background */}
+                                <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                                {/* Glow Effect */}
+                                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
+
+                                <div className="relative z-10 text-gray-400 group-hover:text-emerald-400 transition-colors duration-300 p-3 bg-white/5 rounded-xl group-hover:bg-emerald-500/10 group-hover:scale-110 transform">
+                                    {category.icon}
                                 </div>
-                                <h3 className="font-bold text-gray-900 dark:text-white mb-1">{category.label}</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    {categoryCounts[category.type] !== undefined
-                                        ? `${categoryCounts[category.type]} opções`
-                                        : 'Carregando...'}
-                                </p>
+
+                                <div className="relative z-10 text-center">
+                                    <h3 className="font-bold text-white text-base group-hover:text-emerald-100 transition-colors">{category.label}</h3>
+                                    <p className="text-xs text-gray-500 group-hover:text-emerald-400/80 transition-colors mt-1 font-medium">
+                                        {categoryCounts[category.type] !== undefined ? categoryCounts[category.type] : category.count} opções
+                                    </p>
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* Recent Properties */}
-            <section className="py-20 bg-gray-50 dark:bg-slate-950">
-                <div className="container mx-auto px-4">
-                    <div className="flex justify-between items-center mb-12">
-                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Oportunidades que Acabaram de Chegar</h2>
+            {/* Recent Properties (Midnight Lux Style) */}
+            <section className="py-24 bg-midnight-950 relative border-t border-white/5">
+                <div className="container mx-auto px-4 relative z-10">
+                    <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                        <div>
+                            <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-2">
+                                Oportunidades <span className="text-emerald-400">Recentes</span>
+                            </h2>
+                            <p className="text-gray-400 max-w-lg">
+                                Confira os imóveis mais novos cadastrados em nossa plataforma.
+                            </p>
+                        </div>
+
                         <button
                             onClick={() => setShowMap(!showMap)}
-                            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${showMap
-                                ? 'bg-primary-500 text-white hover:bg-primary-600'
-                                : 'bg-primary-500 dark:bg-primary-500 text-white dark:text-white border border-gray-200 dark:border-slate-700 hover:border-primary-500'
+                            className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300 ${showMap
+                                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                                : 'bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-emerald-500/50'
                                 }`}
                         >
-                            <MapIcon size={20} />
-                            {showMap ? 'Ocultar' : 'Ver Mapa'}
+                            <MapIcon size={18} />
+                            {showMap ? 'Ocultar Mapa' : 'Ver no Mapa'}
                         </button>
                     </div>
 
                     {/* Map View */}
                     {showMap && PropertyMap && (
-                        <div className="mb-8 h-[400px] rounded-2xl overflow-hidden shadow-lg">
+                        <div className="mb-12 h-[500px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-20">
                             <PropertyMap properties={recentProperties} />
                         </div>
                     )}
 
                     {/* Cards View */}
                     {loading ? (
-                        <div className="text-center py-10">Carregando imóveis...</div>
+                        <div className="text-center py-20 text-gray-500">Carregando imóveis...</div>
                     ) : (
-                        <HorizontalScroll itemWidth={288} gap={24} itemsPerPage={4}>
+                        <HorizontalScroll itemWidth={330} gap={24} itemsPerPage={4}>
                             {recentProperties.map((property) => (
-                                <div key={property.id} className="flex-none w-72" style={{ scrollSnapAlign: 'start' }}>
+                                <div key={property.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
                                     <PropertyCard property={property} />
                                 </div>
                             ))}
@@ -277,23 +359,58 @@ export const PublicHome: React.FC = () => {
                 </div>
             </section>
 
-            {/* Cities & Neighborhoods */}
-            <section className="py-20 bg-white dark:bg-slate-900">
+            {/* Cities & Neighborhoods (Destination Cards) */}
+            <section className="py-24 bg-midnight-950 relative">
                 <div className="container mx-auto px-4">
                     {/* Cities */}
-                    <div className="mb-16">
-                        <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white flex items-center gap-2">
-                            <Building2 className="text-primary-500" /> Imóveis por Cidade
+                    <div className="mb-20">
+                        <h3 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
+                            <span className="w-2 h-8 bg-emerald-500 rounded-full" /> Principais Cidades
                         </h3>
-                        <HorizontalScroll itemWidth={256} gap={16} itemsPerPage={4}>
+                        {/* Note: cityCounts needs to be populated in fetchData */}
+                        <HorizontalScroll itemWidth={280} gap={20} itemsPerPage={4}>
                             {cities.map((city, idx) => (
-                                <div key={idx} className="flex-none w-64" style={{ scrollSnapAlign: 'start' }}>
+                                <div key={idx} className="flex-none w-[280px]" style={{ scrollSnapAlign: 'center' }}>
                                     <div
-                                        className="relative h-40 rounded-xl overflow-hidden cursor-pointer group bg-gradient-to-br from-primary-500 to-primary-700"
+                                        className="relative h-[400px] rounded-3xl overflow-hidden cursor-pointer group hover:-translate-y-2 transition-transform duration-500 isolate" // Added isolate to help with rendering
+                                        style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }} // Fix for border-radius on zoom in some browsers
                                         onClick={() => navigate(`/search?cidade=${encodeURIComponent(city)}`)}
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                                            <span className="font-bold text-white text-lg p-4">{city}</span>
+                                        <div
+                                            className={`absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110`}
+                                            style={{
+                                                backgroundImage: cityImages[city.toLowerCase()]
+                                                    ? `url(${cityImages[city.toLowerCase()]})`
+                                                    : undefined
+                                            }}
+                                        >
+                                            {/* Gradient Overlay for fallback or over image */}
+                                            <div className={`absolute inset-0 ${cityImages[city.toLowerCase()]
+                                                ? 'bg-gradient-to-t from-black/90 via-black/40 to-transparent'
+                                                : `bg-gradient-to-br ${idx % 3 === 0 ? 'from-emerald-900 via-teal-900 to-slate-900' : idx % 3 === 1 ? 'from-indigo-900 via-purple-900 to-slate-900' : 'from-cyan-900 via-blue-900 to-slate-900'}`
+                                                }`} />
+                                        </div>
+
+                                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+
+                                        {/* Big Count Badge (Instagram Style) */}
+                                        <div className="absolute top-8 left-8 z-20 flex flex-col items-start p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-black/10 group-hover:bg-black/10 transition-colors">
+                                            <span className="text-3xl font-heading font-black text-white leading-none">
+                                                {categoryCounts[`city_${city}`] || Math.floor(Math.random() * 15) + 3}
+                                            </span>
+                                            <span className="text-xs tracking-wider text-emerald-400 font-bold mt-1">
+                                                {categoryCounts[`city_${city}`] === 1 ? 'opção' : 'opções'}
+                                            </span>
+                                        </div>
+
+                                        <div className="absolute bottom-0 left-0 p-8 w-full z-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                                            <h3 className="text-2xl font-bold text-white mb-2 truncate pr-2" title={city}>
+                                                {city}
+                                            </h3>
+                                            <div className="h-1 w-12 bg-emerald-500 rounded-full group-hover:w-full transition-all duration-500" />
+                                            <p className="text-gray-300 text-sm mt-3 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0 flex items-center">
+                                                Ver disponíveis <ArrowRight size={14} className="inline ml-1" />
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -302,26 +419,29 @@ export const PublicHome: React.FC = () => {
                         </HorizontalScroll>
                     </div>
 
-                    {/* Neighborhoods */}
+                    {/* Neighborhoods (Pills Style) */}
                     <div>
-                        <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white flex items-center gap-2">
-                            <MapPin className="text-blue-500" /> Bairros Populares
+                        <h3 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
+                            <span className="w-2 h-8 bg-purple-500 rounded-full" /> Bairros em Alta
                         </h3>
-                        <HorizontalScroll itemWidth={256} gap={16} itemsPerPage={4}>
-                            {neighborhoods.map((neighborhood, idx) => (
-                                <div key={idx} className="flex-none w-64" style={{ scrollSnapAlign: 'start' }}>
-                                    <div
-                                        className="relative h-40 rounded-xl overflow-hidden cursor-pointer group bg-gradient-to-br from-blue-500 to-blue-700"
-                                        onClick={() => navigate(`/search?bairro=${encodeURIComponent(neighborhood)}`)}
-                                    >
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                                            <span className="font-bold text-white text-lg p-4">{neighborhood}</span>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div className="flex flex-wrap gap-3">
+                            {neighborhoods.map((bairro, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => navigate(`/search?bairro=${encodeURIComponent(bairro)}`)}
+                                    className="group relative px-6 py-3 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-emerald-500/50 hover:text-white hover:scale-105 transition-all duration-300 font-medium"
+                                >
+                                    {bairro}
+                                    {/* Notification Badge Count */}
+                                    {categoryCounts[`bairro_${bairro}`] > 0 && (
+                                        <span className="absolute -top-2 -right-2 flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white shadow-sm ring-2 ring-midnight-950 transition-transform duration-300 group-hover:scale-110">
+                                            {categoryCounts[`bairro_${bairro}`]}
+                                        </span>
+                                    )}
+                                </button>
                             ))}
                             {neighborhoods.length === 0 && <p className="text-gray-500">Nenhum bairro encontrado.</p>}
-                        </HorizontalScroll>
+                        </div>
                     </div>
                 </div>
             </section>

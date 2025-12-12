@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Search, Map } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { div } from 'framer-motion/client';
 
 interface PropertyType {
     tipo: string;
     disponivel_temporada: boolean;
 }
 
-export const SearchFilter = () => {
+export const SearchFilter = ({ brokerSlug }: { brokerSlug?: string }) => {
     const [activeTab, setActiveTab] = useState<'buy' | 'rent' | 'temporada'>('buy');
     const [allPropertyTypes, setAllPropertyTypes] = useState<PropertyType[]>([]);
     const [selectedType, setSelectedType] = useState('');
@@ -69,84 +70,91 @@ export const SearchFilter = () => {
         if (selectedType) params.append('tipo', selectedType);
         if (searchTerm) params.append('q', searchTerm);
         if (showMap) params.append('view', 'map');
+        if (brokerSlug) params.append('broker', brokerSlug);
 
         navigate(`/search?${params.toString()}`);
     };
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 max-w-4xl mx-auto -mt-12 md:-mt-24 relative z-20 border border-gray-100 dark:border-slate-700 mx-4 md:mx-auto">
-            <div className="flex gap-6 mb-6 border-b border-gray-100 dark:border-slate-700 pb-2">
+
+        <div className="bg-midnight-950/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-8 max-w-4xl mx-auto -mt-12 md:-mt-24 relative z-20 mx-4 md:mx-auto group">
+            {/* Decorative sheen */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-3xl" />
+
+            <div className="flex gap-4 mb-6 border-b border-white/10 pb-4 relative z-10">
                 <button
-                    className={`pb-2 font-semibold text-lg transition-colors relative ${activeTab === 'rent'
-                        ? 'text-emerald-500'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                    className={`pb-2 font-bold tracking-wide text-sm uppercase transition-colors relative ${activeTab === 'rent'
+                        ? 'text-blue-400'
+                        : 'text-gray-400 hover:text-white'
                         }`}
                     onClick={() => setActiveTab('rent')}
                 >
                     Alugar
                     {activeTab === 'rent' && (
-                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-500 rounded-full"></span>
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-400 rounded-full shadow-[0_0_10px_rgba(96,165,250,0.5)]"></span>
                     )}
                 </button>
                 <button
-                    className={`pb-2 font-semibold text-lg transition-colors relative ${activeTab === 'buy'
-                        ? 'text-emerald-500'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                    className={`pb-2 font-bold tracking-wide text-sm uppercase transition-colors relative ${activeTab === 'buy'
+                        ? 'text-red-400'
+                        : 'text-gray-400 hover:text-white'
                         }`}
                     onClick={() => setActiveTab('buy')}
                 >
                     Comprar
                     {activeTab === 'buy' && (
-                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-500 rounded-full"></span>
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-red-400 rounded-full shadow-[0_0_10px_rgba(248,113,113,0.5)]"></span>
                     )}
                 </button>
                 <button
-                    className={`pb-2 font-semibold text-lg transition-colors relative ${activeTab === 'temporada'
-                        ? 'text-orange-500'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                    className={`pb-2 font-bold tracking-wide text-sm uppercase transition-colors relative ${activeTab === 'temporada'
+                        ? 'text-orange-400'
+                        : 'text-gray-400 hover:text-white'
                         }`}
                     onClick={() => setActiveTab('temporada')}
                 >
                     Temporada
                     {activeTab === 'temporada' && (
-                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-500 rounded-full"></span>
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-400 rounded-full shadow-[0_0_10px_rgba(251,146,60,0.5)]"></span>
                     )}
                 </button>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 border border-gray-300 dark:border-slate-600 rounded-lg px-4 py-3 flex items-center bg-gray-50 dark:bg-slate-900">
+            <div className="flex flex-col md:flex-row gap-4 relative z-10">
+                <div className="flex-1 border border-white/10 rounded-xl px-4 py-3 flex items-center bg-black/30 focus-within:bg-black/50 focus-within:border-emerald-500/50 transition-all">
                     <select
                         value={selectedType}
                         onChange={(e) => setSelectedType(e.target.value)}
-                        className="w-full bg-transparent outline-none text-gray-700 dark:text-gray-200 cursor-pointer"
+                        className="w-full bg-transparent outline-none text-gray-200 cursor-pointer [&>option]:bg-midnight-950 [&>option]:text-white"
                     >
-                        <option value="" className="dark:bg-slate-800">Tipo de Imóvel</option>
+                        <option value="" className="bg-midnight-950 text-gray-400">Tipo de Imóvel</option>
                         {filteredPropertyTypes.map((type, idx) => (
-                            <option key={idx} value={type.tipo} className="dark:bg-slate-800">
+                            <option key={idx} value={type.tipo} className="bg-midnight-950">
                                 {type.tipo.charAt(0).toUpperCase() + type.tipo.slice(1)}
                             </option>
                         ))}
                     </select>
                 </div>
-                <div className="flex-[2] border border-gray-300 dark:border-slate-600 rounded-lg px-4 py-3 flex items-center bg-gray-50 dark:bg-slate-900">
+                <div className="flex-[2] border border-white/10 rounded-xl px-4 py-3 flex items-center bg-black/30 focus-within:bg-black/50 focus-within:border-emerald-500/50 transition-all">
                     <Search className="w-5 h-5 text-gray-400 mr-3" />
                     <input
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Digite cidades, bairros ou características..."
-                        className="w-full bg-transparent outline-none text-gray-700 dark:text-gray-200 placeholder-gray-400"
+                        className="w-full bg-transparent outline-none text-white placeholder-gray-500"
                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     />
                 </div>
 
                 <button
                     onClick={handleSearch}
-                    className={`font-bold py-3 px-8 rounded-lg transition-all transform hover:scale-105 uppercase tracking-wide shadow-lg ${activeTab === 'temporada'
-                            ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20'
-                            : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'
-                        }`}
+                    className={`
+                        font-bold py-3 px-8 rounded-lg transition-all transform hover:scale-105 uppercase tracking-wide shadow-lg
+                        ${activeTab === 'temporada' ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20' : ''}
+                        ${activeTab === 'rent' ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/20' : ''}
+                        ${activeTab === 'buy' ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/20' : ''}
+                    `}
                 >
                     Buscar
                 </button>

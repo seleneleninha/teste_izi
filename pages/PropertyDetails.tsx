@@ -12,6 +12,29 @@ import { useToast } from '../components/ToastContext'; // Import useToast
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const variants = {
+    enter: (direction: number) => ({
+        x: direction > 0 ? 1000 : -1000,
+        opacity: 0
+    }),
+    center: {
+        zIndex: 1,
+        x: 0,
+        opacity: 1
+    },
+    exit: (direction: number) => ({
+        zIndex: 0,
+        x: direction < 0 ? 1000 : -1000,
+        opacity: 0
+    })
+};
+
+const swipeConfidenceThreshold = 10000;
+const swipePower = (offset: number, velocity: number) => {
+    return Math.abs(offset) * velocity;
+};
 
 // Fix Leaflet default marker icon issue
 const iconUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
@@ -35,8 +58,18 @@ export const PropertyDetails: React.FC = () => {
     const { addToast } = useToast();
     const [property, setProperty] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [[page, direction], setPage] = useState([0, 0]);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+
+    // Derived index
+    const imageIndex = property?.images ? Math.abs(page % property.images.length) : 0;
+    // Sync external currentImageIndex for other components if needed, or just use imageIndex
+    const currentImageIndex = imageIndex;
+
+    // Paginate function
+    const paginate = (newDirection: number) => {
+        setPage([page + newDirection, newDirection]);
+    };
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
     const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
     const [isFavorite, setIsFavorite] = useState(false);
@@ -344,15 +377,17 @@ export const PropertyDetails: React.FC = () => {
         fetchRelated();
     }, [property]);
 
+
+
     const nextImage = () => {
         if (property?.images) {
-            setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
+            paginate(1);
         }
     };
 
     const prevImage = () => {
         if (property?.images) {
-            setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+            paginate(-1);
         }
     };
 
@@ -480,12 +515,36 @@ export const PropertyDetails: React.FC = () => {
 
                     {/* Hero Image Gallery */}
                     <div className="relative rounded-2xl overflow-hidden h-[300px] md:h-[500px] mb-8 shadow-lg group">
-                        <img
-                            src={property.images && property.images.length > 0 ? property.images[currentImageIndex] : 'https://picsum.photos/seed/prop1/800/600'}
-                            alt={property.title}
-                            className="w-full h-full object-cover transition-transform duration-500 cursor-pointer hover:scale-105"
-                            onClick={() => setIsGalleryOpen(true)}
-                        />
+                        <AnimatePresence initial={false} custom={direction}>
+                            <motion.img
+                                key={page}
+                                src={property.images && property.images.length > 0 ? property.images[imageIndex] : 'https://picsum.photos/seed/prop1/800/600'}
+                                custom={direction}
+                                variants={variants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{
+                                    x: { type: "spring", stiffness: 300, damping: 30 },
+                                    opacity: { duration: 0.2 }
+                                }}
+                                drag="x"
+                                dragConstraints={{ left: 0, right: 0 }}
+                                dragElastic={1}
+                                onDragEnd={(e, { offset, velocity }) => {
+                                    const swipe = swipePower(offset.x, velocity.x);
+
+                                    if (swipe < -swipeConfidenceThreshold) {
+                                        paginate(1);
+                                    } else if (swipe > swipeConfidenceThreshold) {
+                                        paginate(-1);
+                                    }
+                                }}
+                                alt={property.title}
+                                className="w-full h-full object-cover transition-transform duration-500 cursor-pointer absolute top-0 left-0" // Absolute is key for stack effect
+                                onClick={() => setIsGalleryOpen(true)}
+                            />
+                        </AnimatePresence>
 
                         {/* Carousel Controls */}
                         {property.images && property.images.length > 1 && (
@@ -508,7 +567,7 @@ export const PropertyDetails: React.FC = () => {
                                     {property.images.map((_: any, idx: number) => (
                                         <button
                                             key={idx}
-                                            onClick={() => setCurrentImageIndex(idx)}
+                                            onClick={() => setPage([page + (idx - imageIndex), idx > imageIndex ? 1 : -1])}
                                             className={`w-2 h-2 rounded-full transition-all ${idx === currentImageIndex ? 'bg-white w-6' : 'bg-white/50'}`}
                                         />
                                     ))}
@@ -516,7 +575,7 @@ export const PropertyDetails: React.FC = () => {
                             </>
                         )}
 
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 pointer-events-none">
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 pointer-events-none z-20">
                             <h1 className="text-2xl font-bold text-white mb-2 truncate">{property.title}</h1>
                             <div className="flex items-center gap-2 mb-2">
                                 {/* Tipo Imovel Badge */}
@@ -658,33 +717,59 @@ export const PropertyDetails: React.FC = () => {
                                 <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
                                     <button
                                         onClick={() => setIsGalleryOpen(false)}
-                                        className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+                                        className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors z-[60]"
                                     >
                                         <X size={32} />
                                     </button>
 
                                     <button
                                         onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-colors backdrop-blur-sm"
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-colors backdrop-blur-sm z-[60]"
                                     >
                                         <ArrowLeft size={32} />
                                     </button>
 
-                                    <img
-                                        src={property.images[currentImageIndex]}
-                                        alt={property.title}
-                                        className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg"
-                                    />
+                                    <div className="relative w-full h-full max-w-[90vw] max-h-[90vh] flex items-center justify-center overflow-hidden">
+                                        <AnimatePresence initial={false} custom={direction}>
+                                            <motion.img
+                                                key={page}
+                                                src={property.images[imageIndex]}
+                                                custom={direction}
+                                                variants={variants}
+                                                initial="enter"
+                                                animate="center"
+                                                exit="exit"
+                                                transition={{
+                                                    x: { type: "spring", stiffness: 300, damping: 30 },
+                                                    opacity: { duration: 0.2 }
+                                                }}
+                                                drag="x"
+                                                dragConstraints={{ left: 0, right: 0 }}
+                                                dragElastic={1}
+                                                onDragEnd={(e, { offset, velocity }) => {
+                                                    const swipe = swipePower(offset.x, velocity.x);
+
+                                                    if (swipe < -swipeConfidenceThreshold) {
+                                                        paginate(1);
+                                                    } else if (swipe > swipeConfidenceThreshold) {
+                                                        paginate(-1);
+                                                    }
+                                                }}
+                                                alt={property.title}
+                                                className="max-h-full max-w-full object-contain absolute"
+                                            />
+                                        </AnimatePresence>
+                                    </div>
 
                                     <button
                                         onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-colors backdrop-blur-sm"
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-colors backdrop-blur-sm z-[60]"
                                     >
                                         <ArrowLeft size={32} className="rotate-180" />
                                     </button>
 
-                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/80 font-medium bg-black/50 px-4 py-2 rounded-full backdrop-blur-sm">
-                                        {currentImageIndex + 1} / {property.images.length}
+                                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/80 font-medium bg-black/50 px-4 py-2 rounded-full backdrop-blur-sm z-[60]">
+                                        {imageIndex + 1} / {property.images.length}
                                     </div>
                                 </div>
                             )}
