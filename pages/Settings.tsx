@@ -118,7 +118,6 @@ export const Settings: React.FC = () => {
           raioAtuacao: data.raio_atuacao || 10,
           watermarkLight: data.watermark_light || '',
           watermarkDark: data.watermark_dark || '',
-          watermarkDark: data.watermark_dark || '',
           marcaDagua: data.marca_dagua || '',
           instagram: data.instagram || '',
           facebook: data.facebook || '',
