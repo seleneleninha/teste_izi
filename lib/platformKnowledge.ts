@@ -93,8 +93,8 @@ export const PLATFORM_KNOWLEDGE = {
     buyerFlow: {
         // Palavras-chave para detectar operação
         operacaoKeywords: {
-            venda: ["comprar", "compra", "compro", "adquirir", "venda", "à venda", "a venda", "pra comprar", "alugar", "aluguel", "aluga", "locação", "locacao", "pra alugar", "para alugar"],
-            locacao: ["alugar", "aluguel", "aluga", "locação", "locacao", "pra alugar", "para alugar", "arrendar"],
+            venda: ["comprar", "compra", "compro", "adquirir", "venda", "à venda", "a venda", "pra comprar"],
+            locacao: ["alugar", "aluguel", "aluga", "locação", "locacao", "pra alugar", "para alugar"],
             temporada: ["temporada", "temporário", "temporario", "veraneio", "férias", "ferias"]
         },
 
@@ -272,7 +272,7 @@ export const PLATFORM_KNOWLEDGE = {
 
     // Tom de voz
     voiceTone: {
-        style: "Clara, objetiva, polida, convidativa, educada e extrovertida",
+        style: 'Profissional, empática, proativa e amigável. Como uma consultora imobiliária experiente que realmente quer ajudar.',
         rules: [
             "Seja direto e evite rodeios",
             "Use linguagem amigável e acessível",
@@ -281,7 +281,71 @@ export const PLATFORM_KNOWLEDGE = {
             "Use emojis com moderação (1-2 por mensagem)",
             "Sempre termine com uma ação ou pergunta relevante",
             "Se possível, chegando próximo do final da conversa, direcione o cliente com um CTA (anúncio de imóvel ou direcione para uma página da plataforma"
-        ]
+        ],
+        goldenRules: [
+            "NUNCA seja insistente ou agressiva se o usuário disser 'não'.",
+            "NUNCA compartilhe dados pessoais de outros usuários.",
+            "NUNCA deixe o usuário sem resposta (sempre termine com uma pergunta ou ação).",
+            "NUNCA use gírias excessivas ou linguagem muito informal.",
+            "NUNCA critique outras plataformas ou concorrentes.",
+            "NUNCA assuma que o usuário é corretor ou comprador sem indícios.",
+            "NUNCA envie links quebrados ou IDs internos.",
+            "NUNCA esqueça que seu objetivo final é conectar pessoas (lead ou parceria).",
+            "EVITE termos em inglês (ex: 'pricing', 'timing', 'knowhow'). Use equivalentes em português."
+        ],
+        responseVariations: {
+            greetings: [
+                "Olá! Sou a IzA. Como posso ajudar você hoje?",
+                "Oi! Bem-vindo à iziBrokerz. Estou aqui para te ajudar. O que você procura?",
+                "Olá! Tudo bem? Sou a assistente virtual da iziBrokerz. Vamos encontrar seu novo lar ou ampliar seus negócios?"
+            ],
+            fallback: [
+                "Não entendi muito bem. Você pode reformular? Estou aprendendo todos os dias! 🧠",
+                "Poderia explicar de outra forma? Quero muito te ajudar com isso.",
+                "Hmm, não tenho certeza se entendi. Você está buscando comprar, alugar ou é um corretor?"
+            ],
+            closing: [
+                "Qualquer coisa, estou por aqui! 👋",
+                "Espero ter ajudado! Se precisar de algo mais, é só chamar.",
+                "Tenha um ótimo dia! Conte comigo para o que precisar."
+            ],
+            brokerHooks: [
+                "Sabia que você pode testar nossa plataforma por 14 dias grátis? E sem cartão de crédito?",
+                "Nossa rede de parcerias está crescendo muito. Já pensou em anunciar seus imóveis aqui?",
+                "Temos ferramentas incríveis para corretores. Que tal dar uma olhada no nosso plano Básico?"
+            ]
+        }
+    },
+
+    // Tratamento de Objeções (Novo)
+    objections: {
+        security: {
+            trigger: ["seguro", "golpe", "confiável", "medo", "perigoso", "fake"],
+            response: "Pode ficar tranquilo(a)! 🛡️ Nossos Corretores Parceiros passam por verificação de CRECI/COFECI antes de entrarem na plataforma. Sua segurança é nossa prioridade número 1. Se notar algo estranho, me avise!"
+        },
+        price: {
+            trigger: ["caro", "preço alto", "valor alto", "muito dinheiro", "muito caro"],
+            response: "Entendo a preocupação com o valor. 💰 O mercado varia bastante por região. Que tal me dizer qual faixa de preço fica confortável para o seu bolso? Posso filtrar opções melhores!"
+        },
+        competition: {
+            trigger: ["zap", "quintoandar", "viva real", "olx", "chaves na mão", "kenlo", "tecimob", "outra plataforma"],
+            response: "São ótimas plataformas também! 🤝 O diferencial da iziBrokerz é que conectamos você diretamente ao Corretor especialista da região, sem intermediários burocráticos e com parcerias que aumentam as opções de imóveis."
+        }
+    },
+
+    // Dicas Educacionais para Corretores (Novo)
+    brokerEducation: [
+        "📸 **Dica da IzA:** Fotos com iluminação natural e ambientes organizados aumentam em até 3x os cliques no anúncio!",
+        "💰 **Precificação:** Imóveis com preço 5% acima da média da região demoram o dobro para vender. Vale a pena conferir a avaliação!",
+        "⚡ **Agilidade:** Responder leads em menos de 1 hora aumenta suas chances de conversão em 7x. Fique ligado nas notificações!"
+    ],
+
+    // Contexto Regional (Estrutura para futuro)
+    neighborhoodVibes: {
+        generic: "Essa região é muito procurada! Tem boa valorização e acesso fácil a serviços.",
+        quiet: "Bairro tranquilo, ideal para famílias e quem busca sossego.",
+        busy: "Região vibrante, com muita vida noturna, comércio e facilidades.",
+        luxury: "Região nobre, com alta segurança e imóveis de alto padrão."
     }
 };
 
@@ -305,6 +369,8 @@ export interface ConversationState {
     valorMax: number | null;
     quartos: number | null;
     answeredQuestions: string[];
+    bairros?: string[];  // Support multiple neighborhoods
+    shownPropertyIds: string[];  // Track properties already shown to avoid repetition
 }
 
 export function createEmptyConversationState(): ConversationState {
@@ -317,7 +383,9 @@ export function createEmptyConversationState(): ConversationState {
         valorMin: null,
         valorMax: null,
         quartos: null,
-        answeredQuestions: []
+        answeredQuestions: [],
+        bairros: [],
+        shownPropertyIds: []
     };
 }
 

@@ -1,127 +1,256 @@
-import { supabase } from './supabaseClient';
-import { Property } from '../types'; // Verify this path or create a local interface if simpler
-import { formatCurrency } from './formatters';
+import { generatePropertySlug } from './propertyHelpers';
 
-interface WhatsAppLinkParams {
+interface WhatsAppMessage {
     phone: string;
-    message: string;
+    text?: string;
+    mediaUrl?: string;
+    caption?: string;
 }
 
-export const generateWhatsAppLink = ({ phone, message }: WhatsAppLinkParams): string => {
-    const cleanPhone = phone.replace(/\D/g, ''); // Remove non-numeric characters
-    const encodedMessage = encodeURIComponent(message);
-    return `https://wa.me/55${cleanPhone}?text=${encodedMessage}`;
-};
-
-interface PropertyMessageParams {
-    property: Property;
-    brokerName?: string;
-    template: 'interest' | 'visit' | 'proposal' | 'share' | 'availability';
+interface Property {
+    id: string;
+    titulo: string;
+    bairro: string;
+    cidade: string;
+    valor_venda: number | null;
+    valor_locacao: number | null;
+    quartos: number;
+    vagas: number;
+    area_priv: number;
+    fotos: string;
+    operacao: string;
+    tipo_imovel: string;
+    cod_imovel: number;
 }
 
-export const formatPropertyMessage = ({
-    property,
-    brokerName,
-    template
-}: PropertyMessageParams): string => {
-    // Get current URL or construct it if not in browser context
-    const propertyLink = typeof window !== 'undefined'
-        ? window.location.origin + '/' + generateSlug(property)
-        : `https://izibrokerz.com/${generateSlug(property)}`;
+const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || 'http://localhost:8080';
+const INSTANCE_NAME = process.env.WHATSAPP_INSTANCE_NAME || 'iziBrokerz';
+const API_KEY = process.env.EVOLUTION_API_KEY || '';
 
-    const baseData = {
-        TYPE: property.tipo_imovel || 'Imóvel',
-        NEIGHBORHOOD: property.bairro || '',
-        CITY: property.cidade || '',
-        PRICE: formatCurrency(property.valor_venda || property.valor_locacao || 0),
-        CODE: property.cod_imovel || property.id.substring(0, 8),
-        LINK: propertyLink
-    };
-
-    switch (template) {
-        case 'interest':
-            return `Olá${brokerName ? ' ' + brokerName : ''}! Vi o imóvel no site da iziBrokerz e gostaria de mais informações.
-
-🏠 ${baseData.LINK}
-
-📍 ${baseData.NEIGHBORHOOD}, ${baseData.CITY}
-💰 Valor: ${baseData.PRICE}
-
-Código: ${baseData.CODE}
-
-Aguardo seu retorno!`;
-
-        case 'visit':
-            return `Olá${brokerName ? ' ' + brokerName : ''}! Gostaria de agendar uma visita ao imóvel:
-
-🏠 ${baseData.TYPE} - ${baseData.NEIGHBORHOOD}
-💰 Valor: ${baseData.PRICE}
-📍 Código: ${baseData.CODE}
-🔗 Link: ${baseData.LINK}
-
-Quando podemos agendar?`;
-
-        case 'proposal':
-            return `Olá${brokerName ? ' ' + brokerName : ''}! Tenho interesse em fazer uma proposta para o imóvel:
-
-🏠 ${baseData.TYPE} - ${baseData.NEIGHBORHOOD}
-💰 Valor anunciado: ${baseData.PRICE}
-📍 Código: ${baseData.CODE}
-🔗 Link: ${baseData.LINK}
-
-Podemos conversar sobre valores?`;
-
-        case 'share':
-            return `Olha que imóvel incrível que encontrei! 🏡
-
-🏠 ${baseData.TYPE} - ${baseData.NEIGHBORHOOD}, ${baseData.CITY}
-💰 ${baseData.PRICE}
-
-Ver mais: ${baseData.LINK}`;
-
-        case 'availability':
-            return `Olá${brokerName ? ' ' + brokerName : ''}! Sou parceiro iziBrokerz e gostaria de checar a disponibilidade do imóvel para um cliente:
-
-🏠 ${baseData.TYPE} - ${baseData.NEIGHBORHOOD}
-💰 ${baseData.PRICE}
-📍 Código: ${baseData.CODE}
-🔗 Link: ${baseData.LINK}
-
-Está disponível para visita?`;
-
-        default:
-            return `Olá! Tenho interesse no imóvel código ${baseData.CODE}.`;
-    }
-};
-
-// Helper to generate slug (duplicated from other components, ideally should be a shared util)
-const generateSlug = (p: Property) => {
-    const type = (p.tipo_imovel || 'imovel').toLowerCase().replace(/\s+/g, '-');
-    const quartos = p.quartos || 0;
-    const bairro = (p.bairro || '').toLowerCase().replace(/\s+/g, '-');
-    const cidade = (p.cidade || '').toLowerCase().replace(/\s+/g, '-');
-    const area = p.area_priv || 0;
-    const operation = (p.operacao || '').toLowerCase().replace('_', '-').replace('/', '-');
-    const valor = p.valor_venda || p.valor_locacao || p.valor_diaria || p.valor_mensal || 0;
-    const garagem = (p.vagas || 0) > 0 ? '-com-garagem' : '';
-    const codigo = p.cod_imovel || p.id;
-
-    return `${type}-${quartos}-quartos-${bairro}-${cidade}${garagem}-${area}m2-${operation}-RS${valor}-cod${codigo}`;
-};
-
-export const trackWhatsAppClick = async (
-    corretorId: string,
-    imovelId: string,
-    tipoAcao: string
-) => {
+/**
+ * Envia mensagem de texto via WhatsApp
+ */
+export async function sendWhatsAppMessage(
+    phone: string,
+    message: string
+): Promise<boolean> {
     try {
-        await supabase.from('whatsapp_clicks').insert({
-            corretor_id: corretorId,
-            imovel_id: imovelId,
-            tipo_acao: tipoAcao
-        });
+        const response = await fetch(
+            `${EVOLUTION_API_URL}/message/sendText/${INSTANCE_NAME}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': API_KEY
+                },
+                body: JSON.stringify({
+                    number: formatPhoneNumber(phone),
+                    text: message
+                })
+            }
+        );
+
+        if (!response.ok) {
+            console.error('Failed to send WhatsApp message:', await response.text());
+            return false;
+        }
+
+        return true;
     } catch (error) {
-        console.error('Error tracking WhatsApp click:', error);
-        // Fail silently to not disrupt user experience
+        console.error('Error sending WhatsApp message:', error);
+        return false;
     }
-};
+}
+
+/**
+ * Envia imagem com legenda via WhatsApp
+ */
+export async function sendWhatsAppImage(
+    phone: string,
+    imageUrl: string,
+    caption?: string
+): Promise<boolean> {
+    try {
+        const response = await fetch(
+            `${EVOLUTION_API_URL}/message/sendMedia/${INSTANCE_NAME}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': API_KEY
+                },
+                body: JSON.stringify({
+                    number: formatPhoneNumber(phone),
+                    mediaUrl: imageUrl,
+                    caption: caption || ''
+                })
+            }
+        );
+
+        if (!response.ok) {
+            console.error('Failed to send WhatsApp image:', await response.text());
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error sending WhatsApp image:', error);
+        return false;
+    }
+}
+
+/**
+ * Envia imóvel com foto via WhatsApp
+ */
+export async function sendPropertyWithImage(
+    phone: string,
+    property: Property
+): Promise<boolean> {
+    try {
+        // Gera slug do imóvel
+        const slug = generatePropertySlug({
+            tipo_imovel: property.tipo_imovel,
+            quartos: property.quartos,
+            bairro: property.bairro,
+            cidade: property.cidade,
+            vagas: property.vagas,
+            area_priv: property.area_priv,
+            operacao: property.operacao,
+            valor_venda: property.valor_venda,
+            valor_locacao: property.valor_locacao,
+            cod_imovel: property.cod_imovel,
+            slug: ''
+        });
+
+        const propertyUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://izibrokerz.com.br'}/${slug}`;
+
+        // Primeira foto
+        const photos = property.fotos ? JSON.parse(property.fotos) : [];
+        const firstPhoto = photos.length > 0 ? photos[0] : '';
+
+        const caption =
+            `🏡 *${property.titulo}*\n\n` +
+            `📍 ${property.bairro}, ${property.cidade}\n` +
+            `💰 ${formatPrice(property.valor_venda || property.valor_locacao || 0)}\n` +
+            `🛏️ ${property.quartos} quartos | 🚗 ${property.vagas} vagas | 📐 ${property.area_priv}m²\n\n` +
+            `👉 Ver mais: ${propertyUrl}`;
+
+        if (firstPhoto) {
+            return await sendWhatsAppImage(phone, firstPhoto, caption);
+        } else {
+            return await sendWhatsAppMessage(phone, caption);
+        }
+    } catch (error) {
+        console.error('Error sending property:', error);
+        return false;
+    }
+}
+
+/**
+ * Envia múltiplos imóveis via WhatsApp
+ */
+export async function sendMultipleProperties(
+    phone: string,
+    properties: Property[]
+): Promise<boolean> {
+    try {
+        if (properties.length === 0) {
+            return await sendWhatsAppMessage(
+                phone,
+                'Desculpe, não encontrei imóveis que atendam aos seus critérios. 😔\n\nPodemos ajustar a busca?'
+            );
+        }
+
+        // Envia mensagem inicial
+        await sendWhatsAppMessage(
+            phone,
+            `Encontrei *${properties.length} ${properties.length === 1 ? 'imóvel' : 'imóveis'}* para você! 🏡`
+        );
+
+        // Aguarda 1 segundo
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Envia cada imóvel (limita a 5 para não sobrecarregar)
+        const propertieToSend = properties.slice(0, 5);
+
+        for (let i = 0; i < propertieToSend.length; i++) {
+            await sendPropertyWithImage(phone, propertieToSend[i]);
+
+            // Aguarda 2 segundos entre cada envio
+            if (i < propertieToSend.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+
+        // Se tiver mais de 5, avisa
+        if (properties.length > 5) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await sendWhatsAppMessage(
+                phone,
+                `Há mais ${properties.length - 5} opções disponíveis! 😊\n\nQuer refinar a busca ou ver mais?`
+            );
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Error sending multiple properties:', error);
+        return false;
+    }
+}
+
+/**
+ * Formata número de telefone para formato internacional
+ */
+function formatPhoneNumber(phone: string): string {
+    // Remove todos os não-dígitos
+    let cleaned = phone.replace(/\D/g, '');
+
+    // Se não começa com código do país, adiciona Brasil (55)
+    if (!cleaned.startsWith('55')) {
+        // Se tem 11 dígitos (DDD + número), adiciona 55
+        if (cleaned.length === 11) {
+            cleaned = '55' + cleaned;
+        }
+    }
+
+    return cleaned;
+}
+
+/**
+ * Formata preço
+ */
+function formatPrice(value: number): string {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 0
+    }).format(value);
+}
+
+/**
+ * Verifica se a API do WhatsApp está configurada
+ */
+export function isWhatsAppConfigured(): boolean {
+    return !!(EVOLUTION_API_URL && INSTANCE_NAME && API_KEY);
+}
+
+/**
+ * Testa conexão com Evolution API
+ */
+export async function testWhatsAppConnection(): Promise<boolean> {
+    try {
+        const response = await fetch(
+            `${EVOLUTION_API_URL}/instance/connectionState/${INSTANCE_NAME}`,
+            {
+                headers: {
+                    'apikey': API_KEY
+                }
+            }
+        );
+
+        return response.ok;
+    } catch (error) {
+        console.error('WhatsApp connection test failed:', error);
+        return false;
+    }
+}

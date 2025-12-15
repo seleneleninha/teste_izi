@@ -451,7 +451,7 @@ export const PublicHome: React.FC = () => {
             <Footer />
 
             {/* AI Assistant */}
-            <PublicAIAssistant />
+            {/* AI Assistant - Moved to PublicLayout for persistence */}
         </div>
     );
 };

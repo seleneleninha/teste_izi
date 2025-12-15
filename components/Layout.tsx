@@ -7,6 +7,7 @@ import { NotificationDropdown } from './NotificationDropdown';
 import { MessagesDrawer } from './MessagesDrawer';
 import { TrialBanner } from './TrialBanner';
 import { AIAssistant } from './AIAssistant';
+import { PublicAIAssistant } from './PublicAIAssistant';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
 
@@ -316,6 +317,9 @@ export const PublicLayout: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Persistence for Public Chat */}
+            <PublicAIAssistant />
 
             <div className={!isBrokerPage ? "pt-[73px]" : ""}>
                 <Outlet />
