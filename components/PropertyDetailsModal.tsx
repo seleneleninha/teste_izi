@@ -3,6 +3,7 @@ import { X, MapPin, Bed, Bath, Car, Square, Share2, MessageCircle, ChevronLeft, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
 import { getPropertyUrl } from '../lib/propertyHelpers';
+import { generateWhatsAppLink, formatPropertyMessage, trackWhatsAppClick } from '../lib/whatsAppHelper';
 import { useAuth } from './AuthContext';
 
 interface PropertyDetailsModalProps {
@@ -46,48 +47,36 @@ export const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({ prop
     const [[page, direction], setPage] = useState([0, 0]);
 
     // Direct WhatsApp Partnership Contact - Check Availability with Property Owner
-    const handleDirectWhatsApp = () => {
-        if (!property || !user) return;
+    const handleDirectWhatsApp = async () => {
+        if (!property) return;
 
         // Owner Data
         const ownerName = property.perfis?.nome || 'Corretor(a)';
         const ownerPhone = property.perfis?.whatsapp || '';
+        const ownerId = property.perfis?.id;
 
         if (!ownerPhone) {
             alert('O WhatsApp do dono do anúncio não está disponível.');
             return;
         }
 
-        // Property Link (Smart Link using owner's slug)
-        const ownerSlug = property.perfis?.slug;
-        const propertyUrl = getPropertyUrl({
-            ...property,
-            tipo_imovel: property.tipo_imovel?.tipo || property.tipo_imovel,
-            operacao: property.operacao?.tipo || property.operacao
-        }, ownerSlug);
+        // Track click
+        if (ownerId && property.id) {
+            await trackWhatsAppClick(ownerId, property.id, 'interest_modal');
+        }
 
-        // Current User Name (fetched in state)
-        const myName = currentUserName || 'Corretor(a) Parceiro(a)';
+        // Generate message
+        const message = formatPropertyMessage({
+            property: property,
+            brokerName: ownerName,
+            template: 'availability'
+        });
 
-        // Format the message with suggested responses
-        const message = `Olá *${ownerName}*, sou *${myName}* Corretor(a) parceiro(a) da iziBrokerz, tudo bem?
+        const whatsappUrl = generateWhatsAppLink({
+            phone: ownerPhone,
+            message: message
+        });
 
-Tenho um Cliente interessado no imóvel: ${propertyUrl}
-
-Gostaria de saber se ainda está disponível e confirmar o(s) valor(es).
-
-Fico no aguardo de sua resposta para agendarmos uma visita e fecharmos essa parceria, ok?
-
----
-💡 *Respostas Rápidas (responda com 1, 2 ou 3):*
-
-1 - ✅ _"Sim, está disponível! Vamos agendar uma visita."_
-
-2 - ⏳ _"Preciso verificar com o(a) Proprietário(a). Já já te confirmo."_
-
-3 - ❌ _"Infelizmente o imóvel já foi vendido/alugado. Vou inativar o anúncio."_`;
-
-        const whatsappUrl = `https://wa.me/55${ownerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
     };
 

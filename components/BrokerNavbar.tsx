@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Home, Search, MessageCircle, Share2, ArrowLeft, History, PersonStandingIcon, User, LogIn } from 'lucide-react';
 import { useTheme } from './ThemeContext';
 import { supabase } from '../lib/supabaseClient';
+import { generateWhatsAppLink, trackWhatsAppClick } from '../lib/whatsAppHelper';
 import { LoginModal } from './LoginModal';
 
 interface BrokerNavbarProps {
@@ -107,14 +108,27 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
                         </Link>
 
                         {/* WhatsApp Button - Inline */}
-                        <a
-                            href={`https://wa.me/55${broker.whatsapp.replace(/\D/g, '')}`}
+                        {/* WhatsApp Button - Inline */}
+                        <button
+                            onClick={() => {
+                                if (broker) {
+                                    // Track click (general contact)
+                                    trackWhatsAppClick(broker.id, 'general_navbar', 'contact');
+
+                                    const message = `Olá ${broker.nome}! Vi seu perfil na iziBrokerz e gostaria de conversar.`;
+                                    const whatsappUrl = generateWhatsAppLink({
+                                        phone: broker.whatsapp,
+                                        message: message
+                                    });
+                                    window.open(whatsappUrl, '_blank');
+                                }
+                            }}
                             className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-full transition-all text-white font-medium shadow-lg shadow-emerald-500/30 hover:scale-105"
-                            title="WhatsApp"
+                            title="Fale Comigo"
                         >
                             <MessageCircle size={18} />
-                            <span>WhatsApp</span>
-                        </a>
+                            <span>Fale Comigo</span>
+                        </button>
 
                         {/* Login Button - Inline */}
                         <button
@@ -177,14 +191,26 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
                             </Link>
 
                             {/* WhatsApp Button - Inline */}
-                            <a
-                                href={`https://wa.me/55${broker.whatsapp.replace(/\D/g, '')}`}
+                            <button
+                                onClick={() => {
+                                    if (broker) {
+                                        // Track click (general contact)
+                                        trackWhatsAppClick(broker.id, 'general_navbar_mobile', 'contact');
+
+                                        const message = `Olá ${broker.nome}! Vi seu perfil na iziBrokerz e gostaria de conversar.`;
+                                        const whatsappUrl = generateWhatsAppLink({
+                                            phone: broker.whatsapp,
+                                            message: message
+                                        });
+                                        window.open(whatsappUrl, '_blank');
+                                    }
+                                }}
                                 className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-full transition-all text-white font-bold shadow-lg shadow-emerald-500/30 hover:scale-105"
-                                title="WhatsApp"
+                                title="Fale Comigo"
                             >
                                 <MessageCircle size={18} />
-                                <span>WhatsApp</span>
-                            </a>
+                                <span>Fale Comigo</span>
+                            </button>
                             {/* Login Button - Inline */}
                             <button
                                 onClick={() => setShowLoginModal(true)}

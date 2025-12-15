@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, Bed, Bath, Car, MapPin, Home, Share2, Heart, Phone, Mail, Calendar, ChevronLeft, ChevronRight, Check, Compass, Coffee, GraduationCap, ShieldCheck, Square, User, Search, LayoutGrid, List, Map, HomeIcon, SearchCode, SearchIcon, MessageCircle, X, PlayCircle, Video, CheckCircle, Handshake, Sparkles, AreaChart } from 'lucide-react';
+import { generateWhatsAppLink, formatPropertyMessage, trackWhatsAppClick } from '../lib/whatsAppHelper';
 import { HorizontalScroll } from '../components/HorizontalScroll';
 import { ScheduleVisitModal } from '../components/ScheduleVisitModal';
 import { PropertyCard } from '../components/PropertyCard';
@@ -975,14 +976,35 @@ export const PropertyDetails: React.FC = () => {
                                     >
                                         <SearchIcon size={18} className="mr-2" />+ Imóveis Desse Corretor
                                     </button>
-                                    <a
-                                        href={`https://wa.me/${property.agent.phone.replace(/\D/g, '')}?text=Olá, gostaria de mais informações sobre o imóvel: ${property.title}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                    <button
+                                        onClick={() => {
+                                            // Track click
+                                            trackWhatsAppClick(property.agent.id, property.id, 'interest');
+
+                                            // Generate link with rich message
+                                            const message = formatPropertyMessage({
+                                                property: property,
+                                                brokerName: property.agent.name,
+                                                template: 'interest'
+                                            });
+
+                                            // Handle phone number (might need to ensure country code)
+                                            const phone = property.agent.phone.startsWith('55')
+                                                ? property.agent.phone
+                                                : property.agent.phone; // Helper handles clean up, but assuming 55 if length is small might be good logic to add inside helper if needed. 
+                                            // Actually helper assumes 55 in generateWhatsAppLink url construction.
+
+                                            const whatsappUrl = generateWhatsAppLink({
+                                                phone: property.agent.phone,
+                                                message: message
+                                            });
+
+                                            window.open(whatsappUrl, '_blank');
+                                        }}
                                         className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-full transition-colors shadow-lg shadow-emerald-500/30 flex items-center justify-center"
                                     >
-                                        <MessageCircle size={18} className="mr-2" /> WhatsApp
-                                    </a>
+                                        <MessageCircle size={18} className="mr-2" />Tenho Interesse
+                                    </button>
 
                                     <button
                                         onClick={handleScheduleClick}

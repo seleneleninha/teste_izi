@@ -152,10 +152,10 @@ export const PartnerPage: React.FC = () => {
             </section>
 
             {/* Partners Carousel */}
-            <PartnersCarousel bgColor="bg-slate-900" />
+            <PartnersCarousel bgColor="bg-midnight-950" />
 
             {/* Stats Section */}
-            <section className="py-4 bg-emerald-50 bg-slate-800/50 border-y border-emerald-100 border-slate-700">
+            <section className="py-4 bg-midnight-800">
                 <div className="container mx-auto px-10">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                         <div className="p-4">
@@ -243,8 +243,8 @@ export const PartnerPage: React.FC = () => {
                         </p>
 
                         {/* Free Trial CTA moved here */}
-                        <div className="bg-emerald-500/40 p-4 rounded-full border border-emerald-100 border-slate-700 max-w-xl mx-auto mb-8 cursor-pointer hover:shadow-md transition-shadow animate-pulse" onClick={() => navigate('/login?register=true')}>
-                            <h4 className="font-bold text-emerald-700 text-emerald-400 mb-1 flex items-center justify-center gap-2">
+                        <div className="bg-emerald-500/40 p-4 rounded-full border-2 border-emerald-500 border-slate-700 max-w-xl mx-auto mb-8 cursor-pointer hover:shadow-md transition-shadow animate-pulse" onClick={() => navigate('/login?register=true')}>
+                            <h4 className="font-bold text-yellow-400 mb-1 flex items-center justify-center gap-2">
                                 <Star className="text-yellow-400 fill-yellow-400" size={28} />
                                 <p className="text-center text-lg">TESTE GRÁTIS POR 14 DIAS</p>
                             </h4>

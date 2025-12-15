@@ -444,7 +444,7 @@ export const BrokerPage: React.FC = () => {
                                             <span className="text-3xl font-heading font-black text-white leading-none">
                                                 {categoryCounts[`city_${city}`]}
                                             </span>
-                                            <span className="text-xs tracking-wider text-emerald-400 font-bold mt-1">
+                                            <span className="text-xs tracking-wider text-white font-bold mt-1">
                                                 {categoryCounts[`city_${city}`] === 1 ? 'opção' : 'opções'}
                                             </span>
                                         </div>

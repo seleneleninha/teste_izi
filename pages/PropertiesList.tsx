@@ -480,7 +480,7 @@ export const PropertiesList: React.FC = () => {
                                     </button>
                                 </div>
 
-                                {user && (
+                                {user && isDashboardRoute && (
                                     <button
                                         onClick={() => navigate('/add-property')}
                                         className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full transition-colors font-medium shadow-sm whitespace-nowrap"

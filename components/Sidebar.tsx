@@ -59,7 +59,15 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
     navigate('/login');
   };
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path.includes('?')) {
+      return location.pathname + location.search === path;
+    }
+    if (path === '/properties') {
+      return location.pathname === '/properties' && !location.search.includes('mode=market');
+    }
+    return location.pathname === path;
+  };
 
   const isAdmin = role === 'Admin' || role === 'admin';
   const isClient = role === 'Cliente';

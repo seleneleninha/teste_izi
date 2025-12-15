@@ -559,7 +559,7 @@ export const PartnerProperties: React.FC = () => {
                         {viewMode === 'list' && (
                             <div className="bg-slate-800 rounded-3xl shadow-sm border border-slate-700 overflow-hidden">
                                 <div className="overflow-x-auto">
-                                    <table className="w-full">
+                                    <table className="w-full min-w-[1000px]">
                                         <thead className="bg-slate-700/50">
                                             <tr>
                                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('tipo_imovel')}>Tipo</th>

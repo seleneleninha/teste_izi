@@ -234,7 +234,7 @@ export const PublicLayout: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50 bg-midnight-950 text-white overflow-x-hidden">
             {!isBrokerPage && (
-                <nav className="border-b border-slate-800 px-6 py-4 flex justify-between items-center fixed top-0 w-full bg-white/90 bg-slate-900/90 backdrop-blur-md z-50 transition-all duration-300">
+                <nav className="border-b border-slate-800 px-6 py-4 flex justify-between items-center fixed top-0 w-full bg-midnight-950/90 backdrop-blur-md z-50 transition-all duration-300">
                     {/* Logo - Conditional: Broker or Platform */}
                     {isBrokerPage && brokerLogo ? (
                         <div className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.location.href = `#/corretor/${brokerSlug}`}>
@@ -295,7 +295,7 @@ export const PublicLayout: React.FC = () => {
 
             {/* Mobile Menu */}
             {mobileMenuOpen && (
-                <div className="md:hidden fixed top-[73px] w-auto right-0 bg-white/90 bg-slate-900/90 border-b border-slate-800 z-40 shadow-lg rounded-bl-3xl">
+                <div className="md:hidden fixed top-[73px] w-auto right-0 bg-midnight-950/90 border-b border-slate-800 z-40 shadow-lg rounded-bl-3xl">
                     <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
                         {isBrokerPage ? (
                             <>
