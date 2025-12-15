@@ -773,7 +773,7 @@ export const AddProperty: React.FC = () => {
                             <h3 className="text-lg font-bold text-red-200 mb-2">
                                 Atenção: Este anúncio foi reprovado
                             </h3>
-                            <div className="bg-slate-800 p-4 rounded-lg border border-red-900/30 mb-4">
+                            <div className="bg-slate-800 p-4 rounded-full border border-red-900/30 mb-4">
                                 <p className="font-bold text-red-300 mb-1">Motivo da Reprovação:</p>
                                 <p className="text-gray-300 whitespace-pre-line">
                                     {rejectionData.reason}
@@ -855,7 +855,7 @@ export const AddProperty: React.FC = () => {
             </div>
 
             {/* Form Content */}
-            <div className="bg-slate-800 rounded-2xl p-6 md:p-8 shadow-lg border border-gray-200 dark:border-slate-700 min-h-[450px] animate-in fade-in duration-300">
+            <div className="bg-slate-800 rounded-full p-6 md:p-8 shadow-lg border border-slate-700 min-h-[450px] animate-in fade-in duration-300">
 
                 {/* STEP 1: LOCALIZAÇÃO E DADOS BÁSICOS */}
                 {step === 1 && (
@@ -868,7 +868,7 @@ export const AddProperty: React.FC = () => {
                                     name="title"
                                     value={formData.title}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                    className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                     placeholder="Ex: Lindo Apartamento no Centro com Vista Mar"
                                 />
                             </div>
@@ -879,7 +879,7 @@ export const AddProperty: React.FC = () => {
                                     name="operacaoId"
                                     value={formData.operacaoId}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 pr-10 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                                    className="w-full px-4 py-3 pr-10 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
                                 >
                                     <option value="">Selecione...</option>
                                     {operacoes.map(op => (
@@ -894,14 +894,14 @@ export const AddProperty: React.FC = () => {
                                     name="tipoImovelId"
                                     value={formData.tipoImovelId}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 pr-10 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                                    className="w-full px-4 py-3 pr-10 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
                                 >
                                     <option value="">Selecione...</option>
                                     {tiposDisponiveis.map(tipo => (
                                         <option key={tipo.id} value={tipo.id}>{tipo.tipo}</option>
                                     ))}
                                 </select>
-                                {isTemporada && <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">🏖️ Tipos disponíveis para Temporada</p>}
+                                {isTemporada && <p className="text-xs text-emerald-600 text-emerald-400 mt-1">🏖️ Tipos disponíveis para Temporada</p>}
                             </div>
 
                             {/* Subtipo - Hidden for Temporada */}
@@ -912,7 +912,7 @@ export const AddProperty: React.FC = () => {
                                         name="subtipoImovelId"
                                         value={formData.subtipoImovelId}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 pr-10 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                                        className="w-full px-4 py-3 pr-10 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
                                     >
                                         <option value="">Selecione...</option>
                                         {subtiposImovel
@@ -941,7 +941,7 @@ export const AddProperty: React.FC = () => {
                                             onChange={handleInputChange}
                                             onBlur={handleCepBlur}
                                             maxLength={9}
-                                            className={`w-full px-4 py-3 rounded-xl bg-slate-900 border focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all ${cepError ? 'border-red-500' : 'border-slate-600'}`}
+                                            className={`w-full px-4 py-3 rounded-full bg-slate-900 border focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all ${cepError ? 'border-red-500' : 'border-slate-600'}`}
                                             placeholder="00000-000"
                                         />
                                         {isLoadingCep && <Loader2 className="absolute right-3 top-3.5 animate-spin text-primary-500" size={18} />}
@@ -956,7 +956,7 @@ export const AddProperty: React.FC = () => {
                                         name="address"
                                         value={formData.address}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="Rua, Avenida..."
                                     />
                                 </div>
@@ -968,7 +968,7 @@ export const AddProperty: React.FC = () => {
                                         name="number"
                                         value={formData.number}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="123"
                                     />
                                 </div>
@@ -980,7 +980,7 @@ export const AddProperty: React.FC = () => {
                                         name="complement"
                                         value={formData.complement}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="Apto 101"
                                     />
                                 </div>
@@ -992,7 +992,7 @@ export const AddProperty: React.FC = () => {
                                         name="neighborhood"
                                         value={formData.neighborhood}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                     />
                                 </div>
 
@@ -1003,7 +1003,7 @@ export const AddProperty: React.FC = () => {
                                         name="city"
                                         value={formData.city}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                     />
                                 </div>
 
@@ -1015,14 +1015,14 @@ export const AddProperty: React.FC = () => {
                                         value={formData.state}
                                         onChange={handleInputChange}
                                         maxLength={2}
-                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all uppercase"
+                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all uppercase"
                                     />
                                 </div>
                             </div>
 
                             {/* Manual Geocoding Test Button (if automatic fails) */}
                             {formData.city && !formData.latitude && (
-                                <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+                                <div className="mt-4 p-4 bg-amber-50 bg-amber-900/20 border border-amber-200 border-amber-800 rounded-full">
                                     <p className="text-sm text-amber-200 mb-3">
                                         <strong>⚠️ Buscando coordenadas automaticamente, um momento...</strong><br />
                                         Clique no botão abaixo para tentar buscar manualmente:
@@ -1062,7 +1062,7 @@ export const AddProperty: React.FC = () => {
                                             }
                                         }}
                                         disabled={isLoadingCep}
-                                        className="w-full px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center disabled:opacity-50"
+                                        className="w-full px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-full font-medium transition-colors flex items-center justify-center disabled:opacity-50"
                                     >
                                         {isLoadingCep ? (
                                             <>
@@ -1081,7 +1081,7 @@ export const AddProperty: React.FC = () => {
 
                             {/* Coordinate Info */}
                             {formData.latitude && formData.longitude && (
-                                <div className="mt-4 p-3 bg-emerald-900/20 border-emerald-800 rounded-lg flex items-center text-sm text-emerald-300">
+                                <div className="mt-4 p-3 bg-emerald-900/20 border-emerald-800 rounded-full flex items-center text-sm text-emerald-300">
                                     <MapPin size={16} className="mr-2 flex-shrink-0" />
                                     <div>
                                         <strong>Coordenadas localizadas:</strong><br />
@@ -1121,7 +1121,7 @@ export const AddProperty: React.FC = () => {
                             )}
 
                             {formData.latitude && (
-                                <div className="mt-4 p-3 bg-blue-900/20 border-blue-900/30 rounded-lg flex items-center text-sm text-blue-300">
+                                <div className="mt-4 p-3 bg-blue-900/20 border-blue-900/30 rounded-full flex items-center text-sm text-blue-300">
                                     <MapPin size={16} className="mr-2" />
                                     Coordenadas localizadas: {formData.latitude}, {formData.longitude}
                                 </div>
@@ -1140,27 +1140,27 @@ export const AddProperty: React.FC = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Quartos</label>
-                                <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Suítes</label>
-                                <input type="number" name="suites" value={formData.suites} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="number" name="suites" value={formData.suites} onChange={handleInputChange} className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Banheiros</label>
-                                <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Vagas</label>
-                                <input type="number" name="garage" value={formData.garage} onChange={handleInputChange} className="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="number" name="garage" value={formData.garage} onChange={handleInputChange} className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Área Privativa (m²) <span className="text-red-500">*</span></label>
-                                <input type="text" inputMode="numeric" name="privateArea" value={formData.privateArea} onChange={handleInputChange} placeholder="120" className="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="text" inputMode="numeric" name="privateArea" value={formData.privateArea} onChange={handleInputChange} placeholder="120" className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Área Total (m²)</label>
-                                <input type="text" inputMode="numeric" name="totalArea" value={formData.totalArea} onChange={handleInputChange} placeholder="150" className="w-full px-4 py-2 rounded-xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="text" inputMode="numeric" name="totalArea" value={formData.totalArea} onChange={handleInputChange} placeholder="150" className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                         </div>
 
@@ -1168,7 +1168,7 @@ export const AddProperty: React.FC = () => {
                             <label className="block text-sm font-bold text-gray-300 mb-3">Comodidades e Infraestrutura</label>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 {availableFeatures.map(feature => (
-                                    <label key={feature.id} className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${formData.features.includes(feature.nome) ? 'bg-primary-900/20 border-primary-500 text-primary-300' : 'border-slate-700 hover:bg-slate-700'}`}>
+                                    <label key={feature.id} className={`flex items-center p-3 rounded-full border cursor-pointer transition-all ${formData.features.includes(feature.nome) ? 'bg-primary-900/20 border-primary-500 text-primary-300' : 'border-slate-700 hover:bg-slate-700'}`}>
                                         <input
                                             type="checkbox"
                                             className="hidden"
@@ -1190,7 +1190,7 @@ export const AddProperty: React.FC = () => {
                                 <button
                                     onClick={generateDescription}
                                     disabled={isGeneratingDesc}
-                                    className="flex items-center text-xs px-3 py-1.5 bg-blue-900/30 text-blue-400 rounded-lg hover:bg-blue-900/50 transition-colors"
+                                    className="flex items-center text-xs px-3 py-1.5 bg-blue-900/30 text-blue-400 rounded-full hover:bg-blue-900/50 transition-colors"
                                 >
                                     {isGeneratingDesc ? <Loader2 size={14} className="animate-spin mr-1.5" /> : <Wand2 size={14} className="mr-1.5" />}
                                     Gerar Texto Inteligente
@@ -1200,7 +1200,7 @@ export const AddProperty: React.FC = () => {
                                 name="description"
                                 value={formData.description}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-40 resize-none transition-all text-sm leading-relaxed"
+                                className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-40 resize-none transition-all text-sm leading-relaxed"
                                 placeholder="Descreva os pontos fortes do imóvel..."
                             ></textarea>
 
@@ -1213,9 +1213,9 @@ export const AddProperty: React.FC = () => {
                                             key={idx}
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, description: desc }))}
-                                            className={`w-full text-left p-4 rounded-lg border-2 transition-all ${formData.description === desc
-                                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                                                : 'border-gray-200 dark:border-slate-700 hover:border-primary-700'
+                                            className={`w-full text-left p-4 rounded-full border-2 transition-all ${formData.description === desc
+                                                ? 'border-primary-500 bg-primary-50 bg-primary-900/20'
+                                                : 'border-slate-700 hover:border-primary-700'
                                                 }`}
                                         >
                                             <div className="flex items-start">
@@ -1259,7 +1259,7 @@ export const AddProperty: React.FC = () => {
                                                                 name="valorDiaria"
                                                                 value={formData.valorDiaria}
                                                                 onChange={handleInputChange}
-                                                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
+                                                                className="w-full pl-10 pr-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
                                                                 placeholder="500,00"
                                                             />
                                                         </div>
@@ -1273,7 +1273,7 @@ export const AddProperty: React.FC = () => {
                                                                 name="valorMensal"
                                                                 value={formData.valorMensal}
                                                                 onChange={handleInputChange}
-                                                                className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
+                                                                className="w-full pl-10 pr-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
                                                                 placeholder="8.000,00"
                                                             />
                                                         </div>
@@ -1293,7 +1293,7 @@ export const AddProperty: React.FC = () => {
                                                             name="salePrice"
                                                             value={formData.salePrice}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
+                                                            className="w-full pl-10 pr-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
                                                             placeholder="1.000.000,00"
                                                         />
                                                     </div>
@@ -1311,7 +1311,7 @@ export const AddProperty: React.FC = () => {
                                                             name="rentPrice"
                                                             value={formData.rentPrice}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
+                                                            className="w-full pl-10 pr-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
                                                             placeholder="5.000,00"
                                                         />
                                                     </div>
@@ -1331,7 +1331,7 @@ export const AddProperty: React.FC = () => {
                                                             name="condoFee"
                                                             value={formData.condoFee}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
+                                                            className="w-full pl-10 pr-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
                                                             placeholder="800,00"
                                                         />
                                                     </div>
@@ -1348,7 +1348,7 @@ export const AddProperty: React.FC = () => {
                                                             name="iptu"
                                                             value={formData.iptu}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
+                                                            className="w-full pl-10 pr-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
                                                             placeholder="2.500,00"
                                                         />
                                                     </div>
@@ -1364,7 +1364,7 @@ export const AddProperty: React.FC = () => {
                                                             onChange={(e) => setFormData(prev => ({ ...prev, taxasInclusas: e.target.checked }))}
                                                             className="sr-only peer"
                                                         />
-                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-500"></div>
+                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
                                                         <span className="ml-3 text-sm font-medium text-gray-300">
                                                             Taxas inclusas no valor?
                                                         </span>
@@ -1381,7 +1381,7 @@ export const AddProperty: React.FC = () => {
                                                             onChange={(e) => setFormData(prev => ({ ...prev, aceitaFinanciamento: e.target.checked }))}
                                                             className="sr-only peer"
                                                         />
-                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-500"></div>
+                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
                                                         <span className="ml-3 text-sm font-medium text-gray-300">
                                                             Aceita Financiamento?
                                                         </span>
@@ -1391,7 +1391,7 @@ export const AddProperty: React.FC = () => {
 
                                             {/* Temporada info box */}
                                             {isTemporada && (
-                                                <div className="p-4 bg-emerald-900/20 border-emerald-900/50 rounded-xl">
+                                                <div className="p-4 bg-emerald-900/20 border-emerald-900/50 rounded-full">
                                                     <p className="text-sm text-emerald-300">
                                                         🏖️ <strong>Imóvel para Temporada</strong><br />
                                                         O valor da diária será exibido no anúncio. Se houver valor mensal, também será mostrado como opção para estadias longas.
@@ -1405,7 +1405,7 @@ export const AddProperty: React.FC = () => {
                         </div>
 
                         {/* Partnership Field */}
-                        <div className="mt-8 p-6 bg-slate-900/50 border-slate-700 rounded-xl">
+                        <div className="mt-8 p-6 bg-slate-900/50 border-slate-700 rounded-full">
                             <div className="flex items-center justify-between mb-4">
                                 <div>
                                     <h4 className="text-lg font-bold text-white">Aceita Parceria neste Imóvel?</h4>
@@ -1418,8 +1418,8 @@ export const AddProperty: React.FC = () => {
                                         onChange={(e) => setFormData(prev => ({ ...prev, aceitaParceria: e.target.checked }))}
                                         className="sr-only peer"
                                     />
-                                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-primary-500"></div>
-                                    <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
+                                    <span className="ml-3 text-sm font-medium text-gray-300">
                                         {formData.aceitaParceria ? 'SIM' : 'NÃO'}
                                     </span>
                                 </label>
@@ -1438,7 +1438,7 @@ export const AddProperty: React.FC = () => {
                             )}
                         </div>
 
-                        <div className="mt-8 p-4 bg-yellow-900/20 border-yellow-900/30 rounded-xl flex items-start justify-between items-center bg-slate-800 shadow-sm">
+                        <div className="mt-8 p-4 bg-yellow-900/20 border-yellow-900/30 rounded-full flex items-start justify-between items-center bg-slate-800 shadow-sm">
                             <div className="flex items-start">
                                 <Info className="text-yellow-400 mt-0.5 mr-3 shrink-0" />
                                 <div>
@@ -1459,7 +1459,7 @@ export const AddProperty: React.FC = () => {
                                 type="button"
                                 onClick={handleEvaluatePrice}
                                 disabled={isEvaluating}
-                                className="ml-4 px-4 py-2 bg-yellow-900/40 text-yellow-300 text-sm font-bold rounded-lg hover:bg-yellow-900 transition-colors flex items-center whitespace-nowrap border-yellow-700"
+                                className="ml-4 px-4 py-2 bg-yellow-900/40 text-yellow-300 text-sm font-bold rounded-full hover:bg-yellow-900 transition-colors flex items-center whitespace-nowrap border-yellow-700"
                             >
                                 {isEvaluating ? <Loader2 size={16} className="animate-spin mr-2" /> : <Sparkles size={16} className="mr-2" />}
                                 {isEvaluating ? 'Avaliando...' : 'Avaliar'}
@@ -1473,7 +1473,7 @@ export const AddProperty: React.FC = () => {
                     <div>
                         <h3 className="text-xl font-bold text-white mb-6">Galeria de Imagens</h3>
 
-                        <label className="border-2 border-dashed border-slate-600 hover:border-primary-500 bg-slate-900/50 rounded-2xl p-10 text-center mb-8 cursor-pointer transition-colors group block">
+                        <label className="border-2 border-dashed border-slate-600 hover:border-primary-500 bg-slate-900/50 rounded-full p-10 text-center mb-8 cursor-pointer transition-colors group block">
                             <input
                                 type="file"
                                 multiple
@@ -1493,7 +1493,7 @@ export const AddProperty: React.FC = () => {
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                             {images.map((img, idx) => (
-                                <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700 relative group shadow-sm">
+                                <div key={idx} className="aspect-square rounded-full overflow-hidden border border-slate-700 relative group shadow-sm">
                                     <img src={img} className="w-full h-full object-cover" alt="preview" />
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <button
@@ -1521,7 +1521,7 @@ export const AddProperty: React.FC = () => {
                                         name="videoUrl"
                                         value={formData.videoUrl}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="https://youtube.com/watch?v=..."
                                     />
                                 </div>
@@ -1539,7 +1539,7 @@ export const AddProperty: React.FC = () => {
                                         />
                                         <label
                                             htmlFor="tour-upload"
-                                            className={`flex items-center justify-center w-full px-4 py-3 rounded-xl border-2 border-dashed cursor-pointer transition-all ${formData.tourVirtualUrl
+                                            className={`flex items-center justify-center w-full px-4 py-3 rounded-full border-2 border-dashed cursor-pointer transition-all ${formData.tourVirtualUrl
                                                 ? 'border-green-500 bg-green-900/20 text-green-400'
                                                 : 'border-slate-600 bg-slate-900 hover:border-primary-500'
                                                 }`}
@@ -1555,7 +1555,7 @@ export const AddProperty: React.FC = () => {
                                         </label>
                                     </div>
                                     {formData.tourVirtualUrl && (
-                                        <p className="text-xs text-green-600 dark:text-green-400 mt-1 truncate">
+                                        <p className="text-xs text-green-600 text-green-400 mt-1 truncate">
                                             URL: {formData.tourVirtualUrl}
                                         </p>
                                     )}
@@ -1570,7 +1570,7 @@ export const AddProperty: React.FC = () => {
                                 name="observacoes"
                                 value={formData.observacoes}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-24 resize-none transition-all text-sm leading-relaxed"
+                                className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-24 resize-none transition-all text-sm leading-relaxed"
                                 placeholder="Informações adicionais sobre o imóvel que não constam no formulário..."
                             ></textarea>
                             <p className="text-xs text-slate-400 mt-1">💡 Este campo será exibido publicamente no anúncio.</p>
@@ -1583,7 +1583,7 @@ export const AddProperty: React.FC = () => {
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
                                     {detectedTags.map((tag, idx) => (
-                                        <span key={idx} className="px-3 py-1.5 bg-slate-800 text-sm font-medium text-gray-300 rounded-full border border-indigo-200 dark:border-indigo-800 flex items-center shadow-sm">
+                                        <span key={idx} className="px-3 py-1.5 bg-slate-800 text-sm font-medium text-gray-300 rounded-full border border-indigo-200 border-indigo-800 flex items-center shadow-sm">
                                             <Tag size={12} className="mr-1.5 text-indigo-500" /> {tag}
                                         </span>
                                     ))}
@@ -1621,7 +1621,7 @@ export const AddProperty: React.FC = () => {
                                     formData.neighborhood;
 
                                 return (
-                                    <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
+                                    <div className={`p-4 rounded-full border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
                                         <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-amber-900/30 text-amber-400'}`}>
                                             {isValid ? <Check size={16} /> : <AlertTriangle size={16} />}
                                         </div>
@@ -1644,7 +1644,7 @@ export const AddProperty: React.FC = () => {
                             {(() => {
                                 const isValid = formData.description && formData.description.length > 10;
                                 return (
-                                    <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-blue-900/10 border-blue-800'}`}>
+                                    <div className={`p-4 rounded-full border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-blue-900/10 border-blue-800'}`}>
                                         <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-blue-900/30 text-blue-400'}`}>
                                             {isValid ? <Check size={16} /> : <Info size={16} />}
                                         </div>
@@ -1685,7 +1685,7 @@ export const AddProperty: React.FC = () => {
                                 }
 
                                 return (
-                                    <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
+                                    <div className={`p-4 rounded-full border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
                                         <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-amber-900/30 text-amber-400'}`}>
                                             {isValid ? <Check size={16} /> : <AlertTriangle size={16} />}
                                         </div>
@@ -1708,7 +1708,7 @@ export const AddProperty: React.FC = () => {
                             {(() => {
                                 const isValid = images.length >= 1; // Require at least 1 photo
                                 return (
-                                    <div className={`p-4 rounded-xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-red-900/10 border-red-800'}`}>
+                                    <div className={`p-4 rounded-full border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-red-900/10 border-red-800'}`}>
                                         <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
                                             {isValid ? <Check size={16} /> : <AlertCircle size={16} />}
                                         </div>
@@ -1757,7 +1757,7 @@ export const AddProperty: React.FC = () => {
                                         onClick={handleSubmit}
                                         disabled={!isFormValid || loading}
                                         className={`
-                                           px-12 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all
+                                           px-12 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all
                                            ${isFormValid
                                                 ? 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white transform hover:scale-105'
                                                 : 'bg-slate-700 text-gray-500 cursor-not-allowed'}
@@ -1788,14 +1788,14 @@ export const AddProperty: React.FC = () => {
                         <div className="flex justify-between mt-8">
                             <button
                                 onClick={() => step > 1 ? changeStep(step - 1) : navigate('/dashboard')}
-                                className="px-6 py-3 rounded-xl bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-200 font-medium hover:bg-slate-700 transition-colors"
+                                className="px-6 py-3 rounded-full bg-slate-800 border border-slate-700 text-gray-200 font-medium hover:bg-slate-700 transition-colors"
                             >
                                 {step === 1 ? 'Cancelar' : 'Voltar'}
                             </button>
                             <div className="flex space-x-4">
                                 <button
                                     onClick={() => changeStep(step + 1)}
-                                    className="px-8 py-3 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold transition-all shadow-lg shadow-primary-600/30 flex items-center"
+                                    className="px-8 py-3 rounded-full bg-primary-600 hover:bg-primary-700 text-white font-bold transition-all shadow-lg shadow-primary-600/30 flex items-center"
                                 >
                                     Próxima Etapa
                                     <Check size={18} className="ml-2" />

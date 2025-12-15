@@ -389,15 +389,15 @@ export const PropertiesList: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-50 dark:bg-slate-900 min-h-screen flex flex-col">
+        <div className="bg-slate-900 min-h-screen flex flex-col">
             <div className="container mx-auto px-4 py-8 flex-1">
                 {/* Header Controls */}
                 <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6">
                     <div>
-                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        <h2 className="text-3xl font-bold text-white">
                             {isMyProperties ? 'Meus Imóveis' : isMarketMode ? 'Mercado Imobiliário' : 'Buscar Imóveis'}
                         </h2>
-                        <p className="text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-gray-400 mt-1">
                             {isMyProperties ? 'Gerencie seus anúncios.' : 'Explore oportunidades e parcerias.'}
                         </p>
                     </div>
@@ -408,21 +408,21 @@ export const PropertiesList: React.FC = () => {
                             <select
                                 value={selectedOperation}
                                 onChange={e => setSelectedOperation(e.target.value)}
-                                className="col-span-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
+                                className="col-span-1 bg-slate-800 border border-slate-700 text-sm rounded-full px-3 py-2 text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
                             >
-                                <option value="" className="dark:bg-slate-800">Operação</option>
-                                <option value="venda" className="dark:bg-slate-800">Venda</option>
-                                <option value="locacao" className="dark:bg-slate-800">Locação</option>
-                                <option value="temporada" className="dark:bg-slate-800">Temporada</option>
+                                <option value="" className="bg-slate-800">Operação</option>
+                                <option value="venda" className="bg-slate-800">Venda</option>
+                                <option value="locacao" className="bg-slate-800">Locação</option>
+                                <option value="temporada" className="bg-slate-800">Temporada</option>
                             </select>
                             <select
                                 value={selectedType}
                                 onChange={e => setSelectedType(e.target.value)}
-                                className="col-span-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
+                                className="col-span-1 bg-slate-800 border border-slate-700 text-sm rounded-full lg px-3 py-2 text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
                             >
-                                <option value="" className="dark:bg-slate-800">Tipo</option>
+                                <option value="" className="bg-slate-800">Tipo</option>
                                 {filteredPropertyTypes.map((type, idx) => (
-                                    <option key={idx} value={type.tipo} className="dark:bg-slate-800">
+                                    <option key={idx} value={type.tipo} className="bg-slate-800">
                                         {type.tipo.charAt(0).toUpperCase() + type.tipo.slice(1)}
                                     </option>
                                 ))}
@@ -430,14 +430,14 @@ export const PropertiesList: React.FC = () => {
                             <select
                                 value={selectedPriceRange}
                                 onChange={e => setSelectedPriceRange(e.target.value)}
-                                className="col-span-2 md:w-auto bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm rounded-lg px-3 py-2 text-gray-700 dark:text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
+                                className="col-span-2 md:w-auto bg-slate-800 border border-slate-700 text-sm rounded-full px-3 py-2 text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
                             >
-                                <option value="" className="dark:bg-slate-800">Faixa de Preço</option>
-                                <option value="0-200000" className="dark:bg-slate-800">até R$200mil</option>
-                                <option value="200000-500000" className="dark:bg-slate-800">R$200k - R$500k</option>
-                                <option value="500000-1000000" className="dark:bg-slate-800">R$500k - R$1M</option>
-                                <option value="1000000-2000000" className="dark:bg-slate-800">R$1M - R$2M</option>
-                                <option value="2000000-100000000" className="dark:bg-slate-800">acima de R$2M</option>
+                                <option value="" className="bg-slate-800">Faixa de Preço</option>
+                                <option value="0-200000" className="bg-slate-800">até R$200mil</option>
+                                <option value="200000-500000" className="bg-slate-800">R$200k - R$500k</option>
+                                <option value="500000-1000000" className="bg-slate-800">R$500k - R$1M</option>
+                                <option value="1000000-2000000" className="bg-slate-800">R$1M - R$2M</option>
+                                <option value="2000000-100000000" className="bg-slate-800">acima de R$2M</option>
                             </select>
                         </div>
 
@@ -446,34 +446,34 @@ export const PropertiesList: React.FC = () => {
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => fetchProperties()}
-                                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-full transition-colors shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
                                 >
                                     <Search size={18} />
                                     <span className="hidden sm:inline">Buscar</span>
                                 </button>
                                 <button
                                     onClick={clearFilters}
-                                    className="bg-red-500 dark:bg-red-700 text-white hover:bg-red-600 dark:hover:bg-red-600 font-bold py-2 px-3 rounded-lg transition-colors flex items-center justify-center"
+                                    className="bg-red-500 bg-red-700 text-white hover:bg-red-600 hover:bg-red-600 font-bold py-2 px-3 rounded-full transition-colors flex items-center justify-center"
                                 >
                                     <X size={18} />
                                     <span className="hidden sm:inline">Limpar</span>
                                 </button>
                             </div>
 
-                            <div className="h-8 w-px bg-gray-300 dark:bg-slate-700 hidden md:block mx-1"></div>
+                            <div className="h-8 w-px bg-slate-700 hidden md:block mx-1"></div>
 
                             <div className="flex gap-2">
-                                <div className="flex bg-white dark:bg-slate-800 rounded-lg p-1 border border-gray-200 dark:border-slate-700">
+                                <div className="flex bg-slate-800 rounded-full p-1 border border-slate-700">
                                     <button
                                         onClick={() => setView('grid')}
-                                        className={`p-2 rounded-md transition-all ${view === 'grid' ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
+                                        className={`p-2 rounded-full transition-all ${view === 'grid' ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-500 hover:bg-slate-700'}`}
                                         title="Visualização Horizontal"
                                     >
                                         <Grid size={20} />
                                     </button>
                                     <button
                                         onClick={() => setView('map')}
-                                        className={`p-2 rounded-md transition-all ${view === 'map' ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700'}`}
+                                        className={`p-2 rounded-full transition-all ${view === 'map' ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-500 hover:bg-slate-700'}`}
                                         title="Mapa"
                                     >
                                         <MapIcon size={20} />
@@ -483,7 +483,7 @@ export const PropertiesList: React.FC = () => {
                                 {user && (
                                     <button
                                         onClick={() => navigate('/add-property')}
-                                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors font-medium shadow-sm whitespace-nowrap"
+                                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full transition-colors font-medium shadow-sm whitespace-nowrap"
                                     >
                                         + Anunciar
                                     </button>
@@ -500,7 +500,7 @@ export const PropertiesList: React.FC = () => {
                             <Loader2 className="animate-spin text-emerald-500" size={48} />
                         </div>
                     ) : properties.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+                        <div className="flex flex-col items-center justify-center h-64 text-gray-400">
                             <Search size={48} className="mb-4 opacity-20" />
                             <p className="text-lg font-medium">Nenhum imóvel encontrado.</p>
                             <p className="text-sm">Tente ajustar seus filtros.</p>
@@ -508,7 +508,7 @@ export const PropertiesList: React.FC = () => {
                     ) : (
                         <>
                             {view === 'map' ? (
-                                <div className="h-[400px] rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-700 shadow-lg">
+                                <div className="h-[500px] rounded-3xl overflow-hidden border border-slate-700 shadow-lg">
                                     <PropertyMap properties={properties} />
                                 </div>
                             ) : view === 'grid' ? (
@@ -529,7 +529,7 @@ export const PropertiesList: React.FC = () => {
                                                                         e.stopPropagation();
                                                                         navigate(`/add-property?id=${prop.id}`);
                                                                     }}
-                                                                    className="flex-1 px-3 py-2 bg-yellow-600/10 text-yellow-700 dark:text-yellow-400 rounded-lg text-sm font-medium hover:bg-yellow-600/20 flex items-center justify-center transition-colors"
+                                                                    className="flex-1 px-3 py-2 bg-yellow-600/10 text-yellow-700 text-yellow-400 rounded-full text-sm font-medium hover:bg-yellow-600/20 flex items-center justify-center transition-colors"
                                                                 >
                                                                     <Edit2 size={16} className="mr-1.5" /> Editar
                                                                 </button>
@@ -538,7 +538,7 @@ export const PropertiesList: React.FC = () => {
                                                                         e.stopPropagation();
                                                                         handleDeleteProperty(prop.id);
                                                                     }}
-                                                                    className="flex-1 px-3 py-2 bg-red-600/10 text-red-700 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-600/20 flex items-center justify-center transition-colors"
+                                                                    className="flex-1 px-3 py-2 bg-red-600/10 text-red-700 text-red-400 rounded-full text-sm font-medium hover:bg-red-600/20 flex items-center justify-center transition-colors"
                                                                 >
                                                                     <Trash2 size={16} className="mr-1.5" /> Inativar
                                                                 </button>
@@ -567,7 +567,7 @@ export const PropertiesList: React.FC = () => {
                                                                 e.stopPropagation();
                                                                 navigate(`/add-property?id=${prop.id}`);
                                                             }}
-                                                            className="flex-1 px-3 py-2 bg-yellow-600/10 text-yellow-700 dark:text-yellow-400 rounded-lg text-sm font-medium hover:bg-yellow-600/20 flex items-center justify-center transition-colors"
+                                                            className="flex-1 px-3 py-2 bg-yellow-600/10 text-yellow-700 text-yellow-400 rounded-full text-sm font-medium hover:bg-yellow-600/20 flex items-center justify-center transition-colors"
                                                         >
                                                             <Edit2 size={16} className="mr-1.5" /> Editar
                                                         </button>
@@ -576,7 +576,7 @@ export const PropertiesList: React.FC = () => {
                                                                 e.stopPropagation();
                                                                 handleDeleteProperty(prop.id);
                                                             }}
-                                                            className="flex-1 px-3 py-2 bg-red-600/10 text-red-700 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-600/20 flex items-center justify-center transition-colors"
+                                                            className="flex-1 px-3 py-2 bg-red-600/10 text-red-700 text-red-400 rounded-full text-sm font-medium hover:bg-red-600/20 flex items-center justify-center transition-colors"
                                                         >
                                                             <Trash2 size={16} className="mr-1.5" /> Inativar
                                                         </button>

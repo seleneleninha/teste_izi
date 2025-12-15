@@ -135,8 +135,8 @@ export const AvailabilityCheck: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex flex-col items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-slate-700">
+        <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+            <div className="max-w-md w-full bg-slate-800 rounded-full shadow-xl overflow-hidden border border-slate-700">
                 {/* Header */}
                 <div className="bg-primary-600 p-6 text-white text-center">
                     <h1 className="text-2xl font-bold mb-2">Verificação de Disponibilidade</h1>
@@ -146,16 +146,16 @@ export const AvailabilityCheck: React.FC = () => {
                 </div>
 
                 {/* Property Preview */}
-                <div className="p-6 border-b border-gray-100 dark:border-slate-700">
+                <div className="p-6 border-b border-slate-700">
                     <div className="flex gap-4">
                         <img
                             src={property.fotos ? property.fotos.split(',')[0] : ''}
                             alt={property.titulo}
-                            className="w-20 h-20 rounded-lg object-cover bg-gray-200"
+                            className="w-20 h-20 rounded-full object-cover bg-gray-200"
                         />
                         <div>
-                            <h3 className="font-bold text-gray-900 dark:text-white line-clamp-1">{property.titulo}</h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                            <h3 className="font-bold text-white line-clamp-1">{property.titulo}</h3>
+                            <p className="text-sm text-gray-400 flex items-center gap-1 mt-1">
                                 <MapPin size={14} /> {property.bairro}, {property.cidade}
                             </p>
                             <p className="text-emerald-600 font-bold mt-2">
@@ -169,14 +169,14 @@ export const AvailabilityCheck: React.FC = () => {
                 <div className="p-6 space-y-4">
                     {message.status === 'pendente' || message.status === 'analise' ? (
                         <>
-                            <p className="text-center text-gray-600 dark:text-gray-300 mb-4 font-medium">
+                            <p className="text-center text-gray-300 mb-4 font-medium">
                                 O imóvel ainda está disponível nas condições anunciadas?
                             </p>
 
                             <button
                                 onClick={() => handleResponse('disponivel')}
                                 disabled={processing}
-                                className="w-full p-4 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl flex items-center gap-3 transition-colors group text-left"
+                                className="w-full p-4 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-full flex items-center gap-3 transition-colors group text-left"
                             >
                                 <div className="bg-emerald-500 text-white p-2 rounded-full group-hover:scale-110 transition-transform">
                                     <CheckCircle size={20} />
@@ -190,7 +190,7 @@ export const AvailabilityCheck: React.FC = () => {
                             <button
                                 onClick={() => handleResponse('analise')}
                                 disabled={processing}
-                                className="w-full p-4 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl flex items-center gap-3 transition-colors group text-left"
+                                className="w-full p-4 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-full flex items-center gap-3 transition-colors group text-left"
                             >
                                 <div className="bg-amber-500 text-white p-2 rounded-full group-hover:scale-110 transition-transform">
                                     <Clock size={20} />
@@ -204,7 +204,7 @@ export const AvailabilityCheck: React.FC = () => {
                             <button
                                 onClick={() => handleResponse('indisponivel')}
                                 disabled={processing}
-                                className="w-full p-4 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl flex items-center gap-3 transition-colors group text-left"
+                                className="w-full p-4 bg-red-50 hover:bg-red-100 border border-red-200 rounded-full flex items-center gap-3 transition-colors group text-left"
                             >
                                 <div className="bg-red-500 text-white p-2 rounded-full group-hover:scale-110 transition-transform">
                                     <XCircle size={20} />
@@ -227,7 +227,7 @@ export const AvailabilityCheck: React.FC = () => {
                             <p className="text-gray-500">Você já respondeu a esta solicitação.</p>
                             <button
                                 onClick={() => navigate('/dashboard')}
-                                className="mt-6 px-6 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 font-medium"
+                                className="mt-6 px-6 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-700 font-medium"
                             >
                                 Voltar ao Dashboard
                             </button>
@@ -237,7 +237,7 @@ export const AvailabilityCheck: React.FC = () => {
 
                 {/* Footer */}
                 {(message.status === 'pendente' || message.status === 'analise') && (
-                    <div className="p-4 bg-gray-50 dark:bg-slate-900 border-t border-gray-100 dark:border-slate-700 flex justify-center">
+                    <div className="p-4 bg-slate-900 border-t border-slate-700 flex justify-center">
                         <button
                             onClick={() => navigate(-1)}
                             className="text-gray-500 hover:text-gray-700 text-sm font-medium flex items-center gap-2"

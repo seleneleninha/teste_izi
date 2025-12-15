@@ -6,8 +6,8 @@ export const Privacy: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 p-8">
-            <div className="max-w-3xl mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 md:p-12">
+        <div className="min-h-screen bg-slate-900 p-8">
+            <div className="max-w-3xl mx-auto bg-slate-800 rounded-3xl shadow-xl p-8 md:p-12">
                 <button
                     onClick={() => navigate(-1)}
                     className="flex items-center text-gray-500 hover:text-primary-600 mb-8 transition-colors"
@@ -15,9 +15,9 @@ export const Privacy: React.FC = () => {
                     <ArrowLeft size={20} className="mr-2" /> Voltar
                 </button>
 
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Política de Privacidade</h1>
+                <h1 className="text-3xl font-bold text-white mb-6">Política de Privacidade</h1>
 
-                <div className="prose dark:prose-invert max-w-none text-gray-600 dark:text-slate-300 space-y-4">
+                <div className="prose dark:prose-invert max-w-none text-slate-300 space-y-4">
                     <p>Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
 
                     <h3>1. Coleta de Dados</h3>

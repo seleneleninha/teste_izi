@@ -66,7 +66,7 @@ export const PublicHome: React.FC = () => {
     const fetchCategoryCounts = async () => {
         try {
             // Tipos de imóvel (buscados na tabela tipo_imovel)
-            const propertyTypes = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno', 'Temporada'];
+            const propertyTypes = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno'];
             const counts: Record<string, number> = {};
 
             for (const type of propertyTypes) {
@@ -233,7 +233,7 @@ export const PublicHome: React.FC = () => {
     };
 
     return (
-        <div className="bg-gray-50 dark:bg-midnight-950 text-gray-900 dark:text-white font-sans transition-colors duration-200">
+        <div className="bg-midnight-950 text-white font-sans transition-colors duration-200">
             {/* Hero Section */}
             <section className="relative h-[700px] flex items-center justify-center">
                 <div className="absolute inset-0 z-0">
@@ -250,7 +250,7 @@ export const PublicHome: React.FC = () => {
                         Seu próximo imóvel...<br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 drop-shadow-sm">a Um Clique de Distância</span>
                     </h1>
-                    <p className="text-xl md:text-2xl text-gray-200 mb-12 max-w-3xl mx-auto font-light tracking-wide">
+                    <p className="text-xl md:text-2xl text-gray-200 mb-12 max-w-3xl mx-auto font-medium tracking-wide">
                         A Plataforma que conecta você às melhores oportunidades do mercado imobiliário.
                     </p>
                 </div>
@@ -262,9 +262,7 @@ export const PublicHome: React.FC = () => {
             </div>
 
             {/* Browse by Type Section (Glass Tiles) */}
-            <section className="py-24 bg-midnight-950 relative overflow-hidden">
-                {/* Decorative background blob */}
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+            <section className="py-24 bg-midnight-900 relative overflow-hidden">
 
                 <div className="container mx-auto px-4 relative z-10">
                     <h2 className="text-4xl md:text-5xl font-heading font-bold mb-16 text-white text-center">
@@ -288,15 +286,15 @@ export const PublicHome: React.FC = () => {
                                         navigate(`/search?tipo=${category.type}`);
                                     }
                                 }}
-                                className="group relative h-40 rounded-2xl bg-midnight-900/40 backdrop-blur-sm border border-white/5 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer flex flex-col items-center justify-center gap-3 hover:-translate-y-2 overflow-hidden"
+                                className="group relative h-40 rounded-3xl bg-midnight-900/40 backdrop-blur-sm border border-white/5 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer flex flex-col items-center justify-center gap-3 hover:-translate-y-2 overflow-hidden"
                             >
                                 {/* Hover Gradient Background */}
                                 <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                                 {/* Glow Effect */}
-                                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
+                                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full blur opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
 
-                                <div className="relative z-10 text-gray-400 group-hover:text-emerald-400 transition-colors duration-300 p-3 bg-white/5 rounded-xl group-hover:bg-emerald-500/10 group-hover:scale-110 transform">
+                                <div className="relative z-10 text-gray-400 group-hover:text-emerald-400 transition-colors duration-300 p-3 bg-white/5 rounded-full group-hover:bg-emerald-500/10 group-hover:scale-110 transform">
                                     {category.icon}
                                 </div>
 
@@ -360,7 +358,7 @@ export const PublicHome: React.FC = () => {
             </section>
 
             {/* Cities & Neighborhoods (Destination Cards) */}
-            <section className="py-24 bg-midnight-950 relative">
+            <section className="py-24 bg-midnight-900 relative">
                 <div className="container mx-auto px-4">
                     {/* Cities */}
                     <div className="mb-20">
@@ -394,7 +392,7 @@ export const PublicHome: React.FC = () => {
                                         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
 
                                         {/* Big Count Badge (Instagram Style) */}
-                                        <div className="absolute top-8 left-8 z-20 flex flex-col items-start p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-black/10 group-hover:bg-black/10 transition-colors">
+                                        <div className="absolute top-8 left-8 z-20 flex flex-col items-start p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-black/10 group-hover:bg-black/10 transition-colors">
                                             <span className="text-3xl font-heading font-black text-white leading-none">
                                                 {categoryCounts[`city_${city}`] || Math.floor(Math.random() * 15) + 3}
                                             </span>
@@ -434,7 +432,7 @@ export const PublicHome: React.FC = () => {
                                     {bairro}
                                     {/* Notification Badge Count */}
                                     {categoryCounts[`bairro_${bairro}`] > 0 && (
-                                        <span className="absolute -top-2 -right-2 flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white shadow-sm ring-2 ring-midnight-950 transition-transform duration-300 group-hover:scale-110">
+                                        <span className="absolute -top-2 -right-2 flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white shadow-sm ring-1 ring-white transition-transform duration-300 group-hover:scale-110">
                                             {categoryCounts[`bairro_${bairro}`]}
                                         </span>
                                     )}

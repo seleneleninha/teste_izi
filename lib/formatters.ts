@@ -1,3 +1,4 @@
+
 /**
  * Formatters - Funções de formatação centralizadas
  * @module lib/formatters
@@ -58,4 +59,37 @@ export const formatAreaInput = (value: string | number): string => {
  */
 export const parseAreaInput = (formatted: string): number => {
     return Number(formatted.replace(/\D/g, '')) || 0;
+};
+
+/**
+ * Normaliza string para URL (remove acentos, espaços, caracteres especiais)
+ */
+export const normalizeSlug = (text: string): string => {
+    return text
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove accents
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+};
+
+/**
+ * Gera slug padronizado para imóveis
+ */
+export const generatePropertySlug = (property: any): string => {
+    const tipo = normalizeSlug(property.tipo_imovel?.tipo || property.tipo_imovel || 'imovel');
+    const quartos = property.quartos || 0;
+    const bairro = normalizeSlug(property.bairro || '');
+    const cidade = normalizeSlug(property.cidade || '');
+    const area = property.area_priv || 0;
+
+    let operacao = normalizeSlug(property.operacao?.tipo || property.operacao || '');
+    // Fix common operation names if needed
+    if (operacao === 'venda-locacao' || operacao === 'venda/locacao') operacao = 'venda-e-locacao';
+
+    const valor = property.valor_venda || property.valor_locacao || 0;
+    const garagem = (property.vagas || 0) > 0 ? '-com-garagem' : '';
+    const codigo = property.cod_imovel || property.id;
+
+    return `${tipo}-${quartos}-quartos-${bairro}-${cidade}${garagem}-${area}m2-${operacao}-RS${valor}-cod${codigo}`;
 };

@@ -218,29 +218,29 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
       {isCentered ? (
         // Centered Modal for welcome/completion messages
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 p-8 max-w-2xl w-full animate-in zoom-in-95 fade-in duration-300">
+          <div className="bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 p-8 max-w-2xl w-full animate-in zoom-in-95 fade-in duration-300">
             {/* Header */}
             <div className="flex items-start justify-between mb-6">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs font-bold text-primary-500 bg-primary-100 dark:bg-primary-900/30 px-3 py-1.5 rounded-full">
+                  <span className="text-xs font-bold text-primary-500 bg-primary-100 bg-primary-900/30 px-3 py-1.5 rounded-full">
                     Passo {currentStep + 1} de {steps.length}
                   </span>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h3 className="text-2xl font-bold text-white">
                   {step.title}
                 </h3>
               </div>
               <button
                 onClick={onSkip}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                className="text-gray-400 hover:text-gray-200 transition-colors"
               >
                 <X size={24} />
               </button>
             </div>
 
             {/* Content */}
-            <div className="text-base text-gray-600 dark:text-gray-300 mb-8">
+            <div className="text-base text-gray-300 mb-8">
               {typeof step.content === 'string' ? (
                 <p>{step.content}</p>
               ) : (
@@ -249,7 +249,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
             </div>
 
             {/* Progress bar */}
-            <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 mb-6">
+            <div className="w-full bg-slate-700 rounded-full h-2 mb-6">
               <div
                 className="bg-primary-500 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
@@ -260,7 +260,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
             <div className="flex items-center justify-between">
               <button
                 onClick={onSkip}
-                className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium"
+                className="text-sm text-gray-500 hover:text-gray-300 font-medium"
               >
                 Pular Tour
               </button>
@@ -269,7 +269,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
                 {!isFirstStep && (
                   <button
                     onClick={handlePrev}
-                    className="px-6 py-3 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium flex items-center gap-2"
+                    className="px-6 py-3 border border-slate-600 rounded-full text-gray-300 hover:bg-slate-700 transition-colors font-medium flex items-center gap-2"
                   >
                     <ChevronLeft size={18} />
                     Voltar
@@ -277,7 +277,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
                 )}
                 <button
                   onClick={handleNext}
-                  className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors font-bold flex items-center gap-2 shadow-lg shadow-primary-500/30"
+                  className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-full transition-colors font-bold flex items-center gap-2 shadow-lg shadow-primary-500/30"
                 >
                   {isLastStep ? (
                     <>
@@ -306,17 +306,17 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
               arrowPosition === 'top' ? 'translate(-50%, -100%)' :
                 arrowPosition === 'left' ? 'translate(-100%, -50%)' :
                   'translate(0, -50%)',
-            maxWidth: `${Math.min(450, window.innerWidth - 40)}px`,
+            maxWidth: `${Math.min(100, window.innerWidth - 400)}px`,
             width: '90vw'
           }}
         >
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-700 p-6 relative">
+          <div className="bg-slate-800 rounded-full shadow-2xl border border-slate-700 p-6 relative">
             {/* Arrow */}
             <div
-              className={`absolute w-4 h-4 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rotate-45 ${arrowPosition === 'top' ? '-top-2 left-1/2 -translate-x-1/2 border-b-0 border-r-0' :
-                  arrowPosition === 'bottom' ? '-bottom-2 left-1/2 -translate-x-1/2 border-t-0 border-l-0' :
-                    arrowPosition === 'left' ? '-left-2 top-1/2 -translate-y-1/2 border-t-0 border-r-0' :
-                      '-right-2 top-1/2 -translate-y-1/2 border-b-0 border-l-0'
+              className={`absolute w-4 h-4 bg-slate-800 border border-slate-700 rotate-45 ${arrowPosition === 'top' ? '-top-2 left-1/2 -translate-x-1/2 border-b-0 border-r-0' :
+                arrowPosition === 'bottom' ? '-bottom-2 left-1/2 -translate-x-1/2 border-t-0 border-l-0' :
+                  arrowPosition === 'left' ? '-left-2 top-1/2 -translate-y-1/2 border-t-0 border-r-0' :
+                    '-right-2 top-1/2 -translate-y-1/2 border-b-0 border-l-0'
                 }`}
             />
 
@@ -324,24 +324,24 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold text-primary-500 bg-primary-100 dark:bg-primary-900/30 px-2 py-1 rounded">
+                  <span className="text-xs font-bold text-primary-500 bg-primary-100 bg-primary-900/30 px-2 py-1 rounded">
                     Passo {currentStep + 1} de {steps.length}
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-bold text-white">
                   {step.title}
                 </h3>
               </div>
               <button
                 onClick={onSkip}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors ml-2"
+                className="text-gray-400 hover:text-gray-200 transition-colors ml-2"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Content */}
-            <div className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+            <div className="text-sm text-gray-300 mb-6">
               {typeof step.content === 'string' ? (
                 <p>{step.content}</p>
               ) : (
@@ -350,7 +350,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
             </div>
 
             {/* Progress bar */}
-            <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5 mb-4">
+            <div className="w-full bg-slate-700 rounded-full h-1.5 mb-4">
               <div
                 className="bg-primary-500 h-1.5 rounded-full transition-all duration-300"
                 style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
@@ -361,7 +361,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
             <div className="flex items-center justify-between">
               <button
                 onClick={onSkip}
-                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium"
+                className="text-xs text-gray-500 hover:text-gray-300 font-medium"
               >
                 Pular Tour
               </button>
@@ -370,7 +370,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
                 {!isFirstStep && (
                   <button
                     onClick={handlePrev}
-                    className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium flex items-center gap-1 text-sm"
+                    className="px-4 py-2 border border-slate-600 rounded-full text-gray-300 hover:bg-slate-700 transition-colors font-medium flex items-center gap-1 text-sm"
                   >
                     <ChevronLeft size={16} />
                     Voltar
@@ -378,7 +378,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({
                 )}
                 <button
                   onClick={handleNext}
-                  className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors font-bold flex items-center gap-1 text-sm"
+                  className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-full transition-colors font-bold flex items-center gap-1 text-sm"
                 >
                   {isLastStep ? (
                     <>

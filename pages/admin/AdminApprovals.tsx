@@ -287,7 +287,7 @@ export const AdminApprovals: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-12">
+        <div className="min-h-screen bg-slate-900 pb-12">
             {/* Admin Header */}
             <div className="bg-slate-900 text-white py-8 px-6 shadow-lg mb-8">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -304,58 +304,58 @@ export const AdminApprovals: React.FC = () => {
             <div className="max-w-7xl mx-auto px-6">
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                    <div className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-500 dark:text-slate-400 font-medium mb-1">Pendentes</p>
+                            <p className="text-sm text-slate-400 font-medium mb-1">Pendentes</p>
                             <p className="text-3xl font-bold text-yellow-600">{stats.pendente}</p>
                         </div>
-                        <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
-                            <Clock className="text-yellow-600 dark:text-yellow-400" size={24} />
+                        <div className="w-12 h-12 bg-yellow-100 bg-yellow-900/30 rounded-3xl flex items-center justify-center">
+                            <Clock className="text-yellow-600 text-yellow-400" size={24} />
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                    <div className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-500 dark:text-slate-400 font-medium mb-1">Aprovados</p>
+                            <p className="text-sm text-slate-400 font-medium mb-1">Aprovados</p>
                             <p className="text-3xl font-bold text-green-600">{stats.aprovado}</p>
                         </div>
-                        <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                            <CheckCircle className="text-green-600 dark:text-green-400" size={24} />
+                        <div className="w-12 h-12 bg-green-100 bg-green-900/30 rounded-3xl flex items-center justify-center">
+                            <CheckCircle className="text-green-600 text-green-400" size={24} />
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                    <div className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-500 dark:text-slate-400 font-medium mb-1">Reprovados</p>
+                            <p className="text-sm text-slate-400 font-medium mb-1">Reprovados</p>
                             <p className="text-3xl font-bold text-red-600">{stats.reprovado}</p>
                         </div>
-                        <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                            <XCircle className="text-red-600 dark:text-red-400" size={24} />
+                        <div className="w-12 h-12 bg-red-100 bg-red-900/30 rounded-3xl flex items-center justify-center">
+                            <XCircle className="text-red-600 text-red-400" size={24} />
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                    <div className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-500 dark:text-slate-400 font-medium mb-1">Total</p>
+                            <p className="text-sm text-slate-400 font-medium mb-1">Total</p>
                             <p className="text-3xl font-bold text-blue-600">{stats.total}</p>
                         </div>
-                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                            <AlertCircle className="text-blue-600 dark:text-blue-400" size={24} />
+                        <div className="w-12 h-12 bg-blue-100 bg-blue-900/30 rounded-3xl flex items-center justify-center">
+                            <AlertCircle className="text-blue-600 text-blue-400" size={24} />
                         </div>
                     </div>
                 </div>
 
                 {/* Filters and Search */}
-                <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700 mb-8">
+                <div className="bg-slate-800 p-6 rounded-full shadow-sm border border-slate-700 mb-8">
                     <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-                        <div className="flex bg-gray-100 dark:bg-slate-900 p-1 rounded-xl w-full md:w-auto">
+                        <div className="flex bg-slate-900 p-1 rounded-full w-full md:w-auto">
                             {(['todos', 'pendente', 'aprovado', 'reprovado'] as const).map(status => (
                                 <button
                                     key={status}
                                     onClick={() => setFilter(status)}
-                                    className={`px-6 py-2 rounded-lg font-medium text-sm transition-all flex-1 md:flex-none ${filter === status
-                                        ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-white shadow-sm'
-                                        : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
+                                    className={`px-6 py-2 rounded-full font-medium text-sm transition-all flex-1 md:flex-none ${filter === status
+                                        ? 'bg-slate-700 text-primary-600 dark:text-white shadow-sm'
+                                        : 'text-slate-400 hover:text-gray-700 hover:text-slate-200'
                                         }`}
                                 >
                                     {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -370,16 +370,16 @@ export const AdminApprovals: React.FC = () => {
                                 placeholder="Buscar por título, cidade ou bairro..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-primary-500 outline-none text-gray-900 dark:text-white transition-all"
+                                className="w-full pl-10 pr-4 py-2.5 rounded-full bg-slate-900 border border-slate-700 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                             />
                         </div>
 
                         {/* View Mode Toggle */}
-                        <div className="flex bg-gray-100 dark:bg-slate-900 p-1 rounded-xl">
+                        <div className="flex bg-slate-900 p-1 rounded-full">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`p-2 rounded-lg transition-all ${viewMode === 'grid'
-                                    ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm'
+                                className={`p-2 rounded-full transition-all ${viewMode === 'grid'
+                                    ? 'bg-slate-700 text-primary-600 shadow-sm'
                                     : 'text-gray-500 hover:text-gray-700'}`}
                                 title="Grade"
                             >
@@ -387,8 +387,8 @@ export const AdminApprovals: React.FC = () => {
                             </button>
                             <button
                                 onClick={() => setViewMode('scroll')}
-                                className={`p-2 rounded-lg transition-all ${viewMode === 'scroll'
-                                    ? 'bg-white dark:bg-slate-700 text-primary-600 shadow-sm'
+                                className={`p-2 rounded-full transition-all ${viewMode === 'scroll'
+                                    ? 'bg-slate-700 text-primary-600 shadow-sm'
                                     : 'text-gray-500 hover:text-gray-700'}`}
                                 title="Scroll Horizontal"
                             >
@@ -401,16 +401,16 @@ export const AdminApprovals: React.FC = () => {
                 {/* Properties Grid */}
                 {loading ? (
                     <div className="text-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
-                        <p className="text-gray-500 dark:text-slate-400 mt-4">Carregando anúncios...</p>
+                        <div className="animate-spin rounded-3xl h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+                        <p className="text-slate-400 mt-4">Carregando anúncios...</p>
                     </div>
                 ) : filteredProperties.length === 0 ? (
-                    <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
-                        <div className="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="text-center py-16 bg-slate-800 rounded-3xl border border-dashed border-slate-700">
+                        <div className="w-16 h-16 bg-slate-700 rounded-3xl flex items-center justify-center mx-auto mb-4">
                             <Search className="text-gray-400" size={32} />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Nenhum anúncio encontrado</h3>
-                        <p className="text-gray-500 dark:text-slate-400">Tente ajustar seus filtros de busca.</p>
+                        <h3 className="text-lg font-bold text-white mb-1">Nenhum anúncio encontrado</h3>
+                        <p className="text-slate-400">Tente ajustar seus filtros de busca.</p>
                     </div>
                 ) : (
                     <div className={viewMode === 'scroll'
@@ -434,7 +434,7 @@ export const AdminApprovals: React.FC = () => {
                                                             e.stopPropagation();
                                                             handleApprove(property);
                                                         }}
-                                                        className="flex-1 px-3 py-2.5 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700 flex items-center justify-center transition-colors shadow-lg shadow-green-600/20"
+                                                        className="flex-1 px-3 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold hover:bg-green-700 flex items-center justify-center transition-colors shadow-lg shadow-green-600/20"
                                                     >
                                                         <Check size={18} className="mr-2" /> Aprovar
                                                     </button>
@@ -443,7 +443,7 @@ export const AdminApprovals: React.FC = () => {
                                                             e.stopPropagation();
                                                             openRejectModal(property);
                                                         }}
-                                                        className="flex-1 px-3 py-2.5 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 rounded-xl text-sm font-bold hover:bg-red-200 dark:hover:bg-red-900/50 flex items-center justify-center transition-colors"
+                                                        className="flex-1 px-3 py-2.5 bg-red-100 text-red-700 bg-red-900/30 text-red-300 rounded-full text-sm font-bold hover:bg-red-200 hover:bg-red-900/50 flex items-center justify-center transition-colors"
                                                     >
                                                         <X size={18} className="mr-2" /> Reprovar
                                                     </button>
@@ -454,7 +454,7 @@ export const AdminApprovals: React.FC = () => {
                                                         e.stopPropagation();
                                                         navigate(`/properties/${property.id}`);
                                                     }}
-                                                    className="w-full py-2.5 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-200 dark:hover:bg-slate-600 flex items-center justify-center transition-colors"
+                                                    className="w-full py-2.5 bg-slate-700 text-gray-300 rounded-full text-sm font-medium hover:bg-slate-600 flex items-center justify-center transition-colors"
                                                 >
                                                     <Eye size={18} className="mr-2" /> Ver Detalhes
                                                 </button>
@@ -465,7 +465,7 @@ export const AdminApprovals: React.FC = () => {
                                     {/* History Badge if previously rejected */}
                                     {historyCount > 0 && property.status_aprovacao === 'pendente' && (
                                         <div className="absolute top-3 right-3 z-10">
-                                            <div className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg flex items-center gap-1">
+                                            <div className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
                                                 <History size={12} />
                                                 {historyCount}x Reprovado
                                             </div>
@@ -475,7 +475,7 @@ export const AdminApprovals: React.FC = () => {
                                     {/* Owner Info Tooltip/Card */}
                                     {owner && (
                                         <div className="absolute -top-2 -right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                                            <div className="bg-slate-900 text-white text-xs p-3 rounded-xl shadow-xl max-w-[200px]">
+                                            <div className="bg-slate-900 text-white text-xs p-3 rounded-3xl shadow-xl max-w-[200px]">
                                                 <p className="font-bold mb-1">{owner.nome} {owner.sobrenome}</p>
                                                 <p className="text-slate-300 mb-1">{owner.email}</p>
                                                 <p className="text-emerald-400 font-mono">{owner.whatsapp}</p>
@@ -491,16 +491,16 @@ export const AdminApprovals: React.FC = () => {
                 {/* Reject Modal */}
                 {showRejectModal && selectedProperty && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-gray-100 dark:border-slate-700 transform transition-all scale-100 max-h-[90vh] overflow-y-auto">
+                        <div className="bg-slate-800 rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-slate-700 transform transition-all scale-100 max-h-[90vh] overflow-y-auto">
                             <div className="flex items-center gap-4 mb-6">
-                                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <AlertCircle className="text-red-600 dark:text-red-400" size={24} />
+                                <div className="w-12 h-12 bg-red-100 bg-red-900/30 rounded-3xl flex items-center justify-center flex-shrink-0">
+                                    <AlertCircle className="text-red-600 text-red-400" size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                    <h3 className="text-2xl font-bold text-white">
                                         Reprovar Anúncio
                                     </h3>
-                                    <p className="text-sm text-gray-500 dark:text-slate-400">
+                                    <p className="text-sm text-slate-400">
                                         {selectedProperty.titulo}
                                     </p>
                                 </div>
@@ -508,13 +508,13 @@ export const AdminApprovals: React.FC = () => {
 
                             {/* Previous Rejection History */}
                             {selectedProperty.historico_reprovacao && selectedProperty.historico_reprovacao.length > 0 && (
-                                <div className="mb-6 bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-100 dark:border-orange-900/30">
-                                    <h4 className="text-sm font-bold text-orange-800 dark:text-orange-300 mb-2 flex items-center gap-2">
+                                <div className="mb-6 bg-orange-50 bg-orange-900/20 p-4 rounded-3xl border border-orange-100 border-orange-900/30">
+                                    <h4 className="text-sm font-bold text-orange-800 text-orange-300 mb-2 flex items-center gap-2">
                                         <History size={14} /> Histórico de Reprovações
                                     </h4>
                                     <div className="space-y-3 max-h-40 overflow-y-auto pr-2">
                                         {selectedProperty.historico_reprovacao.map((item, idx) => (
-                                            <div key={idx} className="text-xs text-orange-700 dark:text-orange-400 border-b border-orange-200 dark:border-orange-800/50 last:border-0 pb-2 last:pb-0">
+                                            <div key={idx} className="text-xs text-orange-700 text-orange-400 border-b border-orange-200 border-orange-800/50 last:border-0 pb-2 last:pb-0">
                                                 <p className="font-semibold">{new Date(item.data).toLocaleDateString('pt-BR')} às {new Date(item.data).toLocaleTimeString('pt-BR')}</p>
                                                 <p>Motivos: {item.razoes.join(', ')}</p>
                                                 {item.motivo && <p className="italic mt-1">"{item.motivo}"</p>}
@@ -525,30 +525,30 @@ export const AdminApprovals: React.FC = () => {
                             )}
 
                             <div className="space-y-4 mb-6">
-                                <p className="text-gray-700 dark:text-slate-300 font-medium">Selecione os motivos:</p>
+                                <p className="text-slate-300 font-medium">Selecione os motivos:</p>
                                 <div className="grid grid-cols-1 gap-2">
                                     {REJECTION_REASONS.map(reason => (
-                                        <label key={reason} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors">
+                                        <label key={reason} className="flex items-center gap-3 p-3 rounded-3xl border border-slate-700 hover:bg-slate-700/50 cursor-pointer transition-colors">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedReasons.includes(reason)}
                                                 onChange={() => toggleReason(reason)}
                                                 className="w-5 h-5 rounded border-gray-300 text-red-600 focus:ring-red-500"
                                             />
-                                            <span className="text-sm text-gray-700 dark:text-slate-300">{reason}</span>
+                                            <span className="text-sm text-slate-300">{reason}</span>
                                         </label>
                                     ))}
                                 </div>
                             </div>
 
                             <div className="mb-6">
-                                <label className="block text-gray-700 dark:text-slate-300 font-medium mb-2">
+                                <label className="block text-slate-300 font-medium mb-2">
                                     Observações adicionais (Opcional):
                                 </label>
                                 <textarea
                                     value={rejectComment}
                                     onChange={(e) => setRejectComment(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-red-500 outline-none text-gray-900 dark:text-white h-24 resize-none text-sm"
+                                    className="w-full px-4 py-3 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-red-500 outline-none text-white h-24 resize-none text-sm"
                                     placeholder="Descreva detalhes específicos..."
                                 />
                             </div>
@@ -561,13 +561,13 @@ export const AdminApprovals: React.FC = () => {
                                         setSelectedReasons([]);
                                         setSelectedProperty(null);
                                     }}
-                                    className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+                                    className="flex-1 px-4 py-3 bg-slate-700 text-gray-300 rounded-full font-bold hover:bg-slate-600 transition-colors"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     onClick={handleReject}
-                                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20"
+                                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-full font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20"
                                 >
                                     Confirmar Reprovação
                                 </button>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, MapPin, Bed, Bath, Car, Square, Share2, MessageCircle, ChevronLeft, ChevronRight, Loader2, Clock, XCircle, ShieldCheck } from 'lucide-react';
+import { X, MapPin, Bed, Bath, Car, Square, Share2, MessageCircle, ChevronLeft, ChevronRight, Loader2, Clock, XCircle, ShieldCheck, CheckCircle, Handshake, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
 import { getPropertyUrl } from '../lib/propertyHelpers';
@@ -43,176 +43,78 @@ export const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({ prop
     const [loading, setLoading] = useState(true);
     // const [currentImageIndex, setCurrentImageIndex] = useState(0); // Replaced by page/direction
     const [currentUserSlug, setCurrentUserSlug] = useState<string | null>(null);
-    const [availabilityStatus, setAvailabilityStatus] = useState<'unknown' | 'pendente' | 'disponivel' | 'analise' | 'indisponivel'>('unknown');
-    const [requestLoading, setRequestLoading] = useState(false);
+    const [[page, direction], setPage] = useState([0, 0]);
 
-    // Fetch current user slug
-    useEffect(() => {
-        const fetchCurrentUserSlug = async () => {
-            if (!user) return;
-            try {
-                const { data, error } = await supabase
-                    .from('perfis')
-                    .select('slug')
-                    .eq('id', user.id)
-                    .single();
-
-                if (data) {
-                    setCurrentUserSlug(data.slug);
-                }
-            } catch (error) {
-                console.error('Error fetching user slug:', error);
-            }
-        };
-
-        fetchCurrentUserSlug();
-    }, [user]);
-
-    // Check Status Effect
-    useEffect(() => {
-        const checkStatus = async () => {
-            if (!property || !user) return;
-
-            // Se for o dono do imóvel, está disponível para ele
-            if (property.user_id === user.id) {
-                setAvailabilityStatus('disponivel');
-                return;
-            }
-
-            try {
-                const { data, error } = await supabase
-                    .from('mensagens_internas')
-                    .select('status')
-                    .eq('imovel_id', property.id)
-                    .eq('remetente_id', user.id)
-                    .eq('tipo', 'verificacao_disponibilidade')
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-
-                if (data) {
-                    setAvailabilityStatus(data.status as any);
-                } else {
-                    setAvailabilityStatus('unknown');
-                }
-            } catch (error) {
-                // No message found is fine
-                setAvailabilityStatus('unknown');
-            }
-        };
-
-        checkStatus();
-    }, [property, user]);
-
-    const handleCheckAvailability = async () => {
+    // Direct WhatsApp Partnership Contact - Check Availability with Property Owner
+    const handleDirectWhatsApp = () => {
         if (!property || !user) return;
-        setRequestLoading(true);
 
-        try {
-            // 1. Get or Create Conversation
-            let conversaId;
-            const targetUserId = property.user_id;
+        // Owner Data
+        const ownerName = property.perfis?.nome || 'Corretor(a)';
+        const ownerPhone = property.perfis?.whatsapp || '';
 
-            const { data: existingConv } = await supabase
-                .from('conversas')
-                .select('id')
-                .eq('imovel_id', property.id)
-                .or(`and(solicitante_id.eq.${user.id},proprietario_id.eq.${targetUserId}),and(solicitante_id.eq.${targetUserId},proprietario_id.eq.${user.id})`)
-                .maybeSingle();
-
-            if (existingConv) {
-                conversaId = existingConv.id;
-            } else {
-                const { data: newConv, error: convError } = await supabase
-                    .from('conversas')
-                    .insert({
-                        imovel_id: property.id,
-                        solicitante_id: user.id,
-                        proprietario_id: targetUserId
-                    })
-                    .select()
-                    .single();
-
-                if (convError) throw convError;
-                conversaId = newConv.id;
-            }
-
-            // 2. Insert Availability Request Message
-            const { data: msgData, error: msgError } = await supabase
-                .from('mensagens_internas')
-                .insert({
-                    conversa_id: conversaId,
-                    remetente_id: user.id,
-                    destinatario_id: targetUserId,
-                    imovel_id: property.id,
-                    tipo: 'verificacao_disponibilidade',
-                    status: 'pendente',
-                    conteudo: `Olá, gostaria de confirmar a disponibilidade do imóvel "${property.titulo}" para visita. Aguardo seu retorno.`
-                })
-                .select()
-                .single();
-
-            if (msgError) throw msgError;
-
-            // 3. Send Notification linked to that conversation
-            await supabase
-                .from('notificacoes')
-                .insert({
-                    user_id: targetUserId,
-                    titulo: 'Verificar Disponibilidade 🏠',
-                    mensagem: `O corretor deseja saber se "${property.titulo}" está disponível para visita.`,
-                    tipo: 'message',
-                    link: `/dashboard?openChat=${conversaId}`,
-                    lida: false
-                });
-
-            // 4. Magic Link & WhatsApp Redirect
-            const token = msgData.magic_link_token; // Should exist if column added to DB
-
-            // Assuming property.anunciante is not available directly, we might need to rely on what we have,
-            // or fetch it if needed. But usually fetching 'property' fetches the owner info too if configured.
-            // If property.perfis exists (from fetchPropertyDetails below), use it.
-            const ownerPhone = property.perfis?.whatsapp || property.anunciante?.whatsapp;
-            const ownerName = property.perfis?.nome || property.anunciante?.nome || 'Parceiro';
-
-            if (token && ownerPhone) {
-                const magicLink = `${window.location.origin}/#/v/${token}`;
-                const text = `Olá ${ownerName}! Tenho um cliente interessado no imóvel "${property.titulo}".\n\nPor favor, confirme a disponibilidade clicando aqui para liberar o lead:\n${magicLink}`;
-
-                const phone = ownerPhone.replace(/\D/g, '');
-                const waUrl = `https://wa.me/55${phone}?text=${encodeURIComponent(text)}`;
-
-                window.open(waUrl, '_blank');
-            }
-
-            setAvailabilityStatus('pendente');
-        } catch (error) {
-            console.error('Error checking availability:', error);
-        } finally {
-            setRequestLoading(false);
+        if (!ownerPhone) {
+            alert('O WhatsApp do dono do anúncio não está disponível.');
+            return;
         }
+
+        // Property Link (Smart Link using owner's slug)
+        const ownerSlug = property.perfis?.slug;
+        const propertyUrl = getPropertyUrl({
+            ...property,
+            tipo_imovel: property.tipo_imovel?.tipo || property.tipo_imovel,
+            operacao: property.operacao?.tipo || property.operacao
+        }, ownerSlug);
+
+        // Current User Name (fetched in state)
+        const myName = currentUserName || 'Corretor(a) Parceiro(a)';
+
+        // Format the message with suggested responses
+        const message = `Olá *${ownerName}*, sou *${myName}* Corretor(a) parceiro(a) da iziBrokerz, tudo bem?
+
+Tenho um Cliente interessado no imóvel: ${propertyUrl}
+
+Gostaria de saber se ainda está disponível e confirmar o(s) valor(es).
+
+Fico no aguardo de sua resposta para agendarmos uma visita e fecharmos essa parceria, ok?
+
+---
+💡 *Respostas Rápidas (responda com 1, 2 ou 3):*
+
+1 - ✅ _"Sim, está disponível! Vamos agendar uma visita."_
+
+2 - ⏳ _"Preciso verificar com o(a) Proprietário(a). Já já te confirmo."_
+
+3 - ❌ _"Infelizmente o imóvel já foi vendido/alugado. Vou inativar o anúncio."_`;
+
+        const whatsappUrl = `https://wa.me/55${ownerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
     };
 
-    // Fetch current user slug
+    // State for current user name
+    const [currentUserName, setCurrentUserName] = useState<string | null>(null);
+
+    // Fetch current user slug and name
     useEffect(() => {
-        const fetchCurrentUserSlug = async () => {
+        const fetchCurrentUserProfile = async () => {
             if (!user) return;
             try {
                 const { data, error } = await supabase
                     .from('perfis')
-                    .select('slug')
+                    .select('slug, nome, sobrenome')
                     .eq('id', user.id)
                     .single();
 
                 if (data) {
                     setCurrentUserSlug(data.slug);
+                    setCurrentUserName(data.nome ? `${data.nome}${data.sobrenome ? ' ' + data.sobrenome : ''}` : null);
                 }
             } catch (error) {
-                console.error('Error fetching user slug:', error);
+                console.error('Error fetching user profile:', error);
             }
         };
 
-        fetchCurrentUserSlug();
+        fetchCurrentUserProfile();
     }, [user]);
 
     // Fetch full property details
@@ -254,12 +156,6 @@ export const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({ prop
 
     const photos = property?.fotos ? property.fotos.split(',') : [];
 
-    // Variant definitions inside or outside? Outside is better perf but inside allows closure if needed (not needed).
-    // I need to add them. I'll add them inside for simplicity of this Replace block or just assume I can add them before component...
-    // Actually, I should have added them with imports. I will add them inside component at top or just use them.
-    // Let's add them at line 16 (before export).
-
-    const [[page, direction], setPage] = useState([0, 0]);
     const imageIndex = Math.abs(page % photos.length);
     const currentImageIndex = imageIndex; // alias
 
@@ -302,12 +198,12 @@ Vamos agendar uma visita?`;
 
     // Format utility
     const formatCurrency = (val: number) => {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val);
     };
 
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row">
+            <div className="bg-slate-800 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 z-[30] p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
@@ -322,7 +218,7 @@ Vamos agendar uma visita?`;
                 ) : property ? (
                     <>
                         {/* Image Gallery - Left Side (Desktop) or Top (Mobile) */}
-                        <div className="w-full md:w-1/2 bg-gray-100 dark:bg-slate-900 relative min-h-[300px] md:min-h-full">
+                        <div className="w-full md:w-1/2 bg-slate-900 relative h-72 md:h-auto min-h-[300px] md:min-h-full">
                             {photos.length > 0 ? (
                                 <div className="absolute inset-0 overflow-hidden">
                                     <AnimatePresence initial={false} custom={direction}>
@@ -354,25 +250,27 @@ Vamos agendar uma visita?`;
                                             className="w-full h-full object-cover absolute inset-0"
                                         />
                                     </AnimatePresence>
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none md:hidden" />
+
+                                    {/* Mobile Gradient Overlay */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none md:hidden" />
 
                                     {photos.length > 1 && (
                                         <>
                                             <button
                                                 onClick={prevImage}
-                                                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/30 hover:bg-black/50 text-white rounded-full transition-colors"
+                                                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors backdrop-blur-sm z-10"
                                             >
-                                                <ChevronLeft size={24} />
+                                                <ChevronLeft size={20} className="md:w-6 md:h-6" />
                                             </button>
                                             <button
                                                 onClick={nextImage}
-                                                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/30 hover:bg-black/50 text-white rounded-full transition-colors"
+                                                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors backdrop-blur-sm z-10"
                                             >
-                                                <ChevronRight size={24} />
+                                                <ChevronRight size={20} className="md:w-6 md:h-6" />
                                             </button>
                                         </>
                                     )}
-                                    <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-medium">
+                                    <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-medium z-10">
                                         {currentImageIndex + 1} / {photos.length}
                                     </div>
                                 </div>
@@ -386,110 +284,185 @@ Vamos agendar uma visita?`;
                         {/* Details - Right Side (Desktop) or Bottom (Mobile) */}
                         <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col">
                             <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${property.operacao?.tipo === 'Locação' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                    <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${(property.operacao?.tipo || '').toLowerCase().includes('venda') ? 'bg-red-900/40 text-red-200 border-red-700/50' :
+                                        (property.operacao?.tipo || '').toLowerCase().includes('locação') ? 'bg-blue-900/40 text-blue-200 border-blue-700/50' :
+                                            (property.operacao?.tipo || '').toLowerCase().includes('temporada') ? 'bg-orange-900/40 text-orange-200 border-orange-700/50' :
+                                                'bg-gray-700 text-gray-300 border-gray-600'
                                         }`}>
-                                        {property.operacao?.tipo || 'Venda'}
-                                    </span>
-                                    <span className="text-gray-500 dark:text-slate-400 text-sm flex items-center gap-1">
-                                        <MapPin size={14} />
-                                        {property.bairro}, {property.cidade}
-                                    </span>
+                                        {property.operacao?.tipo || 'Operação'}
+                                    </div>
+                                    <div className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-purple-900/40 text-purple-200 border-purple-700/50">
+                                        {property.tipo_imovel?.tipo || 'Imóvel'}
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-3 text-slate-400 text-sm mb-1">
+                                        <div className="flex items-center gap-1">
+                                            <MapPin size={14} className="text-primary-500" />
+                                            {property.bairro}, {property.cidade}
+                                        </div>
+                                        <div className="text-slate-600">•</div>
+                                        <div className="font-mono text-xs opacity-70">
+                                            Ref: {property.cod_imovel || property.id?.slice(0, 6)}
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 leading-tight">
+                                <h2 className="text-2xl font-bold text-white mb-2 leading-tight">
                                     {property.titulo}
                                 </h2>
 
-                                <div className="text-3xl font-bold text-primary-600 dark:text-primary-400 mb-6">
-                                    {formatCurrency(property.valor_venda || property.valor_locacao)}
+                                <div className="mb-6">
+                                    {/* Price Logic based on operation */}
+                                    {(property.operacao?.tipo || '').toLowerCase().includes('temporada') ? (
+                                        <div className="flex flex-col gap-1">
+                                            {property.valor_diaria > 0 && (
+                                                <div className="text-2xl font-bold text-primary-400">
+                                                    {formatCurrency(property.valor_diaria)} <span className="text-sm font-normal text-slate-500">/dia</span>
+                                                </div>
+                                            )}
+                                            {property.valor_mensal > 0 && (
+                                                <div className="text-xl font-bold text-primary-400/80">
+                                                    {formatCurrency(property.valor_mensal)} <span className="text-sm font-normal text-slate-500">/mês</span>
+                                                </div>
+                                            )}
+                                            {!property.valor_diaria && !property.valor_mensal && (
+                                                <div className="text-2xl font-bold text-primary-400">Sob Consulta</div>
+                                            )}
+                                        </div>
+                                    ) : (property.operacao?.tipo || '').toLowerCase().includes('venda') ? (
+                                        <div className="text-3xl font-bold text-primary-400">
+                                            {property.valor_venda > 0 ? formatCurrency(property.valor_venda) : 'Sob Consulta'}
+                                        </div>
+                                    ) : (property.operacao?.tipo || '').toLowerCase().includes('locação') || (property.operacao?.tipo || '').toLowerCase().includes('aluguel') ? (
+                                        <div className="text-3xl font-bold text-primary-400">
+                                            {property.valor_locacao > 0 ? formatCurrency(property.valor_locacao) : 'Sob Consulta'} <span className="text-sm font-normal text-slate-500">/mês</span>
+                                        </div>
+                                    ) : (
+                                        <div className="text-3xl font-bold text-primary-400">
+                                            {formatCurrency(property.valor_venda || property.valor_locacao || property.valor_diaria || property.valor_mensal)}
+                                        </div>
+                                    )}
+
+                                    {(property.valor_condo > 0 || property.valor_iptu > 0) && (
+                                        <div className="flex flex-wrap gap-4 mt-2 text-xs text-slate-400">
+                                            {property.valor_condo > 0 && (
+                                                <span>Cond.: <strong className="text-slate-200">{formatCurrency(property.valor_condo)}</strong></span>
+                                            )}
+                                            {property.valor_iptu > 0 && (
+                                                <span>IPTU: <strong className="text-slate-200">{formatCurrency(property.valor_iptu)}</strong></span>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="grid grid-cols-4 gap-4 mb-8 border-y border-gray-100 dark:border-slate-700 py-4">
+                                <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 mb-8 border-y border-slate-700 py-4">
                                     <div className="text-center">
                                         <Bed className="mx-auto text-gray-400 mb-1" size={20} />
-                                        <span className="block font-bold text-gray-900 dark:text-white">{property.quartos}</span>
+                                        <span className="block font-bold text-white">{property.quartos}</span>
                                         <span className="text-xs text-gray-500">Quartos</span>
                                     </div>
+                                    {(property.suites || 0) > 0 && (
+                                        <div className="text-center">
+                                            <div className="relative inline-block">
+                                                <Bed className="mx-auto text-primary-500 mb-1" size={20} />
+                                                <span className="absolute -top-1 -right-2 text-[10px] bg-primary-900 text-primary-200 px-1 rounded-full">S</span>
+                                            </div>
+                                            <span className="block font-bold text-white">{property.suites}</span>
+                                            <span className="text-xs text-gray-500">Suítes</span>
+                                        </div>
+                                    )}
                                     <div className="text-center">
                                         <Bath className="mx-auto text-gray-400 mb-1" size={20} />
-                                        <span className="block font-bold text-gray-900 dark:text-white">{property.banheiros}</span>
+                                        <span className="block font-bold text-white">{property.banheiros}</span>
                                         <span className="text-xs text-gray-500">Banheiros</span>
                                     </div>
                                     <div className="text-center">
                                         <Car className="mx-auto text-gray-400 mb-1" size={20} />
-                                        <span className="block font-bold text-gray-900 dark:text-white">{property.vagas}</span>
+                                        <span className="block font-bold text-white">{property.vagas}</span>
                                         <span className="text-xs text-gray-500">Vagas</span>
                                     </div>
                                     <div className="text-center">
                                         <Square className="mx-auto text-gray-400 mb-1" size={20} />
-                                        <span className="block font-bold text-gray-900 dark:text-white">{property.area_priv}</span>
+                                        <span className="block font-bold text-white">{property.area_priv}</span>
                                         <span className="text-xs text-gray-500">m²</span>
                                     </div>
                                 </div>
 
-                                <div className="prose dark:prose-invert max-w-none mb-8">
+                                <div className="prose dark:prose-invert max-w-none mb-6">
                                     <h3 className="text-sm font-bold uppercase text-gray-400 mb-2">Descrição</h3>
-                                    <p className="text-gray-600 dark:text-slate-300 text-sm line-clamp-6">
+                                    <p className="text-slate-300 text-sm line-clamp-6 whitespace-pre-line">
                                         {property.descricao}
                                     </p>
                                 </div>
+
+                                {/* Features & Characteristics */}
+                                {(property.caracteristicas || property.features) && (
+                                    <div className="mb-6">
+                                        <h3 className="text-sm font-bold uppercase text-gray-400 mb-3">Destaques</h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {/* Handle both string (DB) and array (migrated) formats */}
+                                            {(typeof property.caracteristicas === 'string'
+                                                ? property.caracteristicas.split(',')
+                                                : (property.caracteristicas || property.features || [])
+                                            ).map((feat: string, i: number) => (
+                                                feat && <span key={i} className="px-2 py-1 bg-slate-700 rounded-full text-xs text-slate-300 border border-slate-600">
+                                                    {feat.trim()}
+                                                </span>
+                                            ))}
+                                            {property.aceita_financiamento && (
+                                                <span className="px-2 py-1 bg-green-900/40 text-green-300 border border-green-700/50 rounded text-xs flex items-center gap-1">
+                                                    <CheckCircle size={10} /> Aceita Financiamento
+                                                </span>
+                                            )}
+                                            {property.aceita_permuta && (
+                                                <span className="px-2 py-1 bg-blue-900/40 text-blue-300 border border-blue-700/50 rounded text-xs flex items-center gap-1">
+                                                    <Handshake size={10} /> Aceita Permuta
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
+                            <button
+                                onClick={handleDirectWhatsApp}
+                                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-3xl font-bold transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 mb-6"
+                            >
+                                <MessageCircle size={20} />
+                                Checar Disponibilidade
+                            </button>
+
                             {/* Actions */}
-                            <div className="mt-auto pt-6 border-t border-gray-100 dark:border-slate-700">
+                            <div className="mt-auto p-6 border-t border-slate-700">
                                 {lead ? (
                                     <div className="space-y-3">
-                                        <p className="text-sm text-gray-500 dark:text-slate-400 text-center mb-2">
-                                            Enviar sugestão para <span className="font-bold text-gray-900 dark:text-white">{lead.nome}</span>
-                                        </p>
 
-                                        {availabilityStatus === 'disponivel' ? (
+                                        <div className="bg-red-950/30 backdrop-blur-sm border border-red-900/40 rounded-3xl p-4 space-y-3">
+                                            <div className="flex items-center gap-2 justify-center text-red-300/90 text-sm font-bold animate-pulse text-center leading-tight">
+                                                <AlertCircle size={16} className="shrink-0" />
+                                                <span>
+                                                    Dica: Verifique a disponibilidade antes de enviar. Evite perda de tempo e de seu Cliente!
+                                                </span>
+                                            </div>
+
                                             <button
                                                 onClick={handleWhatsAppShare}
-                                                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-green-600/20 flex items-center justify-center gap-2"
+                                                className="w-full py-3 bg-white hover:bg-red-50 border border-red-100 text-slate-700 rounded-2xl font-bold transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm"
                                             >
-                                                <MessageCircle size={20} />
-                                                Enviar via WhatsApp
+                                                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
+                                                    <Share2 size={14} />
+                                                    <span>Enviar anúncio para</span>
+                                                </div>
+                                                <span className="font-bold text-red-600 text-lg leading-none">{lead.nome}</span>
                                             </button>
-                                        ) : availabilityStatus === 'pendente' ? (
-                                            <button
-                                                disabled
-                                                className="w-full py-3 bg-amber-100 text-amber-700 rounded-xl font-bold flex items-center justify-center gap-2 cursor-wait"
-                                            >
-                                                <Clock size={20} />
-                                                Aguardando Confirmação
-                                            </button>
-                                        ) : availabilityStatus === 'analise' ? (
-                                            <button
-                                                disabled
-                                                className="w-full py-3 bg-blue-100 text-blue-700 rounded-xl font-bold flex items-center justify-center gap-2 cursor-wait"
-                                            >
-                                                <Loader2 size={20} className="animate-spin" />
-                                                Proprietário Verificando...
-                                            </button>
-                                        ) : availabilityStatus === 'indisponivel' ? (
-                                            <div className="p-4 bg-red-100 border border-red-200 rounded-xl text-center">
-                                                <p className="text-red-700 font-bold flex items-center justify-center gap-2">
-                                                    <XCircle size={18} /> Imóvel Indisponível
-                                                </p>
-                                                <p className="text-xs text-red-600 mt-1">O proprietário informou que já foi negociado.</p>
-                                            </div>
-                                        ) : (
-                                            <button
-                                                onClick={handleCheckAvailability}
-                                                disabled={requestLoading}
-                                                className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-primary-600/20 flex items-center justify-center gap-2"
-                                            >
-                                                {requestLoading ? <Loader2 size={20} className="animate-spin" /> : <ShieldCheck size={20} />}
-                                                Verificar Disponibilidade com Anunciante
-                                            </button>
-                                        )}
+                                        </div>
+
                                     </div>
                                 ) : (
                                     <button
                                         onClick={() => onClose()} // Just close if no lead (preview mode)
-                                        className="w-full py-3 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-white rounded-xl font-bold transition-colors"
+                                        className="w-full py-3 bg-slate-700 text-white rounded-full font-bold transition-colors"
                                     >
                                         Fechar
                                     </button>

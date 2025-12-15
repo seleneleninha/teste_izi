@@ -10,7 +10,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                 <p className="mb-3">
                     Estamos felizes em ter você aqui! Vamos fazer um tour rápido para você aproveitar 100% das funcionalidades da Plataforma, ok?
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-gray-400">
                     Você pode pular este tour a qualquer momento, mas recomendamos fortemente que complete-o para não perder nenhum recurso importante.
                 </p>
             </div>
@@ -25,7 +25,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                 <p className="mb-3">
                     <strong>Preencher todos os dados do seu cadastro é essencial!</strong> Isso traz mais confiabilidade e profissionalismo para seus Clientes.
                 </p>
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-3">
+                <div className="bg-blue-50 bg-blue-900/20 rounded-full p-3 mb-3">
                     <p className="text-sm font-semibold mb-2">✅ Benefícios de um perfil completo:</p>
                     <ul className="text-xs space-y-1 ml-4 list-disc">
                         <li>Clientes confiam mais em Corretores com perfil completo</li>
@@ -34,7 +34,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                         <li>Melhora seu ranking nos resultados de busca</li>
                     </ul>
                 </div>
-                <p className="text-md text-amber-600 dark:text-amber-400 font-medium">
+                <p className="text-md text-amber-600 text-amber-400 font-medium">
                     💡 Dica: Informe seu endereço, bairro e cidade, isso traz credibilidade para seus Clientes!
                 </p>
             </div>
@@ -49,7 +49,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                 <p className="mb-3">
                     <strong>Suba suas logos e personalize sua Página (slug)</strong> para criar uma identidade profissional única!
                 </p>
-                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 mb-3">
+                <div className="bg-purple-50 bg-purple-900/20 rounded-full p-3 mb-3">
                     <p className="text-sm font-semibold mb-2">🌟 Por que isso é importante:</p>
                     <ul className="text-xs space-y-1 ml-4 list-disc">
                         <li>Sua página terá sua marca (ex: izibrokerz.com/seu-nome)</li>
@@ -58,7 +58,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                         <li>Diferencia você da concorrência</li>
                     </ul>
                 </div>
-                <p className="text-md text-purple-600 dark:text-purple-400 font-medium">
+                <p className="text-md text-purple-600 text-purple-400 font-medium">
                     💡 Dica: Use logos em alta qualidade (PNG com fundo transparente)
                 </p>
             </div>
@@ -73,7 +73,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                 <p className="mb-3">
                     Configure até onde você está disposto a se deslocar para mostrar imóveis. Isso otimiza seu tempo e foca em oportunidades próximas!
                 </p>
-                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 mb-3">
+                <div className="bg-green-50 bg-green-900/20 rounded-full p-3 mb-3">
                     <p className="text-sm font-semibold mb-2">🎯 Opções disponíveis:</p>
                     <ul className="text-xs space-y-1 ml-4 list-disc">
                         <li>1km, 3km, 5km - Para Corretores que trabalham em áreas específicas</li>
@@ -81,7 +81,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                         <li>Estado - Para máxima abrangência e oportunidades</li>
                     </ul>
                 </div>
-                <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                <p className="text-xs text-green-600 text-green-400 font-medium">
                     💡 Você pode alterar isso a qualquer momento nas Configurações
                 </p>
             </div>
@@ -96,7 +96,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                 <p className="mb-3">
                     <strong>Este é um dos recursos mais atraentes da iziBrokerz!</strong> Pouquíssimas Plataformas oferecem isso!
                 </p>
-                <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-lg p-3 mb-3">
+                <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 rounded-full p-3 mb-3">
                     <p className="text-sm font-semibold mb-2">✨ Como funciona:</p>
                     <ul className="text-xs space-y-1 ml-4 list-disc">
                         <li>Veja imóveis de outros Corretores da sua região</li>
@@ -105,7 +105,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                         <li>Aumente suas chances de fechar negócios e faturar mais</li>
                     </ul>
                 </div>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                <p className="text-xs text-emerald-600 text-emerald-400 font-medium">
                     🚀 Corretores que usam este recurso aumentam suas vendas em até 40%!
                 </p>
             </div>
@@ -120,7 +120,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                 <p className="mb-3">
                     Parabéns! Agora você conhece os principais recursos da Plataforma.
                 </p>
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-4 mb-3">
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full p-4 mb-3">
                     <p className="text-sm font-semibold mb-2">📝 Próximos passos recomendados:</p>
                     <ol className="text-xs space-y-2 ml-4 list-decimal">
                         <li>Complete seu perfil nas Configurações</li>
@@ -130,7 +130,7 @@ export const ONBOARDING_TOUR_STEPS: TourStep[] = [
                         <li>Configure seu raio de atuação</li>
                     </ol>
                 </div>
-                <p className="text-sm font-bold text-center text-primary-600 dark:text-primary-400">
+                <p className="text-sm font-bold text-center text-primary-600 text-primary-400">
                     Boa sorte e boas vendas! 🚀
                 </p>
             </div>

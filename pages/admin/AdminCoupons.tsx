@@ -99,33 +99,33 @@ export const AdminCoupons: React.FC = () => {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gerenciar Cupons</h1>
+                <h1 className="text-2xl font-bold text-white">Gerenciar Cupons</h1>
                 <button
                     onClick={() => {
                         setFormData({ codigo: '', desconto_percentual: 10, valido_ate: '', ativo: true });
                         setIsModalOpen(true);
                     }}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-full flex items-center gap-2"
                 >
                     <Plus size={20} />
                     Novo Cupom
                 </button>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
+            <div className="bg-slate-800 rounded-3xl shadow-sm border border-slate-700 overflow-hidden">
                 <table className="w-full text-left">
-                    <thead className="bg-gray-50 dark:bg-slate-700/50">
+                    <thead className="bg-slate-700/50">
                         <tr>
-                            <th className="p-4 font-semibold text-gray-600 dark:text-gray-300">Código</th>
-                            <th className="p-4 font-semibold text-gray-600 dark:text-gray-300">Desconto</th>
-                            <th className="p-4 font-semibold text-gray-600 dark:text-gray-300">Validade</th>
-                            <th className="p-4 font-semibold text-gray-600 dark:text-gray-300">Status</th>
-                            <th className="p-4 font-semibold text-gray-600 dark:text-gray-300">Ações</th>
+                            <th className="p-4 font-semibold text-gray-300">Código</th>
+                            <th className="p-4 font-semibold text-gray-300">Desconto</th>
+                            <th className="p-4 font-semibold text-gray-300">Validade</th>
+                            <th className="p-4 font-semibold text-gray-300">Status</th>
+                            <th className="p-4 font-semibold text-gray-300">Ações</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
+                    <tbody className="divide-y divide-gray-100 divide-slate-700">
                         {coupons.map(coupon => (
-                            <tr key={coupon.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/30">
+                            <tr key={coupon.id} className="hover:bg-slate-700/30">
                                 <td className="p-4 font-mono font-bold text-emerald-600">{coupon.codigo}</td>
                                 <td className="p-4">{coupon.desconto_percentual}%</td>
                                 <td className="p-4">
@@ -135,8 +135,8 @@ export const AdminCoupons: React.FC = () => {
                                     <button
                                         onClick={() => toggleStatus(coupon)}
                                         className={`px-3 py-1 rounded-full text-xs font-bold ${coupon.ativo
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-gray-100 text-gray-500'
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-gray-100 text-gray-500'
                                             }`}
                                     >
                                         {coupon.ativo ? 'Ativo' : 'Inativo'}
@@ -159,9 +159,9 @@ export const AdminCoupons: React.FC = () => {
             {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-xl p-6 max-w-md w-full">
+                    <div className="bg-slate-900 rounded-3xl p-6 max-w-md w-full">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Novo Cupom</h2>
+                            <h2 className="text-xl font-bold text-white">Novo Cupom</h2>
                             <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700">
                                 <X size={24} />
                             </button>
@@ -169,31 +169,31 @@ export const AdminCoupons: React.FC = () => {
 
                         <div className="space-y-4 mb-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Código</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Código</label>
                                 <input
                                     type="text"
                                     value={formData.codigo}
                                     onChange={e => setFormData({ ...formData, codigo: e.target.value.toUpperCase() })}
-                                    className="w-full p-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700 uppercase"
+                                    className="w-full p-2 border rounded-full bg-slate-800 border-slate-700 uppercase"
                                     placeholder="EX: PROMO20"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Desconto (%)</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Desconto (%)</label>
                                 <input
                                     type="number"
                                     value={formData.desconto_percentual}
                                     onChange={e => setFormData({ ...formData, desconto_percentual: Number(e.target.value) })}
-                                    className="w-full p-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
+                                    className="w-full p-2 border rounded-full bg-slate-800 border-slate-700"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Validade (Opcional)</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Validade (Opcional)</label>
                                 <input
                                     type="date"
                                     value={formData.valido_ate}
                                     onChange={e => setFormData({ ...formData, valido_ate: e.target.value })}
-                                    className="w-full p-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
+                                    className="w-full p-2 border rounded-full bg-slate-800 border-slate-700"
                                 />
                             </div>
                         </div>
@@ -201,13 +201,13 @@ export const AdminCoupons: React.FC = () => {
                         <div className="flex justify-end gap-4">
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-full"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={handleSave}
-                                className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium"
+                                className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-medium"
                             >
                                 Criar Cupom
                             </button>

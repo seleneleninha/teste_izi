@@ -418,7 +418,7 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
             )}
 
             {isOpen && (
-                <div className="fixed bottom-6 right-6 z-50 w-[380px] h-[520px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-slate-700">
+                <div className="fixed bottom-6 right-6 z-50 w-[380px] h-[520px] bg-slate-800 rounded-full shadow-2xl flex flex-col overflow-hidden border border-slate-700">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -439,16 +439,16 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                     </div>
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-slate-900">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900">
                         {messages.map((message, index) => (
                             <div
                                 key={index}
                                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
                                 <div
-                                    className={`max-w-[85%] rounded-2xl px-4 py-2 ${message.role === 'user'
+                                    className={`max-w-[85%] rounded-full px-4 py-2 ${message.role === 'user'
                                         ? 'bg-emerald-500 text-white rounded-br-none'
-                                        : 'bg-white dark:bg-slate-800 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-bl-none'
+                                        : 'bg-slate-800 text-white border border-slate-700 rounded-bl-none'
                                         }`}
                                 >
                                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -461,7 +461,7 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                                                 <button
                                                     key={linkIndex}
                                                     onClick={() => handleLinkClick(link.url)}
-                                                    className="flex items-center gap-2 text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-3 py-2 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors w-full text-left"
+                                                    className="flex items-center gap-2 text-xs bg-emerald-100 bg-emerald-900/30 text-emerald-700 text-emerald-300 px-3 py-2 rounded-full hover:bg-emerald-200 hover:bg-emerald-900/50 transition-colors w-full text-left"
                                                 >
                                                     <ExternalLink size={14} />
                                                     <span className="truncate">{link.text}</span>
@@ -478,7 +478,7 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                         ))}
                         {loading && (
                             <div className="flex justify-start">
-                                <div className="bg-white dark:bg-slate-800 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-2xl rounded-bl-none px-4 py-3">
+                                <div className="bg-slate-800 text-white border border-slate-700 rounded-full rounded-bl-none px-4 py-3">
                                     <div className="flex items-center gap-2">
                                         <Loader2 size={16} className="animate-spin" />
                                         <span className="text-sm">Digitando...</span>
@@ -491,14 +491,14 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
 
                     {/* Quick Questions - Only show at start */}
                     {messages.length === 1 && (
-                        <div className="p-3 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium">Como posso ajudar?</p>
+                        <div className="p-3 bg-slate-800 border-t border-slate-700">
+                            <p className="text-xs text-gray-400 mb-2 font-medium">Como posso ajudar?</p>
                             <div className="flex flex-col gap-2">
                                 {quickQuestions.map((question, index) => (
                                     <button
                                         key={index}
                                         onClick={() => setInput(question)}
-                                        className="text-sm bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-900/30 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-4 py-3 rounded-xl transition-all font-medium text-left"
+                                        className="text-sm bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-900/30 hover:from-emerald-100 hover:to-emerald-200 dark:hover:from-emerald-900/30 dark:hover:to-emerald-900/40 text-emerald-700 text-emerald-300 px-4 py-3 rounded-full transition-all font-medium text-left"
                                     >
                                         {question}
                                     </button>
@@ -508,7 +508,7 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                     )}
 
                     {/* Input */}
-                    <div className="p-4 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
+                    <div className="p-4 bg-slate-800 border-t border-slate-700">
                         <div className="flex gap-2">
                             <input
                                 type="text"
@@ -516,7 +516,7 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyPress={handleKeyPress}
                                 placeholder="Digite sua mensagem..."
-                                className="flex-1 px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-white text-sm"
+                                className="flex-1 px-4 py-3 border border-slate-600 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-700 text-white text-sm"
                                 disabled={loading}
                             />
                             <button

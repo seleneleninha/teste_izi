@@ -175,22 +175,22 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-y-auto max-h-[90vh] relative">
+            <div className="bg-slate-800 rounded-full shadow-2xl w-full max-w-md overflow-y-auto max-h-[90vh] relative">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-200 transition-colors"
                 >
                     <X size={20} />
                 </button>
 
                 <div className="p-6">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
                         <Calendar className="text-primary-500" />
                         Agendar Visita
                     </h2>
-                    <p className="text-gray-500 dark:text-slate-400 mb-6">
+                    <p className="text-slate-400 mb-6">
                         Preencha os dados abaixo para solicitar uma visita ao imóvel: <br />
-                        <span className="font-semibold text-gray-700 dark:text-gray-300">{propertyTitle}</span>
+                        <span className="font-semibold text-gray-300">{propertyTitle}</span>
                     </p>
 
                     {success ? (
@@ -198,14 +198,14 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                             <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <CheckCircle size={32} />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Solicitação Enviada!</h3>
-                            <p className="text-gray-600 dark:text-gray-400 mb-8">
+                            <h3 className="text-xl font-bold text-white mb-2">Solicitação Enviada!</h3>
+                            <p className="text-gray-400 mb-8">
                                 O anunciante foi notificado e entrará em contato para confirmar o horário.
                             </p>
 
                             <button
                                 onClick={handleWhatsAppConfirm}
-                                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-600/20 flex items-center justify-center gap-2 transition-transform hover:scale-105 mb-3"
+                                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-full shadow-lg shadow-green-600/20 flex items-center justify-center gap-2 transition-transform hover:scale-105 mb-3"
                             >
                                 <MessageCircle size={20} />
                                 Agilizar no WhatsApp
@@ -213,7 +213,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
 
                             <button
                                 onClick={onClose}
-                                className="w-full py-3 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-white font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+                                className="w-full py-3 bg-slate-700 text-white font-medium rounded-full hover:bg-slate-600 transition-colors"
                             >
                                 Fechar
                             </button>
@@ -221,7 +221,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Seu Nome</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Seu Nome</label>
                                 <div className="relative">
                                     <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                     <input
@@ -230,7 +230,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                                         value={formData.nome}
                                         onChange={handleChange}
                                         placeholder="Nome completo"
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-2 border border-slate-700 rounded-full bg-slate-900 text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                                         required
                                     />
                                 </div>
@@ -238,7 +238,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
                                     <div className="relative">
                                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <input
@@ -247,13 +247,13 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                                             value={formData.email}
                                             onChange={handleChange}
                                             placeholder="seu@email.com"
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                            className="w-full pl-10 pr-4 py-2 border border-slate-700 rounded-full bg-slate-900 text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                                             required
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefone/WhatsApp</label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">Telefone/WhatsApp</label>
                                     <div className="relative">
                                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <input
@@ -262,7 +262,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                                             value={formData.telefone}
                                             onChange={handleChange}
                                             placeholder="(00) 00000-0000"
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                            className="w-full pl-10 pr-4 py-2 border border-slate-700 rounded-full bg-slate-900 text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                                             required
                                         />
                                     </div>
@@ -271,7 +271,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Preferida</label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">Data Preferida</label>
                                     <div className="relative">
                                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <input
@@ -280,13 +280,13 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                                             value={formData.data}
                                             onChange={handleChange}
                                             min={new Date().toISOString().split('T')[0]}
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                            className="w-full pl-10 pr-4 py-2 border border-slate-700 rounded-full bg-slate-900 text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                                             required
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Horário</label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">Horário</label>
                                     <div className="relative">
                                         <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <input
@@ -294,7 +294,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                                             name="hora"
                                             value={formData.hora}
                                             onChange={handleChange}
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                            className="w-full pl-10 pr-4 py-2 border border-slate-700 rounded-full bg-slate-900 text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                                             required
                                         />
                                     </div>
@@ -302,7 +302,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observações (Opcional)</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">Observações (Opcional)</label>
                                 <div className="relative">
                                     <MessageSquare className="absolute left-3 top-3 text-gray-400" size={18} />
                                     <textarea
@@ -311,7 +311,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                                         onChange={handleChange}
                                         placeholder="Ex: Tenho disponibilidade apenas pela manhã..."
                                         rows={3}
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all resize-none"
+                                        className="w-full pl-10 pr-4 py-2 border border-slate-700 rounded-full bg-slate-900 text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all resize-none"
                                     />
                                 </div>
                             </div>
@@ -319,7 +319,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-primary-600/20 flex items-center justify-center gap-2 mt-4"
+                                className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-full transition-all shadow-lg shadow-primary-600/20 flex items-center justify-center gap-2 mt-4"
                             >
                                 {loading ? <Loader2 className="animate-spin" size={20} /> : <Calendar size={20} />}
                                 Solicitar Agendamento

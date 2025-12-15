@@ -105,7 +105,7 @@ export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) =
                             >
                                 <div
                                     onClick={() => window.open(`#/corretor/${partner.slug}`, '_blank')}
-                                    className="cursor-pointer flex flex-col items-center justify-center p-4 rounded-2xl hover:bg-white/5 transition-all duration-300 w-full h-32 opacity-50 hover:opacity-100 hover:scale-105"
+                                    className="cursor-pointer flex flex-col items-center justify-center p-4 rounded-3xl hover:bg-white/5 transition-all duration-300 w-full h-32 opacity-50 hover:opacity-100 hover:scale-105"
                                 >
                                     {logoSrc ? (
                                         <img

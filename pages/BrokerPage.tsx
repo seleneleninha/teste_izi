@@ -6,6 +6,8 @@ import { HorizontalScroll } from '../components/HorizontalScroll';
 import { PropertyCard } from '../components/PropertyCard';
 import { useTheme } from '../components/ThemeContext';
 import { Footer } from '../components/Footer';
+import { BrokerFooter } from '../components/BrokerFooter';
+import { BrokerNavbar } from '../components/BrokerNavbar';
 import { getRandomBackground } from '../lib/backgrounds';
 import { SearchFilter } from '../components/SearchFilter';
 
@@ -64,7 +66,8 @@ interface Property {
 }
 
 export const BrokerPage: React.FC = () => {
-    const { slug } = useParams<{ slug: string }>();
+    const { slug: rawSlug } = useParams<{ slug: string }>();
+    const slug = rawSlug?.replace(/\/$/, '') || ''; // Sanitize trailing slash
     const navigate = useNavigate();
     const { theme } = useTheme();
     const [broker, setBroker] = useState<BrokerProfile | null>(null);
@@ -229,10 +232,10 @@ export const BrokerPage: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-midnight-950">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 bg-midnight-950">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400">Carregando perfil...</p>
+                    <p className="text-gray-400">Carregando perfil...</p>
                 </div>
             </div>
         );
@@ -240,13 +243,13 @@ export const BrokerPage: React.FC = () => {
 
     if (!broker) return null;
 
-    // Split properties for "Destaques" (Top 8 Recent) and "Outras Opções" (The rest)
-    // Actually, user wants "Destaque" to include map capability.
-    const featuredProperties = allProperties.slice(0, 8);
-    const otherProperties = allProperties.slice(8);
+    // Split properties: Own properties in "Destaque", Partnered properties in "Outras Opções"
+    const ownProperties = allProperties.filter(p => !p.aceita_parceria);
+    const partneredProperties = allProperties.filter(p => p.aceita_parceria);
 
     return (
         <div className="bg-midnight-950 text-white font-sans min-h-screen transition-colors duration-200">
+            <BrokerNavbar brokerSlug={broker.slug} />
             {/* Hero Section */}
             <section className="relative h-[700px] flex items-center justify-center">
                 <div className="absolute inset-0 z-0">
@@ -258,50 +261,27 @@ export const BrokerPage: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-midnight-950/95"></div>
                 </div>
 
-                <div className="container mx-auto px-4 z-10 relative mt-[-80px]">
-                    <div className="flex flex-col items-center gap-6 justify-center animate-fadeIn max-w-4xl mx-auto">
-                        {/* Welcome Messages - Outside Card, No Background */}
-                        <div className="flex flex-col items-center text-center gap-3 mb-4">
-                            {/* First Message - White */}
-                            {broker.mensagem_boasvindas && (
-                                <p className="text-3xl md:text-4xl font-heading font-bold text-white leading-tight">
-                                    "{broker.mensagem_boasvindas}"
-                                </p>
-                            )}
+                <div className="container mx-auto px-4 z-10 text-center relative mt-[-60px]">
+                    <h1 className="text-4xl md:text-7xl font-heading font-bold text-white mb-6 leading-tight animate-float">
+                        {/* First Message - Emerald */}
+                        {broker.mensagem_boasvindas && (
+                            <p className="text-3xl md:text-4xl font-heading font-bold text-emerald-400 leading-tight">
+                                "{broker.mensagem_boasvindas}"
+                            </p>
+                        )}
+                    </h1>
 
-                            {/* Second Message - Emerald */}
-                            {broker.boasvindas2 && (
-                                <p className="text-3xl md:text-4xl font-heading font-bold text-emerald-400 leading-tight animate-pulse">
-                                    {broker.boasvindas2}
-                                </p>
-                            )}
-                        </div>
+                    <div className="container mx-auto px-4 z-10 relative">
+                        <div className="flex flex-col items-center gap-6 justify-center animate-fadeIn max-w-4xl mx-auto">
+                            {/* Welcome Messages - Outside Card, No Background */}
+                            <div className="flex flex-col items-center text-center gap-3 mb-4">
 
-                        {/* Glassmorphic Card - Broker Info Only - All Inline */}
-                        <div className="bg-midnight-900/30 backdrop-blur-xl border border-white/20 rounded-full px-6 py-3 shadow-2xl">
-                            <div className="flex items-center gap-4 text-sm md:text-base">
-                                {/* Name */}
-                                <span className="text-white font-bold uppercase">
-                                    {broker.nome} {broker.sobrenome}
-                                </span>
-
-                                {/* Separator */}
-                                <span className="text-white/50">|</span>
-
-                                {/* CRECI */}
-                                <span className="text-white font-medium text-center">
-                                    CRECI <span className="text-white font-bold uppercase">{broker.creci}/{broker.uf_creci}</span>
-                                </span>
-
-                                {/* WhatsApp Button - Inline */}
-                                <a
-                                    href={`https://wa.me/55${broker.whatsapp.replace(/\D/g, '')}`}
-                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-full transition-all text-white font-medium shadow-lg shadow-emerald-500/30 hover:scale-105"
-                                    title="WhatsApp"
-                                >
-                                    <MessageCircle size={18} />
-                                    <span>WhatsApp</span>
-                                </a>
+                                {/* Second Message */}
+                                {broker.boasvindas2 && (
+                                    <p className="text-3xl md:text-4xl font-heading font-bold text-midnight-400 leading-tight animate-pulse">
+                                        {broker.boasvindas2}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -335,17 +315,17 @@ export const BrokerPage: React.FC = () => {
                                 key={idx}
                                 onClick={() => {
                                     if (category.type === 'temporada') {
-                                        navigate(`/search?broker=${slug}&operacao=temporada`);
+                                        navigate(`/corretor/${slug}/buscar?operacao=temporada`);
                                     } else {
-                                        navigate(`/search?broker=${slug}&tipo=${category.type}`);
+                                        navigate(`/corretor/${slug}/buscar?tipo=${category.type}`);
                                     }
                                 }}
-                                className="group relative h-40 rounded-2xl bg-midnight-900/40 backdrop-blur-sm border border-white/5 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer flex flex-col items-center justify-center gap-3 hover:-translate-y-2 overflow-hidden"
+                                className="group relative h-40 rounded-3xl bg-midnight-900/40 backdrop-blur-sm border border-white/5 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer flex flex-col items-center justify-center gap-3 hover:-translate-y-2 overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
+                                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full blur opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
 
-                                <div className="relative z-10 text-gray-400 group-hover:text-emerald-400 transition-colors duration-300 p-3 bg-white/5 rounded-xl group-hover:bg-emerald-500/10 group-hover:scale-110 transform">
+                                <div className="relative z-10 text-gray-400 group-hover:text-emerald-400 transition-colors duration-300 p-3 bg-white/5 rounded-full group-hover:bg-emerald-500/10 group-hover:scale-110 transform">
                                     {category.icon}
                                 </div>
 
@@ -389,23 +369,23 @@ export const BrokerPage: React.FC = () => {
                     {/* Map View */}
                     {showMap && PropertyMap && (
                         <div className="mb-12 h-[500px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-20">
-                            <PropertyMap properties={allProperties} />
+                            <PropertyMap properties={ownProperties} />
                         </div>
                     )}
 
                     <HorizontalScroll itemWidth={330} gap={24} itemsPerPage={4}>
-                        {featuredProperties.map((property) => (
+                        {ownProperties.map((property) => (
                             <div key={property.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
                                 <PropertyCard property={property} brokerSlug={slug} />
                             </div>
                         ))}
-                        {featuredProperties.length === 0 && <p className="text-gray-500 italic">Nenhum imóvel em destaque.</p>}
+                        {ownProperties.length === 0 && <p className="text-gray-500 italic">Nenhum imóvel próprio cadastrado.</p>}
                     </HorizontalScroll>
                 </div>
             </section>
 
-            {/* Veja Outras Opções */}
-            {otherProperties.length > 0 && (
+            {/* Veja Outras Opções - Imóveis de Parceria */}
+            {partneredProperties.length > 0 && (
                 <section className="py-24 bg-midnight-900/50 relative">
                     <div className="container mx-auto px-4 relative z-10">
                         <div className="flex items-center gap-3 mb-12">
@@ -416,7 +396,7 @@ export const BrokerPage: React.FC = () => {
                         </div>
 
                         <HorizontalScroll itemWidth={330} gap={24} itemsPerPage={4}>
-                            {otherProperties.map((property) => (
+                            {partneredProperties.map((property) => (
                                 <div key={property.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
                                     <PropertyCard property={property} brokerSlug={slug} />
                                 </div>
@@ -441,7 +421,7 @@ export const BrokerPage: React.FC = () => {
                                     <div
                                         className="relative h-[400px] rounded-3xl overflow-hidden cursor-pointer group hover:-translate-y-2 transition-transform duration-500 isolate"
                                         style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
-                                        onClick={() => navigate(`/search?broker=${slug}&cidade=${encodeURIComponent(city)}`)}
+                                        onClick={() => navigate(`/corretor/${slug}/buscar?q=${encodeURIComponent(city)}`)}
                                     >
                                         <div
                                             className={`absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110`}
@@ -460,7 +440,7 @@ export const BrokerPage: React.FC = () => {
                                         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
 
                                         {/* Count Badge */}
-                                        <div className="absolute top-8 left-8 z-20 flex flex-col items-start p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-black/10 group-hover:bg-black/10 transition-colors">
+                                        <div className="absolute top-8 left-8 z-20 flex flex-col items-start p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-black/10 group-hover:bg-black/10 transition-colors">
                                             <span className="text-3xl font-heading font-black text-white leading-none">
                                                 {categoryCounts[`city_${city}`]}
                                             </span>
@@ -494,13 +474,13 @@ export const BrokerPage: React.FC = () => {
                             {topNeighborhoods.map((bairro, idx) => (
                                 <button
                                     key={idx}
-                                    onClick={() => navigate(`/search?broker=${slug}&bairro=${encodeURIComponent(bairro)}`)}
+                                    onClick={() => navigate(`/corretor/${slug}/buscar?q=${encodeURIComponent(bairro)}`)}
                                     className="group relative px-6 py-3 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-emerald-500/50 hover:text-white hover:scale-105 transition-all duration-300 font-medium"
                                 >
                                     {bairro}
                                     {/* Notification Badge Count */}
                                     {categoryCounts[`bairro_${bairro}`] > 0 && (
-                                        <span className="absolute -top-2 -right-2 flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white shadow-sm ring-2 ring-midnight-950 transition-transform duration-300 group-hover:scale-110">
+                                        <span className="absolute -top-2 -right-2 flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white shadow-sm ring-1 ring-white transition-transform duration-300 group-hover:scale-110">
                                             {categoryCounts[`bairro_${bairro}`]}
                                         </span>
                                     )}
@@ -512,7 +492,7 @@ export const BrokerPage: React.FC = () => {
                 </div>
             </section>
 
-            <Footer
+            <BrokerFooter
                 partner={{
                     name: `${broker.nome} ${broker.sobrenome}`,
                     email: broker.email,
@@ -520,6 +500,11 @@ export const BrokerPage: React.FC = () => {
                     creci: `${broker.creci}/${broker.uf_creci}`,
                     logo: broker.watermark_dark,
                     slug: broker.slug,
+                    endereço: broker.logradouro,
+                    numero: broker.numero,
+                    bairro: broker.bairro,
+                    cidade: broker.cidade,
+                    uf: broker.uf,
                     instagram: broker.instagram,
                     facebook: broker.facebook,
                     linkedin: broker.linkedin,

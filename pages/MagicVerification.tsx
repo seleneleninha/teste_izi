@@ -115,7 +115,7 @@ export const MagicVerification: React.FC = () => {
                         Avisamos o corretor que você está verificando. <br />
                         <strong>Quando tiver a resposta, clique neste link novamente!</strong>
                     </p>
-                    <button onClick={() => window.close()} className="px-6 py-3 bg-white text-amber-700 font-bold rounded-xl shadow-sm border border-amber-200">
+                    <button onClick={() => window.close()} className="px-6 py-3 bg-white text-amber-700 font-bold rounded-full shadow-sm border border-amber-200">
                         Fechar Página
                     </button>
                 </div>
@@ -128,7 +128,7 @@ export const MagicVerification: React.FC = () => {
                 <p className="text-emerald-700 max-w-xs mx-auto mb-8">
                     O status foi atualizado e o corretor já recebeu sua mensagem no chat.
                 </p>
-                <div className="p-4 bg-white/50 rounded-xl border border-emerald-100 max-w-sm mx-auto">
+                <div className="p-4 bg-white/50 rounded-full border border-emerald-100 max-w-sm mx-auto">
                     <p className="text-sm text-emerald-800 italic">"{message.status === 'disponivel' ? 'Sim, está disponível...' : 'Não, infelizmente...'}"</p>
                 </div>
             </div>
@@ -159,7 +159,7 @@ export const MagicVerification: React.FC = () => {
             <div className="flex-1 p-6 flex flex-col items-center max-w-md mx-auto w-full">
 
                 {/* Property Card */}
-                <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+                <div className="w-full bg-white rounded-full shadow-sm border border-gray-100 overflow-hidden mb-8">
                     <div className="h-48 bg-gray-200 relative">
                         {property.fotos?.[0] ? (
                             <img src={property.fotos[0]} alt={property.titulo} className="w-full h-full object-cover" />
@@ -190,7 +190,7 @@ export const MagicVerification: React.FC = () => {
                     <button
                         onClick={() => handleResponse('disponivel')}
                         disabled={actionLoading}
-                        className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold text-lg shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-full font-bold text-lg shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2"
                     >
                         {actionLoading ? <Loader2 className="animate-spin" /> : <CheckCircle />}
                         Sim, Disponível
@@ -200,7 +200,7 @@ export const MagicVerification: React.FC = () => {
                         <button
                             onClick={() => handleResponse('analise')}
                             disabled={actionLoading}
-                            className="w-full py-4 bg-white hover:bg-gray-50 border-2 border-amber-200 text-amber-600 font-bold rounded-xl text-lg transition-all flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-white hover:bg-gray-50 border-2 border-amber-200 text-amber-600 font-bold rounded-full text-lg transition-all flex items-center justify-center gap-2"
                         >
                             <Clock />
                             Vou Verificar
@@ -210,7 +210,7 @@ export const MagicVerification: React.FC = () => {
                     <button
                         onClick={() => handleResponse('indisponivel')}
                         disabled={actionLoading}
-                        className="w-full py-4 bg-white hover:bg-red-50 text-red-500 border border-red-100 font-bold rounded-xl text-lg transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-white hover:bg-red-50 text-red-500 border border-red-100 font-bold rounded-full text-lg transition-all flex items-center justify-center gap-2"
                     >
                         <XCircle />
                         Não, Indisponível

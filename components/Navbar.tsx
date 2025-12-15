@@ -44,7 +44,7 @@ export const Navbar = () => {
         <nav
             className={`fixed top-0 w-full z-50 transition-all duration-500 ease-in-out ${scrolled
                 ? 'bg-midnight-950/80 backdrop-blur-xl shadow-glass border-b border-white/5 py-3'
-                : 'bg-transparent py-5'
+                : 'bg-midnight-950/60 backdrop-blur-md py-5'
                 }`}
         >
             <div className="container mx-auto px-4">
@@ -153,7 +153,7 @@ export const Navbar = () => {
                             <button onClick={() => { handleSignOut(); setMobileMenuOpen(false); }} className="text-red-400 font-medium py-2 text-right w-full">Sair</button>
                         </>
                     ) : (
-                        <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="bg-emerald-500 text-white text-center font-bold py-3 rounded-lg">Entrar</Link>
+                        <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="bg-emerald-500 text-white text-center font-bold py-3 rounded-full">Entrar</Link>
                     )}
                 </div>
             )}

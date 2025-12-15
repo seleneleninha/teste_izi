@@ -220,17 +220,17 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
     return (
         <div className="fixed inset-0 z-[100] flex justify-end">
             <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="relative w-full max-w-md bg-slate-900 h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
 
                 {/* Header */}
-                <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 z-10 shrink-0">
+                <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900 z-10 shrink-0">
                     <div className="flex items-center gap-2">
                         {selectedChat && (
-                            <button onClick={() => setSelectedChat(null)} className="mr-2 p-1 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full text-gray-500">
+                            <button onClick={() => setSelectedChat(null)} className="mr-2 p-1 hover:bg-slate-800 rounded-full text-gray-500">
                                 <ArrowLeft size={20} />
                             </button>
                         )}
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
                             {selectedChat ? (
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold text-sm shadow-sm">
@@ -249,13 +249,13 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
                             )}
                         </h2>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full">
+                    <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full">
                         <X size={20} className="text-gray-500" />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-hidden flex flex-col relative bg-gray-50 dark:bg-slate-900/50">
+                <div className="flex-1 overflow-hidden flex flex-col relative bg-slate-900/50">
                     {loading ? (
                         <div className="flex justify-center py-8">
                             <Loader2 className="animate-spin text-primary-500" />
@@ -271,15 +271,15 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
 
                                     return (
                                         <div key={msg.id} className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                            <div className={`max-w-[85%] rounded-2xl p-3 shadow-sm ${isMe
+                                            <div className={`max-w-[85%] rounded-full p-3 shadow-sm ${isMe
                                                 ? 'bg-primary-600 text-white rounded-br-none'
                                                 : isSystem || isResponse
-                                                    ? 'bg-white dark:bg-slate-800 border-l-4 border-primary-500 rounded-md w-full' /* System/Card style */
-                                                    : 'bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 rounded-bl-none border border-gray-100 dark:border-slate-700'
+                                                    ? 'bg-slate-800 border-l-4 border-primary-500 rounded-full w-full' /* System/Card style */
+                                                    : 'bg-slate-800 text-gray-200 rounded-bl-none border border-slate-700'
                                                 }`}>
                                                 {/* Specialized UI for Availability Request */}
                                                 {(isSystem || isResponse) && (
-                                                    <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100 dark:border-slate-700/50">
+                                                    <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-700/50">
                                                         {isSystem ? <Clock size={14} className="text-primary-500" /> : <ShieldCheck size={14} className="text-emerald-500" />}
                                                         <span className={`text-xs font-bold uppercase ${isSystem ? 'text-primary-500' : 'text-emerald-500'}`}>
                                                             {isSystem ? 'Solicitação de Disponibilidade' : 'Resposta Registrada'}
@@ -287,7 +287,7 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
                                                     </div>
                                                 )}
 
-                                                <p className={`text-sm whitespace-pre-wrap ${isMe ? 'text-white' : 'text-gray-700 dark:text-gray-300'}`}>
+                                                <p className={`text-sm whitespace-pre-wrap ${isMe ? 'text-white' : 'text-gray-300'}`}>
                                                     {msg.conteudo}
                                                 </p>
 
@@ -296,24 +296,24 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
                                                     <>
                                                         {/* INITIAL PENDING STATE */}
                                                         {msg.status === 'pendente' && (
-                                                            <div className="mt-3 bg-gray-50 dark:bg-slate-900/50 rounded-xl p-3 space-y-2 border border-gray-100 dark:border-slate-700">
-                                                                <p className="text-xs font-bold text-center mb-1 text-gray-500 dark:text-gray-400">O imóvel está disponível?</p>
+                                                            <div className="mt-3 bg-slate-900/50 rounded-full p-3 space-y-2 border border-slate-700">
+                                                                <p className="text-xs font-bold text-center mb-1 text-gray-400">O imóvel está disponível?</p>
                                                                 <div className="grid grid-cols-1 gap-2">
                                                                     <button
                                                                         onClick={() => handleAvailabilityResponse(msg.id, 'disponivel')}
-                                                                        className="flex items-center justify-center gap-2 px-3 py-2.5 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-bold transition-colors"
+                                                                        className="flex items-center justify-center gap-2 px-3 py-2.5 bg-emerald-100 hover:bg-emerald-200 bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-700 text-emerald-400 rounded-full text-xs font-bold transition-colors"
                                                                     >
                                                                         <CheckCircle size={14} /> Sim, disponível
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleAvailabilityResponse(msg.id, 'analise')}
-                                                                        className="flex items-center justify-center gap-2 px-3 py-2.5 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-400 rounded-lg text-xs font-bold transition-colors"
+                                                                        className="flex items-center justify-center gap-2 px-3 py-2.5 bg-amber-100 hover:bg-amber-200 bg-amber-900/30 hover:bg-amber-900/50 text-amber-700 text-amber-400 rounded-full text-xs font-bold transition-colors"
                                                                     >
                                                                         <Clock size={14} /> Vou verificar
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleAvailabilityResponse(msg.id, 'indisponivel')}
-                                                                        className="flex items-center justify-center gap-2 px-3 py-2.5 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 rounded-lg text-xs font-bold transition-colors"
+                                                                        className="flex items-center justify-center gap-2 px-3 py-2.5 bg-red-100 hover:bg-red-200 bg-red-900/30 hover:bg-red-900/50 text-red-700 text-red-400 rounded-full text-xs font-bold transition-colors"
                                                                     >
                                                                         <XCircle size={14} /> Indisponível
                                                                     </button>
@@ -323,17 +323,17 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
 
                                                         {/* ANALYSIS/CHECKING FOLLOW-UP */}
                                                         {msg.status === 'analise' && (
-                                                            <div className="mt-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl p-3 space-y-2 border border-amber-100 dark:border-amber-800/30 animate-in fade-in slide-in-from-top-2">
-                                                                <div className="flex items-center justify-center gap-1 text-amber-600 dark:text-amber-500 mb-1">
+                                                            <div className="mt-3 bg-amber-50 bg-amber-900/10 rounded-full p-3 space-y-2 border border-amber-100 border-amber-800/30 animate-in fade-in slide-in-from-top-2">
+                                                                <div className="flex items-center justify-center gap-1 text-amber-600 text-amber-500 mb-1">
                                                                     <Clock size={12} />
                                                                     <p className="text-xs font-bold text-center">Em Análise</p>
                                                                 </div>
-                                                                <p className="text-[10px] text-center text-gray-500 dark:text-gray-400 mb-2">Você informou que verificaria. Tem um retorno?</p>
+                                                                <p className="text-[10px] text-center text-gray-400 mb-2">Você informou que verificaria. Tem um retorno?</p>
 
                                                                 <div className="grid grid-cols-1 gap-2">
                                                                     <button
                                                                         onClick={() => handleAvailabilityResponse(msg.id, 'disponivel')}
-                                                                        className="text-left p-2 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 rounded-lg text-[10px] font-medium transition-colors border border-emerald-200 dark:border-emerald-800/50 flex group"
+                                                                        className="text-left p-2 bg-emerald-100 hover:bg-emerald-200 bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-800 text-emerald-300 rounded-full text-[10px] font-medium transition-colors border border-emerald-200 border-emerald-800/50 flex group"
                                                                     >
                                                                         <CheckCircle size={14} className="mt-0.5 mr-2 shrink-0 group-hover:scale-110 transition-transform" />
                                                                         <span>Sim, o imóvel está disponível! Pode agendar a visita. Fico no seu aguardo no WhatsApp.</span>
@@ -341,7 +341,7 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
 
                                                                     <button
                                                                         onClick={() => handleAvailabilityResponse(msg.id, 'indisponivel')}
-                                                                        className="text-left p-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-800 dark:text-red-300 rounded-lg text-[10px] font-medium transition-colors border border-red-200 dark:border-red-800/50 flex group"
+                                                                        className="text-left p-2 bg-red-100 hover:bg-red-200 bg-red-900/30 hover:bg-red-900/50 text-red-800 text-red-300 rounded-full text-[10px] font-medium transition-colors border border-red-200 border-red-800/50 flex group"
                                                                     >
                                                                         <XCircle size={14} className="mt-0.5 mr-2 shrink-0 group-hover:scale-110 transition-transform" />
                                                                         <span>Não. Infelizmente já foi negociado. Vou inativar esse anúncio. Obrigado pelo interesse.</span>
@@ -354,8 +354,8 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
 
                                                 {/* STATUS BADGE After Decision */}
                                                 {isSystem && msg.status !== 'pendente' && (
-                                                    <div className="mt-2 pt-2 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between text-xs opacity-80">
-                                                        <span className="text-gray-500 dark:text-gray-400">Status atual:</span>
+                                                    <div className="mt-2 pt-2 border-t border-slate-700 flex items-center justify-between text-xs opacity-80">
+                                                        <span className="text-gray-400">Status atual:</span>
                                                         <span className={`font-bold uppercase flex items-center gap-1
                                                             ${msg.status === 'disponivel' ? 'text-emerald-600' :
                                                                 msg.status === 'indisponivel' ? 'text-red-600' : 'text-amber-600'}
@@ -375,7 +375,7 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
                             </div>
 
                             {/* Input Area */}
-                            <div className="p-3 bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800 shrink-0">
+                            <div className="p-3 bg-slate-900 border-t border-slate-800 shrink-0">
                                 <form
                                     onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
                                     className="flex items-center gap-2"
@@ -385,12 +385,12 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
                                         value={newMessage}
                                         onChange={(e) => setNewMessage(e.target.value)}
                                         placeholder="Digite sua mensagem..."
-                                        className="flex-1 bg-gray-100 dark:bg-slate-800 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:outline-none dark:text-white dark:placeholder-gray-500"
+                                        className="flex-1 bg-slate-800 border-none rounded-full px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:outline-none dark:text-white placeholder-gray-500"
                                     />
                                     <button
                                         type="submit"
                                         disabled={!newMessage.trim() || sending}
-                                        className="p-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-primary-600/20"
+                                        className="p-3 bg-primary-600 text-white rounded-full hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-primary-600/20"
                                     >
                                         <Send size={20} />
                                     </button>
@@ -409,36 +409,36 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
                                 return (
                                     <div
                                         key={chat.id + '-list'}
-                                        className="describe-chat-card p-3 bg-white dark:bg-slate-800 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-all cursor-pointer border border-gray-100 dark:border-slate-700 hover:border-primary-200 dark:hover:border-primary-900/50 shadow-sm"
+                                        className="describe-chat-card p-3 bg-slate-800 rounded-full hover:bg-slate-700/50 transition-all cursor-pointer border border-slate-700 hover:border-primary-200 dark:hover:border-primary-900/50 shadow-sm"
                                         onClick={() => setSelectedChat(chat)}
                                     >
                                         <div className="flex gap-3">
                                             <div className="relative">
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-100 to-primary-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold shrink-0 text-lg shadow-inner">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-100 to-primary-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center text-primary-600 text-primary-400 font-bold shrink-0 text-lg shadow-inner">
                                                     {chat.partner?.nome?.[0] || <User size={20} />}
                                                 </div>
                                                 {/* Online/Status indicator placeholder */}
-                                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
+                                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white border-slate-800 rounded-full"></div>
                                             </div>
 
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between items-center mb-1">
-                                                    <h4 className="font-bold text-gray-900 dark:text-white text-sm truncate">
+                                                    <h4 className="font-bold text-white text-sm truncate">
                                                         {chat.partner?.nome} {chat.partner?.sobrenome}
                                                     </h4>
-                                                    <span className="text-[10px] text-gray-400 whitespace-nowrap bg-gray-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">
+                                                    <span className="text-[10px] text-gray-400 whitespace-nowrap bg-slate-700 px-1.5 py-0.5 rounded-full">
                                                         {new Date(chat.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                                                     </span>
                                                 </div>
 
                                                 <div className="flex items-center gap-1.5 mb-1.5">
-                                                    <div className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 truncate max-w-[150px]">
+                                                    <div className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-700 text-gray-300 truncate max-w-[150px]">
                                                         🏠 {chat.imovel?.titulo}
                                                     </div>
                                                 </div>
 
-                                                <p className="text-xs text-gray-500 dark:text-slate-400 line-clamp-1 flex items-center gap-1">
-                                                    {isMe ? <span className="font-medium text-gray-900 dark:text-white">Você:</span> : null}
+                                                <p className="text-xs text-slate-400 line-clamp-1 flex items-center gap-1">
+                                                    {isMe ? <span className="font-medium text-white">Você:</span> : null}
                                                     {chat.tipo === 'verificacao_disponibilidade' ? (
                                                         <span className="italic text-primary-500 flex items-center gap-1"><Clock size={10} /> Solicitou disponibilidade...</span>
                                                     ) : chat.tipo === 'resposta_disponibilidade' ? (
@@ -455,10 +455,10 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
                         </div>
                     ) : (
                         <div className="text-center py-12 text-gray-500 flex flex-col items-center justify-center h-full">
-                            <div className="w-16 h-16 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                            <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-4">
                                 <Send size={24} className="text-gray-400" />
                             </div>
-                            <h3 className="font-bold text-gray-900 dark:text-white mb-1">Nenhuma mensagem</h3>
+                            <h3 className="font-bold text-white mb-1">Nenhuma mensagem</h3>
                             <p className="text-sm max-w-[200px]">Suas conversas com outros corretores aparecerão aqui.</p>
                         </div>
                     )}

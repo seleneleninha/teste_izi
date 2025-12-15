@@ -104,8 +104,8 @@ export const About: React.FC = () => {
                     <div className="flex flex-col lg:flex-row items-center gap-16">
                         {/* Image Side */}
                         <div className="lg:w-1/2 relative group">
-                            <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-2xl opacity-30 group-hover:opacity-50 blur-lg transition duration-500"></div>
-                            <div className="relative rounded-2xl overflow-hidden shadow-2xl transform transition hover:-translate-y-1 duration-500">
+                            <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-full opacity-30 group-hover:opacity-50 blur-lg transition duration-500"></div>
+                            <div className="relative rounded-3xl overflow-hidden shadow-2xl transform transition hover:-translate-y-1 duration-500">
                                 <img
                                     src="/cristiano-profile.jpg"
                                     alt="Beluzzo"
@@ -113,7 +113,7 @@ export const About: React.FC = () => {
                                 />
                                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8">
                                     <h3 className="text-2xl font-bold text-white">Beluzzo</h3>
-                                    <p className="text-emerald-400 font-medium">Founder & CEO</p>
+                                    <p className="text-emerald-400 font-medium">Produtor e Comercial</p>
                                 </div>
                             </div>
                         </div>
@@ -139,7 +139,7 @@ export const About: React.FC = () => {
                                 href="https://www.linkedin.com/in/cristianobeluzo/"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-3 mt-8 px-8 py-4 bg-[#0077b5] text-white rounded-xl font-semibold hover:bg-[#006396] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                                className="inline-flex items-center gap-3 mt-8 px-8 py-4 bg-[#0077b5] text-white rounded-full font-semibold hover:bg-[#006396] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                             >
                                 <Linkedin size={22} />
                                 Conectar no LinkedIn
@@ -154,7 +154,7 @@ export const About: React.FC = () => {
                 <div className="container mx-auto px-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                         {achievements.map((item, idx) => (
-                            <div key={idx} className="text-center p-6 rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700 hover:border-emerald-500/50 transition-colors group">
+                            <div key={idx} className="text-center p-6 rounded-3xl bg-slate-800/50 backdrop-blur-sm border border-slate-700 hover:border-emerald-500/50 transition-colors group">
                                 <div className="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2 group-hover:scale-110 transition-transform">
                                     {item.number}
                                 </div>
@@ -196,9 +196,9 @@ export const About: React.FC = () => {
                                         <div className="inline-block px-3 py-1 rounded-full bg-emerald-900/40 text-emerald-300 text-xs font-bold mb-3">
                                             {item.year}
                                         </div>
-                                        <div className={`p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-800 hover:shadow-xl transition-all group ${index % 2 === 0 ? 'md:ml-auto' : 'md:mr-auto'}`}>
+                                        <div className={`p-6 bg-slate-900 rounded-3xl shadow-lg border border-slate-800 hover:shadow-xl transition-all group ${index % 2 === 0 ? 'md:ml-auto' : 'md:mr-auto'}`}>
                                             <div className={`flex items-center gap-3 mb-4 ${index % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
-                                                <div className="p-2.5 rounded-lg bg-slate-800 text-emerald-400 group-hover:scale-110 transition-transform">
+                                                <div className="p-2.5 rounded-full bg-slate-800 text-emerald-400 group-hover:scale-110 transition-transform">
                                                     {item.icon}
                                                 </div>
                                                 <div>
@@ -256,7 +256,7 @@ export const About: React.FC = () => {
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <button
                             onClick={() => navigate('/login')}
-                            className="px-8 py-4 bg-white text-emerald-700 rounded-xl font-bold hover:shadow-2xl hover:-translate-y-1 transition-all shadow-lg flex items-center justify-center gap-2"
+                            className="px-8 py-4 bg-white text-emerald-700 rounded-full font-bold hover:shadow-2xl hover:-translate-y-1 transition-all shadow-lg flex items-center justify-center gap-2"
                         >
                             Começar Gratuitamente
                             <ArrowRight size={20} />

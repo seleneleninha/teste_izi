@@ -37,7 +37,7 @@ const ImageCarousel: React.FC<{ images: string[]; title: string }> = ({ images, 
       <img
         src="https://via.placeholder.com/300x200?text=Sem+Imagem"
         alt={title}
-        className="w-full h-32 object-cover rounded-md mb-2"
+        className="w-full h-32 object-cover rounded-3xl mb-2"
       />
     );
   }
@@ -57,7 +57,7 @@ const ImageCarousel: React.FC<{ images: string[]; title: string }> = ({ images, 
       <img
         src={images[currentIndex]}
         alt={`${title} - ${currentIndex + 1}`}
-        className="w-full h-32 object-cover rounded-md mb-2"
+        className="w-full h-32 object-cover rounded-3xl mb-2"
         onError={(e) => {
           e.currentTarget.src = 'https://via.placeholder.com/300x200?text=Erro+ao+Carregar';
         }}
@@ -151,8 +151,8 @@ const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) =
               },
             }}
           >
-            <Popup maxWidth={280} minWidth={250}>
-              <div className="min-w-[240px] p-1">
+            <Popup maxWidth={280} minWidth={250} maxHeight={420} minHeight={350}>
+              <div className="min-w-[240px] p-1 min-h-[280px]">
                 <ImageCarousel images={images} title={p.titulo} type={p.tipo_imovel} operation={p.operacao} />
 
                 <h3 className="font-bold text-gray-900 text-lg truncate">{p.titulo}</h3>
@@ -160,7 +160,7 @@ const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) =
                 {/* Operation and Type Badges */}
                 <div className="flex items-center gap-2 mt-1 mb-2">
                   {/* Type Badge */}
-                  <span className="text-[16px] px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                  <span className="text-[16px] px-2 py-0.5 rounded-full font-medium bg-midnight-800 text-white border border-gray-200">
                     {type || 'Imóvel'}
                   </span>
 
@@ -187,15 +187,78 @@ const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) =
 
                 <p className="font-bold text-[16px] text-gray-600 text-xs uppercase">{location}</p>
 
-                <div className="flex justify-between items-center mt-2">
-                  <span className="font-bold text-primary-600 text-lg">
-                    {priceValue > 0 ? formatCurrency(priceValue) + priceLabel : 'Sob Consulta'}
-                  </span>
+                {/* Price Display */}
+                <div className="flex flex-col gap-1 mt-2">
+                  {(() => {
+                    const op = (operation || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const isVendaLocacao = op.includes('venda') && op.includes('locacao');
+                    const isTemporada = op.includes('temporada');
+
+                    if (isVendaLocacao) {
+                      // Show both venda and locacao prices
+                      return (
+                        <>
+                          {p.valor_venda > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500">Venda:</span>
+                              <span className="font-bold text-primary-600 text-base">
+                                {formatCurrency(p.valor_venda)}
+                              </span>
+                            </div>
+                          )}
+                          {p.valor_locacao > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500">Locação:</span>
+                              <span className="font-bold text-blue-600 text-base">
+                                {formatCurrency(p.valor_locacao)}/mês
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      );
+                    } else if (isTemporada) {
+                      // Show diaria and/or mensal for temporada
+                      return (
+                        <>
+                          {p.valor_diaria > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500">Diária:</span>
+                              <span className="font-bold text-orange-600 text-base">
+                                {formatCurrency(p.valor_diaria)}/dia
+                              </span>
+                            </div>
+                          )}
+                          {p.valor_mensal > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500">Mensal:</span>
+                              <span className="font-bold text-orange-600 text-base">
+                                {formatCurrency(p.valor_mensal)}/mês
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      );
+                    } else {
+                      // Single price display for venda or locacao only
+                      const priceValue = p.valor_venda || p.valor_locacao || p.valor_diaria || p.valor_mensal || 0;
+                      const priceLabel = p.valor_locacao ? '/mês' : (p.valor_diaria ? '/dia' : (p.valor_mensal ? '/mês' : ''));
+
+                      return (
+                        <span className="font-bold text-primary-600 text-lg">
+                          {priceValue > 0 ? formatCurrency(priceValue) + priceLabel : 'Sob Consulta'}
+                        </span>
+                      );
+                    }
+                  })()}
+                </div>
+
+                {/* Ver Detalhes Button */}
+                <div className="flex justify-end mt-3">
                   <button
                     onClick={() => navigate(`/${generateSlug()}`)}
-                    className="text-xs bg-primary-500 text-white px-3 py-1.5 rounded hover:bg-primary-600 transition-colors"
+                    className="text-sm bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 font-bold shadow-md shadow-black"
                   >
-                    Ver Detalhes
+                    VER DETALHES
                   </button>
                 </div>
               </div>
@@ -229,7 +292,7 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({ properties }) => {
   });
 
   return (
-    <div className="relative w-full h-full rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700 z-0">
+    <div className="relative w-full h-full rounded-3xl overflow-hidden border border-midnight-800 z-0">
       <MapContainer
         center={defaultCenter}
         zoom={12}
@@ -244,7 +307,7 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({ properties }) => {
         <PropertyMarkers properties={properties} />
       </MapContainer>
 
-      <div className="absolute bottom-4 left-4 bg-[#ab0505] border-white border-2 backdrop-blur px-4 py-2 rounded-lg text-xs font-bold text-white shadow-[4px_4px_5px_rgba(0,0,0,0.9)] z-[1000]">
+      <div className="absolute bottom-4 left-4 bg-[#ab0505] border-white border-2 backdrop-blur px-4 py-2 rounded-3xl text-xs font-bold text-white shadow-[4px_4px_5px_rgba(0,0,0,0.9)] z-[1000]">
         {propertiesWithCoords.length} imóveis no mapa
 
       </div>

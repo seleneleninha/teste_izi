@@ -62,49 +62,49 @@ export const SalesFunnel: React.FC<SalesFunnelProps> = ({ metrics }) => {
     const totalActive = metrics.totalLeads - metrics.byStage.perdido;
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-6 mb-6 shadow-sm h-full flex flex-col">
+        <div className="bg-slate-800 rounded-3xl border border-slate-700 p-6 mb-6 shadow-sm h-full flex flex-col">
             {/* Header */}
             <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-6">
                 <div className="w-full md:w-auto">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
                         <Target className="text-primary-500" size={20} />
                         Funil de Vendas
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-slate-400">Acompanhe seus Leads</p>
+                    <p className="text-sm text-slate-400">Acompanhe seus Leads</p>
                 </div>
             </div>
 
             {/* Quick Stats */}
             <div className="flex gap-4 md:gap-8 w-full md:w-auto justify-between md:justify-end overflow-x-auto pb-2 md:pb-0">
                 <div className="text-center min-w-[80px]">
-                    <div className="flex items-center justify-center gap-1 text-gray-500 dark:text-slate-400 text-xs mb-1">
+                    <div className="flex items-center justify-center gap-1 text-slate-400 text-xs mb-1">
                         <Users size={14} />
                         <span>Ativos</span>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{totalActive}</div>
+                    <div className="text-2xl font-bold text-white">{totalActive}</div>
                 </div>
                 <div className="text-center min-w-[80px]">
-                    <div className="flex items-center justify-center gap-1 text-gray-500 dark:text-slate-400 text-xs mb-1">
+                    <div className="flex items-center justify-center gap-1 text-slate-400 text-xs mb-1">
                         <TrendingUp size={14} />
                         <span>Conversão</span>
                     </div>
-                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{metrics.conversionRate.toFixed(1)}%</div>
+                    <div className="text-2xl font-bold text-green-600 text-green-400">{metrics.conversionRate.toFixed(1)}%</div>
                 </div>
                 <div className="text-center min-w-[100px]">
-                    <div className="flex items-center justify-center gap-1 text-gray-500 dark:text-slate-400 text-xs mb-1">
+                    <div className="flex items-center justify-center gap-1 text-slate-400 text-xs mb-1">
                         <DollarSign size={14} />
                         <span>VGV Estimado</span>
                     </div>
-                    <div className="text-xl font-bold text-primary-600 dark:text-primary-400">
+                    <div className="text-xl font-bold text-primary-600 text-primary-400">
                         {(metrics.totalValue || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
                     </div>
                 </div>
                 <div className="text-center min-w-[80px]">
-                    <div className="flex items-center justify-center gap-1 text-gray-500 dark:text-slate-400 text-xs mb-1">
+                    <div className="flex items-center justify-center gap-1 text-slate-400 text-xs mb-1">
                         <XCircle size={14} />
                         <span>Perdidos</span>
                     </div>
-                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">{metrics.byStage.perdido}</div>
+                    <div className="text-2xl font-bold text-red-600 text-red-400">{metrics.byStage.perdido}</div>
                 </div>
             </div>
 

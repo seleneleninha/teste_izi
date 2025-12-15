@@ -12,6 +12,14 @@ export interface PropertyMatch {
     bairro: string;
     imagem?: string;
     match_score: number;
+    operacao?: string;
+    tipo_imovel?: string;
+    operacao_nome?: string;
+    tipo_imovel_nome?: string;
+    valor_venda?: number;
+    valor_locacao?: number;
+    valor_diaria?: number;
+    valor_mensal?: number;
 }
 
 /**
@@ -134,6 +142,12 @@ export async function getSubtypes(typeId: string): Promise<{ id: string; subtipo
 
 /**
  * Calculate match score between a lead and a property
+ * NEW SYSTEM: 20 points per field (100 total)
+ * - Operation: 20 points
+ * - Property Type: 20 points
+ * - City: 20 points
+ * - Neighborhood: 20 points (matches ANY of 3 neighborhoods)
+ * - Budget: 20 points (ONLY if lead has budget filled AND property is within range)
  */
 export function calculateMatchScore(
     lead: {
@@ -141,6 +155,8 @@ export function calculateMatchScore(
         tipo_imovel_interesse?: string;
         cidade_interesse?: string;
         bairro_interesse?: string;
+        bairro_interesse_2?: string;
+        bairro_interesse_3?: string;
         orcamento_min?: number;
         orcamento_max?: number;
     },
@@ -171,19 +187,22 @@ export function calculateMatchScore(
         score += 20;
     }
 
-    // Field 4: Neighborhood (20 points)
-    if (lead.bairro_interesse === property.bairro) {
+    // Field 4: Neighborhood (20 points) - Match if property is in ANY of the 3 neighborhoods
+    const leadNeighborhoods = [
+        lead.bairro_interesse,
+        lead.bairro_interesse_2,
+        lead.bairro_interesse_3
+    ].filter(Boolean); // Remove empty values
+
+    if (leadNeighborhoods.includes(property.bairro)) {
         score += 20;
     }
 
-    // Field 5: Price range (20 points)
+    // Field 5: Budget (20 points) - ONLY if lead has budget filled
     const propertyValue = property.valor_venda || property.valor_locacao || 0;
-    if (
-        lead.orcamento_min &&
-        lead.orcamento_max &&
-        propertyValue >= lead.orcamento_min &&
-        propertyValue <= lead.orcamento_max
-    ) {
+    const hasBudget = lead.orcamento_min && lead.orcamento_min > 0 && lead.orcamento_max && lead.orcamento_max > 0;
+
+    if (hasBudget && propertyValue >= lead.orcamento_min && propertyValue <= lead.orcamento_max) {
         score += 20;
     }
 
@@ -207,7 +226,7 @@ export async function getPropertySuggestions(leadId: string, limit: number = 5):
             return [];
         }
 
-        // Build query for matching properties
+        // Build query for matching properties with JOINs for names
         let query = supabase
             .from('anuncios')
             .select(`
@@ -215,16 +234,35 @@ export async function getPropertySuggestions(leadId: string, limit: number = 5):
                 titulo,
                 valor_venda,
                 valor_locacao,
+                valor_diaria,
+                valor_mensal,
                 cidade,
                 bairro,
                 operacao,
-                tipo_imovel
+                tipo_imovel,
+                imagem,
+                operacao_rel:operacao(id, tipo),
+                tipo_imovel_rel:tipo_imovel(id, tipo)
             `)
             .eq('status_aprovacao', 'aprovado');
 
         // Add filters based on lead interests
+        // For operation: if lead wants Venda or Locação, also include Venda/Locação
         if (lead.operacao_interesse) {
-            query = query.eq('operacao', lead.operacao_interesse);
+            // Get Venda/Locação operation ID
+            const { data: vendaLocacaoOp } = await supabase
+                .from('operacao')
+                .select('id')
+                .ilike('tipo', '%venda/loca%')
+                .limit(1)
+                .single();
+
+            if (vendaLocacaoOp) {
+                // Match either the exact operation OR Venda/Locação
+                query = query.or(`operacao.eq.${lead.operacao_interesse},operacao.eq.${vendaLocacaoOp.id}`);
+            } else {
+                query = query.eq('operacao', lead.operacao_interesse);
+            }
         }
 
         if (lead.tipo_imovel_interesse) {
@@ -233,6 +271,17 @@ export async function getPropertySuggestions(leadId: string, limit: number = 5):
 
         if (lead.cidade_interesse) {
             query = query.eq('cidade', lead.cidade_interesse);
+        }
+
+        // Filter by ANY of the 3 neighborhoods
+        const leadNeighborhoods = [
+            lead.bairro_interesse,
+            lead.bairro_interesse_2,
+            lead.bairro_interesse_3
+        ].filter(Boolean);
+
+        if (leadNeighborhoods.length > 0) {
+            query = query.in('bairro', leadNeighborhoods);
         }
 
         const { data: properties, error: propError } = await query.limit(20);
@@ -246,11 +295,19 @@ export async function getPropertySuggestions(leadId: string, limit: number = 5):
         const matches: PropertyMatch[] = properties.map(prop => ({
             id: prop.id,
             titulo: prop.titulo,
-            valor: prop.valor_venda || prop.valor_locacao || 0,
+            valor: prop.valor_venda || prop.valor_locacao || prop.valor_diaria || prop.valor_mensal || 0,
             cidade: prop.cidade,
             bairro: prop.bairro,
             imagem: prop.imagem,
-            match_score: calculateMatchScore(lead, prop)
+            match_score: calculateMatchScore(lead, prop),
+            operacao: prop.operacao,
+            tipo_imovel: prop.tipo_imovel,
+            operacao_nome: (prop as any).operacao_rel?.tipo || '',
+            tipo_imovel_nome: (prop as any).tipo_imovel_rel?.tipo || '',
+            valor_venda: prop.valor_venda,
+            valor_locacao: prop.valor_locacao,
+            valor_diaria: prop.valor_diaria,
+            valor_mensal: prop.valor_mensal
         }));
 
         // Sort by match score and return top results

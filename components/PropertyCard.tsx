@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MapPin, ChevronLeft, ChevronRight, Home, Bed, Bath, Car, Maximize, Edit2, Trash2, Check, X, Eye, Image as ImageIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
-import { formatCurrency, formatArea } from '../lib/formatters';
+import { formatCurrency, formatArea, generatePropertySlug } from '../lib/formatters';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 
 interface PropertyCardProps {
@@ -18,7 +18,7 @@ interface PropertyCardProps {
         valor_mensal?: number;
         fotos: string | string[];
         operacao: string;
-        tipo_imovel?: string;
+        tipo_imovel?: string | { tipo: string }; // Handle object or string
         quartos?: number;
         banheiros?: number;
         vagas?: number;
@@ -96,20 +96,6 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
         }
     };
 
-    const generateSlug = () => {
-        const tipo = (property.tipo_imovel || 'imovel').toLowerCase().replace(/\s+/g, '-');
-        const quartos = property.quartos || 0;
-        const bairro = (property.bairro || '').toLowerCase().replace(/\s+/g, '-');
-        const cidade = (property.cidade || '').toLowerCase().replace(/\s+/g, '-');
-        const area = property.area_priv || 0;
-        const operacao = (property.operacao || '').toLowerCase().replace('_', '-').replace('/', '-');
-        const valor = property.valor_venda || property.valor_locacao || 0;
-        const garagem = (property.vagas || 0) > 0 ? '-com-garagem' : '';
-        const codigo = property.cod_imovel || property.id;
-
-        return `${tipo}-${quartos}-quartos-${bairro}-${cidade}${garagem}-${area}m2-${operacao}-RS${valor}-cod${codigo}`;
-    };
-
     const [isDragging, setIsDragging] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
@@ -126,11 +112,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
         if (onClick) {
             onClick();
         } else {
-            const slug = generateSlug();
+            const slug = generatePropertySlug(property);
             if (isDashboard) {
                 navigate(`/properties/${slug}`);
             } else if (brokerSlug) {
-                navigate(`/${slug}?broker=${brokerSlug}`);
+                navigate(`/corretor/${brokerSlug}/${slug}`);
             } else {
                 navigate(`/${slug}`);
             }
@@ -158,7 +144,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
     return (
         <motion.div
             layout
-            className={`relative bg-midnight-950 rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 group cursor-pointer flex flex-col ${compact ? 'h-64' : 'h-[550px]'}`}
+            className={`relative bg-midnight-950 rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 group cursor-pointer flex flex-col ${compact ? 'h-64' : 'h-[450px]'}`}
             onClick={handleCardClick}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -213,11 +199,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
 
             {/* Badges (Over Image) */}
             <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 items-start pointer-events-none">
-                <div className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg shadow-md backdrop-blur-md ${operationTagClass()}`}>
+                <div className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-md backdrop-blur-md ${operationTagClass()}`}>
                     {operationLabel}
                 </div>
                 {showStatus && property.status_aprovacao && (
-                    <div className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-lg shadow-md border backdrop-blur-md ${statusColors[property.status_aprovacao as keyof typeof statusColors] || 'bg-gray-100 text-gray-700'}`}>
+                    <div className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-md border backdrop-blur-md ${statusColors[property.status_aprovacao as keyof typeof statusColors] || 'bg-gray-100 text-gray-700'}`}>
                         {property.status_aprovacao}
                     </div>
                 )}
@@ -232,7 +218,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                         onSelect(e);
                     }}
                 >
-                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${isSelected
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected
                         ? 'bg-emerald-500 border-emerald-500 shadow-glow'
                         : 'bg-black/40 border-white/60 hover:bg-white hover:border-white'
                         }`}>
@@ -246,13 +232,13 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                 <div className="hidden md:block opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <button
                         onClick={prevImage}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/60 backdrop-blur-sm text-white p-2 rounded-full transition-colors hover:scale-110 active:scale-95"
+                        className="absolute left-2 top-1/3 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/60 backdrop-blur-sm text-white p-2 rounded-full transition-colors hover:scale-110 active:scale-95"
                     >
                         <ChevronLeft size={24} />
                     </button>
                     <button
                         onClick={nextImage}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/60 backdrop-blur-sm text-white p-2 rounded-full transition-colors hover:scale-110 active:scale-95"
+                        className="absolute right-2 top-1/3 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/60 backdrop-blur-sm text-white p-2 rounded-full transition-colors hover:scale-110 active:scale-95"
                     >
                         <ChevronRight size={24} />
                     </button>
@@ -279,7 +265,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
 
             {/* Dots Indicator */}
             {hasImages && photosArray.length > 1 && (
-                <div className="absolute bottom-52 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 transition-opacity duration-500 pointer-events-none">
+                <div className="absolute bottom-60 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 transition-opacity duration-500 pointer-events-none">
                     {photosArray.slice(0, 5).map((_, idx) => (
                         <div
                             key={idx}
@@ -292,6 +278,9 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
             {/* Content (Overlay at Bottom) */}
             <div className="absolute bottom-0 left-0 right-0 p-6 z-10 flex flex-col justify-end h-full pointer-events-none">
                 <div className="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full backdrop-blur-sm text-xs">{property.tipo_imovel}</span>
+                    </div>
                     <h3 className={`font-bold text-white mb-1 drop-shadow-md truncate ${compact ? 'text-lg line-clamp-1' : 'text-xl line-clamp-2'}`}>
                         {property.titulo}
                     </h3>
@@ -303,17 +292,17 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
 
                     <div className="flex items-center gap-4 text-gray-100 text-sm font-medium mb-3">
                         {(property.quartos || 0) > 0 && (
-                            <span className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-md backdrop-blur-sm">
+                            <span className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full backdrop-blur-sm">
                                 <Bed size={14} /> {property.quartos}
                             </span>
                         )}
                         {(property.banheiros || 0) > 0 && (
-                            <span className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-md backdrop-blur-sm">
+                            <span className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full backdrop-blur-sm">
                                 <Bath size={14} /> {property.banheiros}
                             </span>
                         )}
                         {(property.area_priv || 0) > 0 && (
-                            <span className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-md backdrop-blur-sm">
+                            <span className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full backdrop-blur-sm">
                                 <Maximize size={14} /> {formatArea(property.area_priv)}m²
                             </span>
                         )}
@@ -325,25 +314,24 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                                 <>
                                     {property.valor_diaria ? (
                                         <div className="flex items-baseline gap-1">
-                                            <p className="text-2xl font-bold text-white">
-                                                {formatCurrency(property.valor_diaria)}
+                                            <p className="text-2xl font-bold text-white tracking-tight drop-shadow-lg leading-none">
+                                                {formatCurrency(property.valor_diaria || 0)}
                                             </p>
-                                            <span className="text-lg font-normal text-gray-300">/ dia</span>
+                                            <span className="text-sm font-normal text-gray-300">/ dia</span>
                                         </div>
-                                    ) : (
-                                        property.valor_mensal && (
-                                            <div className="flex items-baseline gap-1">
-                                                <p className="text-2xl font-bold text-white">
-                                                    {formatCurrency(property.valor_mensal)}
-                                                </p>
-                                                <span className="text-lg font-normal text-gray-300">/ mês</span>
-                                            </div>
-                                        )
-                                    )}
-                                    {property.valor_diaria && property.valor_mensal && (
-                                        <p className="text-xl font-bold text-white mt-1">
-                                            ou {formatCurrency(property.valor_mensal)} <span className="text-xs opacity-70">/ mês</span>
-                                        </p>
+                                    ) : null}
+
+                                    {property.valor_mensal ? (
+                                        <div className="flex items-baseline gap-1 mt-1">
+                                            <p className={`${property.valor_diaria ? 'text-xl font-bold text-white/90' : 'text-2xl font-bold text-white'} tracking-tight drop-shadow-lg`}>
+                                                ou {formatCurrency(property.valor_mensal || 0)}
+                                            </p>
+                                            <span className="text-sm font-normal text-gray-300">/ mês</span>
+                                        </div>
+                                    ) : null}
+
+                                    {!property.valor_diaria && !property.valor_mensal && (
+                                        <p className="text-lg font-bold text-white">Sob Consulta</p>
                                     )}
                                 </>
                             ) : (
@@ -351,22 +339,22 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                                     {property.valor_venda && property.valor_locacao ? (
                                         <>
                                             <p className="text-2xl font-bold text-white tracking-tight drop-shadow-lg leading-none">
-                                                {formatCurrency(property.valor_venda)}
+                                                {formatCurrency(property.valor_venda || 0)}
                                             </p>
                                             <p className="text-xl font-bold text-white mt-1">
-                                                ou {formatCurrency(property.valor_locacao)} <span className="text-xs opacity-70">/ mês</span>
+                                                ou {formatCurrency(property.valor_locacao || 0)} <span className="text-sm font-normal text-gray-300">/ mês</span>
                                             </p>
                                         </>
                                     ) : property.valor_locacao ? (
                                         <div className="flex items-baseline gap-1">
                                             <p className="text-2xl font-bold text-white tracking-tight drop-shadow-lg">
-                                                {formatCurrency(property.valor_locacao)}
+                                                {formatCurrency(property.valor_locacao || 0)}
                                             </p>
-                                            <span className="text-lg font-normal text-gray-300">/ mês</span>
+                                            <span className="text-sm font-normal text-gray-300">/ mês</span>
                                         </div>
                                     ) : property.valor_venda ? (
                                         <p className="text-2xl font-bold text-white tracking-tight drop-shadow-lg">
-                                            {formatCurrency(property.valor_venda)}
+                                            {formatCurrency(property.valor_venda || 0)}
                                         </p>
                                     ) : (
                                         <p className="text-lg font-bold text-white">Sob Consulta</p>
@@ -375,7 +363,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                             )}
                         </div>
                         {!actions && (
-                            <button className="self-end bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-xl shadow-lg shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 group-hover:bg-emerald-400">
+                            <button className="self-end bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-full shadow-lg shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 group-hover:bg-emerald-400">
                                 <Eye size={22} />
                             </button>
                         )}

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Search, Map } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { div } from 'framer-motion/client';
 
 interface PropertyType {
     tipo: string;
@@ -70,9 +69,13 @@ export const SearchFilter = ({ brokerSlug }: { brokerSlug?: string }) => {
         if (selectedType) params.append('tipo', selectedType);
         if (searchTerm) params.append('q', searchTerm);
         if (showMap) params.append('view', 'map');
-        if (brokerSlug) params.append('broker', brokerSlug);
 
-        navigate(`/search?${params.toString()}`);
+        // Navigation Logic
+        if (brokerSlug) {
+            navigate(`/corretor/${brokerSlug}/buscar?${params.toString()}`);
+        } else {
+            navigate(`/search?${params.toString()}`);
+        }
     };
 
     return (
@@ -121,7 +124,7 @@ export const SearchFilter = ({ brokerSlug }: { brokerSlug?: string }) => {
             </div>
 
             <div className="flex flex-col md:flex-row gap-4 relative z-10">
-                <div className="flex-1 border border-white/10 rounded-xl px-4 py-3 flex items-center bg-black/30 focus-within:bg-black/50 focus-within:border-emerald-500/50 transition-all">
+                <div className="flex-1 border border-white/10 rounded-full px-4 py-3 flex items-center bg-black/30 focus-within:bg-black/50 focus-within:border-emerald-500/50 transition-all">
                     <select
                         value={selectedType}
                         onChange={(e) => setSelectedType(e.target.value)}
@@ -135,7 +138,7 @@ export const SearchFilter = ({ brokerSlug }: { brokerSlug?: string }) => {
                         ))}
                     </select>
                 </div>
-                <div className="flex-[2] border border-white/10 rounded-xl px-4 py-3 flex items-center bg-black/30 focus-within:bg-black/50 focus-within:border-emerald-500/50 transition-all">
+                <div className="flex-[2] border border-white/10 rounded-full px-4 py-3 flex items-center bg-black/30 focus-within:bg-black/50 focus-within:border-emerald-500/50 transition-all">
                     <Search className="w-5 h-5 text-gray-400 mr-3" />
                     <input
                         type="text"
@@ -150,7 +153,7 @@ export const SearchFilter = ({ brokerSlug }: { brokerSlug?: string }) => {
                 <button
                     onClick={handleSearch}
                     className={`
-                        font-bold py-3 px-8 rounded-lg transition-all transform hover:scale-105 uppercase tracking-wide shadow-lg
+                        font-bold py-3 px-8 rounded-full transition-all transform hover:scale-105 uppercase tracking-wide shadow-lg
                         ${activeTab === 'temporada' ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-500/20' : ''}
                         ${activeTab === 'rent' ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/20' : ''}
                         ${activeTab === 'buy' ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/20' : ''}

@@ -108,9 +108,9 @@ export const DashboardLayout: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-midnight-950 transition-colors duration-200 flex">
+        <div className="min-h-screen bg-gray-50 bg-midnight-950 transition-colors duration-200 flex">
             {/* Mobile hamburger */}
-            <button className="bg-emerald-500 dark:bg-emerald-600 rounded-full md:hidden p-2 fixed top-6 left-6 z-[60] shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <button className="bg-emerald-500 bg-emerald-600 rounded-full md:hidden p-2 fixed top-6 left-6 z-[60] shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform" onClick={() => setSidebarOpen(!sidebarOpen)}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
@@ -120,9 +120,9 @@ export const DashboardLayout: React.FC = () => {
             {/* Main content area with margin to account for fixed sidebar */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden md:ml-64">
                 {/* Topbar - Increased Z-Index */}
-                <header className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm z-[50]">
+                <header className="bg-slate-800 border-b border-slate-700 h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm z-[50]">
                     <div className="flex items-center">
-                        <h1 className="p-14 text-xl font-bold text-gray-800 dark:text-white truncate">
+                        <h1 className="p-14 text-xl font-bold text-white truncate">
                             {getTitle()}
                         </h1>
                     </div>
@@ -133,7 +133,7 @@ export const DashboardLayout: React.FC = () => {
                         {/* Messages Button */}
                         <button
                             onClick={() => setShowMessages(true)}
-                            className="p-2 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 shadow-sm transition-colors relative"
+                            className="p-2 rounded-full bg-blue-50 bg-blue-900/30 text-blue-600 text-blue-400 hover:bg-blue-100 hover:bg-blue-900/50 shadow-sm transition-colors relative"
                             title="Mensagens"
                         >
                             <Send size={20} />
@@ -143,11 +143,11 @@ export const DashboardLayout: React.FC = () => {
                         <div className="relative" ref={notifRef}>
                             <button
                                 onClick={() => setShowNotifications(!showNotifications)}
-                                className={`p-2 rounded-full bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 shadow-sm transition-colors relative ${showNotifications ? 'ring-2 ring-primary-500' : ''}`}
+                                className={`p-2 rounded-full bg-slate-800 text-gray-300 hover:bg-slate-700 shadow-sm transition-colors relative ${showNotifications ? 'ring-2 ring-primary-500' : ''}`}
                             >
                                 <Bell size={20} />
                                 {notifications.some(n => !n.lida) && (
-                                    <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
+                                    <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white border-slate-800"></span>
                                 )}
                             </button>
 
@@ -169,7 +169,7 @@ export const DashboardLayout: React.FC = () => {
                 />
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-slate-900 scroll-smooth">
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-900 scroll-smooth">
                     <TrialBanner />
                     <div className="max-w-7xl mx-auto animate-in fade-in duration-500">
                         <Outlet />
@@ -232,68 +232,70 @@ export const PublicLayout: React.FC = () => {
     }, [brokerSlug, theme]);
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-midnight-950 text-gray-900 dark:text-white overflow-x-hidden">
-            <nav className="border-b border-gray-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center fixed top-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md z-50 transition-all duration-300">
-                {/* Logo - Conditional: Broker or Platform */}
-                {isBrokerPage && brokerLogo ? (
-                    <div className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.location.href = `#/corretor/${brokerSlug}`}>
-                        <img src={brokerLogo} alt="Corretor" className="h-10 w-auto" />
-                    </div>
-                ) : (
-                    <>
-                        <div className="hidden dark:block cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
-                            <img src="/logos/izibrokerz-escuro.png" alt="iziBrokerz" className="h-10 w-auto" />
+        <div className="min-h-screen bg-gray-50 bg-midnight-950 text-white overflow-x-hidden">
+            {!isBrokerPage && (
+                <nav className="border-b border-slate-800 px-6 py-4 flex justify-between items-center fixed top-0 w-full bg-white/90 bg-slate-900/90 backdrop-blur-md z-50 transition-all duration-300">
+                    {/* Logo - Conditional: Broker or Platform */}
+                    {isBrokerPage && brokerLogo ? (
+                        <div className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.location.href = `#/corretor/${brokerSlug}`}>
+                            <img src={brokerLogo} alt="Corretor" className="h-10 w-auto" />
                         </div>
-                        <div className="block dark:hidden cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
-                            <img src="/logos/izibrokerz-claro.png" alt="iziBrokerz" className="h-10 w-auto" />
-                        </div>
-                    </>
-                )}
-
-                {/* Desktop Menu - Conditional based on broker page */}
-                <div className="hidden md:flex items-center space-x-8 font-medium">
-                    {isBrokerPage ? (
-                        <>
-                            <a href={`#/corretor/${brokerSlug}`} className="hover:text-primary-500">Início</a>
-                            <a href={`#/search?broker=${brokerSlug}`} className="hover:text-primary-500">Buscar Imóveis</a>
-                        </>
                     ) : (
                         <>
-                            <a href="#/" className="hover:text-primary-500">Início</a>
-                            <a href="#/search" className="hover:text-primary-500">Buscar Imóveis</a>
-                            <a href="#/partner" className="hover:text-primary-500">Anunciar</a>
-                            <a href="#/about" className="hover:text-primary-500">Sobre</a>
+                            <div className="hidden dark:block cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
+                                <img src="/logos/izibrokerz-escuro.png" alt="iziBrokerz" className="h-10 w-auto" />
+                            </div>
+                            <div className="block dark:hidden cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
+                                <img src="/logos/izibrokerz-claro.png" alt="iziBrokerz" className="h-10 w-auto" />
+                            </div>
                         </>
                     )}
-                </div>
 
-                {/* Right Side Actions */}
-                <div className="flex items-center space-x-4">
-                    <a href="#/login" className="hidden md:block px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium">
-                        ENTRAR/CADASTRAR
-                    </a>
-
-                    {/* Mobile Hamburger */}
-                    <button
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg"
-                    >
-                        {mobileMenuOpen ? (
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                    {/* Desktop Menu - Conditional based on broker page */}
+                    <div className="hidden md:flex items-center space-x-8 font-medium">
+                        {isBrokerPage ? (
+                            <>
+                                <a href={`#/corretor/${brokerSlug}`} className="hover:text-primary-500">Início</a>
+                                <a href={`#/search?broker=${brokerSlug}`} className="hover:text-primary-500">Buscar Imóveis</a>
+                            </>
                         ) : (
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
+                            <>
+                                <a href="#/" className="hover:text-primary-500">Início</a>
+                                <a href="#/search" className="hover:text-primary-500">Buscar Imóveis</a>
+                                <a href="#/partner" className="hover:text-primary-500">Anunciar</a>
+                                <a href="#/about" className="hover:text-primary-500">Sobre</a>
+                            </>
                         )}
-                    </button>
-                </div>
-            </nav>
+                    </div>
+
+                    {/* Right Side Actions */}
+                    <div className="flex items-center space-x-4">
+                        <a href="#/login" className="hidden md:block px-4 py-2 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors font-medium">
+                            ENTRAR/CADASTRAR
+                        </a>
+
+                        {/* Mobile Hamburger */}
+                        <button
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                            className="md:hidden p-2 hover:bg-slate-800 rounded-full"
+                        >
+                            {mobileMenuOpen ? (
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            ) : (
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            )}
+                        </button>
+                    </div>
+                </nav>
+            )}
 
             {/* Mobile Menu */}
             {mobileMenuOpen && (
-                <div className="md:hidden fixed top-[73px] w-auto right-0 bg-white/90 dark:bg-slate-900/90 border-b border-gray-200 dark:border-slate-800 z-40 shadow-lg">
+                <div className="md:hidden fixed top-[73px] w-auto right-0 bg-white/90 bg-slate-900/90 border-b border-slate-800 z-40 shadow-lg rounded-bl-3xl">
                     <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
                         {isBrokerPage ? (
                             <>
@@ -308,14 +310,14 @@ export const PublicLayout: React.FC = () => {
                                 <a href="#/about" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Sobre</a>
                             </>
                         )}
-                        <a href="#/login" className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors font-bold text-center">
+                        <a href="#/login" className="px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors font-bold text-center">
                             ENTRAR/CADASTRAR
                         </a>
                     </div>
                 </div>
             )}
 
-            <div className="pt-[73px]">
+            <div className={!isBrokerPage ? "pt-[73px]" : ""}>
                 <Outlet />
             </div>
         </div>

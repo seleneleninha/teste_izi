@@ -82,7 +82,7 @@ export const PropertyComparison: React.FC = () => {
                 <p className="text-gray-500 mb-4">Nenhum imóvel selecionado para comparação.</p>
                 <button
                     onClick={() => navigate('/properties')}
-                    className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+                    className="px-6 py-2 bg-primary-500 text-white rounded-full hover:bg-primary-600"
                 >
                     Voltar para Imóveis
                 </button>
@@ -95,13 +95,13 @@ export const PropertyComparison: React.FC = () => {
             <div className="flex items-center mb-8">
                 <button
                     onClick={() => navigate(-1)}
-                    className="mr-4 p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                    className="mr-4 p-2 hover:bg-slate-800 rounded-full transition-colors"
                 >
                     <ArrowLeft />
                 </button>
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Comparativo de Imóveis</h2>
-                    <p className="text-gray-500 dark:text-slate-400 text-sm">Comparando {properties.length} imóveis lado a lado</p>
+                    <h2 className="text-2xl font-bold text-white">Comparativo de Imóveis</h2>
+                    <p className="text-slate-400 text-sm">Comparando {properties.length} imóveis lado a lado</p>
                 </div>
             </div>
 
@@ -109,10 +109,10 @@ export const PropertyComparison: React.FC = () => {
                 <table className="w-full min-w-[800px] border-collapse">
                     <thead>
                         <tr>
-                            <th className="p-4 text-left w-48 bg-gray-50 dark:bg-slate-900/50 sticky left-0 border-b border-gray-200 dark:border-slate-700"></th>
+                            <th className="p-4 text-left w-48 bg-slate-900/50 sticky left-0 border-b border-slate-700"></th>
                             {properties.map(prop => (
-                                <th key={prop.id} className="p-4 border-b border-gray-200 dark:border-slate-700 min-w-[300px]">
-                                    <div className="relative rounded-xl overflow-hidden h-48 mb-4 shadow-md">
+                                <th key={prop.id} className="p-4 border-b border-slate-700 min-w-[300px]">
+                                    <div className="relative rounded-full overflow-hidden h-48 mb-4 shadow-md">
                                         <img src={prop.image} alt={prop.title} className="w-full h-full object-cover" />
                                         <button
                                             className="absolute top-2 right-2 bg-white/80 p-1.5 rounded-full text-gray-700 hover:text-red-500"
@@ -123,49 +123,49 @@ export const PropertyComparison: React.FC = () => {
                                             <X size={16} />
                                         </button>
                                     </div>
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{prop.title}</h3>
-                                    <p className="text-sm text-gray-500 dark:text-slate-400 font-normal">{prop.location}</p>
+                                    <h3 className="text-xl font-bold text-white">{prop.title}</h3>
+                                    <p className="text-sm text-slate-400 font-normal">{prop.location}</p>
                                 </th>
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="text-gray-700 dark:text-slate-300">
+                    <tbody className="text-slate-300">
                         <tr>
-                            <td className="p-4 font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-900/50 sticky left-0 border-b border-gray-100 dark:border-slate-800">Preço</td>
+                            <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Preço</td>
                             {properties.map(prop => (
-                                <td key={prop.id} className="p-4 border-b border-gray-100 dark:border-slate-800 text-lg font-bold text-primary-500">
+                                <td key={prop.id} className="p-4 border-b border-slate-800 text-lg font-bold text-primary-500">
                                     R$ {prop.price.toLocaleString('pt-BR')}
                                 </td>
                             ))}
                         </tr>
                         <tr>
-                            <td className="p-4 font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-900/50 sticky left-0 border-b border-gray-100 dark:border-slate-800">Área Total</td>
+                            <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Área Total</td>
                             {properties.map(prop => (
-                                <td key={prop.id} className="p-4 border-b border-gray-100 dark:border-slate-800">
+                                <td key={prop.id} className="p-4 border-b border-slate-800">
                                     {prop.area} m²
                                 </td>
                             ))}
                         </tr>
                         <tr>
-                            <td className="p-4 font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-900/50 sticky left-0 border-b border-gray-100 dark:border-slate-800">Quartos</td>
+                            <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Quartos</td>
                             {properties.map(prop => (
-                                <td key={prop.id} className="p-4 border-b border-gray-100 dark:border-slate-800">
+                                <td key={prop.id} className="p-4 border-b border-slate-800">
                                     {prop.beds}
                                 </td>
                             ))}
                         </tr>
                         <tr>
-                            <td className="p-4 font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-900/50 sticky left-0 border-b border-gray-100 dark:border-slate-800">Banheiros</td>
+                            <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Banheiros</td>
                             {properties.map(prop => (
-                                <td key={prop.id} className="p-4 border-b border-gray-100 dark:border-slate-800">
+                                <td key={prop.id} className="p-4 border-b border-slate-800">
                                     {prop.baths}
                                 </td>
                             ))}
                         </tr>
                         <tr>
-                            <td className="p-4 font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-900/50 sticky left-0 border-b border-gray-100 dark:border-slate-800 align-top">Destaques</td>
+                            <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800 align-top">Destaques</td>
                             {properties.map(prop => (
-                                <td key={prop.id} className="p-4 border-b border-gray-100 dark:border-slate-800 align-top">
+                                <td key={prop.id} className="p-4 border-b border-slate-800 align-top">
                                     <ul className="space-y-2">
                                         {prop.features.length > 0 ? prop.features.map((feat, i) => (
                                             <li key={i} className="flex items-center text-sm">
@@ -179,22 +179,22 @@ export const PropertyComparison: React.FC = () => {
                             ))}
                         </tr>
                         <tr>
-                            <td className="p-4 font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-900/50 sticky left-0 border-b border-gray-100 dark:border-slate-800">Tipo</td>
+                            <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Tipo</td>
                             {properties.map(prop => (
-                                <td key={prop.id} className="p-4 border-b border-gray-100 dark:border-slate-800">
-                                    <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-xs font-medium">
+                                <td key={prop.id} className="p-4 border-b border-slate-800">
+                                    <span className="px-3 py-1 rounded-full bg-slate-700 text-xs font-medium">
                                         {prop.type}
                                     </span>
                                 </td>
                             ))}
                         </tr>
                         <tr>
-                            <td className="p-4 bg-gray-50 dark:bg-slate-900/50 sticky left-0"></td>
+                            <td className="p-4 bg-slate-900/50 sticky left-0"></td>
                             {properties.map(prop => (
                                 <td key={prop.id} className="p-4">
                                     <button
                                         onClick={() => navigate(`/properties/${prop.id}`)}
-                                        className="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-lg transition-colors shadow-md"
+                                        className="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-full transition-colors shadow-md"
                                     >
                                         Ver Detalhes
                                     </button>

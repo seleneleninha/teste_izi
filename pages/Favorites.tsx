@@ -88,25 +88,25 @@ export const Favorites: React.FC = () => {
     return (
         <div className="pt-6 pb-20 md:pb-0">
             <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                     <Heart className="text-red-500 fill-current" size={28} />
                     Meus Favoritos
                 </h2>
-                <p className="text-gray-500 dark:text-slate-400 mt-1">Imóveis que você salvou para ver depois.</p>
+                <p className="text-slate-400 mt-1">Imóveis que você salvou para ver depois.</p>
             </div>
 
             {favorites.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700">
-                    <div className="w-20 h-20 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-6">
+                <div className="flex flex-col items-center justify-center py-16 bg-slate-800 rounded-3xl border border-slate-700">
+                    <div className="w-20 h-20 bg-slate-700 rounded-3xl flex items-center justify-center mb-6">
                         <Heart size={40} className="text-gray-400" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Você ainda não tem favoritos</h3>
-                    <p className="text-gray-500 dark:text-slate-400 text-center max-w-md mb-8">
+                    <h3 className="text-xl font-bold text-white mb-2">Você ainda não tem favoritos</h3>
+                    <p className="text-slate-400 text-center max-w-md mb-8">
                         Explore nossa lista de imóveis e clique no coração para salvar os que mais gostar.
                     </p>
                     <button
                         onClick={() => navigate('/properties')}
-                        className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl transition-colors flex items-center gap-2"
+                        className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-full transition-colors flex items-center gap-2"
                     >
                         <Search size={20} />
                         Buscar Imóveis
@@ -128,11 +128,11 @@ export const Favorites: React.FC = () => {
 
                     {/* Comparison Floating Bar */}
                     {selectedIds.length > 0 && (
-                        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 shadow-2xl rounded-full px-6 py-3 border border-gray-200 dark:border-slate-700 flex items-center gap-4 z-50 animate-fade-in-up">
-                            <span className="text-gray-900 dark:text-white font-medium">
+                        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 shadow-2xl rounded-full px-6 py-3 border border-slate-700 flex items-center gap-4 z-50 animate-fade-in-up">
+                            <span className="text-white font-medium">
                                 {selectedIds.length} selecionado{selectedIds.length !== 1 && 's'}
                             </span>
-                            <div className="h-6 w-px bg-gray-300 dark:bg-slate-600"></div>
+                            <div className="h-6 w-px bg-slate-600"></div>
                             <button
                                 onClick={handleCompare}
                                 className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-1.5 rounded-full font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

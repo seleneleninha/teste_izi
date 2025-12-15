@@ -49,12 +49,12 @@ const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onClose, on
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <div className="bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl">
                 <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-                        <Handshake className="text-emerald-600 dark:text-emerald-400" size={24} />
+                    <div className="w-12 h-12 bg-emerald-100 bg-emerald-900/30 rounded-3xl flex items-center justify-center">
+                        <Handshake className="text-emerald-600 text-emerald-400" size={24} />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    <h3 className="text-2xl font-bold text-white">
                         {isActivating ? 'Aceitar Parceria "fifty"' : 'Remover Parceria'}
                     </h3>
                 </div>
@@ -62,28 +62,28 @@ const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onClose, on
                 <div className="mb-6">
                     {isActivating ? (
                         <>
-                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4">
+                            <div className="bg-amber-50 bg-amber-900/20 border border-amber-200 border-amber-800 rounded-3xl p-4 mb-4">
                                 <div className="flex items-start gap-2">
-                                    <AlertCircle className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" size={20} />
-                                    <div className="text-sm text-amber-800 dark:text-amber-200">
+                                    <AlertCircle className="text-amber-600 text-amber-400 flex-shrink-0 mt-0.5" size={20} />
+                                    <div className="text-sm text-amber-800 text-amber-200">
                                         <p className="font-semibold mb-1">Como funciona a parceria?</p>
                                         <p>Ao aceitar esta parceria, você concorda em dividir a comissão <strong>50/50</strong> com o corretor proprietário do imóvel em caso de venda ou locação.</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-gray-50 dark:bg-slate-900/50 rounded-lg p-4">
-                                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Imóvel Selecionado:</h4>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{property.titulo}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
+                            <div className="bg-slate-900/50 rounded-3xl p-4">
+                                <h4 className="font-semibold text-white mb-2">Imóvel Selecionado:</h4>
+                                <p className="text-sm text-gray-400 mb-1">{property.titulo}</p>
+                                <p className="text-xs text-gray-500 flex items-center gap-1">
                                     <MapPin size={12} />
                                     {property.bairro}, {property.cidade}
                                 </p>
                             </div>
                         </>
                     ) : (
-                        <div className="bg-gray-50 dark:bg-slate-900/50 rounded-lg p-4">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="bg-slate-900/50 rounded-3xl p-4">
+                            <p className="text-sm text-gray-400">
                                 Tem certeza que deseja remover este imóvel das suas parcerias? Ele não aparecerá mais na sua página pública.
                             </p>
                         </div>
@@ -93,7 +93,7 @@ const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onClose, on
                 <div className="flex gap-3">
                     <button
                         onClick={onClose}
-                        className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium"
+                        className="flex-1 px-4 py-2.5 border border-slate-600 rounded-full text-gray-300 hover:bg-slate-700 transition-colors font-medium"
                     >
                         Cancelar
                     </button>
@@ -102,9 +102,9 @@ const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onClose, on
                         className={`flex-1 px-4 py-2.5 ${isActivating
                             ? 'bg-emerald-600 hover:bg-emerald-700'
                             : 'bg-red-600 hover:bg-red-700'
-                            } text-white rounded-lg transition-colors font-bold flex items-center justify-center gap-2`}
+                            } text-white rounded-full transition-colors font-bold flex items-center justify-center gap-2`}
                     >
-                        <Handshake size={18} />
+                        <Handshake size={24} />
                         {isActivating ? 'Confirmar Parceria' : 'Remover Parceria'}
                     </button>
                 </div>
@@ -385,10 +385,10 @@ export const PartnerProperties: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
+            <div className="min-h-screen flex items-center justify-center bg-slate-900">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400">Carregando imóveis...</p>
+                    <p className="text-gray-400">Carregando imóveis...</p>
                 </div>
             </div>
         );
@@ -399,18 +399,18 @@ export const PartnerProperties: React.FC = () => {
             <div className="p-6">
                 <div className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Imóveis Parceiros</h1>
+                        <h1 className="text-3xl font-bold text-white">Imóveis Parceiros</h1>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-gray-400">
                         Aceite parcerias com outros Corretores e aumente seu Faturamento!
                     </p>
                 </div>
 
                 {/* Radius Filter */}
                 {userLocation && !missingCity && (
-                    <div className="mb-8 bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700">
+                    <div className="mb-8 bg-slate-800 rounded-3xl p-6 border border-slate-700">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <h3 className="font-bold text-white flex items-center gap-2">
                                 <MapPin size={20} className="text-primary-500" />
                                 Filtrar por Raio de Atuação
                             </h3>
@@ -424,9 +424,9 @@ export const PartnerProperties: React.FC = () => {
                                 <button
                                     key={radius || 'all'}
                                     onClick={() => setUserRadius(radius || 999)}
-                                    className={`px-3 py-2 rounded-xl font-medium transition-all ${(radius === null && userRadius >= 999) || userRadius === radius
+                                    className={`px-3 py-2 rounded-full font-medium transition-all ${(radius === null && userRadius >= 999) || userRadius === radius
                                         ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                                        : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
+                                        : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
                                         }`}
                                 >
                                     {radius ? `${radius}km` : 'Estado'}
@@ -434,7 +434,7 @@ export const PartnerProperties: React.FC = () => {
                             ))}
                         </div>
 
-                        <p className="text-md text-gray-500 dark:text-gray-400 mt-4">
+                        <p className="text-md text-gray-400 mt-4">
                             💡 Dica: Escolha um raio menor para focar em imóveis próximos à sua região de atuação
                         </p>
                     </div>
@@ -442,22 +442,22 @@ export const PartnerProperties: React.FC = () => {
 
                 {/* Alert for missing city */}
                 {missingCity && (
-                    <div className="mb-8 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-200 dark:border-amber-800 rounded-2xl p-6">
+                    <div className="mb-8 bg-amber-50 bg-amber-900/20 border-2 border-amber-200 border-amber-800 rounded-full p-6">
                         <div className="flex items-start gap-4">
-                            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                                <AlertCircle className="text-amber-600 dark:text-amber-400" size={24} />
+                            <div className="w-12 h-12 bg-amber-100 bg-amber-900/30 rounded-3xl flex items-center justify-center flex-shrink-0">
+                                <AlertCircle className="text-amber-600 text-amber-400" size={24} />
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100 mb-2">
+                                <h3 className="text-lg font-bold text-amber-900 text-amber-100 mb-2">
                                     Configure sua cidade para ver imóveis parceiros
                                 </h3>
-                                <p className="text-sm text-amber-800 dark:text-amber-200 mb-4">
+                                <p className="text-sm text-amber-800 text-amber-200 mb-4">
                                     Para visualizar imóveis disponíveis para parceria, você precisa configurar sua cidade no seu perfil.
                                     Isso permite que mostremos apenas imóveis da sua região.
                                 </p>
                                 <button
                                     onClick={() => navigate('/settings')}
-                                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
+                                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-full font-medium transition-colors flex items-center gap-2"
                                 >
                                     <MapPin size={16} />
                                     Ir para Configurações
@@ -474,18 +474,18 @@ export const PartnerProperties: React.FC = () => {
                     <div className="mb-12">
                         <div className="flex items-center justify-between mb-6">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                <h2 className="text-2xl font-bold text-white">
                                     {availableProperties.length} {availableProperties.length === 1 ? 'imóvel disponível' : 'imóveis disponíveis para Parceria'}
                                 </h2>
                             </div>
 
                             {/* View Mode Toggle */}
-                            <div className="flex gap-2 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
+                            <div className="flex gap-2 bg-slate-800 p-1 rounded-3xl">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-lg transition-colors ${viewMode === 'grid'
-                                        ? 'bg-white dark:bg-slate-700 text-primary-500 shadow'
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                    className={`p-2 rounded-3xl transition-colors ${viewMode === 'grid'
+                                        ? 'bg-slate-700 text-primary-500 shadow'
+                                        : 'text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                         }`}
                                     title="Visualização em Cards"
                                 >
@@ -493,9 +493,9 @@ export const PartnerProperties: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
-                                        ? 'bg-white dark:bg-slate-700 text-primary-500 shadow'
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                    className={`p-2 rounded-3xl transition-colors ${viewMode === 'list'
+                                        ? 'bg-slate-700 text-primary-500 shadow'
+                                        : 'text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                         }`}
                                     title="Visualização em Lista"
                                 >
@@ -503,9 +503,9 @@ export const PartnerProperties: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setViewMode('map')}
-                                    className={`p-2 rounded-lg transition-colors ${viewMode === 'map'
-                                        ? 'bg-white dark:bg-slate-700 text-primary-500 shadow'
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                    className={`p-2 rounded-3xl transition-colors ${viewMode === 'map'
+                                        ? 'bg-slate-700 text-primary-500 shadow'
+                                        : 'text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                         }`}
                                     title="Visualização em Mapa"
                                 >
@@ -526,26 +526,26 @@ export const PartnerProperties: React.FC = () => {
                                             <div className="flex flex-col gap-2 w-full">
                                                 <button
                                                     onClick={() => navigateToProperty(navigate, property, true)}
-                                                    className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                                                    className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-3xl font-medium transition-colors flex items-center justify-center gap-2"
                                                 >
-                                                    <Eye size={16} />
-                                                    Ver Anúncio
+                                                    <Eye size={24} />
+                                                    Detalhes
                                                 </button>
                                                 {!isTrialUser && (
                                                     <button
                                                         onClick={() => onToggle(property, property.isPartnership || false)}
-                                                        className={`px-4 py-2 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 ${property.isPartnership
+                                                        className={`px-4 py-2 rounded-full font-medium transition-colors flex items-center justify-center gap-2 ${property.isPartnership
                                                             ? 'bg-red-500 hover:bg-red-600 text-white'
                                                             : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/50'
                                                             }`}
                                                     >
-                                                        <Handshake size={16} />
-                                                        {property.isPartnership ? 'Remover Parceria' : 'Aceitar Parceria'}
+                                                        <Handshake size={24} />
+                                                        {property.isPartnership ? 'Remover' : 'Aceitar'}
                                                     </button>
                                                 )}
                                                 {isTrialUser && (
-                                                    <div className="p-2 bg-amber-500/20 text-xs text-amber-300 rounded-xl text-center border border-amber-500/30">
-                                                        Faça upgrade para aceitar parcerias
+                                                    <div className="p-2 bg-amber-500/20 text-xs text-amber-300 rounded-full text-center border border-amber-500/30">
+                                                        Faça UPGRADE para aceitar parcerias
                                                     </div>
                                                 )}
                                             </div>
@@ -557,30 +557,30 @@ export const PartnerProperties: React.FC = () => {
 
                         {/* List View */}
                         {viewMode === 'list' && (
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
+                            <div className="bg-slate-800 rounded-3xl shadow-sm border border-slate-700 overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="w-full">
-                                        <thead className="bg-gray-50 dark:bg-slate-700/50">
+                                        <thead className="bg-slate-700/50">
                                             <tr>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('tipo_imovel')}>Tipo</th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('operacao')}>Op.</th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('cidade')}>Cidade</th>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('bairro')}>Bairro</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('area_priv')}><Maximize size={14} /></th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('quartos')}><Bed size={14} /></th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('banheiros')}><Bath size={14} /></th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('vagas')}><Car size={14} /></th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_venda')}>Venda</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_locacao')}>Locação</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_diaria')}>Diária</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_mensal')}>Mensal</th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('tipo_imovel')}>Tipo</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('operacao')}>Op.</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('cidade')}>Cidade</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('bairro')}>Bairro</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('area_priv')}><Maximize size={14} /></th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('quartos')}><Bed size={14} /></th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('banheiros')}><Bath size={14} /></th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('vagas')}><Car size={14} /></th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_venda')}>Venda</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_locacao')}>Locação</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_diaria')}>Diária</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('valor_mensal')}>Mensal</th>
+                                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">Ações</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+                                        <tbody className="divide-y divide-gray-200 divide-slate-700">
                                             {sortProperties(availableProperties).map((property) => (
-                                                <tr key={property.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
-                                                    <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white capitalize">{property.tipo_imovel}</td>
+                                                <tr key={property.id} className="hover:bg-slate-700/50 transition-colors">
+                                                    <td className="px-4 py-3 text-sm font-medium text-white capitalize">{property.tipo_imovel}</td>
                                                     <td className="px-4 py-3">
                                                         {(() => {
                                                             const op = (property.operacao || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -607,23 +607,23 @@ export const PartnerProperties: React.FC = () => {
                                                     <td className="px-4 py-3 text-center">{property.quartos}</td>
                                                     <td className="px-4 py-3 text-center">{property.banheiros}</td>
                                                     <td className="px-4 py-3 text-center">{property.vagas}</td>
-                                                    <td className="px-4 py-3 text-sm text-center font-semibold text-primary-600 dark:text-primary-400">
+                                                    <td className="px-4 py-3 text-sm text-center font-semibold text-primary-600 text-primary-400">
                                                         {property.valor_venda ? formatCurrency(property.valor_venda) : '-'}
                                                     </td>
-                                                    <td className="px-4 py-3 text-sm text-center font-semibold text-blue-600 dark:text-blue-400">
+                                                    <td className="px-4 py-3 text-sm text-center font-semibold text-blue-600 text-blue-400">
                                                         {property.valor_locacao ? formatCurrency(property.valor_locacao) : '-'}
                                                     </td>
-                                                    <td className="px-4 py-3 text-sm text-center font-semibold text-orange-600 dark:text-orange-400">
+                                                    <td className="px-4 py-3 text-sm text-center font-semibold text-orange-600 text-orange-400">
                                                         {property.valor_diaria ? formatCurrency(property.valor_diaria) : '-'}
                                                     </td>
-                                                    <td className="px-4 py-3 text-sm text-center font-semibold text-orange-600 dark:text-orange-400">
+                                                    <td className="px-4 py-3 text-sm text-center font-semibold text-orange-600 text-orange-400">
                                                         {property.valor_mensal ? formatCurrency(property.valor_mensal) : '-'}
                                                     </td>
                                                     <td className="px-4 py-3 text-center">
                                                         <div className="flex items-center justify-center gap-2">
                                                             <button
                                                                 onClick={() => navigateToProperty(navigate, property, true)}
-                                                                className="p-1.5 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors"
+                                                                className="p-1.5 text-primary-500 hover:bg-primary-50 hover:bg-primary-900/20 rounded transition-colors"
                                                                 title="Ver Anúncio"
                                                             >
                                                                 <Eye size={16} />
@@ -631,7 +631,7 @@ export const PartnerProperties: React.FC = () => {
                                                             {!isTrialUser && (
                                                                 <button
                                                                     onClick={() => onToggle(property, false)}
-                                                                    className="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-xs rounded-lg transition-colors font-medium"
+                                                                    className="px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-xs rounded-full transition-colors font-medium"
                                                                     title="Aceitar Parceria"
                                                                 >
                                                                     <Handshake size={14} className="inline mr-1" />
@@ -650,7 +650,7 @@ export const PartnerProperties: React.FC = () => {
 
                         {/* Map View */}
                         {viewMode === 'map' && (
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 overflow-hidden" style={{ height: '600px' }}>
+                            <div className="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden" style={{ height: '600px' }}>
                                 <PropertyMap
                                     properties={availableProperties as any}
                                 />
@@ -662,13 +662,13 @@ export const PartnerProperties: React.FC = () => {
                 {/* Empty State */}
                 {!missingCity && filteredProperties.length === 0 && (
                     <div className="text-center py-12">
-                        <div className="w-20 h-20 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
                             <Handshake className="text-gray-400" size={40} />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                        <h3 className="text-xl font-bold text-white mb-2">
                             Nenhum imóvel disponível. Aumente o Raio de Atuação.
                         </h3>
-                        <p className="text-gray-600 dark:text-gray-400">
+                        <p className="text-gray-400">
                             Não há imóveis disponíveis para parceria na sua região no momento.
                         </p>
                     </div>
@@ -679,7 +679,7 @@ export const PartnerProperties: React.FC = () => {
                     <div className="mb-8">
                         <div className="flex items-center justify-between mb-6">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                                     <Handshake className="text-emerald-500" size={28} />
                                     {acceptedProperties.length} {acceptedProperties.length === 1 ? 'parceria ativa' : 'parcerias ativas'}
                                 </h2>
@@ -696,17 +696,17 @@ export const PartnerProperties: React.FC = () => {
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => navigateToProperty(navigate, property, true)}
-                                                    className="flex-1 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                                                    className="flex-1 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-medium transition-colors flex items-center justify-center gap-2"
+                                                    title="Ver Anúncio"
                                                 >
-                                                    <Eye size={16} />
-                                                    Ver Anúncio
+                                                    <Eye size={24} />
                                                 </button>
                                                 <button
                                                     onClick={() => onToggle(property, true)}
-                                                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors"
-                                                    title="Remover Parceria"
+                                                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full font-medium transition-colors"
+                                                    title="Remover"
                                                 >
-                                                    <Handshake size={16} />
+                                                    <Handshake size={24} />
                                                 </button>
                                             </div>
                                         }

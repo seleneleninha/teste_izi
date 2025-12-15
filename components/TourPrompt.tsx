@@ -17,7 +17,7 @@ export const TourPrompt: React.FC<TourPromptProps> = ({
 
     return (
         <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-500">
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-2xl p-6 max-w-sm relative">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-3xl shadow-2xl p-6 max-w-sm relative">
                 <button
                     onClick={onDismiss}
                     className="absolute top-3 right-3 text-white/80 hover:text-white transition-colors"
@@ -26,7 +26,7 @@ export const TourPrompt: React.FC<TourPromptProps> = ({
                 </button>
 
                 <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-white/20 rounded-3xl flex items-center justify-center flex-shrink-0">
                         <HelpCircle size={24} />
                     </div>
 
@@ -40,7 +40,7 @@ export const TourPrompt: React.FC<TourPromptProps> = ({
 
                         <button
                             onClick={onStartTour}
-                            className="w-full px-4 py-2.5 bg-white text-blue-600 rounded-lg font-bold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                            className="w-full px-4 py-2.5 bg-white text-blue-600 rounded-full font-bold hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
                         >
                             <Play size={16} />
                             Iniciar Tour
@@ -48,7 +48,7 @@ export const TourPrompt: React.FC<TourPromptProps> = ({
 
                         {dismissCount > 0 && (
                             <p className="text-xs text-white/70 mt-2 text-center">
-                                Este prompt aparecerá mais {3 - dismissCount} {3 - dismissCount === 1 ? 'vez' : 'vezes'}
+                                Essa mensagem aparecerá mais {3 - dismissCount} {3 - dismissCount === 1 ? 'vez' : 'vezes'}
                             </p>
                         )}
                     </div>

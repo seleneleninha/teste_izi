@@ -49,11 +49,11 @@ export const AIAssistant: React.FC = () => {
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-80 md:w-96 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 overflow-hidden animate-in fade-in slide-in-from-bottom-10 duration-200 flex flex-col max-h-[500px]">
+        <div className="mb-4 w-80 md:w-96 bg-slate-800 rounded-full shadow-2xl border border-slate-700 overflow-hidden animate-in fade-in slide-in-from-bottom-10 duration-200 flex flex-col max-h-[500px]">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary-600 to-primary-500 p-4 flex justify-between items-center">
             <div className="flex items-center space-x-2 text-white">
-              <div className="bg-white/20 p-1.5 rounded-lg">
+              <div className="bg-white/20 p-1.5 rounded-full">
                 <BrainCircuit size={18} />
               </div>
               <div>
@@ -70,13 +70,13 @@ export const AIAssistant: React.FC = () => {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-slate-900/50 h-80">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900/50 h-80">
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`max-w-[85%] rounded-2xl p-3 text-sm ${msg.role === 'user'
+                  className={`max-w-[85%] rounded-full p-3 text-sm ${msg.role === 'user'
                     ? 'bg-primary-500 text-white rounded-tr-none'
-                    : 'bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-tl-none shadow-sm border border-gray-100 dark:border-slate-600'
+                    : 'bg-slate-700 text-gray-200 rounded-tl-none shadow-sm border border-slate-600'
                     }`}
                 >
                   {msg.text}
@@ -85,9 +85,9 @@ export const AIAssistant: React.FC = () => {
             ))}
             {isThinking && (
               <div className="flex justify-start">
-                <div className="bg-white dark:bg-slate-700 rounded-2xl rounded-tl-none p-3 shadow-sm border border-gray-100 dark:border-slate-600 flex items-center space-x-2">
+                <div className="bg-slate-700 rounded-full rounded-tl-none p-3 shadow-sm border border-slate-600 flex items-center space-x-2">
                   <Loader2 size={14} className="animate-spin text-primary-500" />
-                  <span className="text-xs text-gray-500 dark:text-gray-400 italic">Pensando e analisando dados...</span>
+                  <span className="text-xs text-gray-400 italic">Pensando e analisando dados...</span>
                 </div>
               </div>
             )}
@@ -95,15 +95,15 @@ export const AIAssistant: React.FC = () => {
           </div>
 
           {/* Input */}
-          <div className="p-3 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
-            <div className="flex items-center space-x-2 bg-gray-100 dark:bg-slate-900 rounded-full px-4 py-2">
+          <div className="p-3 bg-slate-800 border-t border-slate-700">
+            <div className="flex items-center space-x-2 bg-slate-900 rounded-full px-4 py-2">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Pergunte algo..."
-                className="flex-1 bg-transparent outline-none text-sm text-gray-800 dark:text-gray-200 placeholder-gray-500"
+                className="flex-1 bg-transparent outline-none text-sm text-gray-200 placeholder-gray-500"
               />
               <button
                 onClick={handleSend}
@@ -120,12 +120,12 @@ export const AIAssistant: React.FC = () => {
       {/* FAB Toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`group flex items-center justify-center w-14 h-14 rounded-full shadow-lg shadow-primary-500/30 transition-all duration-300 hover:scale-110 ${isOpen ? 'bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-gray-300 rotate-90' : 'bg-gradient-to-r from-primary-600 to-primary-400 text-white'}`}
+        className={`group flex items-center justify-center w-14 h-14 rounded-full shadow-lg shadow-primary-500/30 transition-all duration-300 hover:scale-110 ${isOpen ? 'bg-slate-700 text-gray-300 rotate-90' : 'bg-gradient-to-r from-primary-600 to-primary-400 text-white'}`}
       >
         {isOpen ? <X size={24} /> : <Sparkles size={24} className="animate-pulse" />}
 
         {!isOpen && (
-          <span className="absolute right-16 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 px-3 py-1 rounded-lg text-xs font-bold shadow-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-gray-100 dark:border-slate-700">
+          <span className="absolute right-16 bg-slate-800 text-gray-200 px-3 py-1 rounded-full text-xs font-bold shadow-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-slate-700">
             Assistente IzA
           </span>
         )}

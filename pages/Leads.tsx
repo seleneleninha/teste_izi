@@ -53,6 +53,8 @@ interface Lead {
     tipo_imovel_interesse?: string; // UUID
     cidade_interesse?: string;
     bairro_interesse?: string;
+    bairro_interesse_2?: string;
+    bairro_interesse_3?: string;
     orcamento_min?: number;
     orcamento_max?: number;
     motivo_perda?: string;
@@ -93,16 +95,16 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
             style={style}
             {...attributes}
             {...listeners}
-            className={`bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group ${isDragging ? 'shadow-2xl ring-2 ring-primary-500 scale-105' : ''
+            className={`bg-slate-800 p-4 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group ${isDragging ? 'shadow-2xl ring-2 ring-primary-500 scale-105' : ''
                 } ${locked ? 'opacity-75' : ''}`}
         >
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
                     <div>
-                        <h4 className="font-bold text-sm text-gray-900 dark:text-white">
+                        <h4 className="font-bold text-sm text-white">
                             {locked ? 'Lead Bloqueado' : lead.nome}
                         </h4>
-                        <p className="text-xs text-gray-500 dark:text-slate-400">
+                        <p className="text-xs text-slate-400">
                             {locked ? '•••••••••••' : lead.telefone}
                         </p>
                     </div>
@@ -114,7 +116,7 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
                                 e.stopPropagation();
                                 if (onEdit) onEdit(lead);
                             }}
-                            className="p-1.5 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded text-orange-600"
+                            className="p-1.5 hover:bg-orange-100 hover:bg-orange-900/30 rounded text-orange-600"
                             title="Editar Lead"
                         >
                             <Pencil size={14} />
@@ -124,7 +126,7 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
                                 e.stopPropagation();
                                 window.open(`https://wa.me/55${lead.telefone.replace(/\D/g, '')}`, '_blank');
                             }}
-                            className="p-1.5 hover:bg-green-100 dark:hover:bg-green-900/30 rounded text-green-600"
+                            className="p-1.5 hover:bg-green-100 hover:bg-green-900/30 rounded text-green-600"
                             title="WhatsApp"
                         >
                             <MessageCircle size={14} />
@@ -134,12 +136,12 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
                                 e.stopPropagation();
                                 if (onMatch) onMatch(lead);
                             }}
-                            className="p-1.5 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded text-purple-600 relative"
+                            className="p-1.5 hover:bg-purple-100 hover:bg-purple-900/30 rounded text-purple-600 relative"
                             title="Ver Imóveis Compatíveis"
                         >
                             <Target size={14} />
                             {matchCount > 0 && (
-                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white dark:border-slate-800"></span>
+                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white border-slate-800"></span>
                             )}
                         </button>
                         {lead.status !== 'Inativo' && (
@@ -148,7 +150,7 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
                                     e.stopPropagation();
                                     if (onArchive) onArchive(lead);
                                 }}
-                                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700/30 rounded text-gray-600"
+                                className="p-1.5 hover:bg-gray-100 hover:bg-gray-700/30 rounded text-gray-600"
                                 title="Arquivar Lead"
                             >
                                 <Archive size={14} />
@@ -164,12 +166,12 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
             </div>
 
             <div className="space-y-2">
-                <div className="flex items-center text-xs text-gray-600 dark:text-slate-400 bg-gray-50 dark:bg-slate-700/50 p-2 rounded">
+                <div className="flex items-center text-xs text-slate-400 bg-slate-700/50 p-2 rounded">
                     <span className="font-medium mr-1"></span> {lead.interesse}
                 </div>
-                <div className="flex justify-between items-center text-xs text-gray-500 dark:text-slate-400">
+                <div className="flex justify-between items-center text-xs text-slate-400">
                     {locked ? (
-                        <span className="text-primary-500 font-bold bg-primary-50 dark:bg-primary-900/20 px-2 py-1 rounded">
+                        <span className="text-primary-500 font-bold bg-primary-50 bg-primary-900/20 px-2 py-1 rounded">
                             Faça upgrade para ver
                         </span>
                     ) : (
@@ -186,20 +188,20 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
                 </div>
 
                 {/* Mobile-Friendly Status Change */}
-                <div className="md:hidden pt-2 border-t border-gray-100 dark:border-slate-700">
+                <div className="md:hidden pt-2 border-t border-slate-700">
                     <div className="relative">
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setShowStatusMenu(!showStatusMenu);
                             }}
-                            className="w-full px-3 py-2 text-xs font-medium bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg flex items-center justify-between transition-colors"
+                            className="w-full px-3 py-2 text-xs font-medium bg-slate-700 hover:bg-slate-600 rounded-3xl flex items-center justify-between transition-colors"
                         >
                             <span>Mover para: {lead.status}</span>
                             <ChevronRight size={14} className={`transition-transform ${showStatusMenu ? 'rotate-90' : ''}`} />
                         </button>
                         {showStatusMenu && (
-                            <div className="absolute z-50 mt-1 w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg">
+                            <div className="absolute z-50 mt-1 w-full bg-slate-800 border border-slate-700 rounded-3xl shadow-lg">
                                 {statusOptions.filter(opt => opt.value !== lead.status).map(option => (
                                     <button
                                         key={option.value}
@@ -210,7 +212,7 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
                                             }
                                             setShowStatusMenu(false);
                                         }}
-                                        className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-gray-50 dark:hover:bg-slate-700 first:rounded-t-lg last:rounded-b-lg ${option.color}`}
+                                        className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-slate-700 first:rounded-t-lg last:rounded-b-lg ${option.color}`}
                                     >
                                         {option.label}
                                     </button>
@@ -241,28 +243,28 @@ const DroppableColumn: React.FC<{
     });
 
     return (
-        <div ref={setNodeRef} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
+        <div ref={setNodeRef} className="bg-slate-800 rounded-3xl border border-slate-700 shadow-sm transition-all hover:shadow-md">
             {/* Column Header acting as Stage Card Header */}
-            <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between bg-gray-50/50 dark:bg-slate-800/50">
+            <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-gray-50/50 bg-slate-800/50">
                 <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-lg shadow-sm bg-white dark:bg-slate-700`}>
+                    <div className={`p-2 rounded-3xl shadow-sm bg-slate-700`}>
                         {Icon && <Icon size={20} className={color.replace('bg-', 'text-')} />}
                     </div>
                     <div>
-                        <h3 className="font-bold text-gray-900 dark:text-white text-base">{label}</h3>
-                        {description && <p className="text-xs text-gray-500 dark:text-slate-400">{description}</p>}
+                        <h3 className="font-bold text-white text-base">{label}</h3>
+                        {description && <p className="text-xs text-slate-400">{description}</p>}
                     </div>
                 </div>
                 <div className="text-right">
-                    <span className="text-xl font-bold text-gray-900 dark:text-white block">{leads.length}</span>
+                    <span className="text-xl font-bold text-white block">{leads.length}</span>
                 </div>
             </div>
 
             {/* Leads List */}
-            <div className="p-4 min-h-[100px] space-y-3 bg-gray-50 dark:bg-slate-900/20">
+            <div className="p-4 min-h-[100px] space-y-3 bg-slate-900/20">
                 {children}
                 {leads.length === 0 && (
-                    <div className="border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg p-6 text-center">
+                    <div className="border-2 border-dashed border-slate-700 rounded-2xl p-6 text-center">
                         <p className="text-sm text-gray-400">Arraste leads para cá</p>
                     </div>
                 )}
@@ -294,6 +296,8 @@ export const Leads: React.FC = () => {
         tipo_imovel_interesse: '',
         cidade_interesse: '',
         bairro_interesse: '',
+        bairro_interesse_2: '',
+        bairro_interesse_3: '',
         orcamento_min: '',
         orcamento_max: ''
     });
@@ -324,11 +328,11 @@ export const Leads: React.FC = () => {
     );
 
     const columns = [
-        { status: 'Novo', label: 'Novos', color: 'bg-blue-500', darkColor: 'dark:bg-blue-600', icon: Eye, description: 'Leads recém-capturados' },
-        { status: 'Em Contato', label: 'Em Contato', color: 'bg-yellow-500', darkColor: 'dark:bg-yellow-600', icon: Search, description: 'Primeiro contato realizado' },
-        { status: 'Negociação', label: 'Negociação', color: 'bg-purple-500', darkColor: 'dark:bg-purple-600', icon: FileText, description: 'Negociando proposta' },
-        { status: 'Fechado', label: 'Fechados', color: 'bg-green-500', darkColor: 'dark:bg-green-600', icon: CheckCircle, description: 'Negócio concluído' },
-        { status: 'Perdido', label: 'Perdidos', color: 'bg-red-500', darkColor: 'dark:bg-red-600', icon: XCircle, description: 'Leads perdidos' },
+        { status: 'Novo', label: 'Novos', color: 'bg-blue-500', darkColor: 'bg-blue-600', icon: Eye, description: 'Leads recém-capturados' },
+        { status: 'Em Contato', label: 'Em Contato', color: 'bg-yellow-500', darkColor: 'bg-yellow-600', icon: Search, description: 'Primeiro contato realizado' },
+        { status: 'Negociação', label: 'Negociação', color: 'bg-purple-500', darkColor: 'bg-purple-600', icon: FileText, description: 'Negociando proposta' },
+        { status: 'Fechado', label: 'Fechados', color: 'bg-green-500', darkColor: 'bg-green-600', icon: CheckCircle, description: 'Negócio concluído' },
+        { status: 'Perdido', label: 'Perdidos', color: 'bg-red-500', darkColor: 'bg-red-600', icon: XCircle, description: 'Leads perdidos' },
     ];
 
     useEffect(() => {
@@ -495,6 +499,8 @@ export const Leads: React.FC = () => {
                 tipo_imovel_interesse: newLead.tipo_imovel_interesse || null,
                 cidade_interesse: finalCity || null,
                 bairro_interesse: finalNeighborhood || null,
+                bairro_interesse_2: newLead.bairro_interesse_2 || null,
+                bairro_interesse_3: newLead.bairro_interesse_3 || null,
                 orcamento_min: parseFloat(newLead.orcamento_min) || 0,
                 orcamento_max: parseFloat(newLead.orcamento_max) || 0,
             };
@@ -555,7 +561,9 @@ export const Leads: React.FC = () => {
             setNewLead({
                 nome: '', email: '', telefone: '', interesse: '',
                 operacao_interesse: '', tipo_imovel_interesse: '',
-                cidade_interesse: '', bairro_interesse: '', orcamento_min: '', orcamento_max: ''
+                cidade_interesse: '', bairro_interesse: '',
+                bairro_interesse_2: '', bairro_interesse_3: '',
+                orcamento_min: '', orcamento_max: ''
             });
             setCustomCity('');
             setCustomNeighborhood('');
@@ -570,7 +578,9 @@ export const Leads: React.FC = () => {
             }
 
             setEditingLeadId(null);
-            fetchLeads();
+            setEditingLeadId(null);
+            await fetchLeads();
+            await fetchMatchCounts(); // Recalculate matches immediately
         } catch (error) {
             console.error('Error saving lead:', error);
             addToast('Erro ao salvar lead.', 'error');
@@ -588,6 +598,8 @@ export const Leads: React.FC = () => {
             tipo_imovel_interesse: lead.tipo_imovel_interesse || '',
             cidade_interesse: lead.cidade_interesse || '',
             bairro_interesse: lead.bairro_interesse || '',
+            bairro_interesse_2: lead.bairro_interesse_2 || '',
+            bairro_interesse_3: lead.bairro_interesse_3 || '',
             orcamento_min: lead.orcamento_min?.toString() || '',
             orcamento_max: lead.orcamento_max?.toString() || ''
         });
@@ -747,7 +759,7 @@ export const Leads: React.FC = () => {
             {/* Controls */}
             <div className="mt-6 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Gestão de Leads</h2>
+                    <h2 className="text-2xl font-bold text-white">Gestão de Leads</h2>
                 </div>
                 <div className="flex space-x-3">
                     <div className="relative">
@@ -757,7 +769,7 @@ export const Leads: React.FC = () => {
                             placeholder="Buscar leads..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none w-48 text-gray-900 dark:text-white"
+                            className="pl-9 pr-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none w-48 text-white"
                         />
                     </div>
                     <button
@@ -770,7 +782,7 @@ export const Leads: React.FC = () => {
                             });
                             setIsModalOpen(true);
                         }}
-                        className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center">
+                        className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-full text-sm font-medium transition-colors flex items-center">
                         <Plus size={16} className="mr-2" /> Novo Lead
                     </button>
                 </div>
@@ -840,22 +852,22 @@ export const Leads: React.FC = () => {
 
             {/* New Lead Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 m-4">
+                    <div className="bg-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">{editingLeadId ? 'Editar Lead' : 'Novo Lead'}</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"><X size={20} /></button>
+                            <h3 className="text-lg font-bold text-white">{editingLeadId ? 'Editar Lead' : 'Novo Lead'}</h3>
+                            <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-300"><X size={20} /></button>
                         </div>
                         <form onSubmit={handleCreateLead} className="space-y-4">
                             <div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                                    <label className="block text-sm font-medium text-slate-300 mb-1">
                                         Nome <span className="text-red-500">*</span>
                                     </label>
-                                    <input type="text" required value={newLead.nome} onChange={e => setNewLead({ ...newLead, nome: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none mb-2" />
+                                    <input type="text" required value={newLead.nome} onChange={e => setNewLead({ ...newLead, nome: e.target.value })} className="w-full px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none mb-2" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                                    <label className="block text-sm font-medium text-slate-300 mb-1">
                                         Telefone <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -875,37 +887,40 @@ export const Leads: React.FC = () => {
                                             }
                                             setNewLead({ ...newLead, telefone: value });
                                         }}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none" />
+                                        className="w-full px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none" />
                                 </div>
                             </div>
 
-                            <div className="border-t border-gray-200 dark:border-slate-700 pt-4 mt-4">
-                                <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Interesse do Cliente</h4>
+                            <div className="border-t border-slate-700 pt-4 mt-4">
+                                <h4 className="text-sm font-bold text-white mb-3">Interesse do Cliente</h4>
 
                                 <div className="grid grid-cols-2 gap-4 mb-3">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">
+                                        <label className="block text-xs font-medium text-slate-400 mb-1">
                                             Operação <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={newLead.operacao_interesse}
                                             onChange={e => setNewLead({ ...newLead, operacao_interesse: e.target.value })}
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                            className="w-full px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
                                         >
                                             <option value="">Selecione...</option>
-                                            {operations.map(op => (
-                                                <option key={op.id} value={op.id}>{op.tipo}</option>
-                                            ))}
+                                            {operations
+                                                .filter(op => !op.tipo.toLowerCase().includes('venda/locação') && !op.tipo.toLowerCase().includes('venda/locacao'))
+                                                .map(op => (
+                                                    <option key={op.id} value={op.id}>{op.tipo}</option>
+                                                ))
+                                            }
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">
+                                        <label className="block text-xs font-medium text-slate-400 mb-1">
                                             Tipo de Imóvel <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={newLead.tipo_imovel_interesse}
                                             onChange={e => setNewLead({ ...newLead, tipo_imovel_interesse: e.target.value })}
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                            className="w-full px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
                                         >
                                             <option value="">Selecione...</option>
                                             {propertyTypes.map(type => (
@@ -917,10 +932,10 @@ export const Leads: React.FC = () => {
 
                                 {/* Subtipo field removed */}
                                 {/* <div className="mb-3">
-                                    <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Subtipo</label>
+                                    <label className="block text-xs font-medium text-slate-400 mb-1">Subtipo</label>
                                     <select
                                         disabled={!newLead.tipo_imovel_interesse || subtypes.length === 0}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm disabled:opacity-50"
+                                        className="w-full px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm disabled:opacity-50"
                                     >
                                         <option value="">Selecione...</option>
                                         {subtypes.map(sub => (
@@ -931,13 +946,13 @@ export const Leads: React.FC = () => {
 
                                 <div className="grid grid-cols-2 gap-4 mb-3">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">
+                                        <label className="block text-xs font-medium text-slate-400 mb-1">
                                             Cidade <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={newLead.cidade_interesse}
                                             onChange={e => setNewLead({ ...newLead, cidade_interesse: e.target.value, bairro_interesse: '' })}
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                            className="w-full px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
                                         >
                                             <option value="">Selecione...</option>
                                             {cities.map(city => (
@@ -951,17 +966,19 @@ export const Leads: React.FC = () => {
                                                 placeholder="Digite a cidade"
                                                 value={customCity}
                                                 onChange={e => setCustomCity(e.target.value)}
-                                                className="w-full mt-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                                className="w-full mt-2 px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
                                             />
                                         )}
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Bairro</label>
+                                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                                            Bairro <span className="text-red-500">*</span>
+                                        </label>
                                         <select
                                             value={newLead.bairro_interesse}
                                             onChange={e => setNewLead({ ...newLead, bairro_interesse: e.target.value })}
                                             disabled={(!newLead.cidade_interesse && !isCustomCity) || (newLead.cidade_interesse === 'outro' && !customCity)}
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm disabled:opacity-50"
+                                            className="w-full px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm disabled:opacity-50"
                                         >
                                             <option value="">Selecione...</option>
                                             {neighborhoods.map(hood => (
@@ -975,37 +992,69 @@ export const Leads: React.FC = () => {
                                                 placeholder="Digite o bairro"
                                                 value={customNeighborhood}
                                                 onChange={e => setCustomNeighborhood(e.target.value)}
-                                                className="w-full mt-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                                className="w-full mt-2 px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
                                             />
                                         )}
                                     </div>
                                 </div>
 
+                                {/* Bairros 2 e 3 */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Orçamento Mín (R$)</label>
+                                        <label className="block text-xs font-medium text-slate-400 mb-1">Bairro 2 (Opcional)</label>
+                                        <select
+                                            value={newLead.bairro_interesse_2}
+                                            onChange={e => setNewLead({ ...newLead, bairro_interesse_2: e.target.value })}
+                                            disabled={(!newLead.cidade_interesse && !isCustomCity) || (newLead.cidade_interesse === 'outro' && !customCity)}
+                                            className="w-full px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm disabled:opacity-50"
+                                        >
+                                            <option value="">Selecione...</option>
+                                            {neighborhoods.map(hood => (
+                                                <option key={hood} value={hood}>{hood}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-400 mb-1">Bairro 3 (Opcional)</label>
+                                        <select
+                                            value={newLead.bairro_interesse_3}
+                                            onChange={e => setNewLead({ ...newLead, bairro_interesse_3: e.target.value })}
+                                            disabled={(!newLead.cidade_interesse && !isCustomCity) || (newLead.cidade_interesse === 'outro' && !customCity)}
+                                            className="w-full px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm disabled:opacity-50"
+                                        >
+                                            <option value="">Selecione...</option>
+                                            {neighborhoods.map(hood => (
+                                                <option key={hood} value={hood}>{hood}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-400 mb-1">Orçamento Mín (R$)</label>
                                         <input
                                             type="number"
                                             value={newLead.orcamento_min}
                                             onChange={e => setNewLead({ ...newLead, orcamento_min: e.target.value })}
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                            className="w-full px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
                                             placeholder="0,00"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Orçamento Max (R$)</label>
+                                        <label className="block text-xs font-medium text-slate-400 mb-1">Orçamento Max (R$)</label>
                                         <input
                                             type="number"
                                             value={newLead.orcamento_max}
                                             onChange={e => setNewLead({ ...newLead, orcamento_max: e.target.value })}
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
+                                            className="w-full px-3 py-2 rounded-full border border-slate-600 bg-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 outline-none text-sm"
                                             placeholder="0,00"
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <button type="submit" className="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-bold transition-colors mt-4">{editingLeadId ? 'Salvar Alterações' : 'Criar Lead'}</button>
+                            <button type="submit" className="w-full py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-full font-bold transition-colors mt-4">{editingLeadId ? 'Salvar Alterações' : 'Criar Lead'}</button>
                         </form>
                     </div>
                 </div>
@@ -1015,20 +1064,20 @@ export const Leads: React.FC = () => {
             {/* Matching Properties Modal */}
             {matchModalOpen && selectedLeadForMatch && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+                    <div className="bg-slate-800 rounded-3xl shadow-xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
                         <button
                             onClick={() => setMatchModalOpen(false)}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-200"
                         >
                             <X size={20} />
                         </button>
 
                         <div className="mb-6">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                 <Target className="text-primary-500" />
                                 Imóveis Compatíveis
                             </h3>
-                            <p className="text-sm text-gray-500 dark:text-slate-400">
+                            <p className="text-sm text-slate-400">
                                 Sugestões para {selectedLeadForMatch.nome} com base no perfil
                             </p>
                         </div>
@@ -1037,45 +1086,105 @@ export const Leads: React.FC = () => {
                             <div className="flex justify-center py-12">
                                 <Loader2 className="animate-spin text-primary-500" size={32} />
                             </div>
-                        ) : matchingProperties.length > 0 ? (
+                        ) : matchingProperties.filter(p => p.match_score >= 60).length > 0 ? (
                             <div className="space-y-4">
-                                {matchingProperties.map(prop => (
-                                    <div key={prop.id} className="bg-gray-50 dark:bg-slate-700/50 p-4 rounded-lg border border-gray-200 dark:border-slate-600 flex justify-between items-center hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-                                        <div>
-                                            <h4 className="font-bold text-gray-900 dark:text-white">{prop.titulo}</h4>
-                                            <div className="gap-3 text-sm text-gray-500 dark:text-slate-400 mt-1">
-                                                <span>{prop.cidade} - {prop.bairro}</span>
-                                                <p className="text-xl text-primary-600 dark:text-primary-400 font-bold">
-                                                    {prop.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="text-right">
-                                                <div className="text-xs text-gray-500 dark:text-slate-400">Match</div>
-                                                <div className={`text-xl font-bold ${prop.match_score >= 80 ? 'text-green-500' :
-                                                    prop.match_score >= 60 ? 'text-yellow-500' :
-                                                        'text-gray-500'
-                                                    }`}>
-                                                    {prop.match_score}%
+                                {matchingProperties
+                                    .filter(p => p.match_score >= 60)
+                                    .map(prop => {
+                                        // Use pre-joined names from helper (fallback to lookup if not available)
+                                        const opName = prop.operacao_nome || operations.find(op => op.id === prop.operacao)?.tipo || 'Operação';
+                                        const typeName = prop.tipo_imovel_nome || propertyTypes.find(t => t.id === prop.tipo_imovel)?.tipo || 'Imóvel';
+
+                                        // Badge Colors based on operation name
+                                        let opColor = 'bg-gray-700 text-gray-300 border-gray-600';
+                                        const opLower = opName.toLowerCase();
+                                        if (opLower.includes('venda')) opColor = 'bg-red-900/40 text-red-200 border-red-700/50';
+                                        else if (opLower.includes('locação') || opLower.includes('aluguel')) opColor = 'bg-blue-900/40 text-blue-200 border-blue-700/50';
+                                        else if (opLower.includes('temporada')) opColor = 'bg-orange-900/40 text-orange-200 border-orange-700/50';
+
+                                        // Price display logic
+                                        const formatPrice = (val: number) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+
+                                        return (
+                                            <div key={prop.id} className="bg-slate-700/50 p-4 rounded-3xl border border-slate-600 flex justify-between items-center hover:bg-slate-700 transition-colors">
+                                                <div>
+                                                    <h4 className="font-bold text-white text-lg">{prop.titulo}</h4>
+
+                                                    {/* Badges Row */}
+                                                    <div className="flex flex-wrap gap-2 mt-2 mb-2">
+                                                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${opColor}`}>
+                                                            {opName}
+                                                        </span>
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border bg-purple-900/40 text-purple-200 border-purple-700/50">
+                                                            {typeName}
+                                                        </span>
+                                                    </div>
+
+                                                    <span className="text-sm text-slate-400 block mb-1">{prop.cidade} - {prop.bairro}</span>
+
+                                                    {/* Price Logic */}
+                                                    <div className="text-xl text-primary-400 font-bold">
+                                                        {opLower.includes('temporada') ? (
+                                                            <div className="flex flex-col">
+                                                                {prop.valor_diaria && prop.valor_diaria > 0 && (
+                                                                    <span>{formatPrice(prop.valor_diaria)} <span className="text-xs font-normal text-slate-500">/dia</span></span>
+                                                                )}
+                                                                {prop.valor_mensal && prop.valor_mensal > 0 && (
+                                                                    <span>{formatPrice(prop.valor_mensal)} <span className="text-xs font-normal text-slate-500">/mês</span></span>
+                                                                )}
+                                                                {(!prop.valor_diaria || prop.valor_diaria <= 0) && (!prop.valor_mensal || prop.valor_mensal <= 0) && (
+                                                                    <span className="text-sm">Sob Consulta</span>
+                                                                )}
+                                                            </div>
+                                                        ) : opLower.includes('venda/locação') || opLower.includes('venda/locacao') ? (
+                                                            // For Venda/Locação: show BOTH prices
+                                                            <div className="flex flex-col gap-1">
+                                                                {prop.valor_venda && prop.valor_venda > 0 && (
+                                                                    <span className="text-base">{formatPrice(prop.valor_venda)} <span className="text-xs font-normal text-slate-500">venda</span></span>
+                                                                )}
+                                                                {prop.valor_locacao && prop.valor_locacao > 0 && (
+                                                                    <span className="text-base">{formatPrice(prop.valor_locacao)} <span className="text-xs font-normal text-slate-500">/mês</span></span>
+                                                                )}
+                                                                {(!prop.valor_venda || prop.valor_venda <= 0) && (!prop.valor_locacao || prop.valor_locacao <= 0) && (
+                                                                    <span className="text-sm">Sob Consulta</span>
+                                                                )}
+                                                            </div>
+                                                        ) : opLower.includes('venda') ? (
+                                                            <span>{prop.valor_venda && prop.valor_venda > 0 ? formatPrice(prop.valor_venda) : 'Sob Consulta'}</span>
+                                                        ) : opLower.includes('locação') || opLower.includes('aluguel') ? (
+                                                            <span>{prop.valor_locacao && prop.valor_locacao > 0 ? formatPrice(prop.valor_locacao) : 'Sob Consulta'}</span>
+                                                        ) : (
+                                                            <span>{formatPrice(prop.valor)}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="text-right">
+                                                        <div className="text-xs text-slate-400">Match</div>
+                                                        <div className={`text-xl font-bold ${prop.match_score >= 80 ? 'text-green-500' :
+                                                            prop.match_score >= 60 ? 'text-yellow-500' :
+                                                                'text-gray-500'
+                                                            }`}>
+                                                            {prop.match_score}%
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => {
+                                                            setViewingPropertyId(prop.id);
+                                                            setIsDetailsModalOpen(true);
+                                                        }}
+                                                        className="p-2 bg-slate-600 rounded-full shadow-sm hover:shadow text-primary-500 hover:text-primary-600 transition-all"
+                                                        title="Ver Detalhes e Enviar"
+                                                    >
+                                                        <ArrowRight size={18} />
+                                                    </button>
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => {
-                                                    setViewingPropertyId(prop.id);
-                                                    setIsDetailsModalOpen(true);
-                                                }}
-                                                className="p-2 bg-white dark:bg-slate-600 rounded-full shadow-sm hover:shadow text-primary-500 hover:text-primary-600 transition-all"
-                                                title="Ver Detalhes e Enviar"
-                                            >
-                                                <ArrowRight size={18} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                                        )
+                                    })}
                             </div>
                         ) : (
-                            <div className="text-center py-12 text-gray-500 dark:text-slate-400">
+                            <div className="text-center py-12 text-slate-400">
                                 <Search size={48} className="mx-auto mb-3 opacity-20" />
                                 <p>Nenhum imóvel compatível encontrado no momento.</p>
                                 <p className="text-sm mt-1">Tente ajustar os critérios do lead.</p>

@@ -1,24 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { X, Facebook, Globe, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
+import { X, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { useToast } from '../components/ToastContext';
+import { useToast } from './ToastContext';
 
-export const Login: React.FC = () => {
+interface LoginModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     const navigate = useNavigate();
-    const location = useLocation();
     const { addToast } = useToast();
     const [isSignUp, setIsSignUp] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [userType, setUserType] = useState<'corretor' | 'cliente'>('cliente');
-
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        if (params.get('register') === 'true') {
-            setIsSignUp(true);
-        }
-    }, [location]);
 
     // Form State
     const [email, setEmail] = useState('');
@@ -26,7 +24,6 @@ export const Login: React.FC = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [nome, setNome] = useState('');
     const [sobrenome, setSobrenome] = useState('');
-    const [apelido, setApelido] = useState('');
     const [cpf, setCpf] = useState('');
     const [whatsapp, setWhatsapp] = useState('');
     const [creci, setCreci] = useState('');
@@ -62,15 +59,12 @@ export const Login: React.FC = () => {
 
         try {
             if (isSignUp) {
-                // Validation
                 if (password !== confirmPassword) {
                     addToast('As senhas não coincidem.', 'error');
                     setLoading(false);
                     return;
                 }
 
-                // Only validate CPF if it's a Broker (or if we decide Clients also need CPF later)
-                // For now, let's keep CPF optional for clients as per request
                 if (userType === 'corretor' && cpf.length < 14) {
                     addToast('CPF inválido.', 'error');
                     setLoading(false);
@@ -84,13 +78,12 @@ export const Login: React.FC = () => {
                         data: {
                             nome,
                             sobrenome,
-                            apelido: apelido || null,
                             cpf: userType === 'corretor' ? cpf : null,
                             whatsapp,
                             creci: userType === 'corretor' ? creci : null,
                             uf_creci: userType === 'corretor' ? ufCreci : null,
                             is_trial: userType === 'corretor' ? trialAccepted : false,
-                            tipo_usuario: userType // Guardamos o tipo para diferenciar
+                            tipo_usuario: userType
                         }
                     }
                 });
@@ -106,7 +99,6 @@ export const Login: React.FC = () => {
                 if (error) throw error;
 
                 if (data?.user) {
-                    // Check if user is admin
                     const { data: profile } = await supabase
                         .from('perfis')
                         .select('is_admin')
@@ -114,15 +106,11 @@ export const Login: React.FC = () => {
                         .single();
 
                     addToast('Login realizado com sucesso!', 'success');
+                    onClose(); // Close modal
 
-                    const params = new URLSearchParams(location.search);
-                    const redirectTo = params.get('redirectTo');
-
-                    // Redirect based on role or return url
-                    if (redirectTo) {
-                        navigate(redirectTo);
-                    } else if (profile?.is_admin) {
-                        navigate('/dashboard'); // Redirect to main dashboard with X-Ray
+                    // Redirect based on role
+                    if (profile?.is_admin) {
+                        navigate('/dashboard');
                     } else {
                         navigate('/dashboard');
                     }
@@ -136,11 +124,13 @@ export const Login: React.FC = () => {
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm overflow-y-auto py-10">
-            <div className={`bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-8 relative border border-slate-700 my-auto ${isSignUp ? 'max-w-2xl' : 'max-w-md'}`}>
+    if (!isOpen) return null;
+
+    return ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/60 backdrop-blur-sm overflow-y-auto py-10">
+            <div className={`bg-slate-900 rounded-3xl shadow-2xl w-full p-8 relative border border-slate-700 my-auto ${isSignUp ? 'max-w-2xl' : 'max-w-md'}`}>
                 <button
-                    onClick={() => navigate('/')}
+                    onClick={onClose}
                     className="absolute top-4 right-4 text-gray-400 hover:text-gray-200 transition-colors"
                 >
                     <X size={24} />
@@ -185,7 +175,7 @@ export const Login: React.FC = () => {
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-medium text-slate-400 mb-1 ml-1">Nome <span className="text-red-500">*</span></label>
                                     <input
@@ -221,7 +211,6 @@ export const Login: React.FC = () => {
 
                                 {userType === 'corretor' && (
                                     <>
-
                                         <div className="md:col-span-2">
                                             <label className="block text-xs font-medium text-slate-400 mb-1 ml-1">CPF <span className="text-red-500">*</span></label>
                                             <input
@@ -324,9 +313,7 @@ export const Login: React.FC = () => {
 
                     {isSignUp && (
                         <>
-
                             <div className="flex items-start mt-4">
-
                                 <div className="flex items-center h-5">
                                     <input
                                         id="terms"
@@ -381,8 +368,8 @@ export const Login: React.FC = () => {
                         </button>
                     </div>
                 </form>
-
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };

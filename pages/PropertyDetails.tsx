@@ -50,7 +50,8 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 export const PropertyDetails: React.FC = () => {
-    const { id, slug } = useParams();
+    const { id, slug, brokerSlug } = useParams();
+    const routeParams = useParams(); // Keep full object for compatibility if needed
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
@@ -213,8 +214,9 @@ export const PropertyDetails: React.FC = () => {
                     const agentData = data.perfis as any;
 
                     // Verificar se o imóvel é uma parceria
-                    // Usar query param 'broker' para determinar o contexto do corretor
-                    const brokerSlugParam = searchParams.get('broker');
+                    // Usar query param 'broker' ou route param 'brokerSlug' para determinar o contexto do corretor
+                    const useParamsBrokerSlug = (routeParams as any).brokerSlug; // Cast to access custom param
+                    const brokerSlugParam = searchParams.get('broker') || useParamsBrokerSlug;
                     let finalAgentData = agentData;
 
                     if (brokerSlugParam) {
@@ -335,7 +337,8 @@ export const PropertyDetails: React.FC = () => {
         const fetchRelated = async () => {
             // BYPASS: Se houver um corretor na URL (contexto de oferta enviada), 
             // NÃO buscamos imóveis relacionados para evitar que o lead saia do fluxo exclusivo
-            if (!property || searchParams.get('broker')) return;
+            const useParamsBrokerSlug = (routeParams as any)?.brokerSlug;
+            if (!property || searchParams.get('broker') || useParamsBrokerSlug) return;
 
             try {
                 const { data } = await supabase
@@ -459,7 +462,7 @@ export const PropertyDetails: React.FC = () => {
     }
 
     return (
-        <div className="bg-gray-50 dark:bg-slate-900">
+        <div className="bg-slate-900">
 
             {/* Main Content */}
             <div className="container mx-auto px-4 py-8">
@@ -474,7 +477,7 @@ export const PropertyDetails: React.FC = () => {
                                     navigate('/');
                                 }
                             }}
-                            className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors flex items-center gap-2"
+                            className="px-6 py-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center gap-2"
                         >
                             <ArrowLeft size={20} />
                             <span>Voltar</span>
@@ -488,14 +491,14 @@ export const PropertyDetails: React.FC = () => {
                                     // Using a custom toast implementation since useToast might not be available in this scope
                                     // Ideally we should use the ToastContext
                                     const toast = document.createElement('div');
-                                    toast.className = 'fixed bottom-4 right-4 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-xl z-50 animate-fade-in-up flex items-center gap-2';
+                                    toast.className = 'fixed bottom-4 right-4 bg-emerald-600 text-white px-6 py-3 rounded-full shadow-xl z-50 animate-fade-in-up flex items-center gap-2';
                                     toast.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Link copiado com sucesso!';
                                     document.body.appendChild(toast);
                                     setTimeout(() => {
                                         toast.remove();
                                     }, 3000);
                                 }}
-                                className="p-2 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-600 hover:text-primary-500 transition-colors"
+                                className="p-2 rounded-full bg-slate-800 border border-slate-700 text-gray-600 hover:text-primary-500 transition-colors"
                                 title="Copiar Link"
                             >
                                 <Share2 size={20} />
@@ -504,7 +507,7 @@ export const PropertyDetails: React.FC = () => {
                                 onClick={toggleFavorite}
                                 className={`p-2 rounded-full border transition-colors ${isFavorite
                                     ? 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100'
-                                    : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 hover:text-red-500'
+                                    : 'bg-slate-800 border-slate-700 text-gray-600 hover:text-red-500'
                                     }`}
                                 title={isFavorite ? "Remover dos Favoritos" : "Salvar Favorito"}
                             >
@@ -514,7 +517,7 @@ export const PropertyDetails: React.FC = () => {
                     </div>
 
                     {/* Hero Image Gallery */}
-                    <div className="relative rounded-2xl overflow-hidden h-[300px] md:h-[500px] mb-8 shadow-lg group">
+                    <div className="relative rounded-3xl overflow-hidden h-[300px] md:h-[500px] mb-8 shadow-lg group">
                         <AnimatePresence initial={false} custom={direction}>
                             <motion.img
                                 key={page}
@@ -551,13 +554,13 @@ export const PropertyDetails: React.FC = () => {
                             <>
                                 <button
                                     onClick={prevImage}
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                                 >
                                     <ArrowLeft size={24} />
                                 </button>
                                 <button
                                     onClick={nextImage}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                                 >
                                     <ArrowLeft size={24} className="rotate-180" />
                                 </button>
@@ -615,9 +618,9 @@ export const PropertyDetails: React.FC = () => {
                         <div className="lg:col-span-2 space-y-8">
 
                             {/* Stats Strip */}
-                            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 flex flex-wrap justify-between items-center gap-4">
+                            <div className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 flex flex-wrap justify-between items-center gap-4">
                                 <div className="text-center min-w-[80px]">
-                                    <p className="text-gray-500 dark:text-slate-400 text-sm uppercase tracking-wider mb-1">Preço</p>
+                                    <p className="text-slate-400 text-sm uppercase tracking-wider mb-1">Preço</p>
                                     <div className="flex flex-col items-center">
                                         {/* Temporada: Show Diária/Mensal */}
                                         {property.operacao?.toLowerCase() === 'temporada' ? (
@@ -625,13 +628,13 @@ export const PropertyDetails: React.FC = () => {
                                                 {property.valor_diaria > 0 && (
                                                     <p className="text-2xl font-bold text-orange-500">
                                                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(property.valor_diaria)}
-                                                        <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">(Diária)</span>
+                                                        <span className="text-sm font-normal text-gray-400 ml-1">(Diária)</span>
                                                     </p>
                                                 )}
                                                 {property.valor_mensal > 0 && (
                                                     <p className="text-xl font-bold text-orange-400 mt-1">
                                                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(property.valor_mensal)}
-                                                        <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">(Mensal)</span>
+                                                        <span className="text-sm font-normal text-gray-400 ml-1">(Mensal)</span>
                                                     </p>
                                                 )}
                                                 {(!property.valor_diaria && !property.valor_mensal) && (
@@ -642,15 +645,15 @@ export const PropertyDetails: React.FC = () => {
                                             /* Venda/Locação: Normal display */
                                             <>
                                                 {(property.valor_venda > 0) && (
-                                                    <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                                                    <p className="text-2xl font-bold text-primary-600 text-primary-400">
                                                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(property.valor_venda)}
-                                                        <div className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">(Venda)</div>
+                                                        <div className="text-sm font-normal text-gray-400 ml-1">(Venda)</div>
                                                     </p>
                                                 )}
                                                 {(property.valor_locacao > 0) && (
-                                                    <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                                                    <p className="text-xl font-bold text-blue-600 text-blue-400">
                                                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(property.valor_locacao)}
-                                                        <div className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">
+                                                        <div className="text-sm font-normal text-gray-400 ml-1">
                                                             (Locação{property.taxas_inclusas ? ' - Taxas Inclusas' : ''})
                                                         </div>
                                                     </p>
@@ -665,40 +668,40 @@ export const PropertyDetails: React.FC = () => {
 
                                 {(property.area || 0) > 0 && (
                                     <>
-                                        <div className="h-10 w-px bg-gray-200 dark:bg-slate-700 hidden sm:block"></div>
+                                        <div className="h-10 w-px bg-slate-700 hidden sm:block"></div>
                                         <div className="flex flex-col items-center text-center min-w-[80px]">
                                             <div className="mr-2 mb-2"> Área Priv.</div>
-                                            <p className="text-xl font-bold text-gray-900 dark:text-white">{property.area}m²</p>
+                                            <p className="text-xl font-bold text-white">{property.area}m²</p>
                                         </div>
                                     </>
                                 )}
 
                                 {(property.garage || 0) > 0 && (
                                     <>
-                                        <div className="h-10 w-px bg-gray-200 dark:bg-slate-700 hidden sm:block"></div>
+                                        <div className="h-10 w-px bg-slate-700 hidden sm:block"></div>
                                         <div className="flex flex-col items-center text-center min-w-[80px]">
                                             <Car size={20} className="mr-2 mb-2" />
-                                            <p className="text-xl font-bold text-gray-900 dark:text-white">{property.garage}</p>
+                                            <p className="text-xl font-bold text-white">{property.garage}</p>
                                         </div>
                                     </>
                                 )}
 
                                 {(property.beds || 0) > 0 && (
                                     <>
-                                        <div className="h-10 w-px bg-gray-200 dark:bg-slate-700 hidden sm:block"></div>
+                                        <div className="h-10 w-px bg-slate-700 hidden sm:block"></div>
                                         <div className="flex flex-col items-center text-center min-w-[80px]">
                                             <Bed size={20} className="mr-2 mb-2" />
-                                            <p className="text-xl font-bold text-gray-900 dark:text-white">{property.beds}</p>
+                                            <p className="text-xl font-bold text-white">{property.beds}</p>
                                         </div>
                                     </>
                                 )}
 
                                 {(property.baths || 0) > 0 && (
                                     <>
-                                        <div className="h-10 w-px bg-gray-200 dark:bg-slate-700 hidden sm:block"></div>
+                                        <div className="h-10 w-px bg-slate-700 hidden sm:block"></div>
                                         <div className="flex flex-col items-center text-center min-w-[80px]">
                                             <Bath size={20} className="mr-2 mb-2" />
-                                            <p className="text-xl font-bold text-gray-900 dark:text-white">{property.baths}</p>
+                                            <p className="text-xl font-bold text-white">{property.baths}</p>
                                         </div>
                                     </>
                                 )}
@@ -706,8 +709,8 @@ export const PropertyDetails: React.FC = () => {
 
                             {/* Description */}
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Sobre este imóvel</h2>
-                                <p className="text-gray-600 dark:text-slate-300 leading-relaxed">
+                                <h2 className="text-2xl font-bold text-white mb-4">Sobre este imóvel</h2>
+                                <p className="text-slate-300 leading-relaxed">
                                     {property.description}
                                 </p>
                             </div>
@@ -776,40 +779,40 @@ export const PropertyDetails: React.FC = () => {
 
                             {/* Property Details Grid - Cleaned up */}
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Informações Adicionais</h2>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-8 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700">
+                                <h2 className="text-2xl font-bold text-white mb-4">Informações Adicionais</h2>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-8 bg-slate-800 p-6 rounded-3xl border border-slate-700">
                                     {property.iptu > 0 && (
                                         <div>
-                                            <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">IPTU (Anual)</p>
-                                            <p className="font-semibold text-gray-900 dark:text-white text-lg">
+                                            <p className="text-sm text-slate-400 mb-1">IPTU (Anual)</p>
+                                            <p className="font-semibold text-white text-lg">
                                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(property.iptu)}
                                             </p>
                                         </div>
                                     )}
                                     {property.condoFee > 0 && (
                                         <div>
-                                            <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">Condomínio</p>
-                                            <p className="font-semibold text-gray-900 dark:text-white text-lg">
+                                            <p className="text-sm text-slate-400 mb-1">Condomínio</p>
+                                            <p className="font-semibold text-white text-lg">
                                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(property.condoFee)}
                                             </p>
                                         </div>
                                     )}
                                     {property.totalArea > 0 && (
                                         <div>
-                                            <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">Área Total</p>
-                                            <p className="font-semibold text-gray-900 dark:text-white text-lg">{property.totalArea} m²</p>
+                                            <p className="text-sm text-slate-400 mb-1">Área Total</p>
+                                            <p className="font-semibold text-white text-lg">{property.totalArea} m²</p>
                                         </div>
                                     )}
                                     {property.suites > 0 && (
                                         <div>
-                                            <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">Suítes</p>
-                                            <p className="font-semibold text-gray-900 dark:text-white text-lg">{property.suites}</p>
+                                            <p className="text-sm text-slate-400 mb-1">Suítes</p>
+                                            <p className="font-semibold text-white text-lg">{property.suites}</p>
                                         </div>
                                     )}
                                     {property.aceita_financiamento && (
                                         <div>
-                                            <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">Financiamento</p>
-                                            <p className="font-semibold text-emerald-600 dark:text-emerald-400 text-lg flex items-center gap-1">
+                                            <p className="text-sm text-slate-400 mb-1">Financiamento</p>
+                                            <p className="font-semibold text-emerald-600 text-emerald-400 text-lg flex items-center gap-1">
                                                 <CheckCircle size={18} />
                                                 Aceita
                                             </p>
@@ -821,10 +824,10 @@ export const PropertyDetails: React.FC = () => {
                             {/* Features */}
                             {property.features && property.features.length > 0 && (
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Diferenciais</h2>
+                                    <h2 className="text-2xl font-bold text-white mb-4">Diferenciais</h2>
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                         {property.features.map((feature: string, idx: number) => (
-                                            <div key={idx} className="flex items-center text-gray-700 dark:text-slate-300 bg-gray-50 dark:bg-slate-800/50 p-3 rounded-lg">
+                                            <div key={idx} className="flex items-center text-slate-300 bg-slate-800/50 p-3 rounded-full">
                                                 <Check size={18} className="text-primary-500 mr-2" />
                                                 {feature}
                                             </div>
@@ -836,9 +839,9 @@ export const PropertyDetails: React.FC = () => {
                             {/* Observações */}
                             {property.observacoes && (
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Observações</h2>
-                                    <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-2xl border border-amber-200 dark:border-amber-800">
-                                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                                    <h2 className="text-2xl font-bold text-white mb-4">Observações</h2>
+                                    <div className="bg-amber-50 bg-amber-900/20 p-4 rounded-3xl border border-amber-200 border-amber-800">
+                                        <p className="text-gray-300 whitespace-pre-line">
                                             {property.observacoes}
                                         </p>
                                     </div>
@@ -848,15 +851,15 @@ export const PropertyDetails: React.FC = () => {
                             {/* Media Section */}
                             {(property.video || property.tour_virtual) && (
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Mídia</h2>
+                                    <h2 className="text-2xl font-bold text-white mb-4">Mídia</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {property.video && (
-                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700">
-                                                <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                            <div className="bg-slate-800 p-4 rounded-3xl border border-slate-700">
+                                                <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
                                                     <PlayCircle className="text-red-500" size={20} />
                                                     Vídeo do Imóvel
                                                 </h3>
-                                                <div className="aspect-video rounded-lg overflow-hidden bg-black">
+                                                <div className="aspect-video rounded-3xl overflow-hidden bg-black">
                                                     <iframe
                                                         src={property.video.replace('watch?v=', 'embed/').replace('vimeo.com/', 'player.vimeo.com/video/')}
                                                         title="Vídeo do Imóvel"
@@ -867,12 +870,12 @@ export const PropertyDetails: React.FC = () => {
                                             </div>
                                         )}
                                         {property.tour_virtual && (
-                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-200 dark:border-slate-700">
-                                                <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                            <div className="bg-slate-800 p-4 rounded-3xl border border-slate-700">
+                                                <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
                                                     <Video className="text-blue-500" size={20} />
                                                     Tour Virtual 360º
                                                 </h3>
-                                                <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-slate-900 flex items-center justify-center relative group cursor-pointer" onClick={() => window.open(property.tour_virtual, '_blank')}>
+                                                <div className="aspect-video rounded-3xl overflow-hidden bg-slate-900 flex items-center justify-center relative group cursor-pointer" onClick={() => window.open(property.tour_virtual, '_blank')}>
                                                     <img
                                                         src={property.images[0]}
                                                         alt="Tour Virtual"
@@ -894,15 +897,15 @@ export const PropertyDetails: React.FC = () => {
                             {/* Neighborhood Intelligence (Gemini) */}
                             {/* Resumo do Bairro */}
                             {neighborhoodInfo?.resumo && (
-                                <div className="mt-6 pt-6 border-t border-blue-200 dark:border-slate-600">
-                                    <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                <div className="mt-6 pt-6 border-t border-blue-200 border-slate-600">
+                                    <h4 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
                                         <MapPin size={18} className="text-blue-500" />
                                         Localização do Imóvel | Sobre o Bairro {property.address.neighborhood}
                                     </h4>
                                     {/* Mini Map */}
                                     {property.latitude && property.longitude && (
                                         <div className="mt-8">
-                                            <div className="h-[300px] w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-700 shadow-md">
+                                            <div className="h-[300px] w-3xl rounded-3xl overflow-hidden border border-slate-700 shadow-md">
                                                 <MapContainer
                                                     center={[parseFloat(property.latitude), parseFloat(property.longitude)]}
                                                     zoom={15}
@@ -922,26 +925,26 @@ export const PropertyDetails: React.FC = () => {
                                         </div>
                                     )}
 
-                                    <p className="mt-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                    <p className="mt-4 text-sm text-gray-300 leading-relaxed">
                                         {neighborhoodInfo.resumo}
                                     </p>
                                 </div>
                             )}
 
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 italic text-center">
+                            <p className="text-xs text-gray-400 mt-4 italic text-center">
                                 *Análise gerada via Gemini AI. Informações podem variar.
                             </p>
                         </div>
 
                         {/* Sidebar / Contact */}
                         <div className="space-y-6">
-                            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-slate-700 sticky top-24">
+                            <div className="bg-slate-800 p-6 rounded-3xl shadow-lg border border-slate-700 sticky top-24">
                                 <div className="flex items-center space-x-4 mb-6">
                                     <img src={property.agent.avatar} alt="Agent" className="w-16 h-16 rounded-full object-cover border-2 border-primary-500 p-1" />
                                     <div>
-                                        <p className="text-sm text-gray-500 dark:text-slate-400">Anunciante</p>
+                                        <p className="text-sm text-slate-400">Anunciante</p>
                                         <h3
-                                            className="text-lg font-bold text-gray-900 dark:text-white cursor-pointer hover:text-primary-500 transition-colors"
+                                            className="text-lg font-bold text-white cursor-pointer hover:text-primary-500 transition-colors"
                                             onClick={() => {
                                                 if (property.agent.slug) {
                                                     navigate(`/corretor/${property.agent.slug}`);
@@ -950,9 +953,9 @@ export const PropertyDetails: React.FC = () => {
                                         >
                                             {property.agent.name}
                                         </h3>
-                                        <p className="text-md text-primary-600 dark:text-primary-400 font-medium">WhatsApp {property.agent.phone}</p>
+                                        <p className="text-md text-primary-600 text-primary-400 font-medium">WhatsApp {property.agent.phone}</p>
                                         {property.agent.creci && (
-                                            <p className="text-md text-blue-500 dark:text-blue-500 font-bold">CRECI: {property.agent.creci}/{property.agent.uf_creci}</p>
+                                            <p className="text-md text-blue-500 text-blue-500 font-bold">CRECI: {property.agent.creci}/{property.agent.uf_creci}</p>
                                         )}
                                         <div className="flex text-yellow-500 text-md">★★★★★</div>
                                     </div>
@@ -968,7 +971,7 @@ export const PropertyDetails: React.FC = () => {
                                                 alert('Página do corretor indisponível');
                                             }
                                         }}
-                                        className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center"
+                                        className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-full transition-colors flex items-center justify-center"
                                     >
                                         <SearchIcon size={18} className="mr-2" />+ Imóveis Desse Corretor
                                     </button>
@@ -976,14 +979,14 @@ export const PropertyDetails: React.FC = () => {
                                         href={`https://wa.me/${property.agent.phone.replace(/\D/g, '')}?text=Olá, gostaria de mais informações sobre o imóvel: ${property.title}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-colors shadow-lg shadow-emerald-500/30 flex items-center justify-center"
+                                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-full transition-colors shadow-lg shadow-emerald-500/30 flex items-center justify-center"
                                     >
                                         <MessageCircle size={18} className="mr-2" /> WhatsApp
                                     </a>
 
                                     <button
                                         onClick={handleScheduleClick}
-                                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center cursor-pointer"
+                                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-full transition-colors flex items-center justify-center cursor-pointer"
                                     >
                                         <Calendar size={18} className="mr-2" /> Agendar Visita
                                     </button>
@@ -1008,7 +1011,7 @@ export const PropertyDetails: React.FC = () => {
                     <div className="mt-16">
                         <div className="flex items-center gap-2 mb-8">
                             <Sparkles className="text-primary-500" size={24} />
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Você também pode gostar</h2>
+                            <h2 className="text-2xl font-bold text-white">Você também pode gostar</h2>
                         </div>
                         <HorizontalScroll itemWidth={288} gap={24} itemsPerPage={4}>
                             {relatedProperties.map((prop) => (

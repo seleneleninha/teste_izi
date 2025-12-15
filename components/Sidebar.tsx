@@ -121,7 +121,7 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
               key={item.label}
               onClick={() => handleNavigation(item.path)}
               data-tour={item.path === '/partner-properties' ? 'partner-properties' : undefined}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${isActive(item.path)
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-full transition-colors ${isActive(item.path)
                 ? 'bg-slate-800 text-primary-400 border-l-4 border-primary-500'
                 : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                 }`}
@@ -135,7 +135,7 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
         <div className="p-4 border-t border-slate-800">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-400 hover:bg-slate-800 transition-colors"
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-full text-red-400 hover:bg-slate-800 transition-colors"
           >
             <LogOut size={20} />
             <span className="font-medium">SAIR</span>

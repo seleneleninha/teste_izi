@@ -28,6 +28,8 @@ const Privacy = lazy(() => import('./pages/Privacy').then(module => ({ default: 
 const AdminApprovals = lazy(() => import('./pages/admin/AdminApprovals').then(module => ({ default: module.AdminApprovals })));
 const BrokerPage = lazy(() => import('./pages/BrokerPage').then(module => ({ default: module.BrokerPage })));
 const PartnerProperties = lazy(() => import('./pages/PartnerProperties').then(module => ({ default: module.PartnerProperties })));
+const BrokerSearchPage = lazy(() => import('./pages/BrokerSearchPage').then(module => ({ default: module.BrokerSearchPage })));
+const BrokerAboutPage = lazy(() => import('./pages/BrokerAboutPage').then(module => ({ default: module.BrokerAboutPage })));
 const About = lazy(() => import('./pages/About').then(module => ({ default: module.About })));
 const Favorites = lazy(() => import('./pages/Favorites').then(module => ({ default: module.Favorites })));
 
@@ -58,8 +60,20 @@ const App: React.FC = () => {
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/about" element={<About />} />
-                  {/* Rota de corretor - precisa vir antes da rota genérica de slug */}
+                  <Route path="/about" element={<About />} />
+
+                  {/* Rota de corretor - Busca Exclusiva */}
+                  <Route path="/corretor/:slug/buscar" element={<BrokerSearchPage />} />
+
+                  {/* Rota de corretor - Sobre */}
+                  <Route path="/corretor/:slug/sobre" element={<BrokerAboutPage />} />
+
+                  {/* Rota de corretor - Página Principal */}
                   <Route path="/corretor/:slug" element={<BrokerPage />} />
+
+                  {/* Rota de corretor - Detalhes do Imóvel (Nested Context) */}
+                  <Route path="/corretor/:brokerSlug/:slug" element={<PropertyDetails />} />
+
                   {/* Rota genérica de slug para imóveis */}
                   <Route path="/:slug" element={<PropertyDetails />} />
                 </Route>

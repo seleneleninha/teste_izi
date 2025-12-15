@@ -265,8 +265,8 @@ export const Dashboard: React.FC = () => {
             <div className="mb-8">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Bem-vindo(a) de volta, {userName}!</h2>
-                        {role?.toLowerCase() === 'admin' ? <p className="text-gray-500 dark:text-slate-400 mt-2 text-sm md:text-base">Acompanhe o crescimento da Plataforma.</p> : <p className="text-gray-500 dark:text-slate-400 mt-2 text-sm md:text-base">Vamos melhorar seus números e ampliar sua possibilidade de ganhos?</p>}
+                        <h2 className="text-2xl md:text-3xl font-bold text-white">Bem-vindo(a) de volta, {userName}!</h2>
+                        {role?.toLowerCase() === 'admin' ? <p className="text-slate-400 mt-2 text-sm md:text-base">Acompanhe o crescimento da Plataforma.</p> : <p className="text-slate-400 mt-2 text-sm md:text-base">Vamos melhorar seus números e ampliar sua possibilidade de ganhos?</p>}
                     </div>
                 </div>
             </div>
@@ -274,46 +274,46 @@ export const Dashboard: React.FC = () => {
             {/* Admin X-Ray View */}
             {role?.toLowerCase() === 'admin' && (
                 <div className="mb-8">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                         <div className="w-2 h-8 bg-purple-500 rounded-full"></div>
                         Raio-X da Plataforma
                     </h3>
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                        <div className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700">
                             <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                                    <Users size={24} className="text-blue-600 dark:text-blue-400" />
+                                <div className="w-12 h-12 bg-blue-100 bg-blue-900/30 rounded-3xl flex items-center justify-center">
+                                    <Users size={24} className="text-blue-600 text-blue-400" />
                                 </div>
                             </div>
-                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Total Usuários</h3>
-                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{adminStats.totalUsers}</div>
+                            <h3 className="text-slate-400 text-sm font-medium mb-1">Total Usuários</h3>
+                            <div className="text-3xl font-bold text-white">{adminStats.totalUsers}</div>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                        <div className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700">
                             <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                                    <Home size={24} className="text-emerald-600 dark:text-emerald-400" />
+                                <div className="w-12 h-12 bg-emerald-100 bg-emerald-900/30 rounded-3xl flex items-center justify-center">
+                                    <Home size={24} className="text-emerald-600 text-emerald-400" />
                                 </div>
                             </div>
-                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Total Imóveis</h3>
-                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{adminStats.totalProperties}</div>
+                            <h3 className="text-slate-400 text-sm font-medium mb-1">Total Imóveis</h3>
+                            <div className="text-3xl font-bold text-white">{adminStats.totalProperties}</div>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                        <div className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700">
                             <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                                    <Handshake size={24} className="text-purple-600 dark:text-purple-400" />
+                                <div className="w-12 h-12 bg-purple-100 bg-purple-900/30 rounded-3xl flex items-center justify-center">
+                                    <Handshake size={24} className="text-purple-600 text-purple-400" />
                                 </div>
                             </div>
-                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Total Parcerias</h3>
-                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{adminStats.totalPartnerships}</div>
+                            <h3 className="text-slate-400 text-sm font-medium mb-1">Total Parcerias</h3>
+                            <div className="text-3xl font-bold text-white">{adminStats.totalPartnerships}</div>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700">
+                        <div className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700">
                             <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
-                                    <Building2 size={24} className="text-amber-600 dark:text-amber-400" />
+                                <div className="w-12 h-12 bg-amber-100 bg-amber-900/30 rounded-3xl flex items-center justify-center">
+                                    <Building2 size={24} className="text-amber-600 text-amber-400" />
                                 </div>
                             </div>
-                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Planos Ativos</h3>
-                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{adminStats.activePlans}</div>
+                            <h3 className="text-slate-400 text-sm font-medium mb-1">Planos Ativos</h3>
+                            <div className="text-3xl font-bold text-white">{adminStats.activePlans}</div>
                         </div>
                     </div>
                 </div>
@@ -325,18 +325,18 @@ export const Dashboard: React.FC = () => {
                     {/* Stats Grid */}
                     {/* Public Page URL Display - Enhanced */}
                     {user && (
-                        <div className="flex flex-col md:flex-row md:items-center gap-4 bg-gradient-to-r from-primary-50 to-white dark:from-slate-800 dark:to-slate-900 p-6 rounded-2xl border border-primary-100 dark:border-primary-900/50 shadow-sm relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                        <div className="flex flex-col md:flex-row md:items-center gap-4 bg-gradient-to-r from-primary-50 to-white dark:from-slate-800 dark:to-slate-900 p-6 rounded-3xl border border-primary-100 border-primary-900/50 shadow-sm relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-3xl blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
 
                             <div className="flex-1 min-w-0 z-10">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg text-primary-600 dark:text-primary-400">
+                                    <div className="p-2 bg-primary-100 bg-primary-900/30 rounded-3xl text-primary-600 text-primary-400">
                                         <Home size={20} />
                                     </div>
-                                    <p className="text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide">Endereço da Sua Página</p>
+                                    <p className="text-sm font-bold text-gray-200 uppercase tracking-wide">Endereço da Sua Página</p>
                                 </div>
-                                <div className="bg-white/50 dark:bg-black/20 rounded-lg p-2 border border-gray-100 dark:border-slate-700/50 backdrop-blur-sm">
-                                    <p className="text-base md:text-lg font-mono font-bold text-primary-700 dark:text-primary-400 truncate select-all">
+                                <div className="bg-white/50 dark:bg-black/20 rounded-3xl p-2 border border-slate-700/50 backdrop-blur-sm">
+                                    <p className="text-base md:text-lg font-mono font-bold text-primary-700 text-primary-400 truncate select-all">
                                         {window.location.origin}/#/corretor/{userSlug || 'configurar-slug'}
                                     </p>
                                 </div>
@@ -349,7 +349,7 @@ export const Dashboard: React.FC = () => {
                                         navigator.clipboard.writeText(url);
                                         addToast('Link colado na sua área de transferência! 📋', 'success');
                                     }}
-                                    className="flex-1 md:flex-none px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                    className="flex-1 md:flex-none px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-full shadow-lg shadow-primary-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                                     title="Copiar Link"
                                 >
                                     <Share2 size={20} />
@@ -357,7 +357,7 @@ export const Dashboard: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => window.open(`/#/corretor/${userSlug || 'configurar-slug'}`, '_blank')}
-                                    className="px-4 py-3 bg-white dark:bg-slate-800 border-2 border-primary-100 dark:border-slate-600 text-primary-600 dark:text-slate-300 font-bold rounded-xl hover:bg-primary-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+                                    className="px-4 py-3 bg-slate-800 border-2 border-primary-100 border-slate-600 text-primary-600 text-slate-300 font-bold rounded-full hover:bg-primary-50 hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
                                     title="Visitar Página"
                                 >
                                     <Eye size={20} />
@@ -370,59 +370,59 @@ export const Dashboard: React.FC = () => {
                         {/* Meus Imóveis */}
                         <div
                             onClick={() => navigate('/properties')}
-                            className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                            className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
                         >
                             <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                                    <Home size={24} className="text-blue-600 dark:text-blue-400" />
+                                <div className="w-12 h-12 bg-blue-100 bg-blue-900/30 rounded-full flex items-center justify-center">
+                                    <Home size={24} className="text-blue-600 text-blue-400" />
                                 </div>
-                                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+12.5%</span>
+                                <span className="text-xs text-green-600 text-green-400 font-medium">+12.5%</span>
                             </div>
-                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Meus Imóveis</h3>
-                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.properties}</div>
+                            <h3 className="text-slate-400 text-sm font-medium mb-1">Meus Imóveis</h3>
+                            <div className="text-3xl font-bold text-white">{stats.properties}</div>
                         </div>
 
                         {/* Imóveis em Parceria (Accepted) */}
                         <div
                             onClick={() => navigate('/partner-properties')}
-                            className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                            className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
                         >
                             <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                                    <Handshake size={24} className="text-emerald-600 dark:text-emerald-400" />
+                                <div className="w-12 h-12 bg-emerald-100 bg-emerald-900/30 rounded-full flex items-center justify-center">
+                                    <Handshake size={24} className="text-emerald-600 text-emerald-400" />
                                 </div>
                             </div>
-                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Parcerias Aceitas</h3>
-                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.acceptedPartnerships || 0}</div>
+                            <h3 className="text-slate-400 text-sm font-medium mb-1">Parcerias Aceitas</h3>
+                            <div className="text-3xl font-bold text-white">{stats.acceptedPartnerships || 0}</div>
                         </div>
 
                         {/* Imóveis Parceiros (Available) */}
                         <div
                             onClick={() => navigate('/partner-properties')}
-                            className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                            className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
                         >
                             <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                                    <Building2 size={24} className="text-purple-600 dark:text-purple-400" />
+                                <div className="w-12 h-12 bg-purple-100 bg-purple-900/30 rounded-full flex items-center justify-center">
+                                    <Building2 size={24} className="text-purple-600 text-purple-400" />
                                 </div>
                             </div>
-                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Parcerias Disponíveis</h3>
-                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.availablePartnerships || 0}</div>
+                            <h3 className="text-slate-400 text-sm font-medium mb-1">Parcerias Disponíveis</h3>
+                            <div className="text-3xl font-bold text-white">{stats.availablePartnerships || 0}</div>
                         </div>
 
                         {/* Leads */}
                         <div
                             onClick={() => navigate('/leads')}
-                            className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                            className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
                         >
                             <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
-                                    <Users size={24} className="text-amber-600 dark:text-amber-400" />
+                                <div className="w-12 h-12 bg-amber-100 bg-amber-900/30 rounded-full flex items-center justify-center">
+                                    <Users size={24} className="text-amber-600 text-amber-400" />
                                 </div>
-                                <span className="text-xs text-red-600 dark:text-red-400 font-medium">-3.1%</span>
+                                <span className="text-xs text-red-600 text-red-400 font-medium">-3.1%</span>
                             </div>
-                            <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">Leads</h3>
-                            <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.leads}</div>
+                            <h3 className="text-slate-400 text-sm font-medium mb-1">Leads</h3>
+                            <div className="text-3xl font-bold text-white">{stats.leads}</div>
                         </div>
                     </div>
 
@@ -430,43 +430,43 @@ export const Dashboard: React.FC = () => {
                         <div className="lg:col-span-3 space-y-8">
                             <div className="grid grid-cols-2 gap-6">
                                 <div
-                                    className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 cursor-pointer hover:shadow-md transition-all group"
+                                    className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 cursor-pointer hover:shadow-md transition-all group"
                                     onClick={() => navigate('/add-property')}
                                 >
-                                    <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                        <Plus size={24} className="text-primary-600 dark:text-primary-400" />
+                                    <div className="w-12 h-12 bg-primary-100 bg-primary-900/30 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                        <Plus size={24} className="text-primary-600 text-primary-400" />
                                     </div>
-                                    <h4 className="font-bold text-gray-900 dark:text-white mb-1">Anunciar Imóvel</h4>
-                                    <p className="text-sm text-gray-500 dark:text-slate-400">Cadastre um novo imóvel para venda, locação ou ambos.</p>
+                                    <h4 className="font-bold text-white mb-1">Anunciar Imóvel</h4>
+                                    <p className="text-sm text-slate-400">Cadastre um novo imóvel para venda, locação ou ambos.</p>
                                 </div>
 
                                 <div
-                                    className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 cursor-pointer hover:shadow-md transition-all group"
+                                    className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 cursor-pointer hover:shadow-md transition-all group"
                                     onClick={() => navigate('/leads')}
                                 >
-                                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                        <CheckCircle size={24} className="text-purple-600 dark:text-purple-400" />
+                                    <div className="w-12 h-12 bg-purple-100 bg-purple-900/30 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                        <CheckCircle size={24} className="text-purple-600 text-purple-400" />
                                     </div>
-                                    <h4 className="font-bold text-gray-900 dark:text-white mb-1">Gerenciar Leads</h4>
-                                    <p className="text-sm text-gray-500 dark:text-slate-400">Visualize seus leads no funil de vendas.</p>
+                                    <h4 className="font-bold text-white mb-1">Gerenciar Leads</h4>
+                                    <p className="text-sm text-slate-400">Visualize seus leads no funil de vendas.</p>
                                 </div>
                             </div>
 
                             <div className="space-y-6">
-                                <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-slate-700 h-full">
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Notificações Recentes</h3>
+                                <div className="bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-700 h-full">
+                                    <h3 className="text-lg font-bold text-white mb-4">Notificações Recentes</h3>
                                     <div className="space-y-4">
                                         {notifications.length === 0 ? (
                                             <p className="text-gray-500 text-sm text-center py-8">Nenhuma notificação recente.</p>
                                         ) : (
                                             notifications.map(notif => (
-                                                <div key={notif.id} className="flex space-x-3 pb-3 border-b border-gray-100 dark:border-slate-700 last:border-0 last:pb-0">
-                                                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                                                        <CheckCircle className="text-blue-600 dark:text-blue-400 w-4 h-4" />
+                                                <div key={notif.id} className="flex space-x-3 pb-3 border-b border-slate-700 last:border-0 last:pb-0">
+                                                    <div className="w-8 h-8 rounded-full bg-blue-100 bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                                                        <CheckCircle className="text-blue-600 text-blue-400 w-4 h-4" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm text-gray-800 dark:text-gray-200 font-medium">{notif.titulo}</p>
-                                                        <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 line-clamp-2">{notif.mensagem}</p>
+                                                        <p className="text-sm text-gray-200 font-medium">{notif.titulo}</p>
+                                                        <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{notif.mensagem}</p>
                                                         <p className="text-[10px] text-gray-400 mt-1">{new Date(notif.created_at).toLocaleDateString()}</p>
                                                     </div>
                                                 </div>

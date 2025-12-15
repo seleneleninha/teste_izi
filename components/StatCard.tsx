@@ -14,13 +14,13 @@ interface StatCardProps {
 
 export const StatCard: React.FC<StatCardProps> = ({ label, value, change, isPositive, data, dataKey, color }) => {
   return (
-    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col h-64">
+    <div className="bg-slate-800 p-6 rounded-full shadow-sm border border-slate-700 flex flex-col h-64">
       <div>
-        <h3 className="text-gray-500 dark:text-slate-400 text-sm font-medium mb-1">{label}</h3>
-        <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{value}</div>
+        <h3 className="text-slate-400 text-sm font-medium mb-1">{label}</h3>
+        <div className="text-3xl font-bold text-white mb-2">{value}</div>
         <div className={`flex items-center text-sm font-medium ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
           {isPositive ? <ArrowUp size={16} className="mr-1" /> : <ArrowDown size={16} className="mr-1" />}
-          {change} <span className="text-gray-400 dark:text-slate-500 ml-1 font-normal">Last 7 Days</span>
+          {change} <span className="text-slate-500 ml-1 font-normal">Last 7 Days</span>
         </div>
       </div>
 

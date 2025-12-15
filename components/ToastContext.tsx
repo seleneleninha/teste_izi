@@ -49,11 +49,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     <div
                         key={toast.id}
                         className={`
-              pointer-events-auto flex items-center w-full max-w-sm p-4 rounded-lg shadow-lg border-l-4 transition-all duration-300 animate-in slide-in-from-right
-              ${toast.type === 'success' ? 'bg-white dark:bg-slate-800 border-green-500 text-gray-800 dark:text-white' : ''}
-              ${toast.type === 'warning' ? 'bg-white dark:bg-slate-800 border-yellow-500 text-gray-800 dark:text-white' : ''}
-              ${toast.type === 'error' ? 'bg-white dark:bg-slate-800 border-red-500 text-gray-800 dark:text-white' : ''}
-              ${toast.type === 'info' ? 'bg-white dark:bg-slate-800 border-blue-500 text-gray-800 dark:text-white' : ''}
+              pointer-events-auto flex items-center w-full max-w-sm p-4 rounded-full shadow-lg border-l-4 transition-all duration-300 animate-in slide-in-from-right
+              ${toast.type === 'success' ? 'bg-slate-800 border-green-500 text-white' : ''}
+              ${toast.type === 'warning' ? 'bg-slate-800 border-yellow-500 text-white' : ''}
+              ${toast.type === 'error' ? 'bg-slate-800 border-red-500 text-white' : ''}
+              ${toast.type === 'info' ? 'bg-slate-800 border-blue-500 text-white' : ''}
             `}
                     >
                         <div className="shrink-0 mr-3">
@@ -65,7 +65,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         <div className="text-sm font-medium">{toast.message}</div>
                         <button
                             onClick={() => removeToast(toast.id)}
-                            className="ml-auto shrink-0 -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 text-gray-400 hover:text-gray-900 focus:ring-2 focus:ring-gray-300 dark:text-gray-500 dark:hover:text-white"
+                            className="ml-auto shrink-0 -mx-1.5 -my-1.5 rounded-full p-1.5 inline-flex h-8 w-8 text-gray-400 hover:text-gray-900 focus:ring-2 focus:ring-gray-300 text-gray-500 dark:hover:text-white"
                         >
                             <X size={16} />
                         </button>
