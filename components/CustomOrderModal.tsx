@@ -141,12 +141,12 @@ export const CustomOrderModal: React.FC<CustomOrderModalProps> = ({
     if (success) {
         return (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg p-8 max-w-md w-full text-center">
+                <div className="bg-midnight-950 rounded-lg p-8 max-w-md w-full text-center">
                     <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                         <Check className="text-green-600" size={32} />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Solicitação Enviada!</h3>
-                    <p className="text-gray-600">
+                    <h3 className="text-2xl font-bold text-white mb-2">Solicitação Enviada!</h3>
+                    <p className="text-white">
                         Em breve um corretor entrará em contato com opções personalizadas para você!
                     </p>
                 </div>
@@ -156,18 +156,18 @@ export const CustomOrderModal: React.FC<CustomOrderModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-white rounded-lg max-w-2xl w-full my-8">
+            <div className="bg-midnight-950 rounded-lg max-w-2xl w-full my-8">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b">
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900">Encomendar Imóvel</h2>
-                        <p className="text-sm text-gray-600 mt-1">
-                            Preencha todos os campos e encontraremos o imóvel ideal para você
+                        <h2 className="text-2xl font-bold text-white">Encomendar Imóvel</h2>
+                        <p className="text-sm text-white mt-1">
+                            Preencha todos os campos e vamos encontrar o imóvel ideal para você.
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition"
+                        className="text-white hover:text-gray-600 transition"
                     >
                         <X size={24} />
                     </button>
@@ -185,10 +185,10 @@ export const CustomOrderModal: React.FC<CustomOrderModalProps> = ({
 
                     {/* Dados Pessoais */}
                     <div className="space-y-4">
-                        <h3 className="font-bold text-gray-900">Seus Dados</h3>
+                        <h3 className="font-bold text-white">Seus Dados</h3>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-white mb-1">
                                 Nome Completo <span className="text-red-500">*</span>
                             </label>
                             <input

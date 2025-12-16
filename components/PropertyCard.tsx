@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, ChevronLeft, ChevronRight, Home, Bed, Bath, Car, Maximize, Edit2, Trash2, Check, X, Eye, Image as ImageIcon } from 'lucide-react';
+import { MapPin, ChevronLeft, ChevronRight, Home, Bed, Bath, Car, Maximize, Edit2, Trash2, Check, X, Eye, Image as ImageIcon, TrendingUp, Key, Pause, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
 import { formatCurrency, formatArea, generatePropertySlug } from '../lib/formatters';
@@ -24,6 +24,7 @@ interface PropertyCardProps {
         vagas?: number;
         area_priv?: number;
         status_aprovacao?: string;
+        status_imovel?: string; // NOVO
         aceita_parceria?: boolean;
     };
     actions?: React.ReactNode;
@@ -202,9 +203,36 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                 <div className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-md backdrop-blur-md ${operationTagClass()}`}>
                     {operationLabel}
                 </div>
+                {/* Status Badge - Mostra status_imovel real quando aprovado */}
                 {showStatus && property.status_aprovacao && (
-                    <div className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-md border backdrop-blur-md ${statusColors[property.status_aprovacao as keyof typeof statusColors] || 'bg-gray-100 text-gray-700'}`}>
-                        {property.status_aprovacao}
+                    <div className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-md border backdrop-blur-md ${property.status_aprovacao === 'pendente'
+                        ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                        : property.status_aprovacao === 'reprovado'
+                            ? 'bg-red-100 text-red-700 border-red-200'
+                            : property.status_imovel === 'venda_faturada'
+                                ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                                : property.status_imovel === 'locacao_faturada'
+                                    ? 'bg-blue-100 text-blue-700 border-blue-200'
+                                    : property.status_imovel === 'imovel_espera'
+                                        ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                        : property.status_imovel === 'imovel_perdido'
+                                            ? 'bg-red-100 text-red-700 border-red-200'
+                                            : 'bg-green-100 text-green-700 border-green-200'
+                        }`}>
+                        {property.status_aprovacao === 'pendente'
+                            ? '⏳ Pendente'
+                            : property.status_aprovacao === 'reprovado'
+                                ? '❌ Reprovado'
+                                : property.status_imovel === 'venda_faturada'
+                                    ? '🎉 Vendido'
+                                    : property.status_imovel === 'locacao_faturada'
+                                        ? '💰 Alugado'
+                                        : property.status_imovel === 'imovel_espera'
+                                            ? '⏸️ Standby'
+                                            : property.status_imovel === 'imovel_perdido'
+                                                ? '⚠️ Perdido'
+                                                : '✅ Ativo'
+                        }
                     </div>
                 )}
             </div>

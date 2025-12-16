@@ -165,6 +165,7 @@ export const AdminApprovals: React.FC = () => {
                 .from('anuncios')
                 .update({
                     status_aprovacao: 'aprovado',
+                    status_imovel: 'imovel_ativo', // ✅ Setar como ativo ao aprovar
                     aprovado_por: user?.id,
                     data_aprovacao: new Date().toISOString()
                 })
@@ -435,8 +436,9 @@ export const AdminApprovals: React.FC = () => {
                                                             handleApprove(property);
                                                         }}
                                                         className="flex-1 px-3 py-2.5 bg-green-600 text-white rounded-full text-sm font-bold hover:bg-green-700 flex items-center justify-center transition-colors shadow-lg shadow-green-600/20"
+                                                        title="Aprovar"
                                                     >
-                                                        <Check size={18} className="mr-2" /> Aprovar
+                                                        <Check size={18} className="mr-2" />
                                                     </button>
                                                     <button
                                                         onClick={(e) => {
@@ -444,8 +446,9 @@ export const AdminApprovals: React.FC = () => {
                                                             openRejectModal(property);
                                                         }}
                                                         className="flex-1 px-3 py-2.5 bg-red-100 text-red-700 bg-red-900/30 text-red-300 rounded-full text-sm font-bold hover:bg-red-200 hover:bg-red-900/50 flex items-center justify-center transition-colors"
+                                                        title="Reprovar"
                                                     >
-                                                        <X size={18} className="mr-2" /> Reprovar
+                                                        <X size={18} className="mr-2" />
                                                     </button>
                                                 </>
                                             ) : (

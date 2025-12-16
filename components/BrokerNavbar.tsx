@@ -155,7 +155,7 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
 
                         {/* Hamburger */}
                         <button
-                            className="md:hidden text-white"
+                            className="md:hidden text-white animate-pulse"
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                         >
                             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}

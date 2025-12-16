@@ -111,7 +111,7 @@ export const DashboardLayout: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50 bg-midnight-950 transition-colors duration-200 flex">
             {/* Mobile hamburger */}
-            <button className="bg-emerald-500 bg-emerald-600 rounded-full md:hidden p-2 fixed top-6 left-6 z-[60] shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            <button className="bg-emerald-500 bg-emerald-600 rounded-full md:hidden p-2 fixed top-6 left-6 z-[60] shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform animate-pulse" onClick={() => setSidebarOpen(!sidebarOpen)}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
@@ -278,7 +278,7 @@ export const PublicLayout: React.FC = () => {
                         {/* Mobile Hamburger */}
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="md:hidden p-2 hover:bg-slate-800 rounded-full"
+                            className="md:hidden p-2 hover:bg-slate-800 rounded-full animate-pulse"
                         >
                             {mobileMenuOpen ? (
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

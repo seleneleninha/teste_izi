@@ -157,7 +157,7 @@ export const DraggableMap: React.FC<DraggableMapProps> = ({
         <div className="relative">
             <div
                 ref={mapContainerRef}
-                className="w-full h-80 rounded-full border-2 border-midnight-800 overflow-hidden shadow-lg z-0"
+                className="w-full h-80 rounded-3xl border-2 border-midnight-800 overflow-hidden shadow-lg z-0"
             />
             <div className="mt-2 p-3 bg-midnight-950/20 border border-midnight-800 rounded-full">
                 <p className="text-md text-gray-50">

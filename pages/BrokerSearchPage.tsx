@@ -122,6 +122,7 @@ export const BrokerSearchPage: React.FC = () => {
         `)
                 .eq('user_id', brokerId)
                 .eq('status_aprovacao', 'aprovado')
+                .eq('status_imovel', 'imovel_ativo')
                 .order('created_at', { ascending: false });
 
             // Fetch partnership properties
@@ -146,6 +147,7 @@ export const BrokerSearchPage: React.FC = () => {
                  `)
                     .in('id', partnershipPropertyIds)
                     .eq('status_aprovacao', 'aprovado')
+                    .eq('status_imovel', 'imovel_ativo')
                     .order('created_at', { ascending: false })
                 : null;
 

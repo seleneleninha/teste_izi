@@ -5,6 +5,8 @@ import { useToast } from '../components/ToastContext';
 import { User, Lock, Bell, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, AlertTriangle, ExternalLink, MapPin, Phone, Share2, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { geocodeAddress } from '../lib/geocodingHelper';
+import { checkPasswordStrength, validateEmail, validatePhone, validateCRECI, sanitizeInput } from '../lib/validation';
+import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicator';
 
 export const Settings: React.FC = () => {
   const { user, signOut, role } = useAuth();
@@ -362,9 +364,17 @@ export const Settings: React.FC = () => {
       return;
     }
 
-    if (passwords.newPassword.length < 6) {
-      addToast('A senha deve ter pelo menos 6 caracteres.', 'error');
+    // ✅ IMPROVED: Validação robusta de senha
+    const { score, strength, feedback } = checkPasswordStrength(passwords.newPassword);
+
+    if (strength === 'weak') {
+      addToast(`Senha muito fraca. ${feedback.join('. ')}`, 'error');
       return;
+    }
+
+    if (strength === 'fair') {
+      addToast(`Senha fraca. Recomendações: ${feedback.join(', ')}`, 'warning');
+      // Permitir continuar mas com aviso
     }
 
     try {
@@ -378,8 +388,7 @@ export const Settings: React.FC = () => {
       addToast('Senha alterada com sucesso!', 'success');
       setPasswords({ newPassword: '', confirmPassword: '' });
     } catch (error: any) {
-      console.error('Erro ao alterar senha:', error);
-      addToast('Erro ao alterar senha: ' + error.message, 'error');
+      addToast(error.message || 'Erro ao alterar senha', 'error');
     } finally {
       setSaving(false);
     }
@@ -1185,6 +1194,11 @@ export const Settings: React.FC = () => {
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
+
+                    {/* ✅ Password Strength Indicator */}
+                    {passwords.newPassword && (
+                      <PasswordStrengthIndicator password={passwords.newPassword} />
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-1">Confirmar Nova Senha</label>

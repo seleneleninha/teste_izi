@@ -10,6 +10,7 @@ import { BrokerFooter } from '../components/BrokerFooter';
 import { BrokerNavbar } from '../components/BrokerNavbar';
 import { getRandomBackground } from '../lib/backgrounds';
 import { SearchFilter } from '../components/SearchFilter';
+import { BrokerProfileSkeleton, PropertyCardSkeleton, CityCardSkeleton } from '../components/LoadingSkeleton';
 
 interface BrokerProfile {
     id: string;
@@ -106,7 +107,7 @@ export const BrokerPage: React.FC = () => {
         try {
             setLoading(true);
 
-            // 1. Fetch Broker
+            // 1. Fetch Broker first (needed for user_id)
             const { data: brokerData, error: brokerError } = await supabase
                 .from('perfis')
                 .select('*')
@@ -121,32 +122,39 @@ export const BrokerPage: React.FC = () => {
 
             setBroker(brokerData);
 
-            // 2. Fetch Own Properties
-            const { data: ownPropsData, error: ownPropsError } = await supabase
-                .from('anuncios')
-                .select(`
-                  *,
-                  tipo_imovel (tipo),
-                  operacao (tipo)
-                `)
-                .eq('user_id', brokerData.id)
-                .eq('status_aprovacao', 'aprovado')
-                .order('created_at', { ascending: false });
+            // ⚡ OPTIMIZATION: Paralelizar queries de propriedades e parcerias
+            const [
+                { data: ownPropsData, error: ownPropsError },
+                { data: partnershipsData, error: partnershipsError }
+            ] = await Promise.all([
+                // 2. Fetch Own Properties
+                supabase
+                    .from('anuncios')
+                    .select(`
+                      *,
+                      tipo_imovel (tipo),
+                      operacao (tipo)
+                    `)
+                    .eq('user_id', brokerData.id)
+                    .eq('status_aprovacao', 'aprovado')
+                    .eq('status_imovel', 'imovel_ativo')
+                    .order('created_at', { ascending: false }),
+
+                // 3. Fetch Partnerships
+                supabase
+                    .from('parcerias')
+                    .select(`
+                      property_id,
+                      anuncios (
+                        *,
+                        tipo_imovel (tipo),
+                        operacao (tipo)
+                      )
+                    `)
+                    .eq('user_id', brokerData.id)
+            ]);
 
             if (ownPropsError) throw ownPropsError;
-
-            // 3. Fetch Partnerships
-            const { data: partnershipsData, error: partnershipsError } = await supabase
-                .from('parcerias')
-                .select(`
-                  property_id,
-                  anuncios (
-                    *,
-                    tipo_imovel (tipo),
-                    operacao (tipo)
-                  )
-                `)
-                .eq('user_id', brokerData.id);
 
             // 4. Merge and Transform Data
             let allProps: Property[] = [];
@@ -225,6 +233,7 @@ export const BrokerPage: React.FC = () => {
 
         } catch (error) {
             console.error('Erro ao buscar dados do corretor:', error);
+            // TODO: Show error toast to user
         } finally {
             setLoading(false);
         }
@@ -232,10 +241,20 @@ export const BrokerPage: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 bg-midnight-950">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-                    <p className="text-gray-400">Carregando perfil...</p>
+            <div className="bg-midnight-950 text-white font-sans min-h-screen">
+                <BrokerNavbar brokerSlug={slug} />
+                <div className="container mx-auto px-4 py-12">
+                    <BrokerProfileSkeleton />
+
+                    {/* Property skeletons */}
+                    <div className="mt-12">
+                        <div className="h-8 bg-gray-800 rounded w-64 mb-6" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {[1, 2, 3, 4].map((i) => (
+                                <PropertyCardSkeleton key={i} />
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -310,33 +329,35 @@ export const BrokerPage: React.FC = () => {
                             { label: 'Rural', type: 'rural', icon: <Trees size={28} /> },
                             { label: 'Temporada', type: 'temporada', icon: <TreePalm size={28} /> },
                             { label: 'Terrenos', type: 'terreno', icon: <MapPinned size={28} /> },
-                        ].map((category, idx) => (
-                            <div
-                                key={idx}
-                                onClick={() => {
-                                    if (category.type === 'temporada') {
-                                        navigate(`/corretor/${slug}/buscar?operacao=temporada`);
-                                    } else {
-                                        navigate(`/corretor/${slug}/buscar?tipo=${category.type}`);
-                                    }
-                                }}
-                                className="group relative h-40 rounded-3xl bg-midnight-900/40 backdrop-blur-sm border border-white/5 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer flex flex-col items-center justify-center gap-3 hover:-translate-y-2 overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full blur opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
+                        ]
+                            .filter(category => (categoryCounts[category.type] || 0) > 0) // ✅ Só exibir cards com imóveis
+                            .map((category, idx) => (
+                                <div
+                                    key={idx}
+                                    onClick={() => {
+                                        if (category.type === 'temporada') {
+                                            navigate(`/corretor/${slug}/buscar?operacao=temporada`);
+                                        } else {
+                                            navigate(`/corretor/${slug}/buscar?tipo=${category.type}`);
+                                        }
+                                    }}
+                                    className="group relative h-40 rounded-3xl bg-midnight-900/40 backdrop-blur-sm border border-white/5 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer flex flex-col items-center justify-center gap-3 hover:-translate-y-2 overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full blur opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
 
-                                <div className="relative z-10 text-gray-400 group-hover:text-emerald-400 transition-colors duration-300 p-3 bg-white/5 rounded-full group-hover:bg-emerald-500/10 group-hover:scale-110 transform">
-                                    {category.icon}
-                                </div>
+                                    <div className="relative z-10 text-gray-400 group-hover:text-emerald-400 transition-colors duration-300 p-3 bg-white/5 rounded-full group-hover:bg-emerald-500/10 group-hover:scale-110 transform">
+                                        {category.icon}
+                                    </div>
 
-                                <div className="relative z-10 text-center">
-                                    <h3 className="font-bold text-white text-base group-hover:text-emerald-100 transition-colors">{category.label}</h3>
-                                    <p className="text-xs text-gray-500 group-hover:text-emerald-400/80 transition-colors mt-1 font-medium">
-                                        {categoryCounts[category.type] || 0} opções
-                                    </p>
+                                    <div className="relative z-10 text-center">
+                                        <h3 className="font-bold text-white text-base group-hover:text-emerald-100 transition-colors">{category.label}</h3>
+                                        <p className="text-xs text-gray-500 group-hover:text-emerald-400/80 transition-colors mt-1 font-medium">
+                                            {categoryCounts[category.type] || 0} opções
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
                     </div>
                 </div>
             </section>

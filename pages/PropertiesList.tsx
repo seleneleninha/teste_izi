@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MOCK_PROPERTIES } from '../constants';
-import { MapPin, Bed, Bath, Square, Filter, Search, Grid, Map as MapIcon, CheckSquare, Loader2, Edit2, Trash2, X } from 'lucide-react';
+import { MapPin, Bed, Bath, Square, Filter, Search, Grid, Map as MapIcon, CheckSquare, Loader2, Edit2, Trash2, X, TrendingUp, Key, Pause, AlertTriangle, Home, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { PropertyCard } from '../components/PropertyCard';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -9,6 +9,7 @@ import { useToast } from '../components/ToastContext';
 import { useAuth } from '../components/AuthContext';
 import { HorizontalScroll } from '../components/HorizontalScroll';
 import { Footer } from '../components/Footer';
+import { DeactivatePropertyModal } from '../components/DeactivatePropertyModal';
 
 export const PropertiesList: React.FC = () => {
     const navigate = useNavigate();
@@ -21,6 +22,13 @@ export const PropertiesList: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [propertyTypes, setPropertyTypes] = useState<{ tipo: string; disponivel_temporada: boolean }[]>([]);
 
+    // Modal de inativação
+    const [deactivateModal, setDeactivateModal] = useState<{ isOpen: boolean; propertyId: string; propertyTitle: string }>({
+        isOpen: false,
+        propertyId: '',
+        propertyTitle: ''
+    });
+
     // Tipos padrão para Comprar/Alugar (sem temporada)
     const standardTypes = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno'];
 
@@ -29,6 +37,22 @@ export const PropertiesList: React.FC = () => {
     const [selectedPriceRange, setSelectedPriceRange] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOperation, setSelectedOperation] = useState('');
+
+    // Status Filter - NOVO
+    const [statusFilter, setStatusFilter] = useState<string>('imovel_ativo');
+
+    // Estatísticas - NOVO
+    const [stats, setStats] = useState({
+        ativos: 0,
+        vendas: 0,
+        locacoes: 0,
+        standby: 0,
+        perdidos: 0,
+        total: 0
+    });
+
+    // Seções expandidas - NOVO
+    const [expandedSections, setExpandedSections] = useState<string[]>(['imovel_ativo']); // Ativos expandido por padrão
 
     // Determine context based on route
     const isDashboardRoute = location.pathname === '/properties';
@@ -66,6 +90,20 @@ export const PropertiesList: React.FC = () => {
         // Fetch properties with these params directly to avoid race conditions
         fetchProperties(typeParam, operacaoParam, qParam, priceParam, brokerParam);
     }, [location.search, isMyProperties, user]);
+
+    // Calcular estatísticas após carregar properties - NOVO
+    useEffect(() => {
+        if (properties.length > 0 && isMyProperties) {
+            setStats({
+                ativos: properties.filter(p => p.status_imovel === 'imovel_ativo' || !p.status_imovel).length,
+                vendas: properties.filter(p => p.status_imovel === 'venda_faturada').length,
+                locacoes: properties.filter(p => p.status_imovel === 'locacao_faturada').length,
+                standby: properties.filter(p => p.status_imovel === 'imovel_espera').length,
+                perdidos: properties.filter(p => p.status_imovel === 'imovel_perdido').length,
+                total: properties.length
+            });
+        }
+    }, [properties, isMyProperties]);
 
     useEffect(() => {
         fetchPropertyTypes();
@@ -145,6 +183,7 @@ export const PropertiesList: React.FC = () => {
                     `)
                     .eq('user_id', brokerId)
                     .eq('status_aprovacao', 'aprovado')
+                    .eq('status_imovel', 'imovel_ativo')
                     .order('created_at', { ascending: false });
 
                 // Fetch partnership properties
@@ -249,7 +288,8 @@ export const PropertiesList: React.FC = () => {
                     latitude: p.latitude,
                     longitude: p.longitude,
                     user_id: p.user_id,
-                    status_aprovacao: p.status_aprovacao
+                    status_aprovacao: p.status_aprovacao,
+                    status_imovel: p.status_imovel
                 }));
 
                 setProperties(formattedProperties);
@@ -336,7 +376,8 @@ export const PropertiesList: React.FC = () => {
                     latitude: p.latitude,
                     longitude: p.longitude,
                     user_id: p.user_id,
-                    status_aprovacao: p.status_aprovacao
+                    status_aprovacao: p.status_aprovacao,
+                    status_imovel: p.status_imovel
                 }));
                 setProperties(formattedProperties);
             }
@@ -385,7 +426,17 @@ export const PropertiesList: React.FC = () => {
         setSelectedType('');
         setSelectedPriceRange('');
         setSearchTerm('');
+        setStatusFilter('todos');
         fetchProperties('', '', '', '', '');
+    };
+
+    // Toggle de seção colapsável - NOVO
+    const toggleSection = (section: string) => {
+        setExpandedSections(prev =>
+            prev.includes(section)
+                ? prev.filter(s => s !== section)
+                : [...prev, section]
+        );
     };
 
     return (
@@ -398,97 +449,124 @@ export const PropertiesList: React.FC = () => {
                             {isMyProperties ? 'Meus Imóveis' : isMarketMode ? 'Mercado Imobiliário' : 'Buscar Imóveis'}
                         </h2>
                         <p className="text-gray-400 mt-1">
-                            {isMyProperties ? 'Gerencie seus anúncios.' : 'Explore oportunidades e parcerias.'}
+                            {isMyProperties ? 'Gerencie e mantenha seus anúncios atualizados.' : 'Encontre o imóvel ideal para sua Família.'}
                         </p>
                     </div>
 
-                    <div className="w-full xl:w-auto flex flex-col md:flex-row gap-4">
-                        {/* Filters Row */}
-                        <div className="flex-1 grid grid-cols-2 md:flex gap-2">
+                    {/* Filtros - Mobile First Layout */}
+                    <div className="w-full space-y-3 mb-6">
+                        {/* Linha 1: Filtros Principais */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {/* Operação */}
                             <select
                                 value={selectedOperation}
                                 onChange={e => setSelectedOperation(e.target.value)}
-                                className="col-span-1 bg-slate-800 border border-slate-700 text-sm rounded-full px-3 py-2 text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
+                                className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                             >
-                                <option value="" className="bg-slate-800">Operação</option>
+                                <option value="" className="bg-slate-800">📍 Operação</option>
                                 <option value="venda" className="bg-slate-800">Venda</option>
                                 <option value="locacao" className="bg-slate-800">Locação</option>
                                 <option value="temporada" className="bg-slate-800">Temporada</option>
                             </select>
+
+                            {/* Tipo */}
                             <select
                                 value={selectedType}
                                 onChange={e => setSelectedType(e.target.value)}
-                                className="col-span-1 bg-slate-800 border border-slate-700 text-sm rounded-full lg px-3 py-2 text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
+                                className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                             >
-                                <option value="" className="bg-slate-800">Tipo</option>
+                                <option value="" className="bg-slate-800">🏠 Tipo</option>
                                 {filteredPropertyTypes.map((type, idx) => (
                                     <option key={idx} value={type.tipo} className="bg-slate-800">
                                         {type.tipo.charAt(0).toUpperCase() + type.tipo.slice(1)}
                                     </option>
                                 ))}
                             </select>
+
+                            {/* Faixa de Preço */}
                             <select
                                 value={selectedPriceRange}
                                 onChange={e => setSelectedPriceRange(e.target.value)}
-                                className="col-span-2 md:w-auto bg-slate-800 border border-slate-700 text-sm rounded-full px-3 py-2 text-gray-300 cursor-pointer focus:ring-2 focus:ring-emerald-500 outline-none"
+                                className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all col-span-2 md:col-span-1"
                             >
-                                <option value="" className="bg-slate-800">Faixa de Preço</option>
-                                <option value="0-200000" className="bg-slate-800">até R$200mil</option>
-                                <option value="200000-500000" className="bg-slate-800">R$200k - R$500k</option>
-                                <option value="500000-1000000" className="bg-slate-800">R$500k - R$1M</option>
-                                <option value="1000000-2000000" className="bg-slate-800">R$1M - R$2M</option>
-                                <option value="2000000-100000000" className="bg-slate-800">acima de R$2M</option>
+                                <option value="" className="bg-slate-800">💰 Preço</option>
+                                <option value="0-200000" className="bg-slate-800">Até R$ 200mil</option>
+                                <option value="200000-500000" className="bg-slate-800">R$ 200mil - R$ 500mil</option>
+                                <option value="500000-1000000" className="bg-slate-800">R$ 500mil - R$ 1mi</option>
+                                <option value="1000000-999999999" className="bg-slate-800">Acima de R$ 1mi</option>
                             </select>
+
+                            {/* Status - NOVO (apenas para Meus Imóveis) */}
+                            {isMyProperties && (
+                                <select
+                                    value={statusFilter}
+                                    onChange={e => setStatusFilter(e.target.value)}
+                                    className="bg-slate-800 border border-emerald-700/50 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all col-span-2 md:col-span-1 font-medium"
+                                >
+                                    <option value="todos" className="bg-slate-800">📋 Todos ({stats.total})</option>
+                                    <option value="imovel_ativo" className="bg-slate-800">✅ Ativos ({stats.ativos})</option>
+                                    <option value="venda_faturada" className="bg-slate-800">🎉 Vendidos ({stats.vendas})</option>
+                                    <option value="locacao_faturada" className="bg-slate-800">💰 Alugados ({stats.locacoes})</option>
+                                    <option value="imovel_espera" className="bg-slate-800">⏸️ Standby ({stats.standby})</option>
+                                    <option value="imovel_perdido" className="bg-slate-800">⚠️ Perdidos ({stats.perdidos})</option>
+                                </select>
+                            )}
                         </div>
 
-                        {/* Actions Row */}
-                        <div className="flex gap-2 items-center justify-between md:justify-start">
-                            <div className="flex gap-2">
+                        {/* Linha 2: Botões de Ação */}
+                        <div className="flex flex-wrap gap-3">
+                            {/* Buscar */}
+                            <button
+                                onClick={() => fetchProperties()}
+                                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-all shadow-sm flex items-center justify-center gap-2"
+                            >
+                                <Search size={18} />
+                                <span>Buscar</span>
+                            </button>
+
+                            {/* Limpar */}
+                            <button
+                                onClick={clearFilters}
+                                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+                            >
+                                <X size={18} />
+                                <span>Limpar</span>
+                            </button>
+
+                            {/* Toggle Grid/Map */}
+                            <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700">
                                 <button
-                                    onClick={() => fetchProperties()}
-                                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-full transition-colors shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                                    onClick={() => setView('grid')}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${view === 'grid'
+                                        ? 'bg-emerald-600 text-white shadow-sm'
+                                        : 'text-gray-400 hover:text-white hover:bg-slate-700'
+                                        }`}
                                 >
-                                    <Search size={18} />
-                                    <span className="hidden sm:inline">Buscar</span>
+                                    <Grid size={18} />
+                                    <span className="hidden sm:inline">Lista</span>
                                 </button>
                                 <button
-                                    onClick={clearFilters}
-                                    className="bg-red-500 bg-red-700 text-white hover:bg-red-600 hover:bg-red-600 font-bold py-2 px-3 rounded-full transition-colors flex items-center justify-center"
+                                    onClick={() => setView('map')}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${view === 'map'
+                                        ? 'bg-emerald-600 text-white shadow-sm'
+                                        : 'text-gray-400 hover:text-white hover:bg-slate-700'
+                                        }`}
                                 >
-                                    <X size={18} />
-                                    <span className="hidden sm:inline">Limpar</span>
+                                    <MapIcon size={18} />
+                                    <span className="hidden sm:inline">Mapa</span>
                                 </button>
                             </div>
 
-                            <div className="h-8 w-px bg-slate-700 hidden md:block mx-1"></div>
-
-                            <div className="flex gap-2">
-                                <div className="flex bg-slate-800 rounded-full p-1 border border-slate-700">
-                                    <button
-                                        onClick={() => setView('grid')}
-                                        className={`p-2 rounded-full transition-all ${view === 'grid' ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-500 hover:bg-slate-700'}`}
-                                        title="Visualização Horizontal"
-                                    >
-                                        <Grid size={20} />
-                                    </button>
-                                    <button
-                                        onClick={() => setView('map')}
-                                        className={`p-2 rounded-full transition-all ${view === 'map' ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-500 hover:bg-slate-700'}`}
-                                        title="Mapa"
-                                    >
-                                        <MapIcon size={20} />
-                                    </button>
-                                </div>
-
-                                {user && isDashboardRoute && (
-                                    <button
-                                        onClick={() => navigate('/add-property')}
-                                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full transition-colors font-medium shadow-sm whitespace-nowrap"
-                                    >
-                                        + Anunciar
-                                    </button>
-                                )}
-                            </div>
+                            {/* Botão Anunciar - DESTACADO */}
+                            {user && isDashboardRoute && (
+                                <button
+                                    onClick={() => navigate('/add-property')}
+                                    className="ml-auto px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 flex items-center gap-2"
+                                >
+                                    <Home size={20} />
+                                    <span>+ Anunciar Imóvel</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -514,75 +592,187 @@ export const PropertiesList: React.FC = () => {
                             ) : view === 'grid' ? (
                                 <div className="w-full">
                                     {/* Horizontal Scroll Layout */}
-                                    <HorizontalScroll itemsPerPage={undefined} itemWidth={320}>
-                                        {properties.map(prop => (
-                                            <div key={prop.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
-                                                <PropertyCard
-                                                    property={prop}
-                                                    showStatus={isMyProperties}
-                                                    isDashboard={isDashboardRoute}
-                                                    actions={
-                                                        (user && prop.user_id === user.id) ? (
-                                                            <>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        navigate(`/add-property?id=${prop.id}`);
-                                                                    }}
-                                                                    className="flex-1 px-3 py-2 bg-yellow-600/10 text-yellow-700 text-yellow-400 rounded-full text-sm font-medium hover:bg-yellow-600/20 flex items-center justify-center transition-colors"
-                                                                >
-                                                                    <Edit2 size={16} className="mr-1.5" /> Editar
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleDeleteProperty(prop.id);
-                                                                    }}
-                                                                    className="flex-1 px-3 py-2 bg-red-600/10 text-red-700 text-red-400 rounded-full text-sm font-medium hover:bg-red-600/20 flex items-center justify-center transition-colors"
-                                                                >
-                                                                    <Trash2 size={16} className="mr-1.5" /> Inativar
-                                                                </button>
-                                                            </>
-                                                        ) : undefined
-                                                    }
-                                                />
-                                            </div>
-                                        ))}
-                                    </HorizontalScroll>
+                                    {(() => {
+                                        const filteredProps = isMyProperties
+                                            ? statusFilter === 'todos'
+                                                ? properties
+                                                : properties.filter(p => p.status_imovel === statusFilter || (statusFilter === 'imovel_ativo' && !p.status_imovel))
+                                            : properties;
+
+                                        if (filteredProps.length === 0) {
+                                            return (
+                                                <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                                                    <Search size={40} className="mb-3 opacity-30" />
+                                                    <p className="text-base">Nenhum imóvel nesta categoria.</p>
+                                                </div>
+                                            );
+                                        }
+
+                                        return (
+                                            <HorizontalScroll itemsPerPage={undefined} itemWidth={320}>
+                                                {filteredProps.map(prop => (
+                                                    <div key={prop.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
+                                                        <PropertyCard
+                                                            property={prop}
+                                                            showStatus={isMyProperties}
+                                                            isDashboard={isDashboardRoute}
+                                                            actions={
+                                                                (user && prop.user_id === user.id) ? (
+                                                                    <>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                navigate(`/add-property?id=${prop.id}`);
+                                                                            }}
+                                                                            className="flex-1 px-2 py-2 bg-yellow-600/50 text-white rounded-full text-sm font-medium hover:bg-yellow-600/20 flex items-center justify-center transition-colors"
+                                                                            title="Editar"
+                                                                        >
+                                                                            <Edit2 size={16} className="mr-1.5" />
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setDeactivateModal({
+                                                                                    isOpen: true,
+                                                                                    propertyId: prop.id,
+                                                                                    propertyTitle: prop.titulo
+                                                                                });
+                                                                            }}
+                                                                            className="flex-1 px-2 py-2 bg-red-600/50 text-white rounded-full text-sm font-medium hover:bg-red-600/20 flex items-center justify-center transition-colors"
+                                                                            title="Inativar Imóvel"
+                                                                        >
+                                                                            Inativar
+                                                                        </button>
+                                                                    </>
+                                                                ) : undefined
+                                                            }
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </HorizontalScroll>
+                                        );
+                                    })()}
+                                </div>
+                            ) : isMyProperties ? (
+                                /* List View com Seções Colapsáveis por Status - Apenas Meus Imóveis */
+                                <div className="space-y-6">
+                                    {/* Definição das seções */}
+                                    {[
+                                        { key: 'imovel_ativo', label: 'Ativos', icon: <Home size={20} />, color: 'emerald', emoji: '✅' },
+                                        { key: 'venda_faturada', label: 'Vendidos', icon: <TrendingUp size={20} />, color: 'emerald', emoji: '🎉' },
+                                        { key: 'locacao_faturada', label: 'Alugados', icon: <Key size={20} />, color: 'blue', emoji: '💰' },
+                                        { key: 'imovel_espera', label: 'Em Standby', icon: <Pause size={20} />, color: 'yellow', emoji: '⏸️' },
+                                        { key: 'imovel_perdido', label: 'Perdidos', icon: <AlertTriangle size={20} />, color: 'red', emoji: '⚠️' },
+                                    ]
+                                        .filter(section => {
+                                            // Mostrar apenas se tiver properties nessa categoria OU se statusFilter for 'todos'
+                                            const count = properties.filter(p =>
+                                                p.status_imovel === section.key || (section.key === 'imovel_ativo' && !p.status_imovel)
+                                            ).length;
+                                            // Se está filtrando por status específico, só mostra essa seção
+                                            if (statusFilter !== 'todos') {
+                                                return section.key === statusFilter;
+                                            }
+                                            return count > 0;
+                                        })
+                                        .map(section => {
+                                            const sectionProperties = properties.filter(p =>
+                                                p.status_imovel === section.key || (section.key === 'imovel_ativo' && !p.status_imovel)
+                                            );
+                                            const isExpanded = expandedSections.includes(section.key);
+                                            const colorClasses = {
+                                                emerald: 'border-emerald-700/50 bg-emerald-900/20 text-emerald-400',
+                                                blue: 'border-blue-700/50 bg-blue-900/20 text-blue-400',
+                                                yellow: 'border-yellow-700/50 bg-yellow-900/20 text-yellow-400',
+                                                red: 'border-red-700/50 bg-red-900/20 text-red-400',
+                                            };
+
+                                            return (
+                                                <div key={section.key} className="rounded-2xl border border-slate-700/50 overflow-hidden">
+                                                    {/* Header Clicável */}
+                                                    <button
+                                                        onClick={() => toggleSection(section.key)}
+                                                        className={`w-full flex items-center justify-between px-5 py-4 transition-all ${isExpanded ? colorClasses[section.color as keyof typeof colorClasses] : 'bg-slate-800/50 hover:bg-slate-800'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isExpanded ? `bg-${section.color}-500/30` : 'bg-slate-700'
+                                                                }`}>
+                                                                {section.icon}
+                                                            </div>
+                                                            <span className="font-bold text-white text-lg">
+                                                                {section.emoji} {section.label}
+                                                            </span>
+                                                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${isExpanded
+                                                                ? `bg-${section.color}-500/30 text-${section.color}-300`
+                                                                : 'bg-slate-700 text-slate-300'
+                                                                }`}>
+                                                                {sectionProperties.length}
+                                                            </span>
+                                                        </div>
+                                                        <ChevronDown
+                                                            size={24}
+                                                            className={`text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''
+                                                                }`}
+                                                        />
+                                                    </button>
+
+                                                    {/* Conteúdo Colapsável */}
+                                                    {isExpanded && sectionProperties.length > 0 && (
+                                                        <div className="p-5 bg-slate-900/50">
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                                                {sectionProperties.map(prop => (
+                                                                    <PropertyCard
+                                                                        key={prop.id}
+                                                                        property={prop}
+                                                                        showStatus={isMyProperties}
+                                                                        isDashboard={isDashboardRoute}
+                                                                        actions={
+                                                                            (user && prop.user_id === user.id) ? (
+                                                                                <>
+                                                                                    <button
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            navigate(`/add-property?id=${prop.id}`);
+                                                                                        }}
+                                                                                        className="flex-1 px-3 py-2 bg-yellow-600/20 text-yellow-400 rounded-full text-sm font-medium hover:bg-yellow-600/30 flex items-center justify-center transition-colors"
+                                                                                    >
+                                                                                        <Edit2 size={16} className="mr-1.5" /> Editar
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            setDeactivateModal({
+                                                                                                isOpen: true,
+                                                                                                propertyId: prop.id,
+                                                                                                propertyTitle: prop.titulo
+                                                                                            });
+                                                                                        }}
+                                                                                        className="flex-1 px-3 py-2 bg-red-600/20 text-red-400 rounded-full text-sm font-medium hover:bg-red-600/30 flex items-center justify-center transition-colors"
+                                                                                    >
+                                                                                        <Trash2 size={16} className="mr-1.5" /> Inativar
+                                                                                    </button>
+                                                                                </>
+                                                                            ) : undefined
+                                                                        }
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                 </div>
                             ) : (
-                                /* List View (Vertical Grid) */
+                                /* Grid Normal para visitantes */
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {properties.map(prop => (
                                         <PropertyCard
                                             key={prop.id}
                                             property={prop}
-                                            showStatus={isMyProperties}
-                                            isDashboard={isDashboardRoute}
-                                            actions={
-                                                (user && prop.user_id === user.id) ? (
-                                                    <>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                navigate(`/add-property?id=${prop.id}`);
-                                                            }}
-                                                            className="flex-1 px-3 py-2 bg-yellow-600/10 text-yellow-700 text-yellow-400 rounded-full text-sm font-medium hover:bg-yellow-600/20 flex items-center justify-center transition-colors"
-                                                        >
-                                                            <Edit2 size={16} className="mr-1.5" /> Editar
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleDeleteProperty(prop.id);
-                                                            }}
-                                                            className="flex-1 px-3 py-2 bg-red-600/10 text-red-700 text-red-400 rounded-full text-sm font-medium hover:bg-red-600/20 flex items-center justify-center transition-colors"
-                                                        >
-                                                            <Trash2 size={16} className="mr-1.5" /> Inativar
-                                                        </button>
-                                                    </>
-                                                ) : undefined
-                                            }
+                                            showStatus={false}
+                                            isDashboard={false}
                                         />
                                     ))}
                                 </div>
@@ -590,9 +780,19 @@ export const PropertiesList: React.FC = () => {
                         </>
                     )}
                 </div>
-            </div>
 
-            <Footer />
+                { /* Modal de Inativação */}
+                <DeactivatePropertyModal
+                    isOpen={deactivateModal.isOpen}
+                    onClose={() => setDeactivateModal({ isOpen: false, propertyId: '', propertyTitle: '' })}
+                    propertyId={deactivateModal.propertyId}
+                    propertyTitle={deactivateModal.propertyTitle}
+                    onSuccess={() => {
+                        fetchProperties();
+                        setDeactivateModal({ isOpen: false, propertyId: '', propertyTitle: '' });
+                    }}
+                />
+            </div>
         </div>
     );
 };

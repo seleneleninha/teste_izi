@@ -131,7 +131,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             <div className={`bg-slate-900 rounded-3xl shadow-2xl w-full p-8 relative border border-slate-700 my-auto ${isSignUp ? 'max-w-2xl' : 'max-w-md'}`}>
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-200 transition-colors"
+                    className="absolute bottom-4 right-4 text-gray-400 hover:text-gray-200 transition-colors"
                 >
                     <X size={24} />
                 </button>

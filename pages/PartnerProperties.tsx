@@ -230,6 +230,7 @@ export const PartnerProperties: React.FC = () => {
                 .eq('uf', userProfile.uf) // Filter by STATE, not city
                 .neq('user_id', user?.id)
                 .eq('status_aprovacao', 'aprovado')
+                .eq('status_imovel', 'imovel_ativo')
                 .eq('aceita_parceria', true)
                 .order('created_at', { ascending: false });
 

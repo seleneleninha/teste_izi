@@ -352,6 +352,7 @@ export const PropertyDetails: React.FC = () => {
                     .eq('cidade', property.address.city)
                     .neq('id', property.id)
                     .eq('status_aprovacao', 'aprovado')
+                    .eq('status_imovel', 'imovel_ativo')
                     .limit(8);
 
                 if (data) {
@@ -486,18 +487,33 @@ export const PropertyDetails: React.FC = () => {
 
                         <div className="flex space-x-3">
                             <button
-                                onClick={() => {
-                                    const url = window.location.href;
-                                    navigator.clipboard.writeText(url);
-                                    // Using a custom toast implementation since useToast might not be available in this scope
-                                    // Ideally we should use the ToastContext
-                                    const toast = document.createElement('div');
-                                    toast.className = 'fixed bottom-4 right-4 bg-emerald-600 text-white px-6 py-3 rounded-full shadow-xl z-50 animate-fade-in-up flex items-center gap-2';
-                                    toast.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Link copiado com sucesso!';
-                                    document.body.appendChild(toast);
-                                    setTimeout(() => {
-                                        toast.remove();
-                                    }, 3000);
+                                onClick={async () => {
+                                    const currentUrl = window.location.href;
+
+                                    if (navigator.share) {
+                                        try {
+                                            await navigator.share({
+                                                title: property.titulo,
+                                                text: `Confira este imóvel: ${property.titulo}`,
+                                                url: currentUrl
+                                            });
+                                        } catch (err) {
+                                            console.log('Share cancelled');
+                                        }
+                                    } else {
+                                        // Fallback: Copy to clipboard
+                                        try {
+                                            await navigator.clipboard.writeText(currentUrl);
+                                            // ✅ SEGURO: Usar toast do ToastContext ao invés de innerHTML
+                                            const toast = document.createElement('div');
+                                            toast.className = 'fixed bottom-4 right-4 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in';
+                                            toast.textContent = '✓ Link copiado com sucesso!';
+                                            document.body.appendChild(toast);
+                                            setTimeout(() => toast.remove(), 3000);
+                                        } catch (err) {
+                                            console.error('Failed to copy:', err);
+                                        }
+                                    }
                                 }}
                                 className="p-2 rounded-full bg-slate-800 border border-slate-700 text-gray-600 hover:text-primary-500 transition-colors"
                                 title="Copiar Link"

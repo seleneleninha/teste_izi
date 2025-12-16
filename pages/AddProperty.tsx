@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { UploadCloud, Check, Sparkles, Wand2, Loader2, Tag, MapPin, DollarSign, Home, Info, Search, AlertCircle, AlertTriangle, History, ShieldCheck } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { UploadCloud, Check, Sparkles, Wand2, Loader2, Tag, MapPin, DollarSign, Home, Info, Search, AlertCircle, AlertTriangle, History, ShieldCheck, Save } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { generatePropertyDescription, evaluatePropertyPrice } from '../lib/geminiHelper';
 
 import { supabase } from '../lib/supabaseClient';
@@ -92,9 +92,9 @@ const INITIAL_DATA: PropertyFormData = {
 
 
 
-export const AddProperty: React.FC = () => {
+export default function AddProperty() {
     const navigate = useNavigate();
-    const location = useLocation();
+    const [searchParams] = useSearchParams();
     const { user } = useAuth();
     const { addToast } = useToast();
     const [step, setStep] = useState(1);
@@ -371,6 +371,10 @@ export const AddProperty: React.FC = () => {
 
             if (error) throw error;
             if (error) throw error;
+
+            // Limpar rascunho após salvar
+            clearDraft();
+
             addToast(editingId ? 'Imóvel atualizado com sucesso! Aguardando nova aprovação.' : 'Imóvel cadastrado com sucesso! Aguardando aprovação.', 'success');
             navigate('/properties');
         } catch (error: any) {
@@ -398,13 +402,70 @@ export const AddProperty: React.FC = () => {
     const [isLoadingCep, setIsLoadingCep] = useState(false);
     const [cepError, setCepError] = useState('');
 
+    // Touch/Drag states for mobile image reordering
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [touchStartY, setTouchStartY] = useState<number>(0);
+
     const steps = [
         { num: 1, label: 'Localização', icon: MapPin },
-        { num: 2, label: 'Detalhes', icon: Home },
-        { num: 3, label: 'Financeiro', icon: DollarSign },
+        { num: 2, label: 'Financeiro', icon: DollarSign },
+        { num: 3, label: 'Detalhes', icon: Home },
         { num: 4, label: 'Fotos', icon: UploadCloud },
         { num: 5, label: 'Revisão', icon: Check }
     ];
+
+    // Auto-save para localStorage (apenas quando NÃO está editando)
+    useEffect(() => {
+        const propertyId = searchParams.get('id');
+        if (!propertyId) {
+            // Salvar formData
+            localStorage.setItem('addProperty_draft_formData', JSON.stringify(formData));
+            // Salvar images
+            localStorage.setItem('addProperty_draft_images', JSON.stringify(images));
+            // Salvar step atual
+            localStorage.setItem('addProperty_draft_step', step.toString());
+        }
+    }, [formData, images, step, searchParams]);
+
+    // Auto-load do localStorage ao montar componente
+    useEffect(() => {
+        const propertyId = searchParams.get('id');
+        if (!propertyId) {
+            try {
+                const savedFormData = localStorage.getItem('addProperty_draft_formData');
+                const savedImages = localStorage.getItem('addProperty_draft_images');
+                const savedStep = localStorage.getItem('addProperty_draft_step');
+
+                if (savedFormData) {
+                    const parsed = JSON.parse(savedFormData);
+                    // Só carregar se tiver dados relevantes (não vazio)
+                    if (parsed.title || parsed.description || parsed.address) {
+                        setFormData(parsed);
+                        addToast('📋 Rascunho anterior restaurado!', 'info');
+                    }
+                }
+                if (savedImages) {
+                    const parsed = JSON.parse(savedImages);
+                    if (parsed.length > 0) {
+                        setImages(parsed);
+                    }
+                }
+                if (savedStep) {
+                    setStep(parseInt(savedStep));
+                }
+            } catch (error) {
+                console.error('Erro ao carregar rascunho:', error);
+            }
+        }
+    }, [searchParams, addToast]);
+
+    // Função para limpar rascunho
+    const clearDraft = () => {
+        localStorage.removeItem('addProperty_draft_formData');
+        localStorage.removeItem('addProperty_draft_images');
+        localStorage.removeItem('addProperty_draft_step');
+        addToast('🗑️ Rascunho limpo!', 'success');
+    };
 
     // Campos que devem receber formatação de moeda (R$ 1.000.000)
     const currencyFields = ['salePrice', 'rentPrice', 'condoFee', 'iptu', 'valorDiaria', 'valorMensal'];
@@ -549,10 +610,34 @@ export const AddProperty: React.FC = () => {
         setGeneratedDescriptions([]);
 
         try {
+            // Fetch broker data for Popular style
+            const { data: brokerData } = await supabase
+                .from('perfis')
+                .select('nome, sobrenome, creci, uf_creci, whatsapp')
+                .eq('id', user?.id)
+                .single();
+
             // Get tipo, subtipo, and operacao names
             const tipoNome = tiposImovel.find(t => t.id === formData.tipoImovelId)?.tipo || formData.type;
             const subtipoNome = subtiposImovel.find(s => s.id === formData.subtipoImovelId)?.subtipo;
             const operacaoNome = operacoes.find(o => o.id === formData.operacaoId)?.tipo;
+
+            // Check if it's temporada
+            const isTemp = operacaoNome?.toLowerCase() === 'temporada';
+
+            // Parse financial values (já formatados pelo input, ex: "479.000,00")
+            // Remove pontos e vírgulas, depois converte para número
+            const parseValue = (val: string) => {
+                if (!val) return 0;
+                // Remove "R$", espaços, pontos (separador de milhar)
+                // Troca vírgula (decimal) por ponto
+                const cleaned = val.replace(/[R$\s.]/g, '').replace(',', '.');
+                return parseFloat(cleaned) || 0;
+            };
+            const valorVenda = parseValue(formData.salePrice);
+            const valorLocacao = parseValue(formData.rentPrice);
+            const valorDiaria = parseValue(formData.valorDiaria);
+            const valorMensal = parseValue(formData.valorMensal);
 
             const descriptions = await generatePropertyDescription({
                 titulo: formData.title,
@@ -566,7 +651,20 @@ export const AddProperty: React.FC = () => {
                 banheiros: Number(formData.bathrooms) || 0,
                 vagas: Number(formData.garage) || 0,
                 area: Number(formData.privateArea) || 0,
-                caracteristicas: formData.features
+                caracteristicas: formData.features,
+                brokerName: brokerData ? `${brokerData.nome} ${brokerData.sobrenome}` : undefined,
+                brokerCreci: brokerData?.creci || undefined,
+                brokerUfCreci: brokerData?.uf_creci || undefined,
+                brokerWhatsapp: brokerData?.whatsapp || undefined,
+                // Financial info
+                valorVenda: valorVenda > 0 ? valorVenda : undefined,
+                valorLocacao: valorLocacao > 0 ? valorLocacao : undefined,
+                valorDiaria: valorDiaria > 0 ? valorDiaria : undefined,
+                valorMensal: valorMensal > 0 ? valorMensal : undefined,
+                taxasInclusas: formData.taxasInclusas,
+                aceitaFinanciamento: formData.aceitaFinanciamento,
+                // Don't include partnership info (internal only)
+                isTemporada: isTemp,
             });
 
             setGeneratedDescriptions(descriptions);
@@ -647,6 +745,10 @@ export const AddProperty: React.FC = () => {
         } finally {
             setIsEvaluating(false);
         }
+    };
+
+    const handleImageDelete = (index: number) => {
+        setImages(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -760,8 +862,23 @@ export const AddProperty: React.FC = () => {
     return (
         <div className="mt-6 max-w-5xl mx-auto pb-12">
             <div className="mb-8">
-                <h2 className="text-3xl font-bold text-white">{editingId ? 'Editar Imóvel' : 'Cadastrar Novo Imóvel'}</h2>
-                <p className="text-slate-400 mt-1">Preencha os dados do imóvel. Nossa IA ajudará em etapas chave.</p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-3xl font-bold text-white">{editingId ? 'Editar Imóvel' : 'Cadastrar Novo Imóvel'}</h2>
+                        <p className="text-slate-400 mt-1">Preencha os dados do imóvel. Nossa IA ajudará em etapas chave.</p>
+                    </div>
+                    {/* Indicador de rascunho salvo */}
+                    {!editingId && (
+                        <button
+                            onClick={clearDraft}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-900/20 border border-blue-700/30 rounded-full text-blue-300 text-sm hover:bg-blue-900/40 transition-colors"
+                            title="Limpar rascunho automático"
+                        >
+                            <Save size={16} />
+                            Auto-save ativo
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Rejection Banner */}
@@ -855,7 +972,7 @@ export const AddProperty: React.FC = () => {
             </div>
 
             {/* Form Content */}
-            <div className="bg-slate-800 rounded-full p-6 md:p-8 shadow-lg border border-slate-700 min-h-[450px] animate-in fade-in duration-300">
+            <div className="bg-slate-800 rounded-3xl p-6 md:p-8 shadow-lg border border-slate-700 min-h-[450px] animate-in fade-in duration-300">
 
                 {/* STEP 1: LOCALIZAÇÃO E DADOS BÁSICOS */}
                 {step === 1 && (
@@ -1022,7 +1139,7 @@ export const AddProperty: React.FC = () => {
 
                             {/* Manual Geocoding Test Button (if automatic fails) */}
                             {formData.city && !formData.latitude && (
-                                <div className="mt-4 p-4 bg-amber-50 bg-amber-900/20 border border-amber-200 border-amber-800 rounded-full">
+                                <div className="mt-4 p-4 bg-amber-50 bg-amber-900/20 border border-amber-200 border-amber-800 rounded-3xl">
                                     <p className="text-sm text-amber-200 mb-3">
                                         <strong>⚠️ Buscando coordenadas automaticamente, um momento...</strong><br />
                                         Clique no botão abaixo para tentar buscar manualmente:
@@ -1081,7 +1198,7 @@ export const AddProperty: React.FC = () => {
 
                             {/* Coordinate Info */}
                             {formData.latitude && formData.longitude && (
-                                <div className="mt-4 p-3 bg-emerald-900/20 border-emerald-800 rounded-full flex items-center text-sm text-emerald-300">
+                                <div className="mt-4 p-3 bg-emerald-900/20 border-emerald-800 rounded- flex items-center text-sm text-emerald-300">
                                     <MapPin size={16} className="mr-2 flex-shrink-0" />
                                     <div>
                                         <strong>Coordenadas localizadas:</strong><br />
@@ -1132,8 +1249,8 @@ export const AddProperty: React.FC = () => {
 
 
 
-                {/* STEP 2: DETALHES DO IMÓVEL */}
-                {step === 2 && (
+                {/* STEP 3: DETALHES DO IMÓVEL */}
+                {step === 3 && (
                     <div>
                         <h3 className="text-xl font-bold text-white mb-6">Características e Descrição</h3>
 
@@ -1162,6 +1279,35 @@ export const AddProperty: React.FC = () => {
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Área Total (m²)</label>
                                 <input type="text" inputMode="numeric" name="totalArea" value={formData.totalArea} onChange={handleInputChange} placeholder="150" className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
+                        </div>
+
+                        {/* Botão de Avaliação de Preço - Movido para cá */}
+                        <div className="mt-8 p-4 bg-yellow-900/20 border b-2 border-yellow-500/30 rounded-3xl flex items-start justify-between items-center bg-slate-800 shadow-sm mb-8">
+                            <div className="flex items-start">
+                                <Info className="text-yellow-400 mt-0.5 mr-3 shrink-0" />
+                                <div>
+                                    <p className="text-sm text-yellow-200 font-medium">
+                                        {priceEvaluation ? 'Avaliação de Preço (IA)' : 'Sugestão de Preço (IA)'}
+                                    </p>
+                                    <p className="text-sm text-yellow-200/80 mt-1">
+                                        {priceEvaluation ? priceEvaluation.suggestion : 'Lembrando que essa informação é fornecida por IA e pode não refletir a realidade do imóvel.'}
+                                        {priceEvaluation && priceEvaluation.min > 0 && (
+                                            <span className="block mt-1 font-bold">
+                                                Faixa sugerida: R$ {priceEvaluation.min.toLocaleString('pt-BR')} - R$ {priceEvaluation.max.toLocaleString('pt-BR')}
+                                            </span>
+                                        )}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleEvaluatePrice}
+                                disabled={isEvaluating}
+                                className="ml-4 px-4 py-2 bg-yellow-900/40 text-yellow-300 text-sm font-bold rounded-full hover:bg-yellow-900 transition-colors flex items-center whitespace-nowrap border-yellow-700"
+                            >
+                                {isEvaluating ? <Loader2 size={16} className="animate-spin mr-2" /> : <Sparkles size={16} className="mr-2" />}
+                                {isEvaluating ? 'Avaliando...' : 'Avaliar'}
+                            </button>
                         </div>
 
                         <div className="mb-8">
@@ -1200,7 +1346,7 @@ export const AddProperty: React.FC = () => {
                                 name="description"
                                 value={formData.description}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-40 resize-none transition-all text-sm leading-relaxed"
+                                className="w-full px-4 py-3 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-40 resize-none transition-all text-sm leading-relaxed whitespace-pre-wrap"
                                 placeholder="Descreva os pontos fortes do imóvel..."
                             ></textarea>
 
@@ -1208,32 +1354,38 @@ export const AddProperty: React.FC = () => {
                             {generatedDescriptions.length > 0 && (
                                 <div className="mt-4 space-y-3">
                                     <p className="text-xs font-bold text-slate-400 uppercase">Opções Geradas pela IA - Clique para usar:</p>
-                                    {generatedDescriptions.map((desc, idx) => (
-                                        <button
-                                            key={idx}
-                                            type="button"
-                                            onClick={() => setFormData(prev => ({ ...prev, description: desc }))}
-                                            className={`w-full text-left p-4 rounded-full border-2 transition-all ${formData.description === desc
-                                                ? 'border-primary-500 bg-primary-50 bg-primary-900/20'
-                                                : 'border-slate-700 hover:border-primary-700'
-                                                }`}
-                                        >
-                                            <div className="flex items-start">
-                                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-500 text-white text-xs flex items-center justify-center mr-3 mt-0.5">
-                                                    {idx + 1}
-                                                </span>
-                                                <p className="text-sm text-gray-300 leading-relaxed">{desc}</p>
-                                            </div>
-                                        </button>
-                                    ))}
+                                    {generatedDescriptions.map((desc, idx) => {
+                                        const labels = ['Conservadora', 'Popular (com emojis)', 'Mix'];
+                                        return (
+                                            <button
+                                                key={idx}
+                                                type="button"
+                                                onClick={() => setFormData(prev => ({ ...prev, description: desc }))}
+                                                className={`w-full text-left p-4 rounded-3xl border-2 transition-all ${formData.description === desc
+                                                    ? 'border-primary-500 bg-primary-50 bg-primary-900/20'
+                                                    : 'border-slate-700 hover:border-primary-700'
+                                                    }`}
+                                            >
+                                                <div className="flex items-start">
+                                                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-500 text-white text-xs flex items-center justify-center mr-3 mt-0.5">
+                                                        {idx + 1}
+                                                    </span>
+                                                    <div className="flex-1">
+                                                        <p className="text-xs font-bold text-primary-400 mb-1">{labels[idx]}</p>
+                                                        <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{desc}</p>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
 
-                {/* STEP 3: FINANCEIRO */}
-                {step === 3 && (
+                {/* STEP 2: FINANCEIRO */}
+                {step === 2 && (
                     <div>
                         <h3 className="text-xl font-bold text-white mb-6">Valores e Taxas</h3>
 
@@ -1405,7 +1557,7 @@ export const AddProperty: React.FC = () => {
                         </div>
 
                         {/* Partnership Field */}
-                        <div className="mt-8 p-6 bg-slate-900/50 border-slate-700 rounded-full">
+                        <div className="mt-8 p-6 bg-slate-900/50 border-slate-700 rounded-3xl">
                             <div className="flex items-center justify-between mb-4">
                                 <div>
                                     <h4 className="text-lg font-bold text-white">Aceita Parceria neste Imóvel?</h4>
@@ -1438,33 +1590,7 @@ export const AddProperty: React.FC = () => {
                             )}
                         </div>
 
-                        <div className="mt-8 p-4 bg-yellow-900/20 border-yellow-900/30 rounded-full flex items-start justify-between items-center bg-slate-800 shadow-sm">
-                            <div className="flex items-start">
-                                <Info className="text-yellow-400 mt-0.5 mr-3 shrink-0" />
-                                <div>
-                                    <p className="text-sm text-yellow-200 font-medium">
-                                        {priceEvaluation ? 'Avaliação de Preço (IA)' : 'Sugestão de Preço (IA)'}
-                                    </p>
-                                    <p className="text-sm text-yellow-200/80 mt-1">
-                                        {priceEvaluation ? priceEvaluation.suggestion : 'Clique para obter uma sugestão baseada em imóveis similares e análise de mercado.'}
-                                        {priceEvaluation && priceEvaluation.min > 0 && (
-                                            <span className="block mt-1 font-bold">
-                                                Faixa sugerida: R$ {priceEvaluation.min.toLocaleString('pt-BR')} - R$ {priceEvaluation.max.toLocaleString('pt-BR')}
-                                            </span>
-                                        )}
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={handleEvaluatePrice}
-                                disabled={isEvaluating}
-                                className="ml-4 px-4 py-2 bg-yellow-900/40 text-yellow-300 text-sm font-bold rounded-full hover:bg-yellow-900 transition-colors flex items-center whitespace-nowrap border-yellow-700"
-                            >
-                                {isEvaluating ? <Loader2 size={16} className="animate-spin mr-2" /> : <Sparkles size={16} className="mr-2" />}
-                                {isEvaluating ? 'Avaliando...' : 'Avaliar'}
-                            </button>
-                        </div>
+
                     </div>
                 )}
 
@@ -1473,40 +1599,156 @@ export const AddProperty: React.FC = () => {
                     <div>
                         <h3 className="text-xl font-bold text-white mb-6">Galeria de Imagens</h3>
 
-                        <label className="border-2 border-dashed border-slate-600 hover:border-primary-500 bg-slate-900/50 rounded-full p-10 text-center mb-8 cursor-pointer transition-colors group block">
-                            <input
-                                type="file"
-                                multiple
-                                accept="image/*"
-                                className="hidden"
-                                onChange={handleImageUpload}
-                                disabled={uploading}
-                            />
-                            <div className="w-16 h-16 bg-slate-800 text-gray-400 group-hover:text-primary-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm transition-colors">
-                                {uploading ? <Loader2 size={32} className="animate-spin" /> : <UploadCloud size={32} />}
-                            </div>
-                            <h4 className="text-lg font-bold text-white">
-                                {uploading ? 'Enviando fotos e aplicando marca d\'água (se houver)...' : 'Clique para fazer upload'}
-                            </h4>
-                            <p className="text-sm text-slate-400 mt-1">Ou arraste e solte seus arquivos JPG, PNG (Max 10mb por Imagem)</p>
-                        </label>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                            {images.map((img, idx) => (
-                                <div key={idx} className="aspect-square rounded-full overflow-hidden border border-slate-700 relative group shadow-sm">
-                                    <img src={img} className="w-full h-full object-cover" alt="preview" />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <button
-                                            onClick={() => setImages(prev => prev.filter((_, i) => i !== idx))}
-                                            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                                            type="button"
-                                        >
-                                            <div className="w-4 h-0.5 bg-white rotate-45 absolute"></div>
-                                            <div className="w-4 h-0.5 bg-white -rotate-45"></div>
-                                        </button>
+                        {/* Info/Dica - estilizada no padrão */}
+                        {images.length > 0 && (
+                            <div className="mb-6 p-4 bg-blue-900/20 border border-blue-800/30 rounded-3xl">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-1">
+                                        <p className="text-sm text-blue-300 font-medium">
+                                            💡 Arraste as imagens para reordenar. A primeira imagem sempre será o destaque do anúncio.
+                                        </p>
                                     </div>
                                 </div>
-                            ))}
+                            </div>
+                        )}
+
+                        {/* Grid de Imagens */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+
+                            {images.map((img, idx) => {
+                                const isDestaque = idx === 0;
+
+                                return (
+                                    <div
+                                        key={idx}
+                                        draggable={true}
+                                        onDragStart={(e) => {
+                                            e.dataTransfer.effectAllowed = 'move';
+                                            e.dataTransfer.setData('text/html', idx.toString());
+                                            setDraggedIndex(idx);
+                                        }}
+                                        onDragOver={(e) => {
+                                            e.preventDefault();
+                                            e.dataTransfer.dropEffect = 'move';
+                                        }}
+                                        onDrop={(e) => {
+                                            e.preventDefault();
+                                            const draggedIdx = parseInt(e.dataTransfer.getData('text/html'));
+                                            if (draggedIdx === idx) return;
+
+                                            const newImages = [...images];
+                                            const [draggedImage] = newImages.splice(draggedIdx, 1);
+                                            newImages.splice(idx, 0, draggedImage);
+                                            setImages(newImages);
+                                            setDraggedIndex(null);
+                                        }}
+                                        // Touch events for mobile
+                                        onTouchStart={(e) => {
+                                            setDraggedIndex(idx);
+                                            setTouchStartY(e.touches[0].clientY);
+                                        }}
+                                        onTouchMove={(e) => {
+                                            if (draggedIndex === null) return;
+                                            e.preventDefault();
+
+                                            const touch = e.touches[0];
+                                            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                                            const targetDiv = element?.closest('[data-image-index]');
+
+                                            if (targetDiv) {
+                                                const targetIndex = parseInt(targetDiv.getAttribute('data-image-index') || '');
+                                                if (!isNaN(targetIndex) && targetIndex !== draggedIndex) {
+                                                    // Visual feedback
+                                                    targetDiv.classList.add('border-primary-400', 'border-4');
+                                                    setTimeout(() => {
+                                                        targetDiv.classList.remove('border-primary-400', 'border-4');
+                                                    }, 100);
+                                                }
+                                            }
+                                        }}
+                                        onTouchEnd={(e) => {
+                                            if (draggedIndex === null) return;
+
+                                            const touch = e.changedTouches[0];
+                                            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+                                            // Busca melhorada com fallbacks
+                                            let targetDiv = element?.closest('[data-image-index]');
+                                            if (!targetDiv && element?.tagName === 'IMG') {
+                                                targetDiv = element.parentElement?.closest('[data-image-index]');
+                                            }
+                                            if (!targetDiv && element?.parentElement) {
+                                                targetDiv = element.parentElement.closest('[data-image-index]');
+                                            }
+
+                                            if (targetDiv) {
+                                                const targetIndex = parseInt(targetDiv.getAttribute('data-image-index') || '');
+                                                if (!isNaN(targetIndex) && targetIndex !== draggedIndex) {
+                                                    const newImages = [...images];
+                                                    const [draggedImage] = newImages.splice(draggedIndex, 1);
+                                                    newImages.splice(targetIndex, 0, draggedImage);
+                                                    setImages(newImages);
+                                                }
+                                            }
+
+                                            setDraggedIndex(null);
+                                            setTouchStartY(0);
+                                        }}
+                                        data-image-index={idx}
+                                        className={`aspect-square rounded-3xl overflow-hidden border relative group shadow-sm transition-all cursor-move ${isDestaque
+                                            ? 'border-primary-500 border-2 ring-2 ring-primary-500/30'
+                                            : 'border-slate-700 hover:border-primary-400'
+                                            } ${draggedIndex === idx ? 'opacity-50 scale-95' : ''}`}
+                                    >
+                                        {isDestaque && (
+                                            <div className="absolute top-2 left-2 z-10 bg-midnight-950 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+                                                <span>⭐</span> DESTAQUE
+                                            </div>
+                                        )}
+                                        <img
+                                            src={img}
+                                            className="w-full h-full object-cover pointer-events-none"
+                                            alt="preview"
+                                            draggable={false}
+                                        />
+                                        {/* Botão Exclu SEMPRE VISÍVEL */}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleImageDelete(idx)}
+                                            className="absolute bottom-2 right-2 z-10 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 shadow-lg transition-colors"
+                                            title="Excluir imagem"
+                                        >
+                                            ✕
+                                        </button>
+                                        <div className="absolute bottom-2 right-2 bg-slate-800/80 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                            ↕️ Arraste para reordenar
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Card de Upload Compacto - como próxima imagem */}
+                            <label className="aspect-square rounded-3xl overflow-hidden border-2 border-dashed border-slate-600 hover:border-primary-500 bg-slate-900/50 cursor-pointer transition-all group flex flex-col items-center justify-center">
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageUpload}
+                                    disabled={uploading}
+                                />
+                                <div className="text-center p-4">
+                                    <div className="w-12 h-12 bg-slate-800 text-gray-400 group-hover:text-primary-500 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
+                                        {uploading ? <Loader2 size={24} className="animate-spin" /> : <UploadCloud size={24} />}
+                                    </div>
+                                    <p className="text-xs font-bold text-white mb-1">
+                                        {uploading ? 'Enviando...' : images.length > 0 ? 'Adicionar' : 'Upload'}
+                                    </p>
+                                    <p className="text-xs text-slate-400">
+                                        {images.length > 0 ? 'Mais fotos' : 'Fotos aqui'}
+                                    </p>
+                                </div>
+                            </label>
                         </div>
 
                         {/* Media Section */}
@@ -1527,38 +1769,16 @@ export const AddProperty: React.FC = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-300 mb-2">Tour 360º (Arquivo Max 50MB)</label>
-                                    <div className="relative">
-                                        <input
-                                            type="file"
-                                            accept=".jpg,.jpeg,.png,.zip" // Assuming 360 tours might be images or zip packages? Usually 360 images are JPGs.
-                                            onChange={handleTourUpload}
-                                            disabled={uploadingTour}
-                                            className="hidden"
-                                            id="tour-upload"
-                                        />
-                                        <label
-                                            htmlFor="tour-upload"
-                                            className={`flex items-center justify-center w-full px-4 py-3 rounded-full border-2 border-dashed cursor-pointer transition-all ${formData.tourVirtualUrl
-                                                ? 'border-green-500 bg-green-900/20 text-green-400'
-                                                : 'border-slate-600 bg-slate-900 hover:border-primary-500'
-                                                }`}
-                                        >
-                                            {uploadingTour ? (
-                                                <Loader2 size={20} className="animate-spin mr-2" />
-                                            ) : formData.tourVirtualUrl ? (
-                                                <Check size={20} className="mr-2" />
-                                            ) : (
-                                                <UploadCloud size={20} className="mr-2" />
-                                            )}
-                                            {uploadingTour ? 'Enviando...' : formData.tourVirtualUrl ? 'Tour Enviado!' : 'Clique para enviar arquivo'}
-                                        </label>
-                                    </div>
-                                    {formData.tourVirtualUrl && (
-                                        <p className="text-xs text-green-600 text-green-400 mt-1 truncate">
-                                            URL: {formData.tourVirtualUrl}
-                                        </p>
-                                    )}
+                                    <label className="block text-sm font-bold text-gray-300 mb-2">Tour 360º (Link)</label>
+                                    <input
+                                        type="url"
+                                        name="tourVirtualUrl"
+                                        value={formData.tourVirtualUrl}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        placeholder="https://exemplo.com/tour360"
+                                    />
+                                    <p className="text-xs text-slate-400 mt-1">💡 Cole o link do tour virtual 360º do imóvel</p>
                                 </div>
                             </div>
                         </div>
@@ -1570,8 +1790,8 @@ export const AddProperty: React.FC = () => {
                                 name="observacoes"
                                 value={formData.observacoes}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-24 resize-none transition-all text-sm leading-relaxed"
-                                placeholder="Informações adicionais sobre o imóvel que não constam no formulário..."
+                                className="w-full px-4 py-3 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-24 resize-none transition-all text-sm leading-relaxed whitespace-pre-wrap"
+                                placeholder="Informações adicionais sobre o imóvel que que você acha pertinente o Cliente saber..."
                             ></textarea>
                             <p className="text-xs text-slate-400 mt-1">💡 Este campo será exibido publicamente no anúncio.</p>
                         </div>
@@ -1788,14 +2008,14 @@ export const AddProperty: React.FC = () => {
                         <div className="flex justify-between mt-8">
                             <button
                                 onClick={() => step > 1 ? changeStep(step - 1) : navigate('/dashboard')}
-                                className="px-6 py-3 rounded-full bg-slate-800 border border-slate-700 text-gray-200 font-medium hover:bg-slate-700 transition-colors"
+                                className="px-6 py-3 rounded-3xl bg-slate-800 border border-slate-700 text-gray-200 font-medium hover:bg-slate-700 transition-colors"
                             >
                                 {step === 1 ? 'Cancelar' : 'Voltar'}
                             </button>
                             <div className="flex space-x-4">
                                 <button
                                     onClick={() => changeStep(step + 1)}
-                                    className="px-8 py-3 rounded-full bg-primary-600 hover:bg-primary-700 text-white font-bold transition-all shadow-lg shadow-primary-600/30 flex items-center"
+                                    className="px-6 py-3 rounded-3xl bg-primary-600 hover:bg-primary-700 text-white font-bold transition-all shadow-lg shadow-primary-600/30 flex items-center"
                                 >
                                     Próxima Etapa
                                     <Check size={18} className="ml-2" />
@@ -1807,4 +2027,4 @@ export const AddProperty: React.FC = () => {
             </div>
         </div>
     );
-};
+}

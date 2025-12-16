@@ -6,12 +6,13 @@ import { ThemeProvider } from './components/ThemeContext';
 import { AuthProvider } from './components/AuthContext';
 import React, { lazy, Suspense } from 'react';
 import { ScrollToTop } from './components/ScrollToTop';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy‑loaded page components
 const Dashboard = lazy(() => import('./pages/Dashboard').then(module => ({ default: module.Dashboard })));
 const PropertiesList = lazy(() => import('./pages/PropertiesList').then(module => ({ default: module.PropertiesList })));
 const PropertyDetails = lazy(() => import('./pages/PropertyDetails').then(module => ({ default: module.PropertyDetails })));
-const AddProperty = lazy(() => import('./pages/AddProperty').then(module => ({ default: module.AddProperty })));
+const AddProperty = lazy(() => import('./pages/AddProperty'));
 const PublicHome = lazy(() => import('./pages/PublicHome').then(module => ({ default: module.PublicHome })));
 const PartnerPage = lazy(() => import('./pages/PartnerPage').then(module => ({ default: module.PartnerPage })));
 const AdminPlans = lazy(() => import('./pages/admin/AdminPlans').then(module => ({ default: module.AdminPlans })));
@@ -41,69 +42,71 @@ import { MagicVerification } from './pages/MagicVerification';
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <ToastProvider>
-          <Router>
-            <ScrollToTop />
-            <Suspense fallback={<div className="flex items-center justify-center h-screen"><span className="text-lg">Carregando...</span></div>}>
-              <Routes>
-                {/* Public Routes */}
-                <Route element={<PublicLayout />}>
-                  <Route path="/" element={<PublicHome />} />
-                  <Route path="/search" element={<PropertiesList />} />
-                  <Route path="/partner" element={<PartnerPage />} />
-                  <Route path="/sell" element={<PartnerPage />} /> {/* Alias for backward compatibility */}
-                  <Route path="/v/:token" element={<MagicVerification />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/agent/:id" element={<AgentProfile />} />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/about" element={<About />} />
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <Router>
+              <ScrollToTop />
+              <Suspense fallback={<div className="flex items-center justify-center h-screen"><span className="text-lg">Carregando...</span></div>}>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route element={<PublicLayout />}>
+                    <Route path="/" element={<PublicHome />} />
+                    <Route path="/search" element={<PropertiesList />} />
+                    <Route path="/partner" element={<PartnerPage />} />
+                    <Route path="/sell" element={<PartnerPage />} /> {/* Alias for backward compatibility */}
+                    <Route path="/v/:token" element={<MagicVerification />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/agent/:id" element={<AgentProfile />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/about" element={<About />} />
 
-                  {/* Rota de corretor - Busca Exclusiva */}
-                  <Route path="/corretor/:slug/buscar" element={<BrokerSearchPage />} />
+                    {/* Rota de corretor - Busca Exclusiva */}
+                    <Route path="/corretor/:slug/buscar" element={<BrokerSearchPage />} />
 
-                  {/* Rota de corretor - Sobre */}
-                  <Route path="/corretor/:slug/sobre" element={<BrokerAboutPage />} />
+                    {/* Rota de corretor - Sobre */}
+                    <Route path="/corretor/:slug/sobre" element={<BrokerAboutPage />} />
 
-                  {/* Rota de corretor - Página Principal */}
-                  <Route path="/corretor/:slug" element={<BrokerPage />} />
+                    {/* Rota de corretor - Página Principal */}
+                    <Route path="/corretor/:slug" element={<BrokerPage />} />
 
-                  {/* Rota de corretor - Detalhes do Imóvel (Nested Context) */}
-                  <Route path="/corretor/:brokerSlug/:slug" element={<PropertyDetails />} />
+                    {/* Rota de corretor - Detalhes do Imóvel (Nested Context) */}
+                    <Route path="/corretor/:brokerSlug/:slug" element={<PropertyDetails />} />
 
-                  {/* Rota genérica de slug para imóveis */}
-                  <Route path="/:slug" element={<PropertyDetails />} />
-                </Route>
-
-                {/* Protected Routes - Require Authentication */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/availability/:id" element={<AvailabilityCheck />} />
-                  <Route element={<DashboardLayout />}>
-                    <Route path="/admin/approvals" element={<AdminApprovals />} />
-                    <Route path="/admin/plans" element={<AdminPlans />} />
-                    <Route path="/admin/coupons" element={<AdminCoupons />} />
-                    <Route path="/admin/financial" element={<AdminFinancial />} />
-                    <Route path="/admin/trial-settings" element={<AdminTrialSettings />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/properties" element={<PropertiesList />} />
-                    <Route path="/properties/:slug" element={<PropertyDetails />} />
-                    <Route path="/add-property" element={<AddProperty />} />
-                    <Route path="/partner-properties" element={<PartnerProperties />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/compare" element={<PropertyComparison />} />
-                    <Route path="/leads" element={<Leads />} />
-                    <Route path="/favorites" element={<Favorites />} />
+                    {/* Rota genérica de slug para imóveis */}
+                    <Route path="/:slug" element={<PropertyDetails />} />
                   </Route>
-                </Route>
-              </Routes>
-            </Suspense>
-          </Router>
-        </ToastProvider>
-      </AuthProvider>
-    </ThemeProvider>
+
+                  {/* Protected Routes - Require Authentication */}
+                  <Route element={<ProtectedRoute />}>
+                    <Route path="/availability/:id" element={<AvailabilityCheck />} />
+                    <Route element={<DashboardLayout />}>
+                      <Route path="/admin/approvals" element={<AdminApprovals />} />
+                      <Route path="/admin/plans" element={<AdminPlans />} />
+                      <Route path="/admin/coupons" element={<AdminCoupons />} />
+                      <Route path="/admin/financial" element={<AdminFinancial />} />
+                      <Route path="/admin/trial-settings" element={<AdminTrialSettings />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/properties" element={<PropertiesList />} />
+                      <Route path="/properties/:slug" element={<PropertyDetails />} />
+                      <Route path="/add-property" element={<AddProperty />} />
+                      <Route path="/partner-properties" element={<PartnerProperties />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/compare" element={<PropertyComparison />} />
+                      <Route path="/leads" element={<Leads />} />
+                      <Route path="/favorites" element={<Favorites />} />
+                    </Route>
+                  </Route>
+                </Routes>
+              </Suspense>
+            </Router>
+          </ToastProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 

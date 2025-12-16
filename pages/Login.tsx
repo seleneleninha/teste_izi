@@ -3,6 +3,8 @@ import { X, Facebook, Globe, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-re
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../components/ToastContext';
+import { validateEmail, validateCPF, validatePhone, checkPasswordStrength, checkRateLimit, getRateLimitReset } from '../lib/validation';
+import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicator';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -58,9 +60,24 @@ export const Login: React.FC = () => {
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // ✅ SECURITY: Rate limiting
+        if (!checkRateLimit('login', 5, 60000)) { // 5 tentativas por minuto
+            const resetTime = getRateLimitReset('login');
+            addToast(`Muitas tentativas. Tente novamente em ${resetTime}s`, 'error');
+            return;
+        }
+
         setLoading(true);
 
         try {
+            // ✅ VALIDATION: Email format
+            if (!validateEmail(email)) {
+                addToast('Email inválido', 'error');
+                setLoading(false);
+                return;
+            }
+
             if (isSignUp) {
                 // Validation
                 if (password !== confirmPassword) {
@@ -69,10 +86,26 @@ export const Login: React.FC = () => {
                     return;
                 }
 
-                // Only validate CPF if it's a Broker (or if we decide Clients also need CPF later)
-                // For now, let's keep CPF optional for clients as per request
-                if (userType === 'corretor' && cpf.length < 14) {
-                    addToast('CPF inválido.', 'error');
+                // ✅ IMPROVED: Password strength check
+                const { strength, feedback } = checkPasswordStrength(password);
+                if (strength === 'weak') {
+                    addToast(`Senha muito fraca: ${feedback.join('. ')}`, 'error');
+                    setLoading(false);
+                    return;
+                }
+
+                // ✅ IMPROVED: Proper CPF validation
+                if (userType === 'corretor') {
+                    if (!validateCPF(cpf)) {
+                        addToast('CPF inválido. Verifique os dígitos.', 'error');
+                        setLoading(false);
+                        return;
+                    }
+                }
+
+                // ✅ VALIDATION: Phone
+                if (!validatePhone(whatsapp)) {
+                    addToast('WhatsApp inválido', 'error');
                     setLoading(false);
                     return;
                 }
@@ -295,6 +328,11 @@ export const Login: React.FC = () => {
                         >
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
+
+                        {/* ✅ Password Strength Indicator (only on signup) */}
+                        {isSignUp && password && (
+                            <PasswordStrengthIndicator password={password} />
+                        )}
                     </div>
 
                     {isSignUp && (

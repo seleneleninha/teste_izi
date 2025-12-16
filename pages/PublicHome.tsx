@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Footer } from '../components/Footer';
 import { getRandomBackground } from '../lib/backgrounds';
 import { PartnersCarousel } from '../components/PartnersCarousel';
+import { PropertyGridSkeleton, CityCardSkeleton } from '../components/LoadingSkeleton';
 
 
 interface Property {
@@ -81,7 +82,8 @@ export const PublicHome: React.FC = () => {
                         .from('anuncios')
                         .select('*', { count: 'exact', head: true })
                         .eq('tipo_imovel', typeData.id)
-                        .eq('status_aprovacao', 'aprovado');
+                        .eq('status_aprovacao', 'aprovado')
+                        .eq('status_imovel', 'imovel_ativo');
 
                     counts[type.toLowerCase()] = count || 0;
                 } else {
@@ -102,7 +104,8 @@ export const PublicHome: React.FC = () => {
                     .from('anuncios')
                     .select('*', { count: 'exact', head: true })
                     .eq('operacao', temporadaOp.id)
-                    .eq('status_aprovacao', 'aprovado');
+                    .eq('status_aprovacao', 'aprovado')
+                    .eq('status_imovel', 'imovel_ativo');
 
                 counts['temporada'] = count || 0;
             } else {
@@ -116,7 +119,8 @@ export const PublicHome: React.FC = () => {
             const { data: locationData, error: locationError } = await supabase
                 .from('anuncios')
                 .select('cidade, bairro')
-                .eq('status_aprovacao', 'aprovado');
+                .eq('status_aprovacao', 'aprovado')
+                .eq('status_imovel', 'imovel_ativo');
 
             if (!locationError && locationData) {
                 const locationCountsMap: Record<string, number> = {};
@@ -187,6 +191,7 @@ export const PublicHome: React.FC = () => {
                     tipo_imovel(tipo)
                 `)
                 .eq('status_aprovacao', 'aprovado')
+                .eq('status_imovel', 'imovel_ativo')
                 .order('created_at', { ascending: false })
                 .limit(16);
 
