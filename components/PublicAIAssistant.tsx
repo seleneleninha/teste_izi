@@ -17,6 +17,8 @@ import {
 } from '../lib/platformKnowledge';
 import { getOrCreateConversation, saveMessageToDb } from '../lib/izaStorage';
 import { generatePropertySlug } from '../lib/propertyHelpers';
+import { calculateLeadScore, shouldNotifyBroker, generateLeadSummary, getLeadEmoji, getLeadColor } from '../lib/leadScoring';
+import { CustomOrderModal } from './CustomOrderModal';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -67,6 +69,7 @@ export const PublicAIAssistant: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [conversationId, setConversationId] = useState<string | null>(null);
     const [conversationState, setConversationState] = useState<ConversationState>(createEmptyConversationState());
+    const [customOrderModalOpen, setCustomOrderModalOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Quick questions - Just 3 options
@@ -440,6 +443,7 @@ export const PublicAIAssistant: React.FC = () => {
         // 3. HAS TYPE, NO BAIRRO → Fetch neighborhoods from DB
         if (state.tipoImovel && !state.bairro) {
             console.log('🎯 Step 3: Has type, fetching neighborhoods from DB');
+            console.log('🔍 Searching for:', { operacao: state.operacao, tipoImovel: state.tipoImovel });
             try {
                 // Query to get neighborhoods for this operation + type
                 const { data: bairrosData } = await supabase
@@ -461,7 +465,7 @@ export const PublicAIAssistant: React.FC = () => {
                             operacaoTipo?.toLowerCase().includes(state.operacao.toLowerCase()) ||
                             operacaoTipo?.includes('/'); // Venda/Locação matches both
 
-                        const matchesTipo = tipoImovel === state.tipoImovel;
+                        const matchesTipo = tipoImovel?.toLowerCase() === state.tipoImovel?.toLowerCase();
 
                         if (matchesOperacao && matchesTipo && bairro) {
                             neighborhoodCounts[bairro] = (neighborhoodCounts[bairro] || 0) + 1;
@@ -521,6 +525,31 @@ export const PublicAIAssistant: React.FC = () => {
                         count
                     });
                 }
+            });
+
+            return actions;
+        }
+
+        // 5. NO PROPERTIES FOUND → Offer alternatives
+        if (state.bairro && properties.length === 0) {
+            console.log('🚨 No properties found - offering alternatives');
+
+            // Option 1: Suggest searching nearby or expanding search
+            actions.push({
+                id: 'expand-search',
+                text: '🔍 Ver bairros próximos',
+                actionText: 'Mostrar bairros próximos',
+                category: 'neighborhood',
+                icon: '🔍'
+            });
+
+            // Option 2: Custom order (lead generation)
+            actions.push({
+                id: 'custom-order',
+                text: '📝 Encomendar imóvel personalizado',
+                actionText: 'Quero encomendar um im óvel',
+                category: 'broker',
+                icon: '📝'
             });
 
             return actions;
@@ -851,6 +880,8 @@ ${PLATFORM_KNOWLEDGE.voiceTone.goldenRules.map(r => `- ${r}`).join('\n')}
 - SE TIVER LINKS: NÃO PERGUNTE se o usuário quer ver. APENAS APRESENTE.
 - DIGA: "Encontrei estas opções:" e finalize. Os botões farão o resto.
 - EVITE REPETIÇÕES: Não use a mesma frase de "explorar mapa" duas vezes seguidas.
+- ❌ NUNCA diga "Estou procurando" ou "Vou procurar" - VOCÊ NÃO PROCURA, você PERGUNTA ao cliente!
+- ✅ SEMPRE dirija perguntas DIRETAMENTE ao cliente: "Qual faixa de valor você procura?"
 
 CONTEXTO BRASILEIRO:
 - Fale como uma corretora local, amiga e profissional.
@@ -877,7 +908,12 @@ ${textToSend}
 ${matchingProperties.length > 0 ? `
 IMÓVEIS ENCONTRADOS (mencione-os na resposta e diga que o cliente pode clicar para ver):
 ${matchingProperties.map((p, i) => `${i + 1}. ${p.tipo_imovel} em ${p.bairro}, ${p.cidade} - ${formatCurrency(p.valor_venda || p.valor_locacao || 0)}`).join('\n')}
-` : ''}
+` : `
+⚠️ NENHUM IMÓVEL ENCONTRADO com os critérios atuais.
+OFEREÇA ALTERNATIVAS:
+1. Sugira bairros próximos ou similares
+2. Pergunte se o cliente quer "encomendar" um imóvel (cadastrar interesse)
+`}
 
 RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
 
@@ -916,6 +952,44 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                         links: propertyLinks,
                         quickActions
                     });
+
+                    // 🔥 CALCULATE LEAD SCORE
+                    const allMessages = [...messages, userMessage, assistantMessage].map(m => ({
+                        role: m.role,
+                        content: m.content,
+                        timestamp: m.timestamp
+                    }));
+
+                    const leadClassification = calculateLeadScore(newState, allMessages);
+
+                    console.log('🎯 LEAD SCORE CALCULATED:', {
+                        score: leadClassification.score,
+                        status: leadClassification.status,
+                        priority: leadClassification.priority,
+                        breakdown: leadClassification.breakdown
+                    });
+
+                    // Update conversation with lead score
+                    await supabase
+                        .from('iza_conversations')
+                        .update({
+                            lead_score: leadClassification.score,
+                            lead_status: leadClassification.status,
+                            score_breakdown: leadClassification.breakdown,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', conversationId);
+
+                    //🔥 If HOT LEAD, notify
+                    if (shouldNotifyBroker(leadClassification)) {
+                        console.log('🔥🔥🔥 HOT LEAD DETECTED!', {
+                            score: leadClassification.score,
+                            conversationId,
+                            state: newState
+                        });
+
+                        // TODO: Notification system (next step)
+                    }
                 }
             } else {
                 throw new Error('Falha ao obter resposta');
@@ -1057,8 +1131,14 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                                                             <button
                                                                 key={action.id}
                                                                 onClick={() => {
-                                                                    // Don't auto-fill input, just send directly
-                                                                    handleSend(action.actionText);
+                                                                    // Check if it's custom order badge
+                                                                    if (action.id === 'custom-order') {
+                                                                        // Open modal instead of sending message
+                                                                        setCustomOrderModalOpen(true);
+                                                                    } else {
+                                                                        // Normal badge behavior - send message directly
+                                                                        handleSend(action.actionText);
+                                                                    }
                                                                 }}
                                                                 className={`flex items-center justify-center gap-2 text-xs text-white border px-3 py-2.5 rounded-lg transition-all transform hover:scale-105 active:scale-95 font-medium shadow-md ${getCategoryStyles(action.category)}`}
                                                             >
@@ -1136,6 +1216,20 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                     </div>
                 </div>
             )}
+
+            {/* Custom Order Modal */}
+            <CustomOrderModal
+                isOpen={customOrderModalOpen}
+                onClose={() => setCustomOrderModalOpen(false)}
+                conversationId={conversationId || undefined}
+                prefilledData={{
+                    operacao: conversationState.operacao || '',
+                    tipoImovel: conversationState.tipoImovel || '',
+                    cidade: conversationState.cidade || 'Natal',
+                    bairro: conversationState.bairro || '',
+                    valorMax: conversationState.valorMax
+                }}
+            />
         </>
     );
 };
