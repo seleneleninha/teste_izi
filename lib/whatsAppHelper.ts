@@ -254,3 +254,42 @@ export async function testWhatsAppConnection(): Promise<boolean> {
         return false;
     }
 }
+
+// ========================================
+// Legacy Functions (for backward compatibility)
+// ========================================
+
+/**
+ * Gera link do WhatsApp (para PropertyDetails e outros)
+ */
+export function generateWhatsAppLink(phone: string, message?: string): string {
+    const cleanPhone = formatPhoneNumber(phone);
+    const encodedMessage = message ? encodeURIComponent(message) : '';
+    return `https://wa.me/${cleanPhone}${encodedMessage ? `?text=${encodedMessage}` : ''}`;
+}
+
+/**
+ * Formata mensagem de propriedade para WhatsApp
+ */
+export function formatPropertyMessage(property: any): string {
+    const operacao = property.operacao === 'locacao' ? 'Alugar' : 'Comprar';
+    const valor = property.valor_venda || property.valor_locacao || 0;
+
+    return `Olá! Tenho interesse neste imóvel:\n\n` +
+        `🏡 ${property.titulo}\n` +
+        `📍 ${property.bairro}, ${property.cidade}\n` +
+        `💰 ${formatPrice(valor)}\n` +
+        `🛏️ ${property.quartos} quartos | 🚗 ${property.vagas} vagas\n\n` +
+        `Gostaria de mais informações!`;
+}
+
+/**
+ * Track WhatsApp click (analytics placeholder)
+ */
+export function trackWhatsAppClick(propertyId: string, source: string = 'property-details'): void {
+    // Analytics tracking - can be implemented later
+    console.log(`WhatsApp click tracked: ${propertyId} from ${source}`);
+
+    // TODO: Implement analytics tracking
+    // Example: Google Analytics, Mixpanel, etc.
+}
