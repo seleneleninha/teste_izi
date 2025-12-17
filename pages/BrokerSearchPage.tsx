@@ -121,8 +121,7 @@ export const BrokerSearchPage: React.FC = () => {
             operacao (tipo)
         `)
                 .eq('user_id', brokerId)
-                .eq('status_aprovacao', 'aprovado')
-                .eq('status_imovel', 'imovel_ativo')
+                .eq('status', 'ativo')
                 .order('created_at', { ascending: false });
 
             // Fetch partnership properties
@@ -146,8 +145,7 @@ export const BrokerSearchPage: React.FC = () => {
                      )
                  `)
                     .in('id', partnershipPropertyIds)
-                    .eq('status_aprovacao', 'aprovado')
-                    .eq('status_imovel', 'imovel_ativo')
+                    .eq('status', 'ativo')
                     .order('created_at', { ascending: false })
                 : null;
 
@@ -212,7 +210,7 @@ export const BrokerSearchPage: React.FC = () => {
                 banheiros: p.banheiros,
                 vagas: p.vagas,
                 area_priv: p.area_priv,
-                status_aprovacao: p.status_aprovacao,
+                status: p.status,
                 latitude: p.latitude,
                 longitude: p.longitude
             }));

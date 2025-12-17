@@ -50,7 +50,7 @@ export async function getCities(): Promise<string[]> {
         const { data, error } = await supabase
             .from('anuncios')
             .select('cidade')
-            .eq('status_aprovacao', 'aprovado')
+            .eq('status', 'ativo')
             .not('cidade', 'is', null);
 
         if (error) throw error;
@@ -71,7 +71,7 @@ export async function getNeighborhoods(city: string): Promise<string[]> {
         const { data, error } = await supabase
             .from('anuncios')
             .select('bairro')
-            .eq('status_aprovacao', 'aprovado')
+            .eq('status', 'ativo')
             .eq('cidade', city)
             .not('bairro', 'is', null);
 
@@ -244,7 +244,7 @@ export async function getPropertySuggestions(leadId: string, limit: number = 5):
                 operacao_rel:operacao(id, tipo),
                 tipo_imovel_rel:tipo_imovel(id, tipo)
             `)
-            .eq('status_aprovacao', 'aprovado');
+            .eq('status', 'ativo');
 
         // Add filters based on lead interests
         // For operation: if lead wants Venda or Locação, also include Venda/Locação

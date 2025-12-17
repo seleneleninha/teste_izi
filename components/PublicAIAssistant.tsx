@@ -102,7 +102,8 @@ export const PublicAIAssistant: React.FC = () => {
             const { data } = await supabase
                 .from('anuncios')
                 .select('cidade, bairro')
-                .eq('status_aprovacao', 'aprovado');
+                .eq('status', 'ativo')
+                .or('status.eq.ativo,status.is.null');
 
             if (data) {
                 const cities = [...new Set(data.map(p => p.cidade).filter(Boolean))];
@@ -149,7 +150,8 @@ export const PublicAIAssistant: React.FC = () => {
                         operacao_rel:operacao(tipo),
                         tipo_imovel_rel:tipo_imovel(tipo)
                     `)
-                    .eq('status_aprovacao', 'aprovado')
+                    .eq('status', 'ativo')
+                    .or('status.eq.ativo,status.is.null')
                     .limit(5);
 
                 // Exclude properties already shown
@@ -395,7 +397,8 @@ export const PublicAIAssistant: React.FC = () => {
                 const { data: tiposData } = await supabase
                     .from('anuncios')
                     .select('tipo_imovel(tipo)')
-                    .eq('status_aprovacao', 'aprovado')
+                    .eq('status', 'ativo')
+                    .or('status.eq.ativo,status.is.null')
                     .not('tipo_imovel', 'is', null);
 
                 if (tiposData && tiposData.length > 0) {
@@ -449,7 +452,8 @@ export const PublicAIAssistant: React.FC = () => {
                 const { data: bairrosData } = await supabase
                     .from('anuncios')
                     .select('bairro, operacao(tipo), tipo_imovel(tipo)')
-                    .eq('status_aprovacao', 'aprovado')
+                    .eq('status', 'ativo')
+                    .or('status.eq.ativo,status.is.null')
                     .not('bairro', 'is', null);
 
                 if (bairrosData && bairrosData.length > 0) {
@@ -567,7 +571,8 @@ export const PublicAIAssistant: React.FC = () => {
                     id, titulo, cidade, bairro, valor_venda, valor_locacao, quartos,
                     operacao(tipo), tipo_imovel(tipo)
                 `)
-                .eq('status_aprovacao', 'aprovado')
+                .eq('status', 'ativo')
+                .or('status.eq.ativo,status.is.null')
                 .limit(30);
 
             if (!properties) return '';

@@ -35,6 +35,7 @@ interface Property {
 export const PublicHome: React.FC = () => {
     const navigate = useNavigate();
     const [recentProperties, setRecentProperties] = useState<Property[]>([]);
+    const [allMapMarkers, setAllMapMarkers] = useState<Property[]>([]); // TODOS os imóveis para o mapa
     const [cities, setCities] = useState<string[]>([]);
     const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
@@ -82,8 +83,7 @@ export const PublicHome: React.FC = () => {
                         .from('anuncios')
                         .select('*', { count: 'exact', head: true })
                         .eq('tipo_imovel', typeData.id)
-                        .eq('status_aprovacao', 'aprovado')
-                        .eq('status_imovel', 'imovel_ativo');
+                        .eq('status', 'ativo');
 
                     counts[type.toLowerCase()] = count || 0;
                 } else {
@@ -104,8 +104,7 @@ export const PublicHome: React.FC = () => {
                     .from('anuncios')
                     .select('*', { count: 'exact', head: true })
                     .eq('operacao', temporadaOp.id)
-                    .eq('status_aprovacao', 'aprovado')
-                    .eq('status_imovel', 'imovel_ativo');
+                    .eq('status', 'ativo');
 
                 counts['temporada'] = count || 0;
             } else {
@@ -119,8 +118,7 @@ export const PublicHome: React.FC = () => {
             const { data: locationData, error: locationError } = await supabase
                 .from('anuncios')
                 .select('cidade, bairro')
-                .eq('status_aprovacao', 'aprovado')
-                .eq('status_imovel', 'imovel_ativo');
+                .eq('status', 'ativo');
 
             if (!locationError && locationData) {
                 const locationCountsMap: Record<string, number> = {};
@@ -190,8 +188,7 @@ export const PublicHome: React.FC = () => {
                     operacao(tipo),
                     tipo_imovel(tipo)
                 `)
-                .eq('status_aprovacao', 'aprovado')
-                .eq('status_imovel', 'imovel_ativo')
+                .eq('status', 'ativo')
                 .order('created_at', { ascending: false })
                 .limit(16);
 
@@ -222,13 +219,72 @@ export const PublicHome: React.FC = () => {
                     longitude: p.longitude
                 }));
 
-                setRecentProperties(transformedProperties as any);
+                setRecentProperties(transformedProperties);
+
+                // Query separada para TODOS os markers do mapa
+                const { data: allProperties } = await supabase
+                    .from('anuncios')
+                    .select(`
+                        id,
+                        cod_imovel,
+                        titulo,
+                        cidade,
+                        bairro,
+                        valor_venda,
+                        valor_locacao,
+                        valor_diaria,
+                        valor_mensal,
+                        fotos,
+                        quartos,
+                        banheiros,
+                        vagas,
+                        area_priv,
+                        latitude,
+                        longitude,
+                        operacao(tipo),
+                        tipo_imovel(tipo)
+                    `)
+                    .eq('status', 'ativo')
+                    .not('latitude', 'is', null)
+                    .not('longitude', 'is', null)
+                    .order('created_at', { ascending: false });
+
+                if (allProperties && allProperties.length > 0) {
+                    const allTransformed = allProperties.map(p => ({
+                        id: p.id,
+                        cod_imovel: p.cod_imovel,
+                        titulo: p.titulo,
+                        cidade: p.cidade,
+                        bairro: p.bairro,
+                        valor_venda: p.valor_venda,
+                        valor_locacao: p.valor_locacao,
+                        valor_diaria: p.valor_diaria,
+                        valor_mensal: p.valor_mensal,
+                        fotos: p.fotos ? p.fotos.split(',').filter(Boolean) : [],
+                        operacao: (p.operacao as any)?.tipo || '',
+                        tipo_imovel: (p.tipo_imovel as any)?.tipo || '',
+                        quartos: p.quartos || 0,
+                        banheiros: p.banheiros || 0,
+                        vagas: p.vagas || 0,
+                        area_priv: p.area_priv || 0,
+                        latitude: p.latitude,
+                        longitude: p.longitude
+                    }));
+                    setAllMapMarkers(allTransformed);
+                } else {
+                    setAllMapMarkers([]);
+                }
 
                 const uniqueCities = Array.from(new Set(properties.map(p => p.cidade).filter(Boolean)));
                 setCities(uniqueCities);
 
                 const uniqueNeighborhoods = Array.from(new Set(properties.map(p => p.bairro).filter(Boolean))).slice(0, 16);
                 setNeighborhoods(uniqueNeighborhoods);
+            } else {
+                setRecentProperties([]);
+                setAllMapMarkers([]);
+                setCities([]);
+                setNeighborhoods([]);
             }
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -281,36 +337,42 @@ export const PublicHome: React.FC = () => {
                             { label: 'Rural', type: 'rural', icon: <Trees size={28} />, count: '5' },
                             { label: 'Temporada', type: 'temporada', icon: <TreePalm size={28} />, count: '18' },
                             { label: 'Terrenos', type: 'terreno', icon: <MapPinned size={28} />, count: '7' },
-                        ].map((category, idx) => (
-                            <div
-                                key={idx}
-                                onClick={() => {
-                                    if (category.type === 'temporada') {
-                                        navigate('/search?operacao=temporada');
-                                    } else {
-                                        navigate(`/search?tipo=${category.type}`);
-                                    }
-                                }}
-                                className="group relative h-40 rounded-3xl bg-midnight-900/40 backdrop-blur-sm border border-white/5 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer flex flex-col items-center justify-center gap-3 hover:-translate-y-2 overflow-hidden"
-                            >
-                                {/* Hover Gradient Background */}
-                                <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        ]
+                            .filter(category => {
+                                // Ocultar cards com 0 imóveis
+                                const actualCount = categoryCounts[category.type];
+                                return actualCount !== undefined && actualCount > 0;
+                            })
+                            .map((category, idx) => (
+                                <div
+                                    key={idx}
+                                    onClick={() => {
+                                        if (category.type === 'temporada') {
+                                            navigate('/search?operacao=temporada');
+                                        } else {
+                                            navigate(`/search?tipo=${category.type}`);
+                                        }
+                                    }}
+                                    className="group relative h-40 rounded-3xl bg-midnight-900/40 backdrop-blur-sm border border-white/5 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer flex flex-col items-center justify-center gap-3 hover:-translate-y-2 overflow-hidden"
+                                >
+                                    {/* Hover Gradient Background */}
+                                    <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                                {/* Glow Effect */}
-                                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full blur opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
+                                    {/* Glow Effect */}
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full blur opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
 
-                                <div className="relative z-10 text-gray-400 group-hover:text-emerald-400 transition-colors duration-300 p-3 bg-white/5 rounded-full group-hover:bg-emerald-500/10 group-hover:scale-110 transform">
-                                    {category.icon}
+                                    <div className="relative z-10 text-gray-400 group-hover:text-emerald-400 transition-colors duration-300 p-3 bg-white/5 rounded-full group-hover:bg-emerald-500/10 group-hover:scale-110 transform">
+                                        {category.icon}
+                                    </div>
+
+                                    <div className="relative z-10 text-center">
+                                        <h3 className="font-bold text-white text-base group-hover:text-emerald-100 transition-colors">{category.label}</h3>
+                                        <p className="text-xs text-gray-500 group-hover:text-emerald-400/80 transition-colors mt-1 font-medium">
+                                            {categoryCounts[category.type]} opções
+                                        </p>
+                                    </div>
                                 </div>
-
-                                <div className="relative z-10 text-center">
-                                    <h3 className="font-bold text-white text-base group-hover:text-emerald-100 transition-colors">{category.label}</h3>
-                                    <p className="text-xs text-gray-500 group-hover:text-emerald-400/80 transition-colors mt-1 font-medium">
-                                        {categoryCounts[category.type] !== undefined ? categoryCounts[category.type] : category.count} opções
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
+                            ))}
                     </div>
                 </div>
             </section>
@@ -343,7 +405,7 @@ export const PublicHome: React.FC = () => {
                     {/* Map View */}
                     {showMap && PropertyMap && (
                         <div className="mb-12 h-[500px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-20">
-                            <PropertyMap properties={recentProperties} />
+                            <PropertyMap properties={allMapMarkers} />
                         </div>
                     )}
 

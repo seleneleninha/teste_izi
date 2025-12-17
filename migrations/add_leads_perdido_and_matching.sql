@@ -59,7 +59,7 @@ BEGIN
         a.cidade,
         a.bairro
     FROM anuncios a
-    WHERE a.status_aprovacao = 'aprovado'
+    WHERE a.status = 'ativo'
     AND (
         a.operacao = (SELECT operacao_interesse FROM leads WHERE id = lead_id)
         OR a.tipo_imovel = (SELECT tipo_imovel_interesse FROM leads WHERE id = lead_id)

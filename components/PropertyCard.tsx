@@ -23,8 +23,7 @@ interface PropertyCardProps {
         banheiros?: number;
         vagas?: number;
         area_priv?: number;
-        status_aprovacao?: string;
-        status_imovel?: string; // NOVO
+        status?: string;
         aceita_parceria?: boolean;
     };
     actions?: React.ReactNode;
@@ -138,7 +137,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
 
     const statusColors = {
         pendente: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-        aprovado: 'bg-green-100 text-green-700 border-green-200',
+        ativo: 'bg-green-100 text-green-700 border-green-200',
         reprovado: 'bg-red-100 text-red-700 border-red-200'
     };
 
@@ -203,33 +202,33 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                 <div className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-md backdrop-blur-md ${operationTagClass()}`}>
                     {operationLabel}
                 </div>
-                {/* Status Badge - Mostra status_imovel real quando aprovado */}
-                {showStatus && property.status_aprovacao && (
-                    <div className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-md border backdrop-blur-md ${property.status_aprovacao === 'pendente'
+                {/* Status Badge - Mostra status real quando ativo */}
+                {showStatus && property.status && (
+                    <div className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-md border backdrop-blur-md ${property.status === 'pendente'
                         ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                        : property.status_aprovacao === 'reprovado'
+                        : property.status === 'reprovado'
                             ? 'bg-red-100 text-red-700 border-red-200'
-                            : property.status_imovel === 'venda_faturada'
+                            : property.status === 'venda_faturada'
                                 ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-                                : property.status_imovel === 'locacao_faturada'
+                                : property.status === 'locacao_faturada'
                                     ? 'bg-blue-100 text-blue-700 border-blue-200'
-                                    : property.status_imovel === 'imovel_espera'
+                                    : property.status === 'imovel_espera'
                                         ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
-                                        : property.status_imovel === 'imovel_perdido'
+                                        : property.status === 'imovel_perdido'
                                             ? 'bg-red-100 text-red-700 border-red-200'
                                             : 'bg-green-100 text-green-700 border-green-200'
                         }`}>
-                        {property.status_aprovacao === 'pendente'
+                        {property.status === 'pendente'
                             ? '⏳ Pendente'
-                            : property.status_aprovacao === 'reprovado'
+                            : property.status === 'reprovado'
                                 ? '❌ Reprovado'
-                                : property.status_imovel === 'venda_faturada'
+                                : property.status === 'venda_faturada'
                                     ? '🎉 Vendido'
-                                    : property.status_imovel === 'locacao_faturada'
+                                    : property.status === 'locacao_faturada'
                                         ? '💰 Alugado'
-                                        : property.status_imovel === 'imovel_espera'
+                                        : property.status === 'imovel_espera'
                                             ? '⏸️ Standby'
-                                            : property.status_imovel === 'imovel_perdido'
+                                            : property.status === 'imovel_perdido'
                                                 ? '⚠️ Perdido'
                                                 : '✅ Ativo'
                         }

@@ -26,7 +26,7 @@ interface Property {
     valor_mensal?: number;   // Temporada
     area_priv: number;
     quartos: number;
-    status_aprovacao: 'pendente' | 'aprovado' | 'reprovado';
+    status: 'pendente' | 'ativo' | 'reprovado';
     created_at: string;
     user_id: string;
     aceita_parceria: boolean;
@@ -62,7 +62,7 @@ export const AdminApprovals: React.FC = () => {
     const [properties, setProperties] = useState<Property[]>([]);
     const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<'todos' | 'pendente' | 'aprovado' | 'reprovado'>('pendente');
+    const [filter, setFilter] = useState<'todos' | 'pendente' | 'ativo' | 'reprovado'>('pendente');
     const [searchTerm, setSearchTerm] = useState('');
 
     // Rejection State
@@ -115,7 +115,7 @@ export const AdminApprovals: React.FC = () => {
                 .order('created_at', { ascending: false });
 
             if (filter !== 'todos') {
-                query = query.eq('status_aprovacao', filter);
+                query = query.eq('status', filter);
             }
 
             const { data, error } = await query;
@@ -164,8 +164,7 @@ export const AdminApprovals: React.FC = () => {
             const { error } = await supabase
                 .from('anuncios')
                 .update({
-                    status_aprovacao: 'aprovado',
-                    status_imovel: 'imovel_ativo', // ✅ Setar como ativo ao aprovar
+                    status: 'ativo',
                     aprovado_por: user?.id,
                     data_aprovacao: new Date().toISOString()
                 })
@@ -176,13 +175,13 @@ export const AdminApprovals: React.FC = () => {
             // Send Notification
             await supabase.from('notificacoes').insert({
                 user_id: property.user_id,
-                titulo: 'Anúncio Aprovado! 🎉',
-                mensagem: `Seu imóvel "${property.titulo}" foi aprovado e já está publicado na plataforma e na sua página. Parabéns e vamos para o próximo!`,
+                titulo: 'Anúncio ativo! 🎉',
+                mensagem: `Seu imóvel "${property.titulo}" foi ativo e já está publicado na plataforma e na sua página. Parabéns e vamos para o próximo!`,
                 tipo: 'aprovacao',
                 link: `/properties/${property.id}`
             });
 
-            addToast('Anúncio aprovado com sucesso!', 'success');
+            addToast('Anúncio ativo com sucesso!', 'success');
             fetchProperties();
         } catch (error: any) {
             console.error('Error approving property:', error);
@@ -215,7 +214,7 @@ export const AdminApprovals: React.FC = () => {
             const { error } = await supabase
                 .from('anuncios')
                 .update({
-                    status_aprovacao: 'reprovado',
+                    status: 'reprovado',
                     aprovado_por: user?.id,
                     data_aprovacao: new Date().toISOString(),
                     motivo_reprovacao: rejectComment || selectedReasons.join(', '), // Legacy support
@@ -281,9 +280,9 @@ export const AdminApprovals: React.FC = () => {
     );
 
     const stats = {
-        pendente: properties.filter(p => p.status_aprovacao === 'pendente').length,
-        aprovado: properties.filter(p => p.status_aprovacao === 'aprovado').length,
-        reprovado: properties.filter(p => p.status_aprovacao === 'reprovado').length,
+        pendente: properties.filter(p => p.status === 'pendente').length,
+        ativo: properties.filter(p => p.status === 'ativo').length,
+        reprovado: properties.filter(p => p.status === 'reprovado').length,
         total: properties.length
     };
 
@@ -317,8 +316,8 @@ export const AdminApprovals: React.FC = () => {
 
                     <div className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-slate-400 font-medium mb-1">Aprovados</p>
-                            <p className="text-3xl font-bold text-green-600">{stats.aprovado}</p>
+                            <p className="text-sm text-slate-400 font-medium mb-1">ativos</p>
+                            <p className="text-3xl font-bold text-green-600">{stats.ativo}</p>
                         </div>
                         <div className="w-12 h-12 bg-green-100 bg-green-900/30 rounded-3xl flex items-center justify-center">
                             <CheckCircle className="text-green-600 text-green-400" size={24} />
@@ -347,10 +346,10 @@ export const AdminApprovals: React.FC = () => {
                 </div>
 
                 {/* Filters and Search */}
-                <div className="bg-slate-800 p-6 rounded-full shadow-sm border border-slate-700 mb-8">
+                <div className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 mb-8">
                     <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
                         <div className="flex bg-slate-900 p-1 rounded-full w-full md:w-auto">
-                            {(['todos', 'pendente', 'aprovado', 'reprovado'] as const).map(status => (
+                            {(['todos', 'pendente', 'ativo', 'reprovado'] as const).map(status => (
                                 <button
                                     key={status}
                                     onClick={() => setFilter(status)}
@@ -428,7 +427,7 @@ export const AdminApprovals: React.FC = () => {
                                         property={property}
                                         showStatus={true}
                                         actions={
-                                            property.status_aprovacao === 'pendente' ? (
+                                            property.status === 'pendente' ? (
                                                 <>
                                                     <button
                                                         onClick={(e) => {
@@ -466,7 +465,7 @@ export const AdminApprovals: React.FC = () => {
                                     />
 
                                     {/* History Badge if previously rejected */}
-                                    {historyCount > 0 && property.status_aprovacao === 'pendente' && (
+                                    {historyCount > 0 && property.status === 'pendente' && (
                                         <div className="absolute top-3 right-3 z-10">
                                             <div className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
                                                 <History size={12} />

@@ -62,10 +62,10 @@ const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onClose, on
                 <div className="mb-6">
                     {isActivating ? (
                         <>
-                            <div className="bg-amber-50 bg-amber-900/20 border border-amber-200 border-amber-800 rounded-3xl p-4 mb-4">
+                            <div className="bg-amber-50 bg-amber-900/20 border border-amber-300 border-amber-800 rounded-3xl p-4 mb-4">
                                 <div className="flex items-start gap-2">
-                                    <AlertCircle className="text-amber-600 text-amber-400 flex-shrink-0 mt-0.5" size={20} />
-                                    <div className="text-sm text-amber-800 text-amber-200">
+                                    <AlertCircle className="text-amber-600 text-amber-300 flex-shrink-0 mt-0.5" size={20} />
+                                    <div className="text-sm text-amber-100 text-amber-200">
                                         <p className="font-semibold mb-1">Como funciona a parceria?</p>
                                         <p>Ao aceitar esta parceria, você concorda em dividir a comissão <strong>50/50</strong> com o corretor proprietário do imóvel em caso de venda ou locação.</p>
                                     </div>
@@ -229,8 +229,7 @@ export const PartnerProperties: React.FC = () => {
         `)
                 .eq('uf', userProfile.uf) // Filter by STATE, not city
                 .neq('user_id', user?.id)
-                .eq('status_aprovacao', 'aprovado')
-                .eq('status_imovel', 'imovel_ativo')
+                .eq('status', 'ativo')
                 .eq('aceita_parceria', true)
                 .order('created_at', { ascending: false });
 
@@ -443,16 +442,16 @@ export const PartnerProperties: React.FC = () => {
 
                 {/* Alert for missing city */}
                 {missingCity && (
-                    <div className="mb-8 bg-amber-50 bg-amber-900/20 border-2 border-amber-200 border-amber-800 rounded-full p-6">
+                    <div className="mb-8 bg-amber-50 bg-amber-900/20 border-2 border-amber-200 border-amber-800 rounded-3xl p-6">
                         <div className="flex items-start gap-4">
                             <div className="w-12 h-12 bg-amber-100 bg-amber-900/30 rounded-3xl flex items-center justify-center flex-shrink-0">
-                                <AlertCircle className="text-amber-600 text-amber-400" size={24} />
+                                <AlertCircle className="text-amber-600 text-amber-300" size={24} />
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-lg font-bold text-amber-900 text-amber-100 mb-2">
+                                <h3 className="text-lg font-bold text-amber-300 text-amber-100 mb-2">
                                     Configure sua cidade para ver imóveis parceiros
                                 </h3>
-                                <p className="text-sm text-amber-800 text-amber-200 mb-4">
+                                <p className="text-sm text-amber-300 text-amber-200 mb-4">
                                     Para visualizar imóveis disponíveis para parceria, você precisa configurar sua cidade no seu perfil.
                                     Isso permite que mostremos apenas imóveis da sua região.
                                 </p>

@@ -58,7 +58,7 @@ export const DeactivatePropertyModal: React.FC<DeactivatePropertyModalProps> = (
             const { error } = await supabase
                 .from('anuncios')
                 .update({
-                    status_imovel: selectedReason,
+                    status: selectedReason,
                     motivo_inativacao: reasons.find(r => r.value === selectedReason)?.label || '',
                     data_inativacao: new Date().toISOString()
                 })
@@ -117,8 +117,8 @@ export const DeactivatePropertyModal: React.FC<DeactivatePropertyModalProps> = (
                         <label
                             key={reason.value}
                             className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedReason === reason.value
-                                    ? 'border-primary-500 bg-primary-900/20'
-                                    : 'border-slate-700 hover:border-slate-600 bg-slate-800/50'
+                                ? 'border-primary-500 bg-primary-900/20'
+                                : 'border-slate-700 hover:border-slate-600 bg-slate-800/50'
                                 }`}
                         >
                             <div className="flex items-start gap-3">

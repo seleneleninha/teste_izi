@@ -39,7 +39,7 @@ export const PropertiesList: React.FC = () => {
     const [selectedOperation, setSelectedOperation] = useState('');
 
     // Status Filter - NOVO
-    const [statusFilter, setStatusFilter] = useState<string>('imovel_ativo');
+    const [statusFilter, setStatusFilter] = useState<string>('ativo');
 
     // Estatísticas - NOVO
     const [stats, setStats] = useState({
@@ -52,7 +52,7 @@ export const PropertiesList: React.FC = () => {
     });
 
     // Seções expandidas - NOVO
-    const [expandedSections, setExpandedSections] = useState<string[]>(['imovel_ativo']); // Ativos expandido por padrão
+    const [expandedSections, setExpandedSections] = useState<string[]>(['ativo']); // Ativos expandido por padrão
 
     // Determine context based on route
     const isDashboardRoute = location.pathname === '/properties';
@@ -95,11 +95,11 @@ export const PropertiesList: React.FC = () => {
     useEffect(() => {
         if (properties.length > 0 && isMyProperties) {
             setStats({
-                ativos: properties.filter(p => p.status_imovel === 'imovel_ativo' || !p.status_imovel).length,
-                vendas: properties.filter(p => p.status_imovel === 'venda_faturada').length,
-                locacoes: properties.filter(p => p.status_imovel === 'locacao_faturada').length,
-                standby: properties.filter(p => p.status_imovel === 'imovel_espera').length,
-                perdidos: properties.filter(p => p.status_imovel === 'imovel_perdido').length,
+                ativos: properties.filter(p => p.status === 'ativo' || !p.status).length,
+                vendas: properties.filter(p => p.status === 'venda_faturada').length,
+                locacoes: properties.filter(p => p.status === 'locacao_faturada').length,
+                standby: properties.filter(p => p.status === 'imovel_espera').length,
+                perdidos: properties.filter(p => p.status === 'imovel_perdido').length,
                 total: properties.length
             });
         }
@@ -182,8 +182,7 @@ export const PropertiesList: React.FC = () => {
                         )
                     `)
                     .eq('user_id', brokerId)
-                    .eq('status_aprovacao', 'aprovado')
-                    .eq('status_imovel', 'imovel_ativo')
+                    .eq('status', 'ativo')
                     .order('created_at', { ascending: false });
 
                 // Fetch partnership properties
@@ -207,7 +206,7 @@ export const PropertiesList: React.FC = () => {
                             )
                         `)
                         .in('id', partnershipPropertyIds)
-                        .eq('status_aprovacao', 'aprovado')
+                        .eq('status', 'ativo')
                         .order('created_at', { ascending: false })
                     : null;
 
@@ -288,8 +287,8 @@ export const PropertiesList: React.FC = () => {
                     latitude: p.latitude,
                     longitude: p.longitude,
                     user_id: p.user_id,
-                    status_aprovacao: p.status_aprovacao,
-                    status_imovel: p.status_imovel
+                    status: p.status,
+                    status: p.status
                 }));
 
                 setProperties(formattedProperties);
@@ -314,9 +313,11 @@ export const PropertiesList: React.FC = () => {
             // Filter by user if on "Meus Imóveis"
             if (isMyProperties && user) {
                 query = query.eq('user_id', user.id);
-                query = query.neq('status_aprovacao', 'inativo');
+                query = query.neq('status', 'inativo');
+                // NÃO filtrar por status - corretor quer ver todos os seus imóveis
             } else {
-                query = query.neq('status_aprovacao', 'inativo');
+                // Para visitantes: apenas imóveis ativos
+                query = query.eq('status', 'ativo');
             }
 
             // Apply filters using local variables
@@ -376,8 +377,8 @@ export const PropertiesList: React.FC = () => {
                     latitude: p.latitude,
                     longitude: p.longitude,
                     user_id: p.user_id,
-                    status_aprovacao: p.status_aprovacao,
-                    status_imovel: p.status_imovel
+                    status: p.status,
+                    status: p.status
                 }));
                 setProperties(formattedProperties);
             }
@@ -394,7 +395,7 @@ export const PropertiesList: React.FC = () => {
         try {
             const { error } = await supabase
                 .from('anuncios')
-                .update({ status_aprovacao: 'inativo' })
+                .update({ status: 'inativo' })
                 .eq('id', id)
                 .eq('user_id', user?.id);
 
@@ -504,7 +505,9 @@ export const PropertiesList: React.FC = () => {
                                     className="bg-slate-800 border border-emerald-700/50 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all col-span-2 md:col-span-1 font-medium"
                                 >
                                     <option value="todos" className="bg-slate-800">📋 Todos ({stats.total})</option>
-                                    <option value="imovel_ativo" className="bg-slate-800">✅ Ativos ({stats.ativos})</option>
+                                    <option value="pendente" className="bg-slate-800">⏳ Pendentes ({properties.filter(p => p.status === 'pendente').length})</option>
+                                    <option value="reprovado" className="bg-slate-800">❌ Reprovados ({properties.filter(p => p.status === 'reprovado').length})</option>
+                                    <option value="ativo" className="bg-slate-800">✅ Ativos ({stats.ativos})</option>
                                     <option value="venda_faturada" className="bg-slate-800">🎉 Vendidos ({stats.vendas})</option>
                                     <option value="locacao_faturada" className="bg-slate-800">💰 Alugados ({stats.locacoes})</option>
                                     <option value="imovel_espera" className="bg-slate-800">⏸️ Standby ({stats.standby})</option>
@@ -533,7 +536,7 @@ export const PropertiesList: React.FC = () => {
                                 <span>Limpar</span>
                             </button>
 
-                            {/* Toggle Grid/Map */}
+                            {/* Toggle Cards/Map */}
                             <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700">
                                 <button
                                     onClick={() => setView('grid')}
@@ -543,7 +546,7 @@ export const PropertiesList: React.FC = () => {
                                         }`}
                                 >
                                     <Grid size={18} />
-                                    <span className="hidden sm:inline">Lista</span>
+                                    <span className="hidden sm:inline">Cards</span>
                                 </button>
                                 <button
                                     onClick={() => setView('map')}
@@ -596,7 +599,7 @@ export const PropertiesList: React.FC = () => {
                                         const filteredProps = isMyProperties
                                             ? statusFilter === 'todos'
                                                 ? properties
-                                                : properties.filter(p => p.status_imovel === statusFilter || (statusFilter === 'imovel_ativo' && !p.status_imovel))
+                                                : properties.filter(p => p.status === statusFilter || (statusFilter === 'ativo' && !p.status))
                                             : properties;
 
                                         if (filteredProps.length === 0) {
@@ -658,7 +661,9 @@ export const PropertiesList: React.FC = () => {
                                 <div className="space-y-6">
                                     {/* Definição das seções */}
                                     {[
-                                        { key: 'imovel_ativo', label: 'Ativos', icon: <Home size={20} />, color: 'emerald', emoji: '✅' },
+                                        { key: 'pendente', label: 'Pendentes', icon: <Home size={20} />, color: 'yellow', emoji: '⏳' },
+                                        { key: 'reprovado', label: 'Reprovados', icon: <AlertTriangle size={20} />, color: 'red', emoji: '❌' },
+                                        { key: 'ativo', label: 'Ativos', icon: <Home size={20} />, color: 'emerald', emoji: '✅' },
                                         { key: 'venda_faturada', label: 'Vendidos', icon: <TrendingUp size={20} />, color: 'emerald', emoji: '🎉' },
                                         { key: 'locacao_faturada', label: 'Alugados', icon: <Key size={20} />, color: 'blue', emoji: '💰' },
                                         { key: 'imovel_espera', label: 'Em Standby', icon: <Pause size={20} />, color: 'yellow', emoji: '⏸️' },
@@ -667,7 +672,7 @@ export const PropertiesList: React.FC = () => {
                                         .filter(section => {
                                             // Mostrar apenas se tiver properties nessa categoria OU se statusFilter for 'todos'
                                             const count = properties.filter(p =>
-                                                p.status_imovel === section.key || (section.key === 'imovel_ativo' && !p.status_imovel)
+                                                p.status === section.key || (section.key === 'ativo' && !p.status)
                                             ).length;
                                             // Se está filtrando por status específico, só mostra essa seção
                                             if (statusFilter !== 'todos') {
@@ -677,7 +682,7 @@ export const PropertiesList: React.FC = () => {
                                         })
                                         .map(section => {
                                             const sectionProperties = properties.filter(p =>
-                                                p.status_imovel === section.key || (section.key === 'imovel_ativo' && !p.status_imovel)
+                                                p.status === section.key || (section.key === 'ativo' && !p.status)
                                             );
                                             const isExpanded = expandedSections.includes(section.key);
                                             const colorClasses = {

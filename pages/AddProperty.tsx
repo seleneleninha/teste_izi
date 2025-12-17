@@ -218,8 +218,8 @@ export default function AddProperty() {
                 }
 
                 // Set status and rejection info
-                setPropertyStatus(data.status_aprovacao);
-                if (data.status_aprovacao === 'reprovado') {
+                setPropertyStatus(data.status);
+                if (data.status === 'reprovado') {
                     setRejectionData({
                         reason: data.motivo_reprovacao,
                         history: data.historico_reprovacao || []
@@ -349,7 +349,7 @@ export default function AddProperty() {
                 aceita_parceria: formData.aceitaParceria,
                 taxas_inclusas: isTemporada ? null : formData.taxasInclusas,
                 aceita_financiamento: isTemporada ? null : formData.aceitaFinanciamento,
-                status_aprovacao: 'pendente', // Always reset to pending on update
+                status: 'pendente', // Always reset to pending on update
                 video: formData.videoUrl,
                 tour_virtual: formData.tourVirtualUrl,
                 observacoes: formData.observacoes
@@ -1311,8 +1311,8 @@ export default function AddProperty() {
                         </div>
 
                         <div className="mb-8">
-                            <label className="block text-sm font-bold text-gray-300 mb-3">Comodidades e Infraestrutura</label>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <label className="block text-xs font-bold text-gray-300 mb-3">Comodidades e Infraestrutura</label>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                                 {availableFeatures.map(feature => (
                                     <label key={feature.id} className={`flex items-center p-3 rounded-full border cursor-pointer transition-all ${formData.features.includes(feature.nome) ? 'bg-primary-900/20 border-primary-500 text-primary-300' : 'border-slate-700 hover:bg-slate-700'}`}>
                                         <input
@@ -1472,8 +1472,8 @@ export default function AddProperty() {
                                         </div>
 
                                         <div className="space-y-6 md:col-span-2">
-                                            {/* Hide Condo/IPTU/Taxas for Temporada */}
-                                            {!isTemporada && isLocacao && (
+                                            {/* Condomínio - Para LOCAÇÃO ou VENDA de Apartamento */}
+                                            {!isTemporada && (isLocacao || (isVenda && tiposImovel.find(t => t.id === formData.tipoImovelId)?.tipo?.toLowerCase().includes('apartamento'))) && (
                                                 <div>
                                                     <label className="block text-sm font-bold text-gray-300 mb-2">Condomínio (Mês)</label>
                                                     <div className="relative">

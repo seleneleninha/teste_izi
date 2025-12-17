@@ -105,7 +105,7 @@ export const Dashboard: React.FC = () => {
                     .select('*', { count: 'exact', head: true })
                     .eq('uf', userProfile.uf)
                     .neq('user_id', user.id)
-                    .eq('status_aprovacao', 'aprovado')
+                    .eq('status', 'ativo')
                     .eq('aceita_parceria', true);
                 availableCount = count || 0;
             }

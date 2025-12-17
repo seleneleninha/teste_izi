@@ -48,7 +48,7 @@ BEGIN
         a.cidade,
         a.bairro
     FROM anuncios a
-    WHERE a.status_aprovacao = 'aprovado'
+    WHERE a.status = 'ativo'
     AND (
         a.operacao = (SELECT operacao_interesse FROM leads WHERE id = lead_id)
         OR a.tipo_imovel = (SELECT tipo_imovel_interesse FROM leads WHERE id = lead_id)
@@ -67,7 +67,7 @@ DECLARE
     match_score INTEGER;
 BEGIN
     -- Only run for approved properties
-    IF NEW.status_aprovacao = 'aprovado' AND (OLD.status_aprovacao IS NULL OR OLD.status_aprovacao != 'aprovado') THEN
+    IF NEW.status = 'ativo' AND (OLD.status IS NULL OR OLD.status != 'ativo') THEN
         
         -- Iterate through leads that might match
         FOR matched_lead IN 

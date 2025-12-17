@@ -136,8 +136,7 @@ export const BrokerPage: React.FC = () => {
                       operacao (tipo)
                     `)
                     .eq('user_id', brokerData.id)
-                    .eq('status_aprovacao', 'aprovado')
-                    .eq('status_imovel', 'imovel_ativo')
+                    .eq('status', 'ativo')
                     .order('created_at', { ascending: false }),
 
                 // 3. Fetch Partnerships

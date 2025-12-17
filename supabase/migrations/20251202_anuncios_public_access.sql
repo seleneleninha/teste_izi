@@ -8,4 +8,4 @@ DROP POLICY IF EXISTS "Enable read access for approved properties" ON anuncios;
 CREATE POLICY "Enable read access for approved properties" 
 ON anuncios 
 FOR SELECT 
-USING (status_aprovacao = 'aprovado');
+USING (status = 'ativo');

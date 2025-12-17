@@ -279,7 +279,7 @@ export const PropertyDetails: React.FC = () => {
                         operacao: data.operacao?.tipo || data.operacao,
                         aceita_financiamento: data.aceita_financiamento,
                         aceita_parceria: data.aceita_parceria,
-                        status_aprovacao: data.status_aprovacao,
+                        status: data.status,
                         video: data.video,
                         tour_virtual: data.tour_virtual,
                         observacoes: data.observacoes,
@@ -351,8 +351,7 @@ export const PropertyDetails: React.FC = () => {
                     `)
                     .eq('cidade', property.address.city)
                     .neq('id', property.id)
-                    .eq('status_aprovacao', 'aprovado')
-                    .eq('status_imovel', 'imovel_ativo')
+                    .eq('status', 'ativo')
                     .limit(8);
 
                 if (data) {

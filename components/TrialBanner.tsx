@@ -84,7 +84,7 @@ export const TrialBanner: React.FC = () => {
     // Show trial countdown
     return (
         <div className="bg-yellow-500 bg-yellow-700 rounded-full border-b border-yellow-200 border-yellow-800 p-5">
-            <div className="flex items-center justify-center gap-2 text-md text-yellow-900 text-yellow-200">
+            <div className="flex items-center justify-center gap-2 text-lg text-yellow-100 text-yellow-200">
                 <span className="font-medium">
                     🚀 Você tem {status.days_left} dias restantes no seu teste grátis.
                 </span>

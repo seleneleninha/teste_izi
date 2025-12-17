@@ -7,7 +7,7 @@ DECLARE
     match_score INTEGER;
 BEGIN
     -- Only run for approved properties
-    IF NEW.status_aprovacao = 'aprovado' AND (OLD.status_aprovacao IS NULL OR OLD.status_aprovacao != 'aprovado') THEN
+    IF NEW.status = 'ativo' AND (OLD.status IS NULL OR OLD.status != 'ativo') THEN
         
         -- Iterate through leads that might match
         FOR matched_lead IN 
