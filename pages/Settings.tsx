@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
-import { User, Lock, Bell, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, AlertTriangle, ExternalLink, MapPin, Phone, Share2, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign } from 'lucide-react';
+import { User, Lock, Bell, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, AlertTriangle, ExternalLink, MapPin, Phone, Share2, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { geocodeAddress } from '../lib/geocodingHelper';
 import { checkPasswordStrength, validateEmail, validatePhone, validateCRECI, sanitizeInput } from '../lib/validation';
 import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicator';
+import { DeleteAccountModal } from '../components/DeleteAccountModal';
 
 export const Settings: React.FC = () => {
   const { user, signOut, role } = useAuth();
@@ -71,13 +72,16 @@ export const Settings: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
 
-  // Notifications State
   const [notifications, setNotifications] = useState({
     leads: true,
     messages: true,
     properties: true,
     marketing: false
   });
+
+  // LGPD States
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [exportingData, setExportingData] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -394,24 +398,75 @@ export const Settings: React.FC = () => {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (!confirm('ATENÇÃO: Esta ação é irreversível. Todos os seus dados serão apagados. Tem certeza?')) return;
+  // --- LGPD Functions ---
+
+  const handleExportData = async () => {
+    if (!user) return;
 
     try {
-      setDeleting(true);
+      setExportingData(true);
+      addToast('Preparando seus dados...', 'info');
 
-      const { error } = await supabase.rpc('delete_own_account');
+      // 1. Buscar perfil
+      const { data: perfilData } = await supabase
+        .from('perfis')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-      if (error) throw error;
+      // 2. Buscar anúncios
+      const { data: anunciosData } = await supabase
+        .from('anuncios')
+        .select('*')
+        .eq('user_id', user.id);
 
-      addToast('Conta excluída com sucesso.', 'success');
-      await signOut();
-      navigate('/login');
-    } catch (error: any) {
-      console.error('Erro ao excluir conta:', error);
-      addToast('Erro ao excluir conta: ' + error.message, 'error');
+      // 3. Buscar parcerias
+      const { data: parceriasData } = await supabase
+        .from('parcerias')
+        .select('*')
+        .or(`anunciante_id.eq.${user.id},parceiro_id.eq.${user.id}`);
+
+      // 4. Buscar conversas com IzA (se existir)
+      const { data: conversasData } = await supabase
+        .from('encomendar_imovel')
+        .select('*')
+        .eq('user_id', user.id);
+
+      // 5. Montar JSON
+      const userData = {
+        exportado_em: new Date().toISOString(),
+        usuario: {
+          id: user.id,
+          email: user.email,
+          ...perfilData
+        },
+        anuncios: anunciosData || [],
+        parcerias: parceriasData || [],
+        encomendas: conversasData || [],
+        total_registros: {
+          anuncios: anunciosData?.length || 0,
+          parcerias: parceriasData?.length || 0,
+          encomendas: conversasData?.length || 0
+        }
+      };
+
+      // 6. Download como JSON
+      const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `izibrokerz_dados_${user.id}_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast('Dados exportados com sucesso! Arquivo baixado.', 'success');
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      addToast('Erro ao exportar dados. Tente novamente.', 'error');
     } finally {
-      setDeleting(false);
+      setExportingData(false);
     }
   };
 
@@ -1219,23 +1274,50 @@ export const Settings: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-red-50 bg-red-900/10 p-6 rounded-3xl border border-red-100 border-red-900/30">
-                <h4 className="font-bold text-red-600 text-red-400 mb-2 flex items-center">
-                  <AlertTriangle size={18} className="mr-2" /> Zona de Perigo
-                </h4>
-                <p className="text-sm text-red-600/70 text-red-400/70 mb-4">
-                  Excluir sua conta é uma ação permanente e não poderá ser desfeita. Todos os seus dados, imóveis e leads serão perdidos.
-                </p>
-                <button
-                  onClick={handleDeleteAccount}
-                  disabled={deleting}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-colors flex items-center disabled:opacity-50"
-                >
-                  {deleting ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Trash2 size={16} className="mr-2" />}
-                  {deleting ? 'Excluindo...' : 'Excluir Minha Conta'}
-                </button>
+              {/* LGPD Compliance Section */}
+              <div className="col-span-full space-y-6">
+                {/* Export Data */}
+                <div className="bg-emerald-900/10 p-6 rounded-3xl border border-emerald-900/30">
+                  <h4 className="font-bold text-emerald-400 mb-2 flex items-center">
+                    <Download size={18} className="mr-2" /> Seus Dados (LGPD)
+                  </h4>
+                  <p className="text-sm text-emerald-400/70 mb-4">
+                    Conforme a LGPD (Art. 18), você tem direito de acessar e exportar todos os seus dados armazenados na plataforma.
+                  </p>
+                  <button
+                    onClick={handleExportData}
+                    disabled={exportingData}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-sm font-bold transition-colors flex items-center disabled:opacity-50"
+                  >
+                    {exportingData ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Download size={16} className="mr-2" />}
+                    {exportingData ? 'Exportando...' : 'Baixar Meus Dados (JSON)'}
+                  </button>
+                </div>
+
+                {/* Delete Account */}
+                <div className="bg-red-900/10 p-6 rounded-3xl border border-red-900/30">
+                  <h4 className="font-bold text-red-400 mb-2 flex items-center">
+                    <AlertTriangle size={18} className="mr-2" /> Zona de Perigo
+                  </h4>
+                  <p className="text-sm text-red-400/70 mb-4">
+                    Excluir sua conta é uma ação <strong>irreversível</strong>. Seus dados serão anonimizados conforme a LGPD. Anúncios serão desassociados de você.
+                  </p>
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-colors flex items-center"
+                  >
+                    <Trash2 size={16} className="mr-2" />
+                    Deletar Minha Conta
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* Delete Modal */}
+            <DeleteAccountModal
+              isOpen={showDeleteModal}
+              onClose={() => setShowDeleteModal(false)}
+            />
           </div>
         )}
 

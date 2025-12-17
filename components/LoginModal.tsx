@@ -92,7 +92,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                             creci: userType === 'corretor' ? creci : null,
                             uf_creci: userType === 'corretor' ? ufCreci : null,
                             is_trial: userType === 'corretor' ? trialAccepted : false,
-                            tipo_usuario: userType
+                            tipo_usuario: userType,
+                            accepted_terms_at: new Date().toISOString() // ✅ LGPD: Registrar consentimento
                         }
                     }
                 });

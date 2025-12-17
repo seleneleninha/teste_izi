@@ -24,8 +24,8 @@ const Settings = lazy(() => import('./pages/Settings').then(module => ({ default
 const AgentProfile = lazy(() => import('./pages/AgentProfile').then(module => ({ default: module.AgentProfile })));
 const PropertyComparison = lazy(() => import('./pages/PropertyComparison').then(module => ({ default: module.PropertyComparison })));
 const Leads = lazy(() => import('./pages/Leads').then(module => ({ default: module.Leads })));
-const Terms = lazy(() => import('./pages/Terms').then(module => ({ default: module.Terms })));
-const Privacy = lazy(() => import('./pages/Privacy').then(module => ({ default: module.Privacy })));
+const TermsOfService = lazy(() => import('./pages/TermsOfService').then(module => ({ default: module.TermsOfService })));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy').then(module => ({ default: module.PrivacyPolicy })));
 const AdminApprovals = lazy(() => import('./pages/admin/AdminApprovals').then(module => ({ default: module.AdminApprovals })));
 const BrokerPage = lazy(() => import('./pages/BrokerPage').then(module => ({ default: module.BrokerPage })));
 const PartnerProperties = lazy(() => import('./pages/PartnerProperties').then(module => ({ default: module.PartnerProperties })));
@@ -59,8 +59,8 @@ const App: React.FC = () => {
                     <Route path="/v/:token" element={<MagicVerification />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/agent/:id" element={<AgentProfile />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/terms" element={<TermsOfService />} />
+                    <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/about" element={<About />} />
 
