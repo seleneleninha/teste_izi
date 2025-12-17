@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useTheme } from './ThemeContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { TermsModal } from './TermsModal';
-import { PrivacyModal } from './PrivacyModal';
+import { LegalDocumentModal } from './LegalDocumentModal';
 
 export interface FooterProps {
     partner?: {
@@ -30,8 +29,8 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
     const { theme } = useTheme();
     const navigate = useNavigate();
     const location = useLocation();
-    const [showTermsModal, setShowTermsModal] = useState(false);
-    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+    const [legalModalOpen, setLegalModalOpen] = useState(false);
+    const [legalDocType, setLegalDocType] = useState<'privacy' | 'terms' | 'lgpd'>('privacy');
 
     // Detect if we're on a broker page (either via prop or URL)
     const isBrokerPage = propIsBrokerPage || location.pathname.startsWith('/corretor/');
@@ -72,27 +71,27 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
                             {partner && (partner.instagram || partner.facebook || partner.linkedin || partner.youtube || partner.x) ? (
                                 <div className="flex gap-3">
                                     {partner.instagram && (
-                                        <a href={partner.instagram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-pink-600 transition-colors text-gray-400 hover:text-white">
+                                        <a href={partner.instagram} target="_blank" rel="noopener noreferrer" className="min-w-[44px] min-h-[44px] rounded-full bg-white/5 flex items-center justify-center hover:bg-pink-600 transition-all text-gray-400 hover:text-white active:scale-95" aria-label="Instagram">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>
                                         </a>
                                     )}
                                     {partner.facebook && (
-                                        <a href={partner.facebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-blue-600 transition-colors text-gray-400 hover:text-white">
+                                        <a href={partner.facebook} target="_blank" rel="noopener noreferrer" className="min-w-[44px] min-h-[44px] rounded-full bg-white/5 flex items-center justify-center hover:bg-blue-600 transition-all text-gray-400 hover:text-white active:scale-95" aria-label="Facebook">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
                                         </a>
                                     )}
                                     {partner.linkedin && (
-                                        <a href={partner.linkedin} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-blue-500 transition-colors text-gray-400 hover:text-white">
+                                        <a href={partner.linkedin} target="_blank" rel="noopener noreferrer" className="min-w-[44px] min-h-[44px] rounded-full bg-white/5 flex items-center justify-center hover:bg-blue-500 transition-all text-gray-400 hover:text-white active:scale-95" aria-label="LinkedIn">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect width="4" height="12" x="2" y="9" /><circle cx="4" cy="4" r="2" /></svg>
                                         </a>
                                     )}
                                     {partner.youtube && (
-                                        <a href={partner.youtube} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-red-600 transition-colors text-gray-400 hover:text-white">
+                                        <a href={partner.youtube} target="_blank" rel="noopener noreferrer" className="min-w-[44px] min-h-[44px] rounded-full bg-white/5 flex items-center justify-center hover:bg-red-600 transition-all text-gray-400 hover:text-white active:scale-95" aria-label="YouTube">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" /><path d="m10 15 5-3-5-3z" /></svg>
                                         </a>
                                     )}
                                     {partner.x && (
-                                        <a href={partner.x} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-gray-700 transition-colors text-gray-400 hover:text-white">
+                                        <a href={partner.x} target="_blank" rel="noopener noreferrer" className="min-w-[44px] min-h-[44px] rounded-full bg-white/5 flex items-center justify-center hover:bg-gray-700 transition-all text-gray-400 hover:text-white active:scale-95" aria-label="X (Twitter)">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4l11.733 16h4.267l-11.733 -16z" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg>
                                         </a>
                                     )}
@@ -208,16 +207,22 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
 
                         <div className="flex gap-6 mt-4 md:mt-0">
                             <button
-                                onClick={() => setShowTermsModal(true)}
+                                onClick={() => { setLegalDocType('terms'); setLegalModalOpen(true); }}
                                 className="hover:text-gray-400 transition-colors cursor-pointer"
                             >
                                 Termos de Uso
                             </button>
                             <button
-                                onClick={() => setShowPrivacyModal(true)}
+                                onClick={() => { setLegalDocType('privacy'); setLegalModalOpen(true); }}
                                 className="hover:text-gray-400 transition-colors cursor-pointer"
                             >
                                 Privacidade
+                            </button>
+                            <button
+                                onClick={() => { setLegalDocType('lgpd'); setLegalModalOpen(true); }}
+                                className="hover:text-gray-400 transition-colors cursor-pointer"
+                            >
+                                LGPD
                             </button>
                         </div>
 
@@ -230,9 +235,12 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
                 </div>
             </footer>
 
-            {/* Modals */}
-            <TermsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
-            <PrivacyModal isOpen={showPrivacyModal} onClose={() => setShowPrivacyModal(false)} />
+            {/* Legal Document Modal */}
+            <LegalDocumentModal
+                isOpen={legalModalOpen}
+                onClose={() => setLegalModalOpen(false)}
+                documentType={legalDocType}
+            />
         </>
     );
 };

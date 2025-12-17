@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../components/ToastContext';
 import { validateEmail, validateCPF, validatePhone, checkPasswordStrength, checkRateLimit, getRateLimitReset } from '../lib/validation';
 import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicator';
+import { LegalDocumentModal } from '../components/LegalDocumentModal';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -35,6 +36,10 @@ export const Login: React.FC = () => {
     const [ufCreci, setUfCreci] = useState('');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [trialAccepted, setTrialAccepted] = useState(false);
+
+    // Legal Modal States
+    const [legalModalOpen, setLegalModalOpen] = useState(false);
+    const [legalDocType, setLegalDocType] = useState<'privacy' | 'terms' | 'lgpd'>('privacy');
 
     const states = [
         'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
@@ -167,6 +172,11 @@ export const Login: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const openLegalModal = (type: 'privacy' | 'terms' | 'lgpd') => {
+        setLegalDocType(type);
+        setLegalModalOpen(true);
     };
 
     return (
@@ -376,7 +386,10 @@ export const Login: React.FC = () => {
                                     />
                                 </div>
                                 <label htmlFor="terms" className="ml-2 text-sm font-medium text-gray-300">
-                                    Ao cadastrar-se na Plataforma você concorda com nosso <Link to="/terms" className="text-primary-600 hover:underline text-primary-500">TERMO DE USO</Link> e nossa <Link to="/privacy" className="text-primary-600 hover:underline text-primary-500">POLÍTICA DE PRIVACIDADE</Link> de acordo com a LGPD (Lei Geral de Proteção de Dados) vigente.
+                                    Ao cadastrar-se na Plataforma você concorda com nosso{' '}
+                                    <button type="button" onClick={() => openLegalModal('terms')} className="text-primary-600 hover:underline text-primary-500 font-semibold">TERMO DE USO</button>,{' '}
+                                    nossa <button type="button" onClick={() => openLegalModal('privacy')} className="text-primary-600 hover:underline text-primary-500 font-semibold">POLÍTICA DE PRIVACIDADE</button> e{' '}
+                                    <button type="button" onClick={() => openLegalModal('lgpd')} className="text-primary-600 hover:underline text-primary-500 font-semibold">COMPLIANCE LGPD</button>.
                                 </label>
                             </div>
 
@@ -421,6 +434,13 @@ export const Login: React.FC = () => {
                 </form>
 
             </div>
+
+            {/* Legal Document Modal */}
+            <LegalDocumentModal
+                isOpen={legalModalOpen}
+                onClose={() => setLegalModalOpen(false)}
+                documentType={legalDocType}
+            />
         </div>
     );
 };

@@ -5,6 +5,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from './ToastContext';
 import { loginLimiter, formLimiter, checkRateLimit } from '../lib/rateLimit';
+import { sanitizeInput, validateEmail, checkPasswordStrength } from '../lib/validation';
+import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
+import { LegalDocumentModal } from './LegalDocumentModal';
 
 interface LoginModalProps {
     isOpen: boolean;
@@ -31,6 +34,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     const [ufCreci, setUfCreci] = useState('');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [trialAccepted, setTrialAccepted] = useState(false);
+
+    // Legal Modal States
+    const [legalModalOpen, setLegalModalOpen] = useState(false);
+    const [legalDocType, setLegalDocType] = useState<'privacy' | 'terms' | 'lgpd'>('privacy');
 
     const states = [
         'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
@@ -136,10 +143,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             }
         } catch (err: any) {
             console.error(err);
-            addToast(err.message || 'Ocorreu um erro ao tentar autenticar.', 'error');
+            addToast(err.message || 'Erro ao autenticar', 'error');
         } finally {
             setLoading(false);
         }
+    };
+
+    const openLegalModal = (type: 'privacy' | 'terms' | 'lgpd') => {
+        setLegalDocType(type);
+        setLegalModalOpen(true);
     };
 
     if (!isOpen) return null;
@@ -149,9 +161,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             <div className={`bg-slate-900 rounded-3xl shadow-2xl w-full p-8 relative border border-slate-700 my-auto ${isSignUp ? 'max-w-2xl' : 'max-w-md'}`}>
                 <button
                     onClick={onClose}
-                    className="absolute bottom-4 right-4 text-gray-400 hover:text-gray-200 transition-colors"
+                    className="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-200 hover:bg-slate-800 rounded-full transition-all active:scale-95"
+                    aria-label="Fechar"
                 >
-                    <X size={24} />
+                    <X size={20} />
                 </button>
 
                 <div className="text-center mb-6">
@@ -343,7 +356,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                                     />
                                 </div>
                                 <label htmlFor="terms" className="ml-2 text-sm font-medium text-gray-300">
-                                    Ao cadastrar-se na Plataforma você concorda com nosso <Link to="/terms" className="text-primary-600 hover:underline text-primary-500">TERMO DE USO</Link> e nossa <Link to="/privacy" className="text-primary-600 hover:underline text-primary-500">POLÍTICA DE PRIVACIDADE</Link> de acordo com a LGPD (Lei Geral de Proteção de Dados) vigente.
+                                    Ao cadastrar-se na Plataforma você concorda com nosso{' '}
+                                    <button type="button" onClick={() => openLegalModal('terms')} className="text-primary-600 hover:underline text-primary-500 font-semibold">TERMO DE USO</button>,{' '}
+                                    nossa <button type="button" onClick={() => openLegalModal('privacy')} className="text-primary-600 hover:underline text-primary-500 font-semibold">POLÍTICA DE PRIVACIDADE</button> e{' '}
+                                    <button type="button" onClick={() => openLegalModal('lgpd')} className="text-primary-600 hover:underline text-primary-500 font-semibold">COMPLIANCE LGPD</button>.
                                 </label>
                             </div>
 
@@ -387,6 +403,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                     </div>
                 </form>
             </div>
+
+            {/* Legal Document Modal */}
+            <LegalDocumentModal
+                isOpen={legalModalOpen}
+                onClose={() => setLegalModalOpen(false)}
+                documentType={legalDocType}
+            />
         </div>,
         document.body
     );

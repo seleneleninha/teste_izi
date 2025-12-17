@@ -39,8 +39,28 @@ const AvailabilityCheck = lazy(() => import('./pages/AvailabilityCheck').then(mo
 
 import { ToastProvider } from './components/ToastContext';
 import { MagicVerification } from './pages/MagicVerification';
+import { LoadingFallback } from './components/LoadingFallback';
 
 const App: React.FC = () => {
+  // ✅ Preload critical routes on idle
+  React.useEffect(() => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => {
+        // Preload most visited pages
+        import('./pages/PropertiesList');
+        import('./pages/PropertyDetails');
+        import('./pages/Dashboard');
+      });
+    } else {
+      // Fallback for browsers without requestIdleCallback
+      setTimeout(() => {
+        import('./pages/PropertiesList');
+        import('./pages/PropertyDetails');
+        import('./pages/Dashboard');
+      }, 2000);
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <ThemeProvider>
@@ -48,7 +68,7 @@ const App: React.FC = () => {
           <ToastProvider>
             <Router>
               <ScrollToTop />
-              <Suspense fallback={<div className="flex items-center justify-center h-screen"><span className="text-lg">Carregando...</span></div>}>
+              <Suspense fallback={<LoadingFallback />}>
                 <Routes>
                   {/* Public Routes */}
                   <Route element={<PublicLayout />}>

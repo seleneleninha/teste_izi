@@ -10,6 +10,7 @@ import { Footer } from '../components/Footer';
 import { getRandomBackground } from '../lib/backgrounds';
 import { PartnersCarousel } from '../components/PartnersCarousel';
 import { PropertyGridSkeleton, CityCardSkeleton } from '../components/LoadingSkeleton';
+import { SEOHead, generateSchemaOrg } from '../components/SEOHead';
 
 
 interface Property {
@@ -295,6 +296,21 @@ export const PublicHome: React.FC = () => {
 
     return (
         <div className="bg-midnight-950 text-white font-sans transition-colors duration-200">
+            {/* SEO Meta Tags */}
+            <SEOHead
+                title="iziBrokerz - Encontre seu Imóvel Ideal | Compra, Venda e Locação"
+                description="Plataforma imobiliária digital que conecta você aos melhores corretores. Milhares de imóveis para compra, venda, locação e temporada em todo Brasil."
+                type="website"
+                tags={['imóveis', 'corretores', 'compra', 'venda', 'locação', 'brasil']}
+            />
+
+            {generateSchemaOrg({
+                type: 'Organization',
+                name: 'iziBrokerz',
+                description: 'Plataforma Imobiliária Digital',
+                url: 'https://izibrokerz.com',
+            })}
+
             {/* Hero Section */}
             <section className="relative h-[700px] flex items-center justify-center">
                 <div className="absolute inset-0 z-0">
@@ -331,10 +347,10 @@ export const PublicHome: React.FC = () => {
                     </h2>
                     <div className="grid grid-cols-3 lg:grid-cols-6 gap-6">
                         {[
-                            { label: 'Apto', type: 'apartamento', icon: <Building size={28} />, count: '24' },
-                            { label: 'Casa', type: 'casa', icon: <MapPinHouse size={28} />, count: '12' },
-                            { label: 'Comercial', type: 'comercial', icon: <Building2 size={28} />, count: '8' },
-                            { label: 'Rural', type: 'rural', icon: <Trees size={28} />, count: '5' },
+                            { label: 'Aptos', type: 'apartamento', icon: <Building size={28} />, count: '24' },
+                            { label: 'Casas', type: 'casa', icon: <MapPinHouse size={28} />, count: '12' },
+                            { label: 'Comerciais', type: 'comercial', icon: <Building2 size={28} />, count: '8' },
+                            { label: 'Rurais', type: 'rural', icon: <Trees size={28} />, count: '5' },
                             { label: 'Temporada', type: 'temporada', icon: <TreePalm size={28} />, count: '18' },
                             { label: 'Terrenos', type: 'terreno', icon: <MapPinned size={28} />, count: '7' },
                         ]
