@@ -4,6 +4,7 @@ import { X, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from './ToastContext';
+import { loginLimiter, formLimiter, checkRateLimit } from '../lib/rateLimit';
 
 interface LoginModalProps {
     isOpen: boolean;
@@ -59,6 +60,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
         try {
             if (isSignUp) {
+                // ✅ Rate limiting: prevenir spam de cadastros
+                const rateLimitCheck = await checkRateLimit(formLimiter, email, 'cadastro');
+                if (!rateLimitCheck.allowed) {
+                    addToast(rateLimitCheck.error!, 'error');
+                    setLoading(false);
+                    return;
+                }
+
                 if (password !== confirmPassword) {
                     addToast('As senhas não coincidem.', 'error');
                     setLoading(false);
@@ -92,6 +101,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                 addToast('Cadastro realizado! Verifique seu email para confirmar.', 'success');
                 setIsSignUp(false);
             } else {
+                // ✅ Rate limiting: prevenir brute force
+                const rateLimitCheck = await checkRateLimit(loginLimiter, email, 'login');
+                if (!rateLimitCheck.allowed) {
+                    addToast(rateLimitCheck.error!, 'error');
+                    setLoading(false);
+                    return;
+                }
+
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email,
                     password,

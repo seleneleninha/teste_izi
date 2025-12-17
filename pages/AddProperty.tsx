@@ -240,6 +240,13 @@ export default function AddProperty() {
             return;
         }
 
+        // ✅ Rate limiting: prevenir spam de anúncios (limite generoso para evitar frustração)
+        const rateLimitCheck = await checkRateLimit(propertyFormLimiter, user.id, 'submissão de anúncio');
+        if (!rateLimitCheck.allowed) {
+            addToast(rateLimitCheck.error!, 'error');
+            return;
+        }
+
         // --- Trial Enforcement Logic ---
         try {
             const { data: profile } = await supabase
