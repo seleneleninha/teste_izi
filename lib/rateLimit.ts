@@ -1,3 +1,36 @@
+/**
+ * ============================================
+ * RATE LIMITING - Proteção contra Abuso
+ * ============================================
+ * 
+ * 🎯 OBJETIVO:
+ * Proteger a plataforma contra ataques de brute force, spam e abuso,
+ * sem prejudicar a experiência de usuários legítimos.
+ * 
+ * 🛡️ PROTEÇÕES IMPLEMENTADAS:
+ * - Login: Previne tentativas excessivas de senha
+ * - Cadastro: Previne criação massiva de contas fake
+ * - Formulários: Previne spam de anúncios
+ * - AI/IzA: Previne uso excessivo da API Gemini (custo)
+ * 
+ * ⚖️ FILOSOFIA DE CALIBRAÇÃO:
+ * - Limites generosos (usuários reais não são afetados)
+ * - Bloqueios curtos (frustração mínima)
+ * - Mensagens claras (usuário sabe quanto esperar)
+ * 
+ * 📊 MONITORAMENTO:
+ * - Em produção, considerar migrar para Redis (dados persistentes)
+ * - Adicionar logging de bloqueios para detectar ataques
+ * - Whitelist para usuários premium (bypass de limites)
+ * 
+ * 🔧 AJUSTES FUTUROS:
+ * - Se houver reclamações: aumentar `points` ou `duration`
+ * - Se houver ataques: diminuir `blockDuration` para punir mais
+ * - Monitorar métricas: rate_limit_blocks_count, rate_limit_triggered
+ * 
+ * ============================================
+ */
+
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 
 /**

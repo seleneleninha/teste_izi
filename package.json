@@ -26,6 +26,7 @@
     "react-leaflet-cluster": "^4.0.0",
     "react-router-dom": "^7.9.6",
     "recharts": "^3.4.1",
+    "sharp": "^0.34.5",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
