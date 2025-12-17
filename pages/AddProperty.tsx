@@ -9,6 +9,7 @@ import { useToast } from '../components/ToastContext';
 import { geocodeAddress } from '../lib/geocodingHelper';
 import { DraggableMap } from '../components/DraggableMap';
 import { formatCurrencyInput, formatAreaInput } from '../lib/formatters';
+import { optimizeImage, isValidImage, isValidSize, formatFileSize } from '../lib/imageOptimization';
 
 // Interface for the form data
 interface PropertyFormData {
@@ -782,6 +783,18 @@ export default function AddProperty() {
         }
 
         for (const file of files) {
+            // ✅ Validação de imagem
+            if (!isValidImage(file)) {
+                addToast(`Arquivo inválido: ${file.name}. Use JPEG, PNG ou WebP.`, 'error');
+                continue;
+            }
+
+            if (!isValidSize(file, 10)) {
+                const size = formatFileSize(file.size);
+                addToast(`Imagem muito grande: ${file.name} (${size}). Máximo 10MB.`, 'error');
+                continue;
+            }
+
             let fileToUpload: File | Blob = file;
 
             // Apply watermark if configured
@@ -797,13 +810,40 @@ export default function AddProperty() {
                 }
             }
 
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Math.random()}.${fileExt}`;
-            const filePath = `${user?.id}/${fileName}`; // Assuming user is logged in
+            // ⚡ OTIMIZAÇÃO DE IMAGEM - Comprimir para WebP (quality 85%)
+            let finalBuffer: Buffer;
+            let finalFilename: string;
+            let finalMimeType: string;
+
+            try {
+                const optimized = await optimizeImage(fileToUpload);
+                finalBuffer = optimized.buffer;
+                finalFilename = optimized.filename;
+                finalMimeType = optimized.mimeType;
+
+                const originalSize = formatFileSize(file.size);
+                const optimizedSize = formatFileSize(finalBuffer.length);
+                const reduction = Math.round((1 - finalBuffer.length / file.size) * 100);
+
+                console.log(`🚀 Imagem otimizada: ${originalSize} → ${optimizedSize} (${reduction}% redução)`);
+            } catch (error) {
+                console.error('Error optimizing image, uploading original:', error);
+                // Fallback: usar arquivo original
+                const arrayBuffer = await fileToUpload.arrayBuffer();
+                finalBuffer = Buffer.from(arrayBuffer);
+                const fileExt = file.name.split('.').pop();
+                finalFilename = `${Math.random()}.${fileExt}`;
+                finalMimeType = fileToUpload.type;
+            }
+
+            const filePath = `${user?.id}/${finalFilename}`;
 
             const { error: uploadError, data } = await supabase.storage
                 .from('property-images')
-                .upload(filePath, fileToUpload);
+                .upload(filePath, finalBuffer, {
+                    contentType: finalMimeType,
+                    upsert: false
+                });
 
             if (uploadError) {
                 console.error('Error uploading image:', uploadError);
