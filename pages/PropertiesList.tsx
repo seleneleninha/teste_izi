@@ -287,7 +287,6 @@ export const PropertiesList: React.FC = () => {
                     latitude: p.latitude,
                     longitude: p.longitude,
                     user_id: p.user_id,
-                    status: p.status,
                     status: p.status
                 }));
 
@@ -377,7 +376,6 @@ export const PropertiesList: React.FC = () => {
                     latitude: p.latitude,
                     longitude: p.longitude,
                     user_id: p.user_id,
-                    status: p.status,
                     status: p.status
                 }));
                 setProperties(formattedProperties);
