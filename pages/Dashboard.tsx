@@ -337,7 +337,7 @@ export const Dashboard: React.FC = () => {
                                 </div>
                                 <div className="bg-white/50 dark:bg-black/20 rounded-3xl p-2 border border-slate-700/50 backdrop-blur-sm">
                                     <p className="text-base md:text-lg font-mono font-bold text-primary-700 text-primary-400 truncate select-all">
-                                        {window.location.origin}/#/corretor/{userSlug || 'configurar-slug'}
+                                        {window.location.origin}/{userSlug || 'configurar-slug'}
                                     </p>
                                 </div>
                             </div>
@@ -345,7 +345,7 @@ export const Dashboard: React.FC = () => {
                             <div className="flex items-center gap-3 z-10 w-full md:w-auto">
                                 <button
                                     onClick={() => {
-                                        const url = `${window.location.origin}/#/corretor/${userSlug || 'configurar-slug'}`;
+                                        const url = `${window.location.origin}/${userSlug || 'configurar-slug'}`;
                                         navigator.clipboard.writeText(url);
                                         addToast('Link colado na sua área de transferência! 📋', 'success');
                                     }}
@@ -356,7 +356,7 @@ export const Dashboard: React.FC = () => {
                                     <span>Copiar</span>
                                 </button>
                                 <button
-                                    onClick={() => window.open(`/#/corretor/${userSlug || 'configurar-slug'}`, '_blank')}
+                                    onClick={() => window.open(`/${userSlug || 'configurar-slug'}`, '_blank')}
                                     className="px-4 py-3 bg-slate-800 border-2 border-primary-100 border-slate-600 text-primary-600 text-slate-300 font-bold rounded-full hover:bg-primary-50 hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
                                     title="Visitar Página"
                                 >

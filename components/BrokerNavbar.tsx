@@ -69,7 +69,7 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
             <div className="container mx-auto px-4">
                 <div className="flex justify-between items-center">
                     {/* Brand / Name */}
-                    <Link to={`/corretor/${brokerSlug}`} className="text-2xl font-heading font-bold text-white flex items-center gap-3">
+                    <Link to={`/${brokerSlug}`} className="text-2xl font-heading font-bold text-white flex items-center gap-3">
                         {/* If they had a logo it would go here, else generic or avatar */}
                         {broker.avatar ? (
                             <img src={broker.avatar} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-emerald-500 object-cover" />
@@ -89,19 +89,19 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
                     {/* Desktop Menu */}
                     <div className="hidden md:flex items-center gap-8">
                         <Link
-                            to={`/corretor/${brokerSlug}`}
-                            className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-emerald-400 ${location.pathname === `/corretor/${brokerSlug}` ? 'text-emerald-400' : 'text-gray-300'}`}
+                            to={`/${brokerSlug}`}
+                            className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-emerald-400 ${location.pathname === `/${brokerSlug}` ? 'text-emerald-400' : 'text-gray-300'}`}
                         >
                             <Home size={18} /> Início
                         </Link>
                         <Link
-                            to={`/corretor/${brokerSlug}/buscar`}
+                            to={`/${brokerSlug}/buscar`}
                             className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-emerald-400 ${location.pathname.includes('/buscar') ? 'text-emerald-400' : 'text-gray-300'}`}
                         >
                             <Search size={18} /> Buscar Imóveis
                         </Link>
                         <Link
-                            to={`/corretor/${brokerSlug}/sobre`}
+                            to={`/${brokerSlug}/sobre`}
                             className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-emerald-400 ${location.pathname.includes('/sobre') ? 'text-emerald-400' : 'text-gray-300'}`}
                         >
                             <User size={18} /> Sobre
@@ -111,7 +111,7 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
                         {/* WhatsApp Button - Inline */}
                         <button
                             onClick={() => {
-                                if (broker) {
+                                if (broker && broker.whatsapp) {
                                     // Track click (general contact)
                                     trackWhatsAppClick(broker.id, 'general_navbar', 'contact');
 
@@ -121,6 +121,8 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
                                         message: message
                                     });
                                     window.open(whatsappUrl, '_blank');
+                                } else {
+                                    alert('WhatsApp não disponível para este corretor.');
                                 }
                             }}
                             className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-full transition-all text-white font-medium shadow-lg shadow-emerald-500/30 hover:scale-105"
@@ -169,31 +171,31 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
                     <div className="md:hidden fixed top-full w-auto right-0 bg-midnight-950/90 border-b border-midnight-700 z-40 shadow-lg rounded-bl-3xl">
                         <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
                             <Link
-                                to={`/corretor/${brokerSlug}`}
+                                to={`/${brokerSlug}`}
                                 className="flex items-center gap-3 text-gray-300 p-2 rounded-full hover:bg-white/5"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 <Home size={20} /> Início
                             </Link>
                             <Link
-                                to={`/corretor/${brokerSlug}/buscar`}
+                                to={`/${brokerSlug}/buscar`}
                                 className="flex items-center gap-3 text-gray-300 p-2 rounded-full hover:bg-white/5"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 <Search size={20} /> Buscar Imóveis
                             </Link>
                             <Link
-                                to={`/corretor/${brokerSlug}/sobre`}
+                                to={`/${brokerSlug}/sobre`}
                                 className="flex items-center gap-3 text-gray-300 p-2 rounded-full hover:bg-white/5"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 <User size={18} /> Sobre
                             </Link>
 
-                            {/* WhatsApp Button - Inline */}
+                            {/* WhatsApp Button - Mobile */}
                             <button
                                 onClick={() => {
-                                    if (broker) {
+                                    if (broker && broker.whatsapp) {
                                         // Track click (general contact)
                                         trackWhatsAppClick(broker.id, 'general_navbar_mobile', 'contact');
 
@@ -203,6 +205,8 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
                                             message: message
                                         });
                                         window.open(whatsappUrl, '_blank');
+                                    } else {
+                                        alert('WhatsApp não disponível para este corretor.');
                                     }
                                 }}
                                 className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-full transition-all text-white font-bold shadow-lg shadow-emerald-500/30 hover:scale-105"

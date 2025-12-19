@@ -4,16 +4,16 @@ import { supabase } from '../lib/supabaseClient';
 import { MapPin, Phone, Mail, Building2, Home, MessageCircle, CheckCircle2, Search, Heart, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign, Map as MapIcon, Building, MapPinHouse, MapPinned, Tractor, Trees, TreePalm, ArrowRight } from 'lucide-react';
 import { HorizontalScroll } from '../components/HorizontalScroll';
 import { PropertyCard } from '../components/PropertyCard';
+import { NoPropertiesFound } from '../components/NoPropertiesFound';
 import { useTheme } from '../components/ThemeContext';
 import { Footer } from '../components/Footer';
 import { BrokerFooter } from '../components/BrokerFooter';
 import { BrokerNavbar } from '../components/BrokerNavbar';
 import { getRandomBackground } from '../lib/backgrounds';
 import { SearchFilter } from '../components/SearchFilter';
-import { BrokerProfileSkeleton, PropertyCardSkeleton, CityCardSkeleton } from '../components/LoadingSkeleton';
 
 interface BrokerProfile {
-    id: string;
+    id: string;  // UUID do usuário (chave primária)
     nome: string;
     sobrenome: string;
     email: string;
@@ -68,7 +68,9 @@ interface Property {
 
 export const BrokerPage: React.FC = () => {
     const { slug: rawSlug } = useParams<{ slug: string }>();
-    const slug = rawSlug?.replace(/\/$/, '') || ''; // Sanitize trailing slash
+    // Remove trailing slash, /buscar, and any other path segments after the slug
+    const slug = rawSlug?.replace(/\/$/, '').split('/')[0] || '';
+    console.log('BrokerPage - Raw slug:', rawSlug, '- Sanitized slug:', slug);
     const navigate = useNavigate();
     const { theme } = useTheme();
     const [broker, setBroker] = useState<BrokerProfile | null>(null);
@@ -114,6 +116,12 @@ export const BrokerPage: React.FC = () => {
                 .eq('slug', slug)
                 .single();
 
+            // DEBUG: Ver exatamente o que vem do banco
+            console.log('BrokerPage - brokerData completo:', brokerData);
+            console.log('BrokerPage - brokerData.id:', brokerData?.id);
+            console.log('BrokerPage - brokerData.user_id:', brokerData?.user_id);
+            console.log('BrokerPage - Todas as chaves:', brokerData ? Object.keys(brokerData) : 'null');
+
             if (brokerError) throw brokerError;
             if (!brokerData) {
                 navigate('/');
@@ -139,7 +147,7 @@ export const BrokerPage: React.FC = () => {
                     .eq('status', 'ativo')
                     .order('created_at', { ascending: false }),
 
-                // 3. Fetch Partnerships
+                // 3. Fetch Partnerships (only 'aceita' status)
                 supabase
                     .from('parcerias')
                     .select(`
@@ -151,6 +159,8 @@ export const BrokerPage: React.FC = () => {
                       )
                     `)
                     .eq('user_id', brokerData.id)
+                    .eq('status', 'aceita') // Só parcerias aceitas
+                    .eq('anuncios.status', 'ativo') // Só imóveis ativos
             ]);
 
             if (ownPropsError) throw ownPropsError;
@@ -239,24 +249,7 @@ export const BrokerPage: React.FC = () => {
     };
 
     if (loading) {
-        return (
-            <div className="bg-midnight-950 text-white font-sans min-h-screen">
-                <BrokerNavbar brokerSlug={slug} />
-                <div className="container mx-auto px-4 py-12">
-                    <BrokerProfileSkeleton />
-
-                    {/* Property skeletons */}
-                    <div className="mt-12">
-                        <div className="h-8 bg-gray-800 rounded w-64 mb-6" />
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {[1, 2, 3, 4].map((i) => (
-                                <PropertyCardSkeleton key={i} />
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+        return null; // Render nothing during loading for cleaner experience
     }
 
     if (!broker) return null;
@@ -264,6 +257,12 @@ export const BrokerPage: React.FC = () => {
     // Split properties: Own properties in "Destaque", Partnered properties in "Outras Opções"
     const ownProperties = allProperties.filter(p => !p.aceita_parceria);
     const partneredProperties = allProperties.filter(p => p.aceita_parceria);
+
+    // DEBUG: Verificar parcerias
+    console.log('BrokerPage - Total properties:', allProperties.length);
+    console.log('BrokerPage - Own properties:', ownProperties.length);
+    console.log('BrokerPage - Partnered properties:', partneredProperties.length);
+    console.log('BrokerPage - Partnered props detail:', partneredProperties);
 
     return (
         <div className="bg-midnight-950 text-white font-sans min-h-screen transition-colors duration-200">
@@ -335,9 +334,9 @@ export const BrokerPage: React.FC = () => {
                                     key={idx}
                                     onClick={() => {
                                         if (category.type === 'temporada') {
-                                            navigate(`/corretor/${slug}/buscar?operacao=temporada`);
+                                            navigate(`/${slug}/buscar?operacao=temporada`);
                                         } else {
-                                            navigate(`/corretor/${slug}/buscar?tipo=${category.type}`);
+                                            navigate(`/${slug}/buscar?tipo=${category.type}`);
                                         }
                                     }}
                                     className="group relative h-40 rounded-3xl bg-midnight-900/40 backdrop-blur-sm border border-white/5 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer flex flex-col items-center justify-center gap-3 hover:-translate-y-2 overflow-hidden"
@@ -389,7 +388,7 @@ export const BrokerPage: React.FC = () => {
                     {/* Map View */}
                     {showMap && PropertyMap && (
                         <div className="mb-12 h-[500px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-20">
-                            <PropertyMap properties={ownProperties} />
+                            <PropertyMap properties={allProperties} />
                         </div>
                     )}
 
@@ -399,7 +398,17 @@ export const BrokerPage: React.FC = () => {
                                 <PropertyCard property={property} brokerSlug={slug} />
                             </div>
                         ))}
-                        {ownProperties.length === 0 && <p className="text-gray-500 italic">Nenhum imóvel próprio cadastrado.</p>}
+                        {ownProperties.length === 0 && broker && (
+                            <>
+                                {console.log('BrokerPage - broker.id:', broker.id)}
+                                <NoPropertiesFound
+                                    message="Você ainda não cadastrou imóveis próprios"
+                                    subtitle="Que tal começar adicionando seu primeiro imóvel? Ou então, explore oportunidades de parceria com outros corretores."
+                                    onShowMore={() => window.location.href = `/${broker.slug}`}
+                                    brokerId={broker.id}
+                                />
+                            </>
+                        )}
                     </HorizontalScroll>
                 </div>
             </section>
@@ -441,7 +450,7 @@ export const BrokerPage: React.FC = () => {
                                     <div
                                         className="relative h-[400px] rounded-3xl overflow-hidden cursor-pointer group hover:-translate-y-2 transition-transform duration-500 isolate"
                                         style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
-                                        onClick={() => navigate(`/corretor/${slug}/buscar?q=${encodeURIComponent(city)}`)}
+                                        onClick={() => navigate(`/${slug}/buscar?q=${encodeURIComponent(city)}`)}
                                     >
                                         <div
                                             className={`absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110`}
@@ -494,7 +503,7 @@ export const BrokerPage: React.FC = () => {
                             {topNeighborhoods.map((bairro, idx) => (
                                 <button
                                     key={idx}
-                                    onClick={() => navigate(`/corretor/${slug}/buscar?q=${encodeURIComponent(bairro)}`)}
+                                    onClick={() => navigate(`/${slug}/buscar?q=${encodeURIComponent(bairro)}`)}
                                     className="group relative px-6 py-3 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-emerald-500/50 hover:text-white hover:scale-105 transition-all duration-300 font-medium"
                                 >
                                     {bairro}

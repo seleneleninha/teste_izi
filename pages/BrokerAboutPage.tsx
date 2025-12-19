@@ -211,6 +211,7 @@ export const BrokerAboutPage: React.FC = () => {
                     phone: broker.whatsapp,
                     creci: `${broker.creci}/${broker.uf_creci}`,
                     slug: broker.slug,
+                    logo: broker.watermark_dark || broker.marca_dagua,
                     endereço: broker.logradouro,
                     numero: broker.numero,
                     bairro: broker.bairro,

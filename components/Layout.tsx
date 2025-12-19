@@ -189,9 +189,36 @@ export const PublicLayout: React.FC = () => {
     const [brokerLogo, setBrokerLogo] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Check if we're on a broker page
-    const isBrokerPage = location.pathname.startsWith('/corretor/');
-    const brokerSlug = isBrokerPage ? location.pathname.split('/corretor/')[1] : null;
+    // Check if we're on a broker page (new clean URLs)
+    // Broker pages: /:slug, /:slug/buscar, /:slug/sobre, /:slug/imovel/:propertySlug
+    // Not broker pages: /, /search, /buscar, /imovel/:slug, /partner, /login, /admin/*, etc.
+
+    // Extract first path segment
+    const pathSegments = location.pathname.split('/').filter(Boolean);
+    const firstSegment = pathSegments[0] || '';
+
+    // List of reserved routes that are NOT broker pages
+    const fixedRoutes = ['search', 'buscar', 'partner', 'sell', 'login', 'terms', 'privacy', 'about', 'favoritos', 'contact', 'agent', 'v'];
+    const isFixedRoute = fixedRoutes.includes(firstSegment);
+
+    const isAdminRoute = location.pathname.startsWith('/admin');
+    const isPropertyRoute = location.pathname.startsWith('/imovel/');
+
+    // If it's not a fixed route, admin route, or property route, it's a broker page
+    const isBrokerPage = !isFixedRoute && !isAdminRoute && !isPropertyRoute && location.pathname !== '/';
+
+
+    // Extract broker slug from path (first segment after /)
+    const brokerSlug = isBrokerPage && pathSegments[0] ? pathSegments[0] : null;
+
+    // DEBUG: Log broker page detection
+    console.log('PublicLayout DEBUG:');
+    console.log('  pathname:', location.pathname);
+    console.log('  isFixedRoute:', isFixedRoute);
+    console.log('  isAdminRoute:', isAdminRoute);
+    console.log('  isPropertyRoute:', isPropertyRoute);
+    console.log('  isBrokerPage:', isBrokerPage);
+    console.log('  brokerSlug:', brokerSlug);
 
     useEffect(() => {
         const fetchBrokerLogo = async () => {
@@ -238,7 +265,7 @@ export const PublicLayout: React.FC = () => {
                 <nav className="border-b border-slate-800 px-6 py-4 flex justify-between items-center fixed top-0 w-full bg-midnight-950/90 backdrop-blur-md z-50 transition-all duration-300">
                     {/* Logo - Conditional: Broker or Platform */}
                     {isBrokerPage && brokerLogo ? (
-                        <div className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.location.href = `#/corretor/${brokerSlug}`}>
+                        <div className="cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.location.href = `/${brokerSlug}`}>
                             <img src={brokerLogo} alt="Corretor" className="h-10 w-auto" />
                         </div>
                     ) : (
@@ -256,22 +283,22 @@ export const PublicLayout: React.FC = () => {
                     <div className="hidden md:flex items-center space-x-8 font-medium">
                         {isBrokerPage ? (
                             <>
-                                <a href={`#/corretor/${brokerSlug}`} className="hover:text-primary-500">Início</a>
-                                <a href={`#/search?broker=${brokerSlug}`} className="hover:text-primary-500">Buscar Imóveis</a>
+                                <a href={`/${brokerSlug}`} className="hover:text-primary-500">Início</a>
+                                <a href={`/search?broker=${brokerSlug}`} className="hover:text-primary-500">Buscar Imóveis</a>
                             </>
                         ) : (
                             <>
-                                <a href="#/" className="hover:text-primary-500">Início</a>
-                                <a href="#/search" className="hover:text-primary-500">Buscar Imóveis</a>
-                                <a href="#/partner" className="hover:text-primary-500">Anunciar</a>
-                                <a href="#/about" className="hover:text-primary-500">Sobre</a>
+                                <a href="/" className="hover:text-primary-500">Início</a>
+                                <a href="/search" className="hover:text-primary-500">Buscar Imóveis</a>
+                                <a href="/partner" className="hover:text-primary-500">Anunciar</a>
+                                <a href="/about" className="hover:text-primary-500">Sobre</a>
                             </>
                         )}
                     </div>
 
                     {/* Right Side Actions */}
                     <div className="flex items-center space-x-4">
-                        <a href="#/login" className="hidden md:block px-4 py-2 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors font-medium">
+                        <a href="/login" className="hidden md:block px-4 py-2 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors font-medium">
                             ENTRAR/CADASTRAR
                         </a>
 
@@ -300,18 +327,18 @@ export const PublicLayout: React.FC = () => {
                     <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
                         {isBrokerPage ? (
                             <>
-                                <a href={`#/corretor/${brokerSlug}`} className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Início</a>
-                                <a href={`#/search?broker=${brokerSlug}`} className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Buscar Imóveis</a>
+                                <a href={`/${brokerSlug}`} className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Início</a>
+                                <a href={`/search?broker=${brokerSlug}`} className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Buscar Imóveis</a>
                             </>
                         ) : (
                             <>
-                                <a href="#/" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Início</a>
-                                <a href="#/search" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Buscar Imóveis</a>
-                                <a href="#/partner" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Anunciar</a>
-                                <a href="#/about" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Sobre</a>
+                                <a href="/" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Início</a>
+                                <a href="/search" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Buscar Imóveis</a>
+                                <a href="/partner" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Anunciar</a>
+                                <a href="/about" className="hover:text-primary-500 py-2" onClick={() => setMobileMenuOpen(false)}>Sobre</a>
                             </>
                         )}
-                        <a href="#/login" className="px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors font-bold text-center">
+                        <a href="/login" className="px-4 py-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors font-bold text-center">
                             ENTRAR/CADASTRAR
                         </a>
                     </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
 import { PropertyCard } from '../components/PropertyCard';
-import { Heart, Search, X, Loader2 } from 'lucide-react';
+import { Heart, Search, X, Loader2, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/ToastContext';
 
@@ -94,6 +94,23 @@ export const Favorites: React.FC = () => {
                 </h2>
                 <p className="text-slate-400 mt-1">Imóveis que você salvou para ver depois.</p>
             </div>
+
+            {/* Comparison Feature Info */}
+            {favorites.length > 0 && (
+                <div className="mb-6 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/30 rounded-2xl p-4">
+                    <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                            <Check className="text-emerald-400" size={20} strokeWidth={3} />
+                        </div>
+                        <div>
+                            <h3 className="text-white font-bold text-lg mb-1">💡 Você pode comparar imóveis!</h3>
+                            <p className="text-slate-300 text-sm">
+                                Clique nos checkboxes <span className="inline-flex items-center px-2 py-0.5 bg-black/40 rounded-full text-xs font-bold mx-1">Comparar</span> no canto superior direito dos cards para selecionar até 4 imóveis e comparar lado a lado.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {favorites.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 bg-slate-800 rounded-3xl border border-slate-700">

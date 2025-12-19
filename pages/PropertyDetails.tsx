@@ -4,6 +4,7 @@ import { ArrowLeft, Bed, Bath, Car, MapPin, Home, Share2, Heart, Phone, Mail, Ca
 import { generateWhatsAppLink, formatPropertyMessage, trackWhatsAppClick } from '../lib/whatsAppHelper';
 import { HorizontalScroll } from '../components/HorizontalScroll';
 import { ScheduleVisitModal } from '../components/ScheduleVisitModal';
+import { LoginPromptModal } from '../components/LoginPromptModal';
 import { PropertyCard } from '../components/PropertyCard';
 import { SearchFilter } from '../components/SearchFilter';
 import { supabase } from '../lib/supabaseClient';
@@ -51,8 +52,20 @@ const DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 export const PropertyDetails: React.FC = () => {
-    const { id, slug, brokerSlug } = useParams();
-    const routeParams = useParams(); // Keep full object for compatibility if needed
+    // Get all possible params from routes:
+    // Route 1: /imovel/:slug -> { slug: propertySlug }
+    // Route 2: /:slug/imovel/:propertySlug -> { slug: brokerSlug, propertySlug: propertySlug }
+    const params = useParams<{ id?: string; slug?: string; propertySlug?: string; brokerSlug?: string }>();
+
+    // Determine correct values based on which route we're on
+    const propertySlugValue = params.propertySlug || params.slug; // If propertySlug exists, use it; otherwise use slug (Route 1)
+    const brokerSlugValue = params.propertySlug ? params.slug : undefined; // If propertySlug exists, then slug is actually brokerSlug
+    const propertyIdValue = params.id;
+
+    console.log('PropertyDetails - params:', params);
+    console.log('PropertyDetails - propertySlug:', propertySlugValue);
+    console.log('PropertyDetails - brokerSlug:', brokerSlugValue);
+
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
@@ -73,6 +86,7 @@ export const PropertyDetails: React.FC = () => {
         setPage([page + newDirection, newDirection]);
     };
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
     const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
     const [isFavorite, setIsFavorite] = useState(false);
     const [neighborhoodInfo, setNeighborhoodInfo] = useState<{
@@ -85,7 +99,7 @@ export const PropertyDetails: React.FC = () => {
     const [partnershipBroker, setPartnershipBroker] = useState<any>(null);
     const [relatedProperties, setRelatedProperties] = useState<any[]>([]);
 
-    const propertyId = id;
+    const propertyId = propertyIdValue;
 
     // Extrair código ou ID do slug
     // Formatos esperados:
@@ -95,19 +109,19 @@ export const PropertyDetails: React.FC = () => {
     let slugCode: string | null = null;
     let slugId: string | null = null;
 
-    if (slug) {
+    if (propertySlugValue) {
         // Tenta encontrar padrão "cod" seguido de números no final da string
-        const codMatch = slug.match(/-cod(\d+)$/);
+        const codMatch = propertySlugValue.match(/-cod(\d+)$/);
         if (codMatch) {
             slugCode = codMatch[1];
-        } else if (slug.includes('-id-')) {
-            slugId = slug.split('-id-').pop() || null;
-        } else if (slug.includes('-cod-')) {
+        } else if (propertySlugValue.includes('-id-')) {
+            slugId = propertySlugValue.split('-id-').pop() || null;
+        } else if (propertySlugValue.includes('-cod-')) {
             // Fallback para formato antigo ...-cod-1234
-            slugCode = slug.split('-cod-').pop() || null;
+            slugCode = propertySlugValue.split('-cod-').pop() || null;
         } else {
             // Fallback: assume que o slug é o próprio ID (para rotas /properties/:id migradas para :slug)
-            slugId = slug;
+            slugId = propertySlugValue;
         }
     }
 
@@ -215,9 +229,8 @@ export const PropertyDetails: React.FC = () => {
                     const agentData = data.perfis as any;
 
                     // Verificar se o imóvel é uma parceria
-                    // Usar query param 'broker' ou route param 'brokerSlug' para determinar o contexto do corretor
-                    const useParamsBrokerSlug = (routeParams as any).brokerSlug; // Cast to access custom param
-                    const brokerSlugParam = searchParams.get('broker') || useParamsBrokerSlug;
+                    // Usar brokerSlugValue (do path) ou query param 'broker'
+                    const brokerSlugParam = searchParams.get('broker') || brokerSlugValue;
                     let finalAgentData = agentData;
 
                     if (brokerSlugParam) {
@@ -418,9 +431,8 @@ export const PropertyDetails: React.FC = () => {
 
     const toggleFavorite = async () => {
         if (!user) {
-            // Redirect to login with return url only if NOT logged in
-            const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-            navigate(`/login?returnUrl=${returnUrl}&type=client`);
+            // Show login prompt modal instead of immediate redirect
+            setShowLoginModal(true);
             return;
         }
 
@@ -514,7 +526,7 @@ export const PropertyDetails: React.FC = () => {
                                         }
                                     }
                                 }}
-                                className="p-2 rounded-full bg-slate-800 border border-slate-700 text-gray-600 hover:text-primary-500 transition-colors"
+                                className="p-2 rounded-full bg-slate-800 border border-slate-100 text-slate-100 hover:text-primary-500 transition-colors"
                                 title="Copiar Link"
                             >
                                 <Share2 size={20} />
@@ -523,7 +535,7 @@ export const PropertyDetails: React.FC = () => {
                                 onClick={toggleFavorite}
                                 className={`p-2 rounded-full border transition-colors ${isFavorite
                                     ? 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100'
-                                    : 'bg-slate-800 border-slate-700 text-gray-600 hover:text-red-500'
+                                    : 'bg-slate-800 border-slate-100 text-slate-100 hover:text-red-500'
                                     }`}
                                 title={isFavorite ? "Remover dos Favoritos" : "Salvar Favorito"}
                             >
@@ -963,7 +975,7 @@ export const PropertyDetails: React.FC = () => {
                                             className="text-lg font-bold text-white cursor-pointer hover:text-primary-500 transition-colors"
                                             onClick={() => {
                                                 if (property.agent.slug) {
-                                                    navigate(`/corretor/${property.agent.slug}`);
+                                                    navigate(`/${property.agent.slug}`);
                                                 }
                                             }}
                                         >
@@ -981,7 +993,7 @@ export const PropertyDetails: React.FC = () => {
                                     <button
                                         onClick={() => {
                                             if (property.agent.slug) {
-                                                navigate(`/corretor/${property.agent.slug}`);
+                                                navigate(`/${property.agent.slug}`);
                                             } else {
                                                 // Fallback if no slug
                                                 alert('Página do corretor indisponível');
@@ -1060,6 +1072,12 @@ export const PropertyDetails: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Login Prompt Modal */}
+            <LoginPromptModal
+                isOpen={showLoginModal}
+                onClose={() => setShowLoginModal(false)}
+            />
         </div >
     );
 };

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { MapPin, ChevronLeft, ChevronRight, Home, Bed, Bath, Car, Maximize, Edit2, Trash2, Check, X, Eye, Image as ImageIcon, TrendingUp, Key, Pause, AlertTriangle } from 'lucide-react';
+import { MapPin, ChevronLeft, ChevronRight, Home, Bed, Bath, Car, Maximize, Edit2, Trash2, Check, X, Eye, Image as ImageIcon, TrendingUp, Key, Pause, AlertTriangle, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
 import { formatCurrency, formatArea, generatePropertySlug } from '../lib/formatters';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { supabase } from '../lib/supabaseClient';
+import { useToast } from './ToastContext';
 
 interface PropertyCardProps {
     property: {
@@ -68,8 +70,10 @@ const swipePower = (offset: number, velocity: number) => {
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, showStatus = false, compact = false, onClick, brokerSlug, isDashboard = false, isSelected = false, onSelect }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { addToast } = useToast();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [[page, direction], setPage] = useState([0, 0]);
+    const [isFavorite, setIsFavorite] = useState(false);
 
     const photosArray = Array.isArray(property.fotos)
         ? property.fotos
@@ -106,6 +110,64 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
+    // Check if property is in favorites
+    React.useEffect(() => {
+        const checkFavorite = async () => {
+            if (!user || !property.id) return;
+
+            try {
+                const { data } = await supabase
+                    .from('favoritos')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('anuncio_id', property.id)
+                    .single();
+
+                if (data) setIsFavorite(true);
+            } catch (error) {
+                // Ignore error if not found
+            }
+        };
+        checkFavorite();
+    }, [user, property.id]);
+
+    const toggleFavorite = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        if (!user) {
+            addToast('Faça login para favoritar imóveis', 'info');
+            const slug = generatePropertySlug(property);
+            const returnUrl = encodeURIComponent(`/imovel/${slug}`);
+            navigate(`/login?returnUrl=${returnUrl}&type=client`);
+            return;
+        }
+
+        try {
+            if (isFavorite) {
+                // Remove from favorites
+                await supabase
+                    .from('favoritos')
+                    .delete()
+                    .eq('user_id', user.id)
+                    .eq('anuncio_id', property.id);
+
+                setIsFavorite(false);
+                addToast('Removido dos favoritos', 'success');
+            } else {
+                // Add to favorites
+                await supabase
+                    .from('favoritos')
+                    .insert([{ user_id: user.id, anuncio_id: property.id }]);
+
+                setIsFavorite(true);
+                addToast('Adicionado aos favoritos', 'success');
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+            addToast('Erro ao atualizar favoritos', 'error');
+        }
+    };
+
     const handleCardClick = () => {
         if (isDragging) return;
 
@@ -116,9 +178,9 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
             if (isDashboard) {
                 navigate(`/properties/${slug}`);
             } else if (brokerSlug) {
-                navigate(`/corretor/${brokerSlug}/${slug}`);
+                navigate(`/${brokerSlug}/imovel/${slug}`);
             } else {
-                navigate(`/${slug}`);
+                navigate(`/imovel/${slug}`);
             }
         }
     };
@@ -188,7 +250,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                             }}
                         />
                         {/* Gradient Overlay for Text Readability */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 via-20% to-transparent opacity-90 group-hover:opacity-95 transition-opacity pointer-events-none z-10" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/95 via-20% to-transparent opacity-100 group-hover:opacity-95 transition-opacity pointer-events-none z-10" />
                     </AnimatePresence>
                 ) : (
                     <div className="w-full h-full flex items-center justify-center bg-midnight-900 text-gray-600">
@@ -236,22 +298,43 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                 )}
             </div>
 
-            {/* Selection Checkbox */}
+
+            {/* Selection Checkbox - Enhanced for Comparison */}
             {onSelect && (
                 <div
-                    className="absolute top-4 right-4 z-20 cursor-pointer"
+                    className="absolute top-4 right-4 z-20 cursor-pointer flex flex-col items-center gap-1"
                     onClick={(e) => {
                         e.stopPropagation();
                         onSelect(e);
                     }}
                 >
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected
-                        ? 'bg-emerald-500 border-emerald-500 shadow-glow'
-                        : 'bg-black/40 border-white/60 hover:bg-white hover:border-white'
+                    <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${isSelected
+                        ? 'bg-emerald-500 border-emerald-500 shadow-glow shadow-emerald-500/50'
+                        : 'bg-black/60 border-white/80 hover:bg-emerald-500/20 hover:border-emerald-400'
                         }`}>
-                        {isSelected && <Check size={14} className="text-white" strokeWidth={3} />}
+                        {isSelected && <Check size={20} className="text-white" strokeWidth={3} />}
                     </div>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full backdrop-blur-sm transition-colors ${isSelected
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-black/60 text-white'
+                        }`}>
+                        Comparar
+                    </span>
                 </div>
+            )}
+
+            {/* Favorite Button - Only show if not in selection mode */}
+            {!onSelect && (
+                <button
+                    onClick={toggleFavorite}
+                    className={`absolute top-4 right-4 z-20 p-2 rounded-full border-2 transition-all ${isFavorite
+                        ? 'bg-red-50 border-red-200 text-red-500'
+                        : 'bg-black/60 border-white/80 hover:bg-red-500/20 hover:border-red-400 text-white'
+                        }`}
+                    title={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                >
+                    <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
+                </button>
             )}
 
             {/* Navigation Arrows (Desktop - Hover Only) */}
@@ -292,7 +375,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
 
             {/* Dots Indicator */}
             {hasImages && photosArray.length > 1 && (
-                <div className="absolute bottom-60 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 transition-opacity duration-500 pointer-events-none">
+                <div className="absolute bottom-52 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 transition-opacity duration-500 pointer-events-none">
                     {photosArray.slice(0, 5).map((_, idx) => (
                         <div
                             key={idx}
@@ -326,6 +409,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                         {(property.banheiros || 0) > 0 && (
                             <span className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full backdrop-blur-sm">
                                 <Bath size={14} /> {property.banheiros}
+                            </span>
+                        )}
+                        {(property.vagas || 0) > 0 && (
+                            <span className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full backdrop-blur-sm">
+                                <Car size={14} /> {property.vagas}
                             </span>
                         )}
                         {(property.area_priv || 0) > 0 && (
@@ -390,8 +478,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                             )}
                         </div>
                         {!actions && (
-                            <button className="self-end bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-full shadow-lg shadow-emerald-500/30 transition-all hover:scale-105 active:scale-95 group-hover:bg-emerald-400">
-                                <Eye size={22} />
+                            <button className="self-end bg-emerald-500 hover:bg-emerald-600 text-white p-2 rounded-full shadow-lg shadow-emerald-500/30 transition-all hover:scale-110 active:scale-100 group-hover:bg-emerald-400">
+                                <Eye size={20} />
                             </button>
                         )}
                         {actions && (

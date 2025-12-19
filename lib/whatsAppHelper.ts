@@ -202,6 +202,12 @@ export async function sendMultipleProperties(
  * Formata número de telefone para formato internacional
  */
 function formatPhoneNumber(phone: string): string {
+    // Validate input
+    if (!phone || typeof phone !== 'string') {
+        console.error('formatPhoneNumber: Invalid phone number:', phone);
+        return '';
+    }
+
     // Remove todos os não-dígitos
     let cleaned = phone.replace(/\D/g, '');
 
@@ -262,9 +268,13 @@ export async function testWhatsAppConnection(): Promise<boolean> {
 /**
  * Gera link do WhatsApp (para PropertyDetails e outros)
  */
-export function generateWhatsAppLink(phone: string, message?: string): string {
-    const cleanPhone = formatPhoneNumber(phone);
-    const encodedMessage = message ? encodeURIComponent(message) : '';
+export function generateWhatsAppLink(params: { phone: string; message?: string }): string {
+    if (!params.phone) {
+        console.error('generateWhatsAppLink: phone is required');
+        return '';
+    }
+    const cleanPhone = formatPhoneNumber(params.phone);
+    const encodedMessage = params.message ? encodeURIComponent(params.message) : '';
     return `https://wa.me/${cleanPhone}${encodedMessage ? `?text=${encodedMessage}` : ''}`;
 }
 

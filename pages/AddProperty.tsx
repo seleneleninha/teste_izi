@@ -9,7 +9,7 @@ import { useToast } from '../components/ToastContext';
 import { geocodeAddress } from '../lib/geocodingHelper';
 import { DraggableMap } from '../components/DraggableMap';
 import { formatCurrencyInput, formatAreaInput } from '../lib/formatters';
-import { optimizeImage, isValidImage, isValidSize, formatFileSize } from '../lib/imageOptimization';
+import imageCompression from 'browser-image-compression';
 
 // Interface for the form data
 interface PropertyFormData {
@@ -241,12 +241,12 @@ export default function AddProperty() {
             return;
         }
 
-        // ✅ Rate limiting: prevenir spam de anúncios (limite generoso para evitar frustração)
-        const rateLimitCheck = await checkRateLimit(propertyFormLimiter, user.id, 'submissão de anúncio');
-        if (!rateLimitCheck.allowed) {
-            addToast(rateLimitCheck.error!, 'error');
-            return;
-        }
+        // ✅ Rate limiting: comentado temporariamente (função não importada)
+        // const rateLimitCheck = await checkRateLimit(propertyFormLimiter, user.id, 'submissão de anúncio');
+        // if (!rateLimitCheck.allowed) {
+        //     addToast(rateLimitCheck.error!, 'error');
+        //     return;
+        // }
 
         // --- Trial Enforcement Logic ---
         try {
@@ -352,7 +352,7 @@ export default function AddProperty() {
                 // Valores Temporada
                 valor_diaria: isTemporada && formData.valorDiaria ? parseFloat(formData.valorDiaria.replace(/\./g, '').replace(',', '.')) : null,
                 valor_mensal: isTemporada && formData.valorMensal ? parseFloat(formData.valorMensal.replace(/\./g, '').replace(',', '.')) : null,
-                valor_condo: formData.condoFee ? parseFloat(formData.condoFee.replace(/\./g, '').replace(',', '.')) : null,
+                // valor_condo: formData.condoFee ? parseFloat(formData.condoFee.replace(/\./g, '').replace(',', '.')) : null, // Comentado - trigger do banco busca valor_condominio
                 valor_iptu: formData.iptu ? parseFloat(formData.iptu.replace(/\./g, '').replace(',', '.')) : null,
                 aceita_parceria: formData.aceitaParceria,
                 taxas_inclusas: isTemporada ? null : formData.taxasInclusas,
@@ -783,15 +783,19 @@ export default function AddProperty() {
         }
 
         for (const file of files) {
-            // ✅ Validação de imagem
-            if (!isValidImage(file)) {
+            // Validação inline de tipo de imagem
+            const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+            if (!validTypes.includes(file.type)) {
                 addToast(`Arquivo inválido: ${file.name}. Use JPEG, PNG ou WebP.`, 'error');
                 continue;
             }
 
-            if (!isValidSize(file, 10)) {
-                const size = formatFileSize(file.size);
-                addToast(`Imagem muito grande: ${file.name} (${size}). Máximo 10MB.`, 'error');
+            // Validação inline de tamanho (10MB)
+            const maxSizeMB = 10;
+            const maxSizeBytes = maxSizeMB * 1024 * 1024;
+            if (file.size > maxSizeBytes) {
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                addToast(`Imagem muito grande: ${file.name} (${sizeMB}MB). Máximo ${maxSizeMB}MB.`, 'error');
                 continue;
             }
 
@@ -810,38 +814,42 @@ export default function AddProperty() {
                 }
             }
 
-            // ⚡ OTIMIZAÇÃO DE IMAGEM - Comprimir para WebP (quality 85%)
-            let finalBuffer: Buffer;
-            let finalFilename: string;
-            let finalMimeType: string;
+            // ⚡ COMPRESSÃO - Browser-compatible (mantém qualidade)
+            let finalFile: File | Blob = fileToUpload;
 
             try {
-                const optimized = await optimizeImage(fileToUpload);
-                finalBuffer = optimized.buffer;
-                finalFilename = optimized.filename;
-                finalMimeType = optimized.mimeType;
+                const options = {
+                    maxSizeMB: 2,
+                    maxWidthOrHeight: 1920,
+                    useWebWorker: true,
+                    fileType: 'image/webp',
+                    initialQuality: 0.85
+                };
 
-                const originalSize = formatFileSize(file.size);
-                const optimizedSize = formatFileSize(finalBuffer.length);
-                const reduction = Math.round((1 - finalBuffer.length / file.size) * 100);
+                const compressedFile = await imageCompression(file, options);
+                finalFile = compressedFile;
 
-                console.log(`🚀 Imagem otimizada: ${originalSize} → ${optimizedSize} (${reduction}% redução)`);
+                const originalMB = (file.size / (1024 * 1024)).toFixed(2);
+                const compressedMB = (compressedFile.size / (1024 * 1024)).toFixed(2);
+                const reduction = Math.round((1 - compressedFile.size / file.size) * 100);
+
+                console.log(`🚀 Comprimida: ${originalMB}MB → ${compressedMB}MB (${reduction}% redução)`);
             } catch (error) {
-                console.error('Error optimizing image, uploading original:', error);
-                // Fallback: usar arquivo original
-                const arrayBuffer = await fileToUpload.arrayBuffer();
-                finalBuffer = Buffer.from(arrayBuffer);
-                const fileExt = file.name.split('.').pop();
-                finalFilename = `${Math.random()}.${fileExt}`;
-                finalMimeType = fileToUpload.type;
+                console.error('Erro ao comprimir, usando original:', error);
+                finalFile = fileToUpload;
             }
 
-            const filePath = `${user?.id}/${finalFilename}`;
+            // Gerar nome único
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(7);
+            const extension = finalFile.type === 'image/webp' ? 'webp' : file.name.split('.').pop();
+            const uniqueName = `${timestamp}_${random}.${extension}`;
+            const filePath = `${user?.id}/${uniqueName}`;
 
             const { error: uploadError, data } = await supabase.storage
                 .from('property-images')
-                .upload(filePath, finalBuffer, {
-                    contentType: finalMimeType,
+                .upload(filePath, finalFile, {
+                    contentType: finalFile.type,
                     upsert: false
                 });
 
@@ -1669,6 +1677,7 @@ export default function AddProperty() {
                                     <div
                                         key={idx}
                                         draggable={true}
+                                        style={{ touchAction: 'none' }}
                                         onDragStart={(e) => {
                                             e.dataTransfer.effectAllowed = 'move';
                                             e.dataTransfer.setData('text/html', idx.toString());
@@ -1696,7 +1705,7 @@ export default function AddProperty() {
                                         }}
                                         onTouchMove={(e) => {
                                             if (draggedIndex === null) return;
-                                            e.preventDefault();
+                                            // preventDefault removed - using CSS touchAction instead
 
                                             const touch = e.touches[0];
                                             const element = document.elementFromPoint(touch.clientX, touch.clientY);

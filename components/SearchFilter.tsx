@@ -72,7 +72,7 @@ export const SearchFilter = ({ brokerSlug }: { brokerSlug?: string }) => {
 
         // Navigation Logic
         if (brokerSlug) {
-            navigate(`/corretor/${brokerSlug}/buscar?${params.toString()}`);
+            navigate(`/${brokerSlug}/buscar?${params.toString()}`);
         } else {
             navigate(`/search?${params.toString()}`);
         }

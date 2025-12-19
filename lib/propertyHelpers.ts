@@ -156,7 +156,7 @@ export function generatePropertySlug(property: {
  * @param navigate - Função de navegação do react-router
  * @param property - Dados da propriedade
  * @param isDashboard - Se true, usa rota protegida do dashboard (/properties/:id)
- *                      Se false, usa rota pública com slug (/corretor/:brokerSlug/imovel/:propertySlug)
+ *                      Se false, usa rota pública com slug (/:brokerSlug/imovel/:propertySlug)
  * @param brokerSlug - Slug do corretor (obrigatório se isDashboard = false)
  */
 export function navigateToProperty(
@@ -173,7 +173,7 @@ export function navigateToProperty(
         // Rota pública com slug
         const propertySlug = generatePropertySlug(property);
         if (brokerSlug) {
-            navigate(`/corretor/${brokerSlug}/imovel/${propertySlug}`);
+            navigate(`/${brokerSlug}/imovel/${propertySlug}`);
         } else {
             // Fallback: rota pública sem contexto de corretor
             navigate(`/imovel/${propertySlug}`);

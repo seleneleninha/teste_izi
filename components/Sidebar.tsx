@@ -74,13 +74,14 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
 
   const navItems = isAdmin ? [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: Globe, label: 'Mercado', path: '/properties?mode=market' }, // New Link
     { icon: CheckCircle, label: 'Aprovar Anúncios', path: '/admin/approvals' },
     { icon: CreditCard, label: 'Planos', path: '/admin/plans' },
     { icon: Settings, label: 'Config Trial', path: '/admin/trial-settings' },
     { icon: Ticket, label: 'Cupons', path: '/admin/coupons' },
     { icon: DollarSign, label: 'Financeiro', path: '/admin/financial' },
     { icon: Settings, label: 'Configurações', path: '/settings' },
+    { icon: Globe, label: 'Anúncios iziBrokerz', path: '/properties?mode=market' }, // New Link
+
   ] : isClient ? [
     { icon: Home, label: 'Início', path: '/dashboard' },
     { icon: Search, label: 'Buscar Imóveis', path: '/properties' },
@@ -88,11 +89,12 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
     { icon: UserIcon, label: 'Meu Perfil', path: '/settings' },
   ] : [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: Globe, label: 'Mercado', path: '/properties?mode=market' }, // New Link
     { icon: Building2, label: 'Meus Imóveis', path: '/properties' },
     { icon: Handshake, label: 'Imóveis Parceiros', path: '/partner-properties' },
     { icon: Users, label: 'Leads (CRM)', path: '/leads' },
     { icon: Settings, label: 'Configurações', path: '/settings' },
+    { icon: Globe, label: 'Anúncios iziBrokerz', path: '/properties?mode=market' }, // New Link
+
   ];
 
   return (
@@ -134,7 +136,7 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
                 : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                 }`}
             >
-              <IconWrapper Icon={item.icon} size={20} />
+              <item.icon size={20} />
               <span className="font-medium">{item.label}</span>
             </button>
           ))}

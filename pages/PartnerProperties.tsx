@@ -127,7 +127,7 @@ export const PartnerProperties: React.FC = () => {
     const [isActivating, setIsActivating] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [missingCity, setMissingCity] = useState(false);
-    const [userRadius, setUserRadius] = useState<number | null>(null);
+    const [userRadius, setUserRadius] = useState<number | null>(999); // Default to Estado (state-wide)
     const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
 
     // View Mode State
@@ -200,9 +200,9 @@ export const PartnerProperties: React.FC = () => {
 
             setMissingCity(false);
 
-            // Get user's radius preference and location
-            // If radius is not set, default to 10km
-            setUserRadius(userProfile.raio_atuacao || null);
+            // Get user's location
+            // Always default to 999 (Estado - state-wide) for better UX
+            setUserRadius(999); // Ignore saved raio_atuacao, always start with Estado
 
             if (userProfile.latitude && userProfile.longitude) {
                 setUserLocation({
@@ -414,7 +414,7 @@ export const PartnerProperties: React.FC = () => {
                                 <MapPin size={20} className="text-primary-500" />
                                 Filtrar por Raio de Atuação
                             </h3>
-                            <span className="text-sm text-gray-500">
+                            <span className="font-bold text-white">
                                 {filteredProperties.length} {filteredProperties.length === 1 ? 'imóvel encontrado' : 'imóveis encontrados'}
                             </span>
                         </div>

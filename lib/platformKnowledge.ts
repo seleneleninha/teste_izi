@@ -173,7 +173,7 @@ export const PLATFORM_KNOWLEDGE = {
         personalPage: {
             name: "Página Personalizada",
             description: "Seu próprio site profissional",
-            url: "izibrokerz.com/corretor/[seu-slug]",
+            url: "izibrokerz.com/[seu-slug]",
             includes: [
                 "Seus imóveis em destaque",
                 "Imóveis de parceiros como Outras Opções",

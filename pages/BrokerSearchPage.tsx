@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { PropertyCard } from '../components/PropertyCard';
+import { NoPropertiesFound } from '../components/NoPropertiesFound';
 import { BrokerFooter } from '../components/BrokerFooter';
 import { BrokerNavbar } from '../components/BrokerNavbar';
 // ... (imports)
@@ -19,6 +20,8 @@ interface BrokerProfile {
     whatsapp: string;
     email: string;
     avatar: string;
+    watermark_dark?: string;
+    marca_dagua?: string;
     instagram?: string;
     facebook?: string;
     linkedin?: string;
@@ -33,6 +36,8 @@ export const BrokerSearchPage: React.FC = () => {
     const slug = rawSlug?.split('/')[0] || ''; // Take only the first segment
 
     const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
     const [broker, setBroker] = useState<BrokerProfile | null>(null);
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -52,7 +57,7 @@ export const BrokerSearchPage: React.FC = () => {
             fetchBrokerAndProperties();
             fetchPropertyTypes();
         }
-    }, [slug, location.search]); // Re-fetch if search params change
+    }, [slug, searchParams]); // Re-fetch when search params change
 
     // Compute filtered types based on operation
     const filteredPropertyTypes = propertyTypes.filter(type => {
@@ -90,9 +95,7 @@ export const BrokerSearchPage: React.FC = () => {
 
             setBroker(brokerData);
 
-            // 2. Fetch Properties
-            const searchParams = new URLSearchParams(window.location.hash.split('?')[1]); // Hash router support
-
+            // 2. Fetch Properties - Read URL params from BrowserRouter
             const type = searchParams.get('tipo') || '';
             const operacao = searchParams.get('operacao') || '';
             const term = searchParams.get('q') || '';
@@ -231,7 +234,7 @@ export const BrokerSearchPage: React.FC = () => {
         if (searchTerm) params.append('q', searchTerm);
         if (selectedPriceRange) params.append('price', selectedPriceRange);
 
-        navigate(`/corretor/${broker.slug}/buscar?${params.toString()}`);
+        navigate(`/${broker.slug}/buscar?${params.toString()}`);
     };
 
     const clearFilters = () => {
@@ -239,7 +242,7 @@ export const BrokerSearchPage: React.FC = () => {
         setSelectedType('');
         setSelectedPriceRange('');
         setSearchTerm('');
-        navigate(`/corretor/${broker.slug}/buscar`);
+        navigate(`/${broker.slug}/buscar`);
     };
 
     if (loading) {
@@ -380,9 +383,14 @@ export const BrokerSearchPage: React.FC = () => {
                 )}
 
                 {properties.length === 0 && (
-                    <div className="text-center py-20 text-gray-500">
-                        Nunhum imóvel encontrado com estes filtros.
-                    </div>
+                    <NoPropertiesFound
+                        filters={{
+                            operacao: selectedOperation,
+                            tipoImovel: selectedType,
+                            cidade: '', // Can be extracted from search term if needed
+                        }}
+                        onShowMore={clearFilters}
+                    />
                 )}
             </div>
 
@@ -391,6 +399,8 @@ export const BrokerSearchPage: React.FC = () => {
                 creci: `${broker.creci}/${broker.uf_creci}`,
                 phone: broker.whatsapp,
                 email: broker.email,
+                slug: broker.slug,
+                logo: broker.watermark_dark || broker.marca_dagua,
                 instagram: broker.instagram,
                 facebook: broker.facebook,
                 linkedin: broker.linkedin,

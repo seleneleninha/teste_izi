@@ -709,11 +709,11 @@ export const Settings: React.FC = () => {
 
             {/* Aviso ADM */}
 
-            <div className="bg-red-50 bg-red-900/10 p-6 rounded-3xl border border-red-100 border-red-900/30 mb-8">
-              <h4 className="font-bold text-red-600 text-red-400 mb-2 flex items-center">
+            <div className="bg-red-800/50 p-6 rounded-3xl border border-red-100 border-red-900/30 mb-8">
+              <h4 className="font-bold text-red-200 mb-2 flex items-center">
                 <AlertTriangle size={18} className="mr-2" /> Dados Restritos
               </h4>
-              <p className="text-sm text-red-600/70 text-red-400/70 mb-4">
+              <p className="text-sm text-red-200/70 mb-4">
                 Somente Administradores poderão alterar seus dados pessoais, por questões de segurança. Fale com um Administrador clicando no botão abaixo.
               </p>
               <a
@@ -855,7 +855,7 @@ export const Settings: React.FC = () => {
                   </div>
                   <div className="bg-white/50 dark:bg-black/20 rounded-3xl p-2 border border-slate-700/50 backdrop-blur-sm">
                     <p className="text-base md:text-lg font-mono font-bold text-primary-700 text-primary-400 truncate select-all">
-                      {window.location.origin}/#/corretor/{profile.slug || 'configurar-slug'}
+                      {window.location.origin}/{profile.slug || 'configurar-slug'}
                     </p>
                   </div>
                 </div>
@@ -863,7 +863,7 @@ export const Settings: React.FC = () => {
                 <div className="flex items-center gap-3 z-10 w-full md:w-auto">
                   <button
                     onClick={() => {
-                      const url = `${window.location.origin}/#/corretor/${profile.slug || 'configurar-slug'}`;
+                      const url = `${window.location.origin}/${profile.slug || 'configurar-slug'}`;
                       navigator.clipboard.writeText(url);
                       addToast('Link colado na sua área de transferência! 📋', 'success');
                     }}
@@ -873,7 +873,7 @@ export const Settings: React.FC = () => {
                     <Share2 size={20} />
                   </button>
                   <button
-                    onClick={() => window.open(`/#/corretor/${profile.slug || 'configurar-slug'}`, '_blank')}
+                    onClick={() => window.open(`/${profile.slug || 'configurar-slug'}`, '_blank')}
                     className="px-4 py-3 bg-slate-800 border-2 border-primary-100 border-slate-600 text-primary-600 text-slate-300 font-bold rounded-full hover:bg-primary-50 hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
                     title="Visitar Página"
                   >

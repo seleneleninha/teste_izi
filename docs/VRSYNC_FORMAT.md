@@ -30,7 +30,7 @@ O **VrSync** é o formato XML padrão usado por:
 
 ## 🏢 Header (Cabeçalho)
 
-Informações da imobiliária/corretor:
+Informações da BrokerPage:
 
 ```xml
 <Header>

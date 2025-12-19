@@ -33,8 +33,11 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
     const [legalDocType, setLegalDocType] = useState<'privacy' | 'terms' | 'lgpd'>('privacy');
 
     // Detect if we're on a broker page (either via prop or URL)
-    const isBrokerPage = propIsBrokerPage || location.pathname.startsWith('/corretor/');
-    const brokerSlug = partner?.slug || (isBrokerPage && location.pathname.includes('/corretor/') ? location.pathname.split('/corretor/')[1]?.split('/')[0] : null);
+    // Detect broker page from clean URLs (without /corretor prefix)
+    const pathSegments = location.pathname.split('/').filter(Boolean);
+    const isFixedRoute = ['search', 'buscar', 'partner', 'login', 'about', 'favoritos', 'admin', 'imovel'].some(r => pathSegments[0] === r);
+    const isBrokerPage = propIsBrokerPage || (!isFixedRoute && pathSegments.length > 0 && location.pathname !== '/');
+    const brokerSlug = partner?.slug || (isBrokerPage && pathSegments[0] ? pathSegments[0] : null);
 
     // Logo: Use broker's watermark_dark if on broker page, otherwise platform logo
     const logoSrc = isBrokerPage && partner?.logo
@@ -50,9 +53,15 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
 
                             <img
                                 src={logoSrc}
-                                alt="iziBrokerz"
+                                alt={isBrokerPage ? partner?.name : "iziBrokerz"}
                                 className="h-10 mb-6 object-contain cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
-                                onClick={() => !isBrokerPage && navigate('/')}
+                                onClick={() => {
+                                    if (isBrokerPage && brokerSlug) {
+                                        navigate(`/${brokerSlug}`);
+                                    } else {
+                                        navigate('/');
+                                    }
+                                }}
                             />
 
                             <div>
@@ -117,16 +126,16 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
                             <ul className="space-y-3 text-gray-400 text-sm">
                                 {isBrokerPage && brokerSlug ? (
                                     <>
-                                        <li><a href={`#/corretor/${brokerSlug}`} className="hover:text-emerald-400 transition-colors">Início</a></li>
-                                        <li><a href={`#/corretor/${brokerSlug}/buscar?operacao=venda`} className="hover:text-emerald-400 transition-colors">Comprar</a></li>
-                                        <li><a href={`#/corretor/${brokerSlug}/buscar?operacao=locacao`} className="hover:text-emerald-400 transition-colors">Alugar</a></li>
-                                        <li><a href={`#/corretor/${brokerSlug}/buscar`} className="hover:text-emerald-400 transition-colors">Todos os Imóveis</a></li>
+                                        <li><a href={`/${brokerSlug}`} className="hover:text-emerald-400 transition-colors">Início</a></li>
+                                        <li><a href={`/${brokerSlug}/buscar?operacao=venda`} className="hover:text-emerald-400 transition-colors">Comprar</a></li>
+                                        <li><a href={`/${brokerSlug}/buscar?operacao=locacao`} className="hover:text-emerald-400 transition-colors">Alugar</a></li>
+                                        <li><a href={`/${brokerSlug}/buscar`} className="hover:text-emerald-400 transition-colors">Todos os Imóveis</a></li>
                                     </>
                                 ) : (
                                     <>
-                                        <li><a href="#/search?operacao=venda" className="hover:text-emerald-400 transition-colors">Imóveis à Venda</a></li>
-                                        <li><a href="#/search?operacao=locacao" className="hover:text-emerald-400 transition-colors">Imóveis para Alugar</a></li>
-                                        <li><a href="#/search?operacao=temporada" className="hover:text-emerald-400 transition-colors">Imóveis para Temporada</a></li>
+                                        <li><a href="/search?operacao=venda" className="hover:text-emerald-400 transition-colors">Imóveis à Venda</a></li>
+                                        <li><a href="/search?operacao=locacao" className="hover:text-emerald-400 transition-colors">Imóveis para Alugar</a></li>
+                                        <li><a href="/search?operacao=temporada" className="hover:text-emerald-400 transition-colors">Imóveis para Temporada</a></li>
                                     </>
                                 )}
                             </ul>
@@ -159,9 +168,9 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
                                     </>
                                 ) : (
                                     <>
-                                        <li><a href="#/login" className="hover:text-emerald-400 transition-colors">Área do Corretor</a></li>
-                                        <li><a href="#/partner" className="hover:text-emerald-400 transition-colors">Seja um Parceiro</a></li>
-                                        <li><a href="#/about" className="hover:text-emerald-400 transition-colors">Sobre Nós</a></li>
+                                        <li><a href="/login" className="hover:text-emerald-400 transition-colors">Área do Corretor</a></li>
+                                        <li><a href="/partner" className="hover:text-emerald-400 transition-colors">Seja um Parceiro</a></li>
+                                        <li><a href="/about" className="hover:text-emerald-400 transition-colors">Sobre Nós</a></li>
                                         <li><a href="#/contact" className="hover:text-emerald-400 transition-colors">Contato</a></li>
                                     </>
                                 )}
@@ -202,7 +211,7 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
 
                     <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-md text-gray-600">
                         <div className="text-center">
-                            <p>© 2025 <a href="#/" className="text-emerald-500 hover:text-emerald-400 font-bold transition-colors"> iziBrokerz</a>. Todos os direitos reservados.</p>
+                            <p>© 2025 <a href="/" className="text-emerald-500 hover:text-emerald-400 font-bold transition-colors"> iziBrokerz</a>. Todos os direitos reservados.</p>
                         </div>
 
                         <div className="flex gap-6 mt-4 md:mt-0">

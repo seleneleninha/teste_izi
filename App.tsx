@@ -1,5 +1,5 @@
 
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { DashboardLayout, PublicLayout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ThemeProvider } from './components/ThemeContext';
@@ -70,34 +70,38 @@ const App: React.FC = () => {
               <ScrollToTop />
               <Suspense fallback={<LoadingFallback />}>
                 <Routes>
-                  {/* Public Routes */}
+                  {/* Public Routes - Ordem importa! Mais específico primeiro */}
                   <Route element={<PublicLayout />}>
+                    {/* Home */}
                     <Route path="/" element={<PublicHome />} />
+
+                    {/* Páginas fixas (específicas) */}
                     <Route path="/search" element={<PropertiesList />} />
+                    <Route path="/buscar" element={<PropertiesList />} />
                     <Route path="/partner" element={<PartnerPage />} />
-                    <Route path="/sell" element={<PartnerPage />} /> {/* Alias for backward compatibility */}
-                    <Route path="/v/:token" element={<MagicVerification />} />
+                    <Route path="/sell" element={<PartnerPage />} />
                     <Route path="/login" element={<Login />} />
-                    <Route path="/agent/:id" element={<AgentProfile />} />
                     <Route path="/terms" element={<TermsOfService />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/about" element={<About />} />
-                    <Route path="/about" element={<About />} />
+                    <Route path="/favoritos" element={<Favorites />} />
 
-                    {/* Rota de corretor - Busca Exclusiva */}
-                    <Route path="/corretor/:slug/buscar" element={<BrokerSearchPage />} />
+                    {/* Magic Link Verification */}
+                    <Route path="/v/:token" element={<MagicVerification />} />
 
-                    {/* Rota de corretor - Sobre */}
-                    <Route path="/corretor/:slug/sobre" element={<BrokerAboutPage />} />
+                    {/* Agent Profile */}
+                    <Route path="/agent/:id" element={<AgentProfile />} />
 
-                    {/* Rota de corretor - Página Principal */}
-                    <Route path="/corretor/:slug" element={<BrokerPage />} />
+                    {/* Imóveis - Prefixo /imovel */}
+                    <Route path="/imovel/:slug" element={<PropertyDetails />} />
 
-                    {/* Rota de corretor - Detalhes do Imóvel (Nested Context) */}
-                    <Route path="/corretor/:brokerSlug/:slug" element={<PropertyDetails />} />
+                    {/* Corretor - Páginas específicas com slug */}
+                    <Route path="/:slug/imovel/:propertySlug" element={<PropertyDetails />} />
+                    <Route path="/:slug/buscar" element={<BrokerSearchPage />} />
+                    <Route path="/:slug/sobre" element={<BrokerAboutPage />} />
 
-                    {/* Rota genérica de slug para imóveis */}
-                    <Route path="/:slug" element={<PropertyDetails />} />
+                    {/* Corretor - Página Principal (último, pega qualquer slug) */}
+                    <Route path="/:slug" element={<BrokerPage />} />
                   </Route>
 
                   {/* Protected Routes - Require Authentication */}

@@ -3,6 +3,7 @@ import { MOCK_PROPERTIES } from '../constants';
 import { MapPin, Bed, Bath, Square, Filter, Search, Grid, Map as MapIcon, CheckSquare, Loader2, Edit2, Trash2, X, TrendingUp, Key, Pause, AlertTriangle, Home, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { PropertyCard } from '../components/PropertyCard';
+import { NoPropertiesFound } from '../components/NoPropertiesFound';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PropertyMap } from '../components/PropertyMap';
 import { useToast } from '../components/ToastContext';
@@ -38,8 +39,11 @@ export const PropertiesList: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedOperation, setSelectedOperation] = useState('');
 
-    // Status Filter - NOVO
-    const [statusFilter, setStatusFilter] = useState<string>('ativo');
+    // Status Filter - Default to TODOS
+    const [statusFilter, setStatusFilter] = useState<string>('todos');
+
+    // Broker's state for market mode filtering
+    const [brokerUF, setBrokerUF] = useState<string | null>(null);
 
     // Estatísticas - NOVO
     const [stats, setStats] = useState({
@@ -90,6 +94,25 @@ export const PropertiesList: React.FC = () => {
         // Fetch properties with these params directly to avoid race conditions
         fetchProperties(typeParam, operacaoParam, qParam, priceParam, brokerParam);
     }, [location.search, isMyProperties, user]);
+
+    // Fetch broker's state (UF) when in Market Mode
+    useEffect(() => {
+        const fetchBrokerUF = async () => {
+            if (isMarketMode && user) {
+                const { data, error } = await supabase
+                    .from('perfis')
+                    .select('uf')
+                    .eq('id', user.id)
+                    .single();
+
+                if (data && !error) {
+                    setBrokerUF(data.uf);
+                }
+            }
+        };
+
+        fetchBrokerUF();
+    }, [isMarketMode, user]);
 
     // Calcular estatísticas após carregar properties - NOVO
     useEffect(() => {
@@ -317,6 +340,11 @@ export const PropertiesList: React.FC = () => {
             } else {
                 // Para visitantes: apenas imóveis ativos
                 query = query.eq('status', 'ativo');
+
+                // Para Market Mode: filtrar por estado do corretor
+                if (isMarketMode && brokerUF) {
+                    query = query.eq('uf', brokerUF);
+                }
             }
 
             // Apply filters using local variables
@@ -448,7 +476,7 @@ export const PropertiesList: React.FC = () => {
                             {isMyProperties ? 'Meus Imóveis' : isMarketMode ? 'Mercado Imobiliário' : 'Buscar Imóveis'}
                         </h2>
                         <p className="text-gray-400 mt-1">
-                            {isMyProperties ? 'Gerencie e mantenha seus anúncios atualizados.' : 'Encontre o imóvel ideal para sua Família.'}
+                            {isMyProperties ? 'Gerencie e mantenha seus anúncios atualizados.' : isMarketMode ? 'Você está visualizando todos os imóveis de sua Cidade' : 'Encontre o imóvel ideal para sua Família.'}
                         </p>
                     </div>
 
@@ -489,10 +517,12 @@ export const PropertiesList: React.FC = () => {
                                 className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all col-span-2 md:col-span-1"
                             >
                                 <option value="" className="bg-slate-800">💰 Preço</option>
-                                <option value="0-200000" className="bg-slate-800">Até R$ 200mil</option>
-                                <option value="200000-500000" className="bg-slate-800">R$ 200mil - R$ 500mil</option>
-                                <option value="500000-1000000" className="bg-slate-800">R$ 500mil - R$ 1mi</option>
-                                <option value="1000000-999999999" className="bg-slate-800">Acima de R$ 1mi</option>
+                                <option value="0-200000" className="bg-slate-800">Até R$200mil</option>
+                                <option value="200000-500000" className="bg-slate-800">R$200mil - R$500mil</option>
+                                <option value="500000-1000000" className="bg-slate-800">R$500mil - R$1M</option>
+                                <option value="1000000-2000000" className="bg-slate-800">R$1M - R$2M</option>
+                                <option value="2000000-999999999" className="bg-slate-800">Acima de R$2M</option>
+
                             </select>
 
                             {/* Status - NOVO (apenas para Meus Imóveis) */}
@@ -579,11 +609,9 @@ export const PropertiesList: React.FC = () => {
                             <Loader2 className="animate-spin text-emerald-500" size={48} />
                         </div>
                     ) : properties.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                            <Search size={48} className="mb-4 opacity-20" />
-                            <p className="text-lg font-medium">Nenhum imóvel encontrado.</p>
-                            <p className="text-sm">Tente ajustar seus filtros.</p>
-                        </div>
+                        <NoPropertiesFound
+                            onShowMore={() => window.location.href = '/'}
+                        />
                     ) : (
                         <>
                             {view === 'map' ? (
@@ -602,10 +630,10 @@ export const PropertiesList: React.FC = () => {
 
                                         if (filteredProps.length === 0) {
                                             return (
-                                                <div className="flex flex-col items-center justify-center h-48 text-gray-400">
-                                                    <Search size={40} className="mb-3 opacity-30" />
-                                                    <p className="text-base">Nenhum imóvel nesta categoria.</p>
-                                                </div>
+                                                <NoPropertiesFound
+                                                    message="Nenhum imóvel nesta categoria no momento"
+                                                    onShowMore={() => setStatusFilter('todos')}
+                                                />
                                             );
                                         }
 

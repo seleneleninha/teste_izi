@@ -40,15 +40,15 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
     };
 
     return (
-        <div className="mt-2 space-y-2">
+        <div className="mt-6 space-y-2">
             {/* Strength bar */}
             <div className="flex gap-1">
                 {[1, 2, 3, 4].map((level) => (
                     <div
                         key={level}
                         className={`h-1 flex-1 rounded-full transition-all ${level <= score
-                                ? strengthColors[strength]
-                                : 'bg-gray-700'
+                            ? strengthColors[strength]
+                            : 'bg-gray-700'
                             }`}
                     />
                 ))}

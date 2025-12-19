@@ -255,7 +255,7 @@ const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) =
                 {/* Ver Detalhes Button */}
                 <div className="flex justify-end mt-3">
                   <button
-                    onClick={() => navigate(`/${generateSlug()}`)}
+                    onClick={() => navigate(`/imovel/${generateSlug()}`)}
                     className="text-sm bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 font-bold shadow-md shadow-black"
                   >
                     VER DETALHES
