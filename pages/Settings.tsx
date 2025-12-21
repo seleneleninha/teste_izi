@@ -501,7 +501,7 @@ export const Settings: React.FC = () => {
       <h2 className="text-2xl font-bold text-white mb-6">Configurações da Conta</h2>
 
       {/* Unified Horizontal Tab Navigation */}
-      <div className="mb-6 sticky top-[68px] z-20 bg-gray-50/95 bg-slate-900/95 backdrop-blur-sm -mx-4 px-4 py-3">
+      <div className="mb-6 sticky top-[68px] z-20 bg-midnight-50/95 bg-midnight-900/95 backdrop-blur-sm -mx-4 px-4 py-3">
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('profile')}
@@ -651,21 +651,6 @@ export const Settings: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  CPF <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={profile.cpf}
-                  disabled
-                  className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400 cursor-not-allowed"
-                  title="Este campo só pode ser alterado pelos administradores"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
                   WhatsApp <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -677,8 +662,23 @@ export const Settings: React.FC = () => {
                   className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400 cursor-not-allowed"
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
               {role !== 'Cliente' && (
                 <>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      CPF <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.cpf}
+                      disabled
+                      className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400 cursor-not-allowed"
+                      title="Este campo só pode ser alterado pelos administradores"
+                    />
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">
                       CRECI <span className="text-red-500">*</span>

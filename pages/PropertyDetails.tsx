@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { ArrowLeft, Bed, Bath, Car, MapPin, Home, Share2, Heart, Phone, Mail, Calendar, ChevronLeft, ChevronRight, Check, Compass, Coffee, GraduationCap, ShieldCheck, Square, User, Search, LayoutGrid, List, Map, HomeIcon, SearchCode, SearchIcon, MessageCircle, X, PlayCircle, Video, CheckCircle, Handshake, Sparkles, AreaChart } from 'lucide-react';
 import { generateWhatsAppLink, formatPropertyMessage, trackWhatsAppClick } from '../lib/whatsAppHelper';
 import { HorizontalScroll } from '../components/HorizontalScroll';
@@ -738,7 +738,7 @@ export const PropertyDetails: React.FC = () => {
                             {/* Description */}
                             <div>
                                 <h2 className="text-2xl font-bold text-white mb-4">Sobre este imóvel</h2>
-                                <p className="text-slate-300 leading-relaxed">
+                                <p className="text-slate-300 leading-relaxed whitespace-pre-line">
                                     {property.description}
                                 </p>
                             </div>
@@ -971,16 +971,14 @@ export const PropertyDetails: React.FC = () => {
                                     <img src={property.agent.avatar} alt="Agent" className="w-16 h-16 rounded-full object-cover border-2 border-primary-500 p-1" />
                                     <div>
                                         <p className="text-sm text-slate-400">Anunciante</p>
-                                        <h3
+                                        <Link
+                                            to={property.agent.slug ? `/${property.agent.slug}` : '#'}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
                                             className="text-lg font-bold text-white cursor-pointer hover:text-primary-500 transition-colors"
-                                            onClick={() => {
-                                                if (property.agent.slug) {
-                                                    navigate(`/${property.agent.slug}`);
-                                                }
-                                            }}
                                         >
                                             {property.agent.name}
-                                        </h3>
+                                        </Link>
                                         <p className="text-md text-primary-600 text-primary-400 font-medium">WhatsApp {property.agent.phone}</p>
                                         {property.agent.creci && (
                                             <p className="text-md text-blue-500 text-blue-500 font-bold">CRECI: {property.agent.creci}/{property.agent.uf_creci}</p>
@@ -990,19 +988,14 @@ export const PropertyDetails: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-3">
-                                    <button
-                                        onClick={() => {
-                                            if (property.agent.slug) {
-                                                navigate(`/${property.agent.slug}`);
-                                            } else {
-                                                // Fallback if no slug
-                                                alert('Página do corretor indisponível');
-                                            }
-                                        }}
+                                    <Link
+                                        to={property.agent.slug ? `/${property.agent.slug}` : '#'}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-full transition-colors flex items-center justify-center"
                                     >
                                         <SearchIcon size={18} className="mr-2" />+ Imóveis Desse Corretor
-                                    </button>
+                                    </Link>
                                     <button
                                         onClick={() => {
                                             // Track click
@@ -1035,7 +1028,7 @@ export const PropertyDetails: React.FC = () => {
 
                                     <button
                                         onClick={handleScheduleClick}
-                                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-full transition-colors flex items-center justify-center cursor-pointer"
+                                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-3xl transition-colors flex items-center justify-center cursor-pointer"
                                     >
                                         <Calendar size={18} className="mr-2" /> Agendar Visita
                                     </button>

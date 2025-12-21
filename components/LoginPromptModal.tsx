@@ -42,13 +42,9 @@ export const LoginPromptModal: React.FC<LoginPromptModalProps> = ({ isOpen, onCl
 
                 {/* Content */}
                 <div className="text-center space-y-4">
-                    <h2 className="text-2xl font-bold text-white">
-                        Para favoritar imóveis você precisa se cadastrar ou estar logado na plataforma.
-                    </h2>
                     <h1 className="text-2xl font-bold text-white">
                         Para favoritar imóveis você precisa se cadastrar ou estar logado na plataforma.
                     </h1>
-
 
                     <p className="text-gray-300 text-lg">
                         Quer se cadastrar? É <span className="text-emerald-400 font-semibold">grátis</span> e <span className="text-emerald-400 font-semibold">super rápido</span>!

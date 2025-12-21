@@ -490,7 +490,7 @@ export const PropertiesList: React.FC = () => {
                                 onChange={e => setSelectedOperation(e.target.value)}
                                 className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                             >
-                                <option value="" className="bg-slate-800">📍 Operação</option>
+                                <option value="" className="bg-slate-800">Operação</option>
                                 <option value="venda" className="bg-slate-800">Venda</option>
                                 <option value="locacao" className="bg-slate-800">Locação</option>
                                 <option value="temporada" className="bg-slate-800">Temporada</option>
@@ -502,7 +502,7 @@ export const PropertiesList: React.FC = () => {
                                 onChange={e => setSelectedType(e.target.value)}
                                 className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                             >
-                                <option value="" className="bg-slate-800">🏠 Tipo</option>
+                                <option value="" className="bg-slate-800">Tipo</option>
                                 {filteredPropertyTypes.map((type, idx) => (
                                     <option key={idx} value={type.tipo} className="bg-slate-800">
                                         {type.tipo.charAt(0).toUpperCase() + type.tipo.slice(1)}
@@ -514,9 +514,9 @@ export const PropertiesList: React.FC = () => {
                             <select
                                 value={selectedPriceRange}
                                 onChange={e => setSelectedPriceRange(e.target.value)}
-                                className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all col-span-2 md:col-span-1"
+                                className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                             >
-                                <option value="" className="bg-slate-800">💰 Preço</option>
+                                <option value="" className="bg-slate-800">Preço</option>
                                 <option value="0-200000" className="bg-slate-800">Até R$200mil</option>
                                 <option value="200000-500000" className="bg-slate-800">R$200mil - R$500mil</option>
                                 <option value="500000-1000000" className="bg-slate-800">R$500mil - R$1M</option>
@@ -530,22 +530,22 @@ export const PropertiesList: React.FC = () => {
                                 <select
                                     value={statusFilter}
                                     onChange={e => setStatusFilter(e.target.value)}
-                                    className="bg-slate-800 border border-emerald-700/50 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all col-span-2 md:col-span-1 font-medium"
+                                    className="bg-slate-800 border border-emerald-700/50 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all font-medium"
                                 >
-                                    <option value="todos" className="bg-slate-800">📋 Todos ({stats.total})</option>
-                                    <option value="pendente" className="bg-slate-800">⏳ Pendentes ({properties.filter(p => p.status === 'pendente').length})</option>
-                                    <option value="reprovado" className="bg-slate-800">❌ Reprovados ({properties.filter(p => p.status === 'reprovado').length})</option>
-                                    <option value="ativo" className="bg-slate-800">✅ Ativos ({stats.ativos})</option>
-                                    <option value="venda_faturada" className="bg-slate-800">🎉 Vendidos ({stats.vendas})</option>
-                                    <option value="locacao_faturada" className="bg-slate-800">💰 Alugados ({stats.locacoes})</option>
-                                    <option value="imovel_espera" className="bg-slate-800">⏸️ Standby ({stats.standby})</option>
-                                    <option value="imovel_perdido" className="bg-slate-800">⚠️ Perdidos ({stats.perdidos})</option>
+                                    <option value="todos" className="bg-slate-800">Todos ({stats.total})</option>
+                                    <option value="pendente" className="bg-slate-800">Pendentes ({properties.filter(p => p.status === 'pendente').length})</option>
+                                    <option value="reprovado" className="bg-slate-800">Reprovados ({properties.filter(p => p.status === 'reprovado').length})</option>
+                                    <option value="ativo" className="bg-slate-800">Ativos ({stats.ativos})</option>
+                                    <option value="venda_faturada" className="bg-slate-800">Vendidos ({stats.vendas})</option>
+                                    <option value="locacao_faturada" className="bg-slate-800">Alugados ({stats.locacoes})</option>
+                                    <option value="imovel_espera" className="bg-slate-800">Standby ({stats.standby})</option>
+                                    <option value="imovel_perdido" className="bg-slate-800">Perdidos ({stats.perdidos})</option>
                                 </select>
                             )}
                         </div>
 
                         {/* Linha 2: Botões de Ação */}
-                        <div className="flex flex-wrap gap-3">
+                        <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-center gap-3">
                             {/* Buscar */}
                             <button
                                 onClick={() => fetchProperties()}
@@ -558,44 +558,43 @@ export const PropertiesList: React.FC = () => {
                             {/* Limpar */}
                             <button
                                 onClick={clearFilters}
-                                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+                                className="px-6 py-3 bg-red-500/50 hover:bg-red-500/80 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
                             >
                                 <X size={18} />
                                 <span>Limpar</span>
                             </button>
 
                             {/* Toggle Cards/Map */}
-                            <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700">
+                            <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700 col-span-2 md:col-span-1">
                                 <button
                                     onClick={() => setView('grid')}
-                                    className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${view === 'grid'
+                                    className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${view === 'grid'
                                         ? 'bg-emerald-600 text-white shadow-sm'
                                         : 'text-gray-400 hover:text-white hover:bg-slate-700'
                                         }`}
                                 >
                                     <Grid size={18} />
-                                    <span className="hidden sm:inline">Cards</span>
+                                    <span className="sm:inline">Cards</span>
                                 </button>
                                 <button
                                     onClick={() => setView('map')}
-                                    className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${view === 'map'
+                                    className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${view === 'map'
                                         ? 'bg-emerald-600 text-white shadow-sm'
                                         : 'text-gray-400 hover:text-white hover:bg-slate-700'
                                         }`}
                                 >
                                     <MapIcon size={18} />
-                                    <span className="hidden sm:inline">Mapa</span>
+                                    <span className="sm:inline">Mapa</span>
                                 </button>
                             </div>
 
-                            {/* Botão Anunciar - DESTACADO */}
-                            {user && isDashboardRoute && (
+                            {/* Botão Anunciar - DESTACADO - Only for brokers */}
+                            {user && isDashboardRoute && role === 'corretor' && (
                                 <button
                                     onClick={() => navigate('/add-property')}
-                                    className="ml-auto px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 flex items-center gap-2"
+                                    className="col-span-2 md:col-span-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 flex items-center justify-center gap-2 md:ml-auto"
                                 >
-                                    <Home size={20} />
-                                    <span>+ Anunciar Imóvel</span>
+                                    <span className="whitespace-nowrap">ANUNCIAR IMÓVEL</span>
                                 </button>
                             )}
                         </div>
@@ -646,7 +645,7 @@ export const PropertiesList: React.FC = () => {
                                                             showStatus={isMyProperties}
                                                             isDashboard={isDashboardRoute}
                                                             actions={
-                                                                (user && prop.user_id === user.id) ? (
+                                                                (isDashboardRoute && user && prop.user_id === user.id) ? (
                                                                     <>
                                                                         <button
                                                                             onClick={(e) => {
@@ -759,7 +758,7 @@ export const PropertiesList: React.FC = () => {
                                                                         showStatus={isMyProperties}
                                                                         isDashboard={isDashboardRoute}
                                                                         actions={
-                                                                            (user && prop.user_id === user.id) ? (
+                                                                            (isDashboardRoute && user && prop.user_id === user.id) ? (
                                                                                 <>
                                                                                     <button
                                                                                         onClick={(e) => {

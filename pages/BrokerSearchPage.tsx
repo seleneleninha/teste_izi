@@ -344,7 +344,7 @@ export const BrokerSearchPage: React.FC = () => {
                             </button>
                             <button
                                 onClick={clearFilters}
-                                className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold py-3 px-4 rounded-full transition-colors border border-red-500/20"
+                                className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-red-500/50 hover:bg-red-500/80 text-red-400 font-bold py-3 px-4 rounded-full transition-colors border border-red-500/20"
                             >
                                 <X size={20} />
                                 Limpar
@@ -357,7 +357,7 @@ export const BrokerSearchPage: React.FC = () => {
                                     }`}
                             >
                                 {viewMode === 'grid' ? <MapIcon size={20} /> : <Grid size={20} />}
-                                {viewMode === 'grid' ? 'Ver Mapa' : 'Ver Lista'}
+                                {viewMode === 'grid' ? 'Ver Mapa' : 'Ocultar Mapa'}
                             </button>
                         </div>
                     </div>

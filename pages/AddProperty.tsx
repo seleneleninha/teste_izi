@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { UploadCloud, Check, Sparkles, Wand2, Loader2, Tag, MapPin, DollarSign, Home, Info, Search, AlertCircle, AlertTriangle, History, ShieldCheck, Save } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { generatePropertyDescription, evaluatePropertyPrice } from '../lib/geminiHelper';
@@ -120,10 +120,56 @@ export default function AddProperty() {
     // Temporada state - detect if operation is vacation rental
     const [isTemporada, setIsTemporada] = useState(false);
 
-    // Filter tipos for Temporada
-    const tiposDisponiveis = isTemporada
-        ? tiposImovel.filter(t => t.disponivel_temporada)
-        : tiposImovel;
+    // Trial status state
+    const [isTrial, setIsTrial] = useState(false);
+    const [reachedLimit, setReachedLimit] = useState(false);
+    const TRIAL_LIMIT = 5;
+
+    // List of allowed types for Sale/Rent operations
+    const TIPOS_PERMITIDOS_PADRAO = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno'];
+
+    // Filter tipos logic
+    const tiposDisponiveis = useMemo(() => {
+        if (isTemporada) {
+            return tiposImovel.filter(t => t.disponivel_temporada);
+        } else {
+            // For Sale, Rent, Sale/Rent - show only specific types
+            return tiposImovel.filter(t => TIPOS_PERMITIDOS_PADRAO.includes(t.tipo));
+        }
+    }, [isTemporada, tiposImovel]);
+
+    // Fetch user trial status and property count
+    useEffect(() => {
+        const checkTrialAndLimit = async () => {
+            if (!user?.id) return;
+
+            // 1. Check Profile for Trial Status
+            const { data: profile } = await supabase
+                .from('perfis')
+                .select('is_trial')
+                .eq('id', user.id)
+                .single();
+
+            const isUserTrial = profile?.is_trial || false;
+            setIsTrial(isUserTrial);
+
+            // 2. If Trial, check property count
+            if (isUserTrial) {
+                const { count, error } = await supabase
+                    .from('anuncios')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', user.id);
+
+                if (!error && count !== null) {
+                    if (count >= TRIAL_LIMIT) {
+                        setReachedLimit(true);
+                    }
+                }
+            }
+        };
+
+        checkTrialAndLimit();
+    }, [user?.id]);
 
     useEffect(() => {
         const fetchOptions = async () => {
@@ -380,9 +426,6 @@ export default function AddProperty() {
             if (error) throw error;
             if (error) throw error;
 
-            // Limpar rascunho após salvar
-            clearDraft();
-
             addToast(editingId ? 'Imóvel atualizado com sucesso! Aguardando nova aprovação.' : 'Imóvel cadastrado com sucesso! Aguardando aprovação.', 'success');
             navigate('/properties');
         } catch (error: any) {
@@ -467,14 +510,6 @@ export default function AddProperty() {
         }
     }, [searchParams, addToast]);
 
-    // Função para limpar rascunho
-    const clearDraft = () => {
-        localStorage.removeItem('addProperty_draft_formData');
-        localStorage.removeItem('addProperty_draft_images');
-        localStorage.removeItem('addProperty_draft_step');
-        addToast('🗑️ Rascunho limpo!', 'success');
-    };
-
     // Campos que devem receber formatação de moeda (R$ 1.000.000)
     const currencyFields = ['salePrice', 'rentPrice', 'condoFee', 'iptu', 'valorDiaria', 'valorMensal'];
     // Campos que devem receber formatação de área (1.500 m²)
@@ -519,7 +554,7 @@ export default function AddProperty() {
 
         try {
             console.log('Buscando CEP:', cleanCep);
-            const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+            const response = await fetch(`https://brasilapi.com.br/api/cep/v1/${cleanCep}`);
             const data = await response.json();
 
             if (data.erro) {
@@ -531,23 +566,23 @@ export default function AddProperty() {
 
             setFormData(prev => ({
                 ...prev,
-                address: data.logradouro || '',
-                neighborhood: data.bairro || '',
-                city: data.localidade || '',
-                state: data.uf || '',
+                address: data.street || data.logradouro || '',
+                neighborhood: data.neighborhood || data.bairro || '',
+                city: data.city || data.localidade || '',
+                state: data.state || data.uf || '',
             }));
 
             // Automatically fetch coordinates using geocoding
-            if (data.localidade) {
+            if (data.city || data.localidade) {
                 console.log('Iniciando geocodificação...');
 
                 // Try precise address first
                 let coords = await geocodeAddress({
-                    street: data.logradouro || '',
+                    street: data.street || data.logradouro || '',
                     number: formData.number || 's/n',
-                    neighborhood: data.bairro || '',
-                    city: data.localidade,
-                    state: data.uf,
+                    neighborhood: data.neighborhood || data.bairro || '',
+                    city: data.city || data.localidade || '',
+                    state: data.state || data.uf || '',
                     postalCode: cleanCep
                 });
 
@@ -560,8 +595,8 @@ export default function AddProperty() {
                         street: '',
                         number: '',
                         neighborhood: '',
-                        city: data.localidade,
-                        state: data.uf,
+                        city: data.city || data.localidade || '',
+                        state: data.state || data.uf || '',
                         postalCode: ''
                     });
                     console.log('Coordenadas obtidas (tentativa 2 - cidade):', coords);
@@ -914,6 +949,46 @@ export default function AddProperty() {
         }
     };
 
+    // BLOCKING UI FOR TRIAL LIMIT
+    if (reachedLimit) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+                <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl relative overflow-hidden">
+                    {/* Background decoration */}
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 to-orange-600"></div>
+                    <div className="absolute -top-20 -right-20 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div className="w-16 h-16 bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-6 border border-amber-500/30">
+                        <AlertTriangle className="text-amber-500" size={32} />
+                    </div>
+
+                    <h2 className="text-2xl font-bold text-white mb-2">Limite do Plano Atingido</h2>
+                    <p className="text-gray-400 mb-8 leading-relaxed">
+                        Você atingiu o limite de <strong>{TRIAL_LIMIT} imóveis</strong> disponíveis no seu período de teste.
+                        Para continuar cadastrando e expandindo sua carteira, faça um upgrade.
+                    </p>
+
+                    <div className="flex flex-col gap-3">
+                        <button
+                            onClick={() => navigate('/upgrade')}
+                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-amber-900/20 flex items-center justify-center gap-2 group"
+                        >
+                            <Sparkles size={20} className="group-hover:animate-pulse" />
+                            Fazer Upgrade Agora
+                        </button>
+
+                        <button
+                            onClick={() => navigate('/dashboard')}
+                            className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-gray-300 font-medium rounded-xl transition-colors border border-slate-700"
+                        >
+                            Voltar ao Dashboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="mt-6 max-w-5xl mx-auto pb-12">
             <div className="mb-8">
@@ -922,17 +997,6 @@ export default function AddProperty() {
                         <h2 className="text-3xl font-bold text-white">{editingId ? 'Editar Imóvel' : 'Cadastrar Novo Imóvel'}</h2>
                         <p className="text-slate-400 mt-1">Preencha os dados do imóvel. Nossa IA ajudará em etapas chave.</p>
                     </div>
-                    {/* Indicador de rascunho salvo */}
-                    {!editingId && (
-                        <button
-                            onClick={clearDraft}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-900/20 border border-blue-700/30 rounded-full text-blue-300 text-sm hover:bg-blue-900/40 transition-colors"
-                            title="Limpar rascunho automático"
-                        >
-                            <Save size={16} />
-                            Auto-save ativo
-                        </button>
-                    )}
                 </div>
             </div>
 
@@ -1611,39 +1675,41 @@ export default function AddProperty() {
                             })()}
                         </div>
 
-                        {/* Partnership Field */}
-                        <div className="mt-8 p-6 bg-slate-900/50 border-slate-700 rounded-3xl">
-                            <div className="flex items-center justify-between mb-4">
-                                <div>
-                                    <h4 className="text-lg font-bold text-white">Aceita Parceria neste Imóvel?</h4>
-                                    <p className="text-sm text-slate-400 mt-1">Permitir que outros Corretores trabalhem este imóvel</p>
+                        {/* Partnership Field - Hidden for Trial Users */}
+                        {!isTrial && (
+                            <div className="mt-8 p-6 bg-slate-900/50 border-slate-700 rounded-3xl">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h4 className="text-lg font-bold text-white">Aceita Parceria neste Imóvel?</h4>
+                                        <p className="text-sm text-slate-400 mt-1">Permitir que outros Corretores trabalhem este imóvel</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.aceitaParceria}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, aceitaParceria: e.target.checked }))}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
+                                        <span className="ml-3 text-sm font-medium text-gray-300">
+                                            {formData.aceitaParceria ? 'SIM' : 'NÃO'}
+                                        </span>
+                                    </label>
                                 </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.aceitaParceria}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, aceitaParceria: e.target.checked }))}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
-                                    <span className="ml-3 text-sm font-medium text-gray-300">
-                                        {formData.aceitaParceria ? 'SIM' : 'NÃO'}
-                                    </span>
-                                </label>
-                            </div>
 
-                            {formData.aceitaParceria && (
-                                <div className="mt-4 p-4 bg-red-900/20 border-l-4 border-red-500 rounded">
-                                    <p className="text-sm text-red-200 leading-relaxed">
-                                        <strong>ATENÇÃO:</strong> Caso você aceite a parceria com outros Corretores neste imóvel,
-                                        desde já <strong>VOCÊ CONCORDA E ACEITA</strong> a divisão do comissionamento padrão
-                                        (<strong>"fifty" 50/50</strong>), sem nada a reclamar posteriormente.
-                                        <br /><br />
-                                        <strong>A Plataforma NÃO SE RESPONSABILIZA PELAS PARCERIAS FEITAS ENTRE OS Corretores.</strong>
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                                {formData.aceitaParceria && (
+                                    <div className="mt-4 p-4 bg-red-900/20 border-l-4 border-red-500 rounded">
+                                        <p className="text-sm text-red-200 leading-relaxed">
+                                            <strong>ATENÇÃO:</strong> Caso você aceite a parceria com outros Corretores neste imóvel,
+                                            desde já <strong>VOCÊ CONCORDA E ACEITA</strong> a divisão do comissionamento padrão
+                                            (<strong>"fifty" 50/50</strong>), sem nada a reclamar posteriormente.
+                                            <br /><br />
+                                            <strong>A Plataforma NÃO SE RESPONSABILIZA PELAS PARCERIAS FEITAS ENTRE OS Corretores.</strong>
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
 
                     </div>
@@ -1873,7 +1939,7 @@ export default function AddProperty() {
                 {step === 5 && (
                     <div className="space-y-6">
                         <div className="text-center mb-8">
-                            <div className="w-20 h-20 bg-primary-900/30 text-primary-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="w-20 h-20 bg-primary-900/30 text-primary-500 rounded-3xl flex items-center justify-center mx-auto mb-4">
                                 <ShieldCheck size={40} />
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-2">Revisão e Validação</h3>
@@ -1897,7 +1963,7 @@ export default function AddProperty() {
                                     formData.neighborhood;
 
                                 return (
-                                    <div className={`p-4 rounded-full border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
+                                    <div className={`p-4 rounded-3xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
                                         <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-amber-900/30 text-amber-400'}`}>
                                             {isValid ? <Check size={16} /> : <AlertTriangle size={16} />}
                                         </div>
@@ -1906,6 +1972,16 @@ export default function AddProperty() {
                                             <p className="text-sm text-gray-400 mt-1">
                                                 {isValid ? 'Todos os dados obrigatórios preenchidos.' : 'Faltam dados obrigatórios (Título, Tipo, Endereço).'}
                                             </p>
+                                            {formData.title && (
+                                                <p className="text-sm text-slate-300 mt-2">
+                                                    <strong>Título:</strong> {formData.title}
+                                                </p>
+                                            )}
+                                            {formData.address && (
+                                                <p className="text-sm text-slate-300 mt-1">
+                                                    <strong>Endereço:</strong> {formData.address}, {formData.number} - {formData.neighborhood}, {formData.city}/{formData.state}
+                                                </p>
+                                            )}
                                             {!isValid && (
                                                 <button onClick={() => changeStep(1)} className="text-sm font-bold text-amber-600 hover:underline mt-2">
                                                     Corrigir Etapa 1
@@ -1920,7 +1996,7 @@ export default function AddProperty() {
                             {(() => {
                                 const isValid = formData.description && formData.description.length > 10;
                                 return (
-                                    <div className={`p-4 rounded-full border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-blue-900/10 border-blue-800'}`}>
+                                    <div className={`p-4 rounded-3xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-blue-900/10 border-blue-800'}`}>
                                         <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-blue-900/30 text-blue-400'}`}>
                                             {isValid ? <Check size={16} /> : <Info size={16} />}
                                         </div>
@@ -1929,9 +2005,19 @@ export default function AddProperty() {
                                             <p className="text-sm text-gray-400 mt-1">
                                                 {isValid ? 'Descrição preenchida.' : 'Adicione uma descrição detalhada para atrair mais clientes.'}
                                             </p>
+                                            {formData.description && (
+                                                <p className="text-sm text-slate-300 mt-2 line-clamp-2">
+                                                    <strong>Descrição:</strong> {formData.description.substring(0, 100)}...
+                                                </p>
+                                            )}
+                                            {(formData.bedrooms || formData.bathrooms || formData.garage) && (
+                                                <p className="text-sm text-slate-300 mt-1">
+                                                    <strong>Características:</strong> {formData.bedrooms} quartos, {formData.bathrooms} banheiros, {formData.garage} vagas
+                                                </p>
+                                            )}
                                             {!isValid && (
-                                                <button onClick={() => changeStep(2)} className="text-sm font-bold text-blue-600 hover:underline mt-2">
-                                                    Revisar Etapa 2
+                                                <button onClick={() => changeStep(3)} className="text-sm font-bold text-blue-600 hover:underline mt-2">
+                                                    Revisar Etapa 3
                                                 </button>
                                             )}
                                         </div>
@@ -1949,19 +2035,21 @@ export default function AddProperty() {
                                 let isValid = true;
                                 let msg = 'Valores definidos.';
 
-                                if (isTemporada && !formData.valorDiaria) {
-                                    isValid = false;
-                                    msg = 'Informe o Valor da Diária.';
-                                } else if (isVenda && !formData.salePrice) {
+                                // Temporada não requer valores obrigatórios (podem ser NULL)
+                                // Proprietário pode querer alugar só por diária, só por mensal, ou ambos
+                                if (isVenda && !formData.salePrice) {
                                     isValid = false;
                                     msg = 'Informe o Valor de Venda.';
                                 } else if (isLocacao && !formData.rentPrice) {
                                     isValid = false;
                                     msg = 'Informe o Valor de Locação.';
+                                } else if (isTemporada && !formData.valorDiaria && !formData.valorMensal) {
+                                    isValid = false;
+                                    msg = 'Informe pelo menos um valor: Diária ou Mensal.';
                                 }
 
                                 return (
-                                    <div className={`p-4 rounded-full border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
+                                    <div className={`p-4 rounded-3xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
                                         <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-amber-900/30 text-amber-400'}`}>
                                             {isValid ? <Check size={16} /> : <AlertTriangle size={16} />}
                                         </div>
@@ -1970,9 +2058,28 @@ export default function AddProperty() {
                                             <p className="text-sm text-gray-400 mt-1">
                                                 {msg}
                                             </p>
+                                            {(() => {
+                                                const operacaoNome = operacoes.find(o => o.id === formData.operacaoId)?.tipo || '';
+                                                let valorDisplay = '';
+
+                                                if (isTemporada) {
+                                                    if (formData.valorDiaria) valorDisplay += `Diária: R$ ${formData.valorDiaria}`;
+                                                    if (formData.valorMensal) valorDisplay += (valorDisplay ? ' | ' : '') + `Mensal: R$ ${formData.valorMensal}`;
+                                                } else if (formData.salePrice) {
+                                                    valorDisplay = `R$ ${formData.salePrice}`;
+                                                } else if (formData.rentPrice) {
+                                                    valorDisplay = `R$ ${formData.rentPrice}`;
+                                                }
+
+                                                return valorDisplay && (
+                                                    <p className="text-sm text-slate-300 mt-2">
+                                                        <strong>{operacaoNome}:</strong> {valorDisplay}
+                                                    </p>
+                                                );
+                                            })()}
                                             {!isValid && (
-                                                <button onClick={() => changeStep(3)} className="text-sm font-bold text-amber-600 hover:underline mt-2">
-                                                    Corrigir Etapa 3
+                                                <button onClick={() => changeStep(2)} className="text-sm font-bold text-amber-600 hover:underline mt-2">
+                                                    Corrigir Etapa 2
                                                 </button>
                                             )}
                                         </div>
@@ -1984,15 +2091,27 @@ export default function AddProperty() {
                             {(() => {
                                 const isValid = images.length >= 1; // Require at least 1 photo
                                 return (
-                                    <div className={`p-4 rounded-full border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-red-900/10 border-red-800'}`}>
+                                    <div className={`p-4 rounded-3xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-red-900/10 border-red-800'}`}>
                                         <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
                                             {isValid ? <Check size={16} /> : <AlertCircle size={16} />}
                                         </div>
                                         <div>
                                             <h4 className={`font-bold ${isValid ? 'text-green-300' : 'text-red-300'}`}>Fotos</h4>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                {isValid ? `${images.length} fotos carregadas.` : 'É obrigatório enviar pelo menos 1 foto.'}
+                                                {isValid ? `${images.length} foto${images.length > 1 ? 's' : ''} carregada${images.length > 1 ? 's' : ''}.` : 'É obrigatório enviar pelo menos 1 foto.'}
                                             </p>
+                                            {images.length > 0 && (
+                                                <div className="mt-2 flex gap-2 overflow-x-auto">
+                                                    {images.slice(0, 3).map((img, idx) => (
+                                                        <img key={idx} src={img} alt="" className="w-16 h-16 rounded object-cover border border-slate-600" />
+                                                    ))}
+                                                    {images.length > 3 && (
+                                                        <div className="w-16 h-16 rounded bg-slate-700 flex items-center justify-center text-xs text-slate-400 border border-slate-600">
+                                                            +{images.length - 3}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                             {!isValid && (
                                                 <button onClick={() => changeStep(4)} className="text-sm font-bold text-red-600 hover:underline mt-2">
                                                     Adicionar Fotos na Etapa 4
@@ -2022,7 +2141,7 @@ export default function AddProperty() {
                                     formData.state &&
                                     formData.neighborhood &&
                                     (
-                                        (isTemporada && formData.valorDiaria) ||
+                                        (isTemporada && (formData.valorDiaria || formData.valorMensal)) ||
                                         (isVenda && formData.salePrice) ||
                                         (isLocacao && formData.rentPrice)
                                     ) &&

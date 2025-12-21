@@ -174,8 +174,8 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[70] p-4 animate-in fade-in duration-200">
-            <div className="bg-slate-800 rounded-full shadow-2xl w-full max-w-md overflow-y-auto max-h-[90vh] relative">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200">
+            <div className="bg-slate-800 rounded-3xl shadow-2xl w-[90%] max-w-md overflow-y-auto max-h-[90%] relative">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-gray-400 hover:text-gray-200 transition-colors"
@@ -195,7 +195,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
 
                     {success ? (
                         <div className="text-center py-8 animate-in zoom-in-50 duration-300">
-                            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-3xl flex items-center justify-center mx-auto mb-4">
                                 <CheckCircle size={32} />
                             </div>
                             <h3 className="text-xl font-bold text-white mb-2">Solicitação Enviada!</h3>
@@ -280,7 +280,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                                             value={formData.data}
                                             onChange={handleChange}
                                             min={new Date().toISOString().split('T')[0]}
-                                            className="w-full pl-10 pr-4 py-2 border border-slate-700 rounded-full bg-slate-900 text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                            className="w-full pl-10 pr-4 py-2 border border-slate-700 rounded-2xl bg-slate-900 text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                                             required
                                         />
                                     </div>
@@ -294,7 +294,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                                             name="hora"
                                             value={formData.hora}
                                             onChange={handleChange}
-                                            className="w-full pl-10 pr-4 py-2 border border-slate-700 rounded-full bg-slate-900 text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                            className="w-full pl-10 pr-4 py-2 border border-slate-700 rounded-2xl bg-slate-900 text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                                             required
                                         />
                                     </div>
@@ -311,7 +311,7 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                                         onChange={handleChange}
                                         placeholder="Ex: Tenho disponibilidade apenas pela manhã..."
                                         rows={3}
-                                        className="w-full pl-10 pr-4 py-2 border border-slate-700 rounded-full bg-slate-900 text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all resize-none"
+                                        className="w-full pl-10 pr-4 py-2 border border-slate-700 rounded-2xl bg-slate-900 text-white focus:ring-2 focus:ring-primary-500 outline-none transition-all resize-none"
                                     />
                                 </div>
                             </div>

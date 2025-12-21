@@ -1,29 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Heart, User, LogOut, ChevronRight, Home } from 'lucide-react';
+import { Search, Heart, User, LogOut, ChevronRight, Home, ShoppingCart } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { CustomOrderModal } from './CustomOrderModal';
 
 export const ClientDashboardView: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [userName, setUserName] = useState('');
     const [favoritesCount, setFavoritesCount] = useState(0);
+    const [showOrderModal, setShowOrderModal] = useState(false);
+    const [userWhatsApp, setUserWhatsApp] = useState('');
 
     useEffect(() => {
         if (user) {
             setUserName(user.user_metadata?.nome || 'Cliente');
+            setUserWhatsApp(user.user_metadata?.telefone || '');
             fetchFavoritesCount();
         }
     }, [user]);
 
     const fetchFavoritesCount = async () => {
         try {
-            const { count } = await supabase
+            // Count only favorites with ACTIVE properties
+            const { data } = await supabase
                 .from('favoritos')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', user?.id);
-            setFavoritesCount(count || 0);
+                .select('anuncio_id, anuncios!inner(status)')
+                .eq('user_id', user?.id)
+                .eq('anuncios.status', 'ativo');
+
+            setFavoritesCount(data?.length || 0);
         } catch (error) {
             console.error('Error fetching favorites:', error);
         }
@@ -41,7 +48,7 @@ export const ClientDashboardView: React.FC = () => {
             </div>
 
             {/* Quick Actions Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
                 {/* Search Card */}
                 <div
@@ -65,6 +72,18 @@ export const ClientDashboardView: React.FC = () => {
                     </div>
                     <h3 className="text-xl font-bold text-white mb-1">Meus Favoritos</h3>
                     <p className="text-sm text-slate-400">{favoritesCount} imóveis salvos</p>
+                </div>
+
+                {/* Custom Order Card */}
+                <div
+                    onClick={() => setShowOrderModal(true)}
+                    className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group flex flex-col items-center text-center justify-center min-h-[160px]"
+                >
+                    <div className="w-16 h-16 bg-emerald-900/30 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <ShoppingCart size={32} className="text-emerald-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-1">Encomendar Imóvel</h3>
+                    <p className="text-sm text-slate-400">Não achou? Peça para nós!</p>
                 </div>
 
                 {/* Profile Card */}
@@ -111,6 +130,17 @@ export const ClientDashboardView: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Custom Order Modal */}
+            <CustomOrderModal
+                isOpen={showOrderModal}
+                onClose={() => setShowOrderModal(false)}
+                brokerId={null}
+                prefilledData={{
+                    nome_cliente: user ? `${user.user_metadata?.nome || ''} ${user.user_metadata?.sobrenome || ''}`.trim() : '',
+                    whatsapp: userWhatsApp
+                }}
+            />
         </div>
     );
 };

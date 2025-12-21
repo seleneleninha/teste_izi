@@ -70,7 +70,7 @@ export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) =
     const displayPartners = partners.length < 10 ? [...partners, ...partners, ...partners] : [...partners, ...partners];
 
     return (
-        <section className={`py-24 border-t border-white/5 overflow-hidden bg-midnight-950`}>
+        <section className={`py-24 border-t border-white/5 overflow-hidden bg-midnight-900`}>
             <div className="container mx-auto px-4 mb-12 text-center">
                 <span className="text-emerald-400 font-semibold tracking-wider text-sm uppercase bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20">
                     Confiança & Credibilidade

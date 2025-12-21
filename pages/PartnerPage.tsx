@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Star, Users, Building2, Handshake, Zap, Shield, BarChart3, ArrowRight, CheckCircle2, Target } from 'lucide-react';
+import { Check, Star, Users, Building2, Handshake, Zap, Shield, BarChart3, ArrowRight, CheckCircle2, Target, Ticket, Trophy, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { Footer } from '../components/Footer';
 import { PartnersCarousel } from '../components/PartnersCarousel';
+import { useToast } from '../components/ToastContext';
 
 interface Plan {
     id: string;
@@ -16,11 +17,26 @@ interface Plan {
     features: string[];
 }
 
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(value);
+};
+
 export const PartnerPage: React.FC = () => {
     const navigate = useNavigate();
+    const { addToast } = useToast();
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Challenge & Coupon State
+    const [simulatedDiscount, setSimulatedDiscount] = useState(0);
+    const [showCouponInput, setShowCouponInput] = useState(false);
+    const [couponCode, setCouponCode] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string, percent: number } | null>(null);
+
     const [stats, setStats] = useState({
         properties: 0,
         brokers: 0,
@@ -49,8 +65,8 @@ export const PartnerPage: React.FC = () => {
                         nome: 'Básico',
                         limite_anuncios: 10,
                         limite_parcerias: 10,
-                        preco_mensal: 99.90,
-                        preco_anual: 959.04,
+                        preco_mensal: 99.00,
+                        preco_anual: 950.40,
                         destaque: false,
                         features: ['Até 10 Anúncios', 'Até 10 Parcerias', 'Painel de Controle Básico', 'Suporte por Email']
                     },
@@ -59,8 +75,8 @@ export const PartnerPage: React.FC = () => {
                         nome: 'Intermediário',
                         limite_anuncios: 25,
                         limite_parcerias: 20,
-                        preco_mensal: 199.90,
-                        preco_anual: 1919.04,
+                        preco_mensal: 169.00,
+                        preco_anual: 1622.40,
                         destaque: false,
                         features: ['Até 25 Anúncios', 'Até 20 Parcerias', 'Painel de Controle Completo', 'Suporte Prioritário', 'Estatísticas de Visualização']
                     },
@@ -69,8 +85,8 @@ export const PartnerPage: React.FC = () => {
                         nome: 'Avançado',
                         limite_anuncios: 50,
                         limite_parcerias: 30,
-                        preco_mensal: 299.90,
-                        preco_anual: 2879.04,
+                        preco_mensal: 249.00,
+                        preco_anual: 2390.40,
                         destaque: true,
                         features: ['Até 50 Anúncios', 'Até 30 Parcerias', 'Destaque nos Resultados', 'Suporte via WhatsApp', 'Relatórios Avançados', 'Selo de Corretor Verificado']
                     },
@@ -79,8 +95,8 @@ export const PartnerPage: React.FC = () => {
                         nome: 'Profissional',
                         limite_anuncios: 100,
                         limite_parcerias: 50,
-                        preco_mensal: 499.90,
-                        preco_anual: 4799.04,
+                        preco_mensal: 319.00,
+                        preco_anual: 3062.40,
                         destaque: false,
                         features: ['Até 100 Anúncios', 'Até 50 Parcerias', 'Prioridade Máxima em Buscas', 'Gerente de Conta Dedicado', 'API de Integração', 'Importação XML (Em breve)']
                     }
@@ -108,6 +124,60 @@ export const PartnerPage: React.FC = () => {
             console.error('Error fetching stats:', error);
         }
     };
+
+    // Scroll Logic for Sticky Bubble (Mobile & Desktop)
+    const [showStickyBubble, setShowStickyBubble] = useState(false);
+    useEffect(() => {
+        const handleScroll = () => {
+            const plansSection = document.getElementById('plans');
+            const challengeSection = document.getElementById('challenge-section');
+
+            if (plansSection && challengeSection) {
+                const plansRect = plansSection.getBoundingClientRect();
+                const challengeRect = challengeSection.getBoundingClientRect();
+                const windowHeight = window.innerHeight;
+
+                // Show if Plans Top is above middle of screen AND Challenge is not yet fully visible
+                // Basically: user is looking at plans but hasn't reached challenge
+                const startedPlans = plansRect.top < windowHeight / 2;
+                const reachedChallenge = challengeRect.top < windowHeight - 100;
+
+                if (startedPlans && !reachedChallenge) {
+                    setShowStickyBubble(true);
+                } else {
+                    setShowStickyBubble(false);
+                }
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollToChallenge = () => {
+        document.getElementById('challenge-section')?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const handleApplyCoupon = () => {
+        const code = couponCode.toUpperCase().trim();
+        if (code === 'IZI50') {
+            setAppliedCoupon({ code: 'IZI50', percent: 50 });
+            setSimulatedDiscount(50);
+            setShowCouponInput(false);
+            addToast('Cupom de 50% de LANÇAMENTO aplicado!', 'success');
+        } else if (code === 'IZI30') {
+            setAppliedCoupon({ code: 'IZI30', percent: 30 });
+            setSimulatedDiscount(30);
+            setShowCouponInput(false);
+            addToast('Cupom de 30% aplicado com sucesso!', 'success');
+        } else {
+            addToast('Cupom inválido ou expirado.', 'error');
+        }
+    };
+
+    // Calculate effective discount (either simulation or real applied coupon)
+    // Applied coupon locks the discount visualization
+    const activeDiscount = appliedCoupon ? appliedCoupon.percent : simulatedDiscount;
 
     return (
         <div className="bg-slate-900 min-h-screen font-sans">
@@ -259,12 +329,12 @@ export const PartnerPage: React.FC = () => {
                             <span className={`text-sm font-medium ${billingCycle === 'monthly' ? 'text-white' : 'text-gray-500'}`}>Mensal</span>
                             <button
                                 onClick={() => setBillingCycle(prev => prev === 'monthly' ? 'annual' : 'monthly')}
-                                className={`relative w-16 h-8 rounded-full transition-colors ${billingCycle === 'annual' ? 'bg-emerald-500' : 'bg-slate-600'}`}
+                                className={`relative w-16 h-8 rounded-full transition-colors animate-pulse ${billingCycle === 'annual' ? 'bg-emerald-500' : 'bg-slate-600'}`}
                             >
-                                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${billingCycle === 'annual' ? 'translate-x-8' : ''}`}></div>
+                                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform animate-pulse ${billingCycle === 'annual' ? 'translate-x-8' : ''}`}></div>
                             </button>
-                            <span className={`text-sm font-medium ${billingCycle === 'annual' ? 'text-white' : 'text-gray-500'}`}>
-                                Anual <span className="text-emerald-500 text-xs font-bold ml-1">(-20%)</span>
+                            <span className={`text-lg font-medium ${billingCycle === 'annual' ? 'text-white' : 'text-gray-500 animate-pulse'}`}>
+                                Anual <span className="text-emerald-500 text-md font-bold ml-1 animate-pulse">(20% DESCONTO)</span>
                             </span>
                         </div>
                     </div>
@@ -273,8 +343,17 @@ export const PartnerPage: React.FC = () => {
                         {plans.map((plan) => {
                             const monthlyCost = plan.preco_mensal * 12;
                             const annualCost = plan.preco_anual;
-                            const savings = monthlyCost - annualCost;
-                            const savingsPercent = Math.round((savings / monthlyCost) * 100);
+
+                            // Base prices (Monthly or Annual/12)
+                            const baseDisplayPrice = billingCycle === 'monthly' ? plan.preco_mensal : (plan.preco_anual / 12);
+
+                            // Apply active discount logic
+                            const finalDisplayPrice = baseDisplayPrice * (1 - (activeDiscount / 100));
+
+                            // Savings calculation (Always compares to base monthly * 12)
+                            // If annual, savings = (monthly * 12) - (annual_price_with_discount)
+                            const annualPriceWithDiscount = plan.preco_anual * (1 - (activeDiscount / 100));
+                            const totalSavings = (plan.preco_mensal * 12) - annualPriceWithDiscount;
 
                             return (
                                 <div
@@ -290,18 +369,44 @@ export const PartnerPage: React.FC = () => {
                                         </div>
                                     )}
 
+                                    {/* Active Discount Badge */}
+                                    {activeDiscount > 0 && (
+                                        <div className="absolute top-4 right-4 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
+                                            -{activeDiscount}% OFF
+                                        </div>
+                                    )}
+
                                     <h3 className="text-xl font-bold text-white mb-2">{plan.nome}</h3>
                                     <div className="mb-6">
-                                        <span className="text-3xl font-bold text-white">
-                                            R$ {billingCycle === 'monthly' ? plan.preco_mensal.toFixed(2).replace('.', ',') : (plan.preco_anual / 12).toFixed(2).replace('.', ',')}
-                                        </span>
-                                        <span className="text-gray-500 text-sm">/mês</span>
+                                        {/* Original Price Strikethrough (Annual or Discounted) */}
+                                        {(billingCycle === 'annual' || activeDiscount > 0) && (
+                                            <div className="text-gray-400 text-lg font-bold mb-1">
+                                                De <span className="line-through decoration-red-500 decoration-2">
+                                                    R$ {formatCurrency(plan.preco_mensal)}/mês
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-baseline gap-1">
+                                            <span className={`text-3xl font-bold ${activeDiscount > 0 ? 'text-emerald-400' : 'text-white'}`}>
+                                                R$ {formatCurrency(finalDisplayPrice)}
+                                            </span>
+                                            <span className="text-gray-500 text-sm">/mês</span>
+                                        </div>
+
                                         {billingCycle === 'annual' && (
                                             <div className="font-bold text-md text-emerald-500 mt-1">
-                                                Economize R$ {savings.toFixed(2).replace('.', ',')} no ano
-                                                <p className="font-light text-sm text-slate-900 dark:text-white">Pagamento único de R$ {plan.preco_anual.toFixed(2).replace('.', ',')}</p>
+                                                Economize R$ {formatCurrency(totalSavings)} no ano
+                                                <p className="font-light text-md text-slate-300">
+                                                    Pagamento único de R$ {formatCurrency(annualPriceWithDiscount)}
+                                                </p>
                                             </div>
-
+                                        )}
+                                        {/* Discount Note */}
+                                        {activeDiscount > 0 && (
+                                            <p className="text-xs text-red-400 font-bold mt-2">
+                                                *Cupom de {activeDiscount}% aplicado na simulação
+                                            </p>
                                         )}
                                     </div>
 
@@ -326,8 +431,116 @@ export const PartnerPage: React.FC = () => {
                             )
                         })}
                     </div>
+
+                    {/* --- CHALLENGE SECTION --- */}
+                    <div id="challenge-section" className="mt-16 max-w-4xl mx-auto bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 md:p-12 border border-slate-700 shadow-2xl relative overflow-hidden group">
+                        {/* Interactive Background */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-colors"></div>
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-500/5 rounded-full blur-3xl group-hover:bg-red-500/10 transition-colors"></div>
+
+                        <div className="relative z-10 text-center">
+                            <div className="inline-flex items-center justify-center p-3 bg-red-500/10 rounded-full mb-6 animate-bounce">
+                                <Trophy className="text-red-500 w-8 h-8" />
+                            </div>
+
+                            <h2 className="text-3xl md:text-5xl font-black text-white mb-4 italic tracking-tight">
+                                "AINDA ACHA QUE TÁ CARO???"
+                            </h2>
+                            <p className="text-xl md:text-2xl text-gray-400 font-light mb-10">
+                                Por tudo isso que oferecemos... <span className="text-emerald-400 font-bold">TEM CERTEZA?</span>
+                            </p>
+
+                            <div className="bg-slate-950/50 rounded-2xl p-8 mb-8 backdrop-blur-sm border border-slate-800">
+                                <h3 className="text-xl font-bold text-white mb-6 flex items-center justify-center gap-2">
+                                    <Ticket className="text-yellow-500" />
+                                    QUER UM CUPOM DE DESCONTO?
+                                    <Ticket className="text-yellow-500" />
+                                </h3>
+
+                                {/* Dynamic Slider */}
+                                <div className="mb-8 px-4">
+                                    <div className="flex justify-between text-sm text-gray-500 font-bold mb-2">
+                                        <span>0%</span>
+                                        <span>10%</span>
+                                        <span>20%</span>
+                                        <span>30%</span>
+                                        <span>40%</span>
+                                        <span className="text-red-500">50%</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="50"
+                                        step="10"
+                                        value={simulatedDiscount}
+                                        onChange={(e) => {
+                                            if (!appliedCoupon) {
+                                                setSimulatedDiscount(Number(e.target.value));
+                                            }
+                                        }}
+                                        disabled={!!appliedCoupon}
+                                        className={`w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition-all ${appliedCoupon ? 'opacity-50 cursor-not-allowed' : 'hover:accent-emerald-400'}`}
+                                    />
+                                    <p className="mt-4 text-gray-400 text-sm">
+                                        Arraste para simular o <span className="text-white font-bold">DESCONTO DE LANÇAMENTO</span>
+                                    </p>
+                                </div>
+
+                                {!showCouponInput && !appliedCoupon ? (
+                                    <button
+                                        onClick={() => setShowCouponInput(true)}
+                                        className="px-10 py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white rounded-full font-black text-xl shadow-lg shadow-red-900/30 transform hover:scale-105 transition-all w-full md:w-auto"
+                                    >
+                                        AGORA SIM... QUERO MEU CUPOM!
+                                    </button>
+                                ) : showCouponInput && !appliedCoupon ? (
+                                    <div className="flex flex-col md:flex-row gap-4 justify-center items-center animate-in fade-in zoom-in duration-300">
+                                        <div className="relative w-full md:w-64">
+                                            <input
+                                                type="text"
+                                                value={couponCode}
+                                                onChange={(e) => setCouponCode(e.target.value)}
+                                                placeholder="DIGITE O CÓDIGO"
+                                                className="w-full px-6 py-4 bg-slate-800 border-2 border-slate-600 rounded-full text-white font-bold text-center uppercase tracking-widest focus:border-emerald-500 focus:outline-none"
+                                            />
+                                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+                                        </div>
+                                        <button
+                                            onClick={handleApplyCoupon}
+                                            className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-bold text-lg shadow-lg transition-all w-full md:w-auto"
+                                        >
+                                            VALIDAR
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="bg-emerald-500/20 border border-emerald-500/50 p-4 rounded-xl inline-flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4">
+                                        <div className="bg-emerald-500 rounded-full p-2">
+                                            <Check className="text-white w-6 h-6" />
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="font-bold text-white text-lg">CUPOM APLICADO!</p>
+                                            <p className="text-emerald-400 text-sm">Desconto de {appliedCoupon?.percent}% garantido.</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
+
+            {/* Sticky CTA Bubble (Mobile & Desktop) */}
+            {showStickyBubble && (
+                <button
+                    onClick={scrollToChallenge}
+                    className="fixed bottom-6 right-6 z-50 animate-bounce cursor-pointer hover:scale-110 transition-transform"
+                >
+                    <div className="relative bg-red-600 text-white px-6 py-4 rounded-tr-2xl rounded-tl-2xl rounded-bl-2xl shadow-2xl border-4 border-white flex items-center gap-3">
+                        <span className="text-lg font-black whitespace-nowrap uppercase italic">Acha que ainda está caro?! 👇</span>
+                        <div className="absolute -bottom-2 right-0 w-6 h-6 bg-red-600 border-r-4 border-b-4 border-white transform rotate-45"></div>
+                    </div>
+                </button>
+            )}
 
             {/* CTA Section */}
             <section className="py-20 bg-slate-900 relative overflow-hidden">
@@ -354,6 +567,6 @@ export const PartnerPage: React.FC = () => {
             </section>
 
             <Footer />
-        </div>
+        </div >
     );
 };

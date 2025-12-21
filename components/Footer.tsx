@@ -46,7 +46,7 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
 
     return (
         <>
-            <footer className="bg-black text-white py-20 border-t border-white/10">
+            <footer className="bg-midnight-950 text-white py-20 border-t border-white/10">
                 <div className="container mx-auto px-4">
                     <div className="grid md:grid-cols-4 gap-12 mb-16">
                         <div className="col-span-1 md:col-span-1">

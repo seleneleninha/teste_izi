@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StatCard } from '../components/StatCard';
 import { PropertyCard } from '../components/PropertyCard';
 import { CHART_DATA } from '../constants';
-import { Plus, Edit2, Trash2, CheckCircle, ArrowUp, Loader2, Bed, Bath, Square, MapPin, Share2, ExternalLink, Home, Handshake, Building2, Users, Eye } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle, ArrowUp, Loader2, Bed, Bath, Square, MapPin, Share2, ExternalLink, Home, Handshake, Building2, Users, Eye, TrendingUp, Key, Clock, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
@@ -25,6 +25,11 @@ export const Dashboard: React.FC = () => {
     const [userSlug, setUserSlug] = useState('');
     const [stats, setStats] = useState({
         properties: 0,
+        propertiesAtivos: 0,
+        propertiesPendentes: 0,
+        propertiesReprovados: 0,
+        vendasFechadas: 0,
+        locacoesFechadas: 0,
         leads: 0,
         messages: 0,
         acceptedPartnerships: 0,
@@ -75,6 +80,38 @@ export const Dashboard: React.FC = () => {
                 .select('*', { count: 'exact', head: true })
                 .eq('user_id', user.id);
 
+            // Breakdown by status
+            const { count: ativosCount } = await supabase
+                .from('anuncios')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .eq('status', 'ativo');
+
+            const { count: pendentesCount } = await supabase
+                .from('anuncios')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .eq('status', 'pendente');
+
+            const { count: reprovadosCount } = await supabase
+                .from('anuncios')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .eq('status', 'reprovado');
+
+            // Vendas e Locações Fechadas
+            const { count: vendasCount } = await supabase
+                .from('anuncios')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .eq('status', 'venda_faturada');
+
+            const { count: locacoesCount } = await supabase
+                .from('anuncios')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', user.id)
+                .eq('status', 'locacao_faturada');
+
             const { count: leadCount } = await supabase
                 .from('leads')
                 .select('*', { count: 'exact', head: true })
@@ -89,9 +126,11 @@ export const Dashboard: React.FC = () => {
             const { count: acceptedCount } = await supabase
                 .from('parcerias')
                 .select('*', { count: 'exact', head: true })
-                .eq('user_id', user.id);
+                .eq('user_id', user.id)
+                .eq('status', 'aceita');
 
             // Count available partnerships (properties accepting partnerships in my state, excluding mine)
+            // MINUS my accepted partnerships
             const { data: userProfile } = await supabase
                 .from('perfis')
                 .select('uf')
@@ -100,18 +139,27 @@ export const Dashboard: React.FC = () => {
 
             let availableCount = 0;
             if (userProfile?.uf) {
-                const { count } = await supabase
+                const { count: totalAvailable } = await supabase
                     .from('anuncios')
                     .select('*', { count: 'exact', head: true })
                     .eq('uf', userProfile.uf)
                     .neq('user_id', user.id)
                     .eq('status', 'ativo')
                     .eq('aceita_parceria', true);
-                availableCount = count || 0;
+
+                // Deduct accepted partnerships
+                availableCount = (totalAvailable || 0) - (acceptedCount || 0);
+                // Ensure non-negative
+                if (availableCount < 0) availableCount = 0;
             }
 
             setStats({
                 properties: propCount || 0,
+                propertiesAtivos: ativosCount || 0,
+                propertiesPendentes: pendentesCount || 0,
+                propertiesReprovados: reprovadosCount || 0,
+                vendasFechadas: vendasCount || 0,
+                locacoesFechadas: locacoesCount || 0,
                 leads: leadCount || 0,
                 messages: msgCount || 0,
                 acceptedPartnerships: acceptedCount || 0,
@@ -322,161 +370,310 @@ export const Dashboard: React.FC = () => {
             {/* User Dashboard - Only for non-admins */}
             {role?.toLowerCase() !== 'admin' && (
                 <>
-                    {/* Stats Grid */}
-                    {/* Public Page URL Display - Enhanced */}
-                    {user && (
-                        <div className="flex flex-col md:flex-row md:items-center gap-4 bg-gradient-to-r from-primary-50 to-white dark:from-slate-800 dark:to-slate-900 p-6 rounded-3xl border border-primary-100 border-primary-900/50 shadow-sm relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-3xl blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                    {/* Stats Grid - Horizontal Scroll Mobile */}
+                    <div className="mb-8">
+                        {/* Mobile: Horizontal Scroll */}
+                        <div className="md:hidden overflow-x-auto pb-4 -mx-4 px-4">
+                            <div className="flex gap-4 snap-x snap-mandatory">
 
-                            <div className="flex-1 min-w-0 z-10">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="p-2 bg-primary-100 bg-primary-900/30 rounded-3xl text-primary-600 text-primary-400">
-                                        <Home size={20} />
+                                {/* Sua Página - Mobile */}
+                                <div className="min-w-[200px] snap-center bg-purple-500/30 p-5 rounded-2xl shadow-lg border border-white active:scale-[0.98] transition-transform animate-pulse">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                                            <ExternalLink size={24} className="text-white" />
+                                        </div>
                                     </div>
-                                    <p className="text-sm font-bold text-gray-200 uppercase tracking-wide">Endereço da Sua Página</p>
-                                </div>
-                                <div className="bg-white/50 dark:bg-black/20 rounded-3xl p-2 border border-slate-700/50 backdrop-blur-sm">
-                                    <p className="text-base md:text-lg font-mono font-bold text-primary-700 text-primary-400 truncate select-all">
+                                    <h3 className="text-white text-xs font-bold mb-1">DIVULGUE SUA PÁGINA</h3>
+                                    <div className="text-xs font-mono text-slate-400 mb-3 truncate">
                                         {window.location.origin}/{userSlug || 'configurar-slug'}
-                                    </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => {
+                                                const url = `${window.location.origin}/${userSlug || 'configurar-slug'}`;
+                                                navigator.clipboard.writeText(url);
+                                                addToast('Link copiado! 📋', 'success');
+                                            }}
+                                            className="flex-1 px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1"
+                                        >
+                                            <Share2 size={14} /> Copiar
+                                        </button>
+                                        <button
+                                            onClick={() => window.open(`/${userSlug || 'configurar-slug'}`, '_blank')}
+                                            className="flex-1 px-3 py-2 bg-slate-700/50 hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1"
+                                        >
+                                            <Eye size={14} /> Ver
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="flex items-center gap-3 z-10 w-full md:w-auto">
-                                <button
-                                    onClick={() => {
-                                        const url = `${window.location.origin}/${userSlug || 'configurar-slug'}`;
-                                        navigator.clipboard.writeText(url);
-                                        addToast('Link colado na sua área de transferência! 📋', 'success');
-                                    }}
-                                    className="flex-1 md:flex-none px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-full shadow-lg shadow-primary-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-                                    title="Copiar Link"
-                                >
-                                    <Share2 size={20} />
-                                    <span>Copiar</span>
-                                </button>
-                                <button
-                                    onClick={() => window.open(`/${userSlug || 'configurar-slug'}`, '_blank')}
-                                    className="px-4 py-3 bg-slate-800 border-2 border-primary-100 border-slate-600 text-primary-600 text-slate-300 font-bold rounded-full hover:bg-primary-50 hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
-                                    title="Visitar Página"
-                                >
-                                    <Eye size={20} />
-                                    <span>Ver Página</span>
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-                        {/* Meus Imóveis */}
-                        <div
-                            onClick={() => navigate('/properties')}
-                            className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-blue-100 bg-blue-900/30 rounded-full flex items-center justify-center">
-                                    <Home size={24} className="text-blue-600 text-blue-400" />
-                                </div>
-                                <span className="text-xs text-green-600 text-green-400 font-medium">+12.5%</span>
-                            </div>
-                            <h3 className="text-slate-400 text-sm font-medium mb-1">Meus Imóveis</h3>
-                            <div className="text-3xl font-bold text-white">{stats.properties}</div>
-                        </div>
-
-                        {/* Imóveis em Parceria (Accepted) */}
-                        <div
-                            onClick={() => navigate('/partner-properties')}
-                            className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-emerald-100 bg-emerald-900/30 rounded-full flex items-center justify-center">
-                                    <Handshake size={24} className="text-emerald-600 text-emerald-400" />
-                                </div>
-                            </div>
-                            <h3 className="text-slate-400 text-sm font-medium mb-1">Parcerias Aceitas</h3>
-                            <div className="text-3xl font-bold text-white">{stats.acceptedPartnerships || 0}</div>
-                        </div>
-
-                        {/* Imóveis Parceiros (Available) */}
-                        <div
-                            onClick={() => navigate('/partner-properties')}
-                            className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-purple-100 bg-purple-900/30 rounded-full flex items-center justify-center">
-                                    <Building2 size={24} className="text-purple-600 text-purple-400" />
-                                </div>
-                            </div>
-                            <h3 className="text-slate-400 text-sm font-medium mb-1">Parcerias Disponíveis</h3>
-                            <div className="text-3xl font-bold text-white">{stats.availablePartnerships || 0}</div>
-                        </div>
-
-                        {/* Leads */}
-                        <div
-                            onClick={() => navigate('/leads')}
-                            className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="w-12 h-12 bg-amber-100 bg-amber-900/30 rounded-full flex items-center justify-center">
-                                    <Users size={24} className="text-amber-600 text-amber-400" />
-                                </div>
-                                <span className="text-xs text-red-600 text-red-400 font-medium">-3.1%</span>
-                            </div>
-                            <h3 className="text-slate-400 text-sm font-medium mb-1">Leads</h3>
-                            <div className="text-3xl font-bold text-white">{stats.leads}</div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-3 space-y-8">
-                            <div className="grid grid-cols-2 gap-6">
+                                {/* Anunciar Imóvel - Mobile */}
                                 <div
-                                    className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 cursor-pointer hover:shadow-md transition-all group"
                                     onClick={() => navigate('/add-property')}
+                                    className="min-w-[200px] snap-center bg-red-500/30 p-5 rounded-2xl shadow-lg border border-white active:scale-[0.98] transition-transform cursor-pointer animate-pulse"
                                 >
-                                    <div className="w-12 h-12 bg-primary-100 bg-primary-900/30 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                        <Plus size={24} className="text-primary-600 text-primary-400" />
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                                            <Plus size={24} className="text-white" />
+                                        </div>
                                     </div>
-                                    <h4 className="font-bold text-white mb-1">Anunciar Imóvel</h4>
-                                    <p className="text-sm text-slate-400">Cadastre um novo imóvel para venda, locação ou ambos.</p>
+                                    <h3 className="text-slate-400 text-sm font-medium mb-1">Expanda sua Carteira</h3>
+                                    <div className="text-lg font-bold text-white">Cadastrar Novo Imóvel</div>
                                 </div>
 
+                                {/* Meus Imóveis */}
                                 <div
-                                    className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 cursor-pointer hover:shadow-md transition-all group"
-                                    onClick={() => navigate('/leads')}
+                                    onClick={() => navigate('/properties')}
+                                    className="min-w-[200px] snap-center bg-slate-800/50 backdrop-blur-sm p-5 rounded-2xl shadow-lg border border-slate-700/50 active:scale-[0.98] transition-transform cursor-pointer"
                                 >
-                                    <div className="w-12 h-12 bg-purple-100 bg-purple-900/30 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                        <CheckCircle size={24} className="text-purple-600 text-purple-400" />
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="w-12 h-12 bg-blue-900/30 rounded-full flex items-center justify-center">
+                                            <Home size={24} className="text-blue-400" />
+                                        </div>
                                     </div>
-                                    <h4 className="font-bold text-white mb-1">Gerenciar Leads</h4>
-                                    <p className="text-sm text-slate-400">Visualize seus leads no funil de vendas.</p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-6">
-                                <div className="bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-700 h-full">
-                                    <h3 className="text-lg font-bold text-white mb-4">Notificações Recentes</h3>
-                                    <div className="space-y-4">
-                                        {notifications.length === 0 ? (
-                                            <p className="text-gray-500 text-sm text-center py-8">Nenhuma notificação recente.</p>
-                                        ) : (
-                                            notifications.map(notif => (
-                                                <div key={notif.id} className="flex space-x-3 pb-3 border-b border-slate-700 last:border-0 last:pb-0">
-                                                    <div className="w-8 h-8 rounded-full bg-blue-100 bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                                                        <CheckCircle className="text-blue-600 text-blue-400 w-4 h-4" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm text-gray-200 font-medium">{notif.titulo}</p>
-                                                        <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{notif.mensagem}</p>
-                                                        <p className="text-[10px] text-gray-400 mt-1">{new Date(notif.created_at).toLocaleDateString()}</p>
-                                                    </div>
-                                                </div>
-                                            ))
+                                    <h3 className="text-slate-400 text-sm font-medium mb-1">Meus Imóveis</h3>
+                                    <div className="text-3xl font-bold text-white mb-3">{stats.properties}</div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {stats.propertiesAtivos > 0 && (
+                                            <span className="text-xs px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 flex items-center gap-1">
+                                                <CheckCircle size={12} /> {stats.propertiesAtivos} Ativo(s)
+                                            </span>
+                                        )}
+                                        {stats.propertiesPendentes > 0 && (
+                                            <span className="text-xs px-2 py-1 rounded bg-yellow-500/10 text-yellow-400 flex items-center gap-1">
+                                                <Clock size={12} /> {stats.propertiesPendentes} Pendente(s)
+                                            </span>
+                                        )}
+                                        {stats.propertiesReprovados > 0 && (
+                                            <span className="text-xs px-2 py-1 rounded bg-red-500/10 text-red-400 flex items-center gap-1">
+                                                <XCircle size={12} /> {stats.propertiesReprovados} Reprovado(s)
+                                            </span>
                                         )}
                                     </div>
-                                    <button className="w-full mt-4 text-center text-sm text-primary-500 hover:text-primary-600 font-medium">
-                                        Ver Todas
+                                </div>
+
+                                {/* Vendas Fechadas */}
+                                <div
+                                    onClick={() => navigate('/properties?status=venda_faturada')}
+                                    className="min-w-[200px] snap-center bg-slate-800/50 backdrop-blur-sm p-5 rounded-2xl shadow-lg border border-slate-700/50 active:scale-[0.98] transition-transform cursor-pointer"
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="w-12 h-12 bg-green-900/30 rounded-full flex items-center justify-center">
+                                            <TrendingUp size={24} className="text-green-400" />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-slate-400 text-sm font-medium mb-1">Vendas Fechadas</h3>
+                                    <div className="text-3xl font-bold text-white">{stats.vendasFechadas}</div>
+                                </div>
+
+                                {/* Locações Fechadas */}
+                                <div
+                                    onClick={() => navigate('/properties?status=locacao_faturada')}
+                                    className="min-w-[200px] snap-center bg-slate-800/50 backdrop-blur-sm p-5 rounded-2xl shadow-lg border border-slate-700/50 active:scale-[0.98] transition-transform cursor-pointer"
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="w-12 h-12 bg-blue-900/30 rounded-full flex items-center justify-center">
+                                            <Key size={24} className="text-blue-400" />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-slate-400 text-sm font-medium mb-1">Locações Fechadas</h3>
+                                    <div className="text-3xl font-bold text-white">{stats.locacoesFechadas}</div>
+                                </div>
+
+                                {/* Parcerias Aceitas */}
+                                <div
+                                    onClick={() => navigate('/partner-properties')}
+                                    className="min-w-[200px] snap-center bg-slate-800/50 backdrop-blur-sm p-5 rounded-2xl shadow-lg border border-slate-700/50 active:scale-[0.98] transition-transform cursor-pointer"
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="w-12 h-12 bg-emerald-900/30 rounded-full flex items-center justify-center">
+                                            <Handshake size={24} className="text-emerald-400" />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-slate-400 text-sm font-medium mb-1">Parcerias Aceitas</h3>
+                                    <div className="text-3xl font-bold text-white">{stats.acceptedPartnerships || 0}</div>
+                                </div>
+
+                                {/* Parcerias Disponíveis */}
+                                <div
+                                    onClick={() => navigate('/partner-properties')}
+                                    className="min-w-[200px] snap-center bg-slate-800/50 backdrop-blur-sm p-5 rounded-2xl shadow-lg border border-slate-700/50 active:scale-[0.98] transition-transform cursor-pointer"
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="w-12 h-12 bg-purple-900/30 rounded-full flex items-center justify-center">
+                                            <Building2 size={24} className="text-purple-400" />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-slate-400 text-sm font-medium mb-1">Parcerias Disponíveis</h3>
+                                    <div className="text-3xl font-bold text-white">{stats.availablePartnerships || 0}</div>
+                                </div>
+
+                                {/* Gerenciar Leads - Mobile */}
+                                <div
+                                    onClick={() => navigate('/leads')}
+                                    className="min-w-[200px] snap-center bg-slate-800/50 backdrop-blur-sm p-5 rounded-2xl shadow-lg border border-slate-700/50 active:scale-[0.98] transition-transform cursor-pointer"
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="w-12 h-12 bg-purple-900/30 rounded-full flex items-center justify-center">
+                                            <CheckCircle size={24} className="text-purple-400" />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-slate-400 text-sm font-medium mb-1">Gerenciar Leads</h3>
+                                    <div className="text-lg font-bold text-white">Ver Todos</div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        {/* Desktop: Grid */}
+                        <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-6">
+
+                            {/* Sua Página - Stat Format */}
+                            <div
+                                className="bg-purple-500/30 p-6 rounded-3xl shadow-sm border border-white hover:shadow-md transition-all group animate-pulse"
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                                        <ExternalLink size={24} className="text-white" />
+                                    </div>
+                                </div>
+                                <h3 className="text-white text-sm font-bold mb-1">DIVULGUE SUA PÁGINA</h3>
+                                <div className="text-sm font-mono text-slate-400 mb-4">
+                                    {window.location.origin}/{userSlug || 'configurar-slug'}
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => {
+                                            const url = `${window.location.origin}/${userSlug || 'configurar-slug'}`;
+                                            navigator.clipboard.writeText(url);
+                                            addToast('Link copiado! 📋', 'success');
+                                        }}
+                                        className="flex-1 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Share2 size={16} /> Copiar
+                                    </button>
+                                    <button
+                                        onClick={() => window.open(`/${userSlug || 'configurar-slug'}`, '_blank')}
+                                        className="flex-1 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Eye size={16} /> Ver
                                     </button>
                                 </div>
+                            </div>
+
+                            {/* Anunciar Imóvel - Stat Format */}
+                            <div
+                                className="bg-red-500/30 p-6 rounded-3xl shadow-sm border border-white hover:shadow-md transition-all cursor-pointer group animate-pulse"
+                                onClick={() => navigate('/add-property')}
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                                        <Plus size={24} className="text-white" />
+                                    </div>
+                                </div>
+                                <h3 className="text-slate-400 text-sm font-medium mb-1">Expanda sua Carteira</h3>
+                                <div className="text-lg font-bold text-white">Cadastrar Novo Imóvel</div>
+                            </div>
+
+                            {/* Meus Imóveis */}
+                            <div
+                                onClick={() => navigate('/properties')}
+                                className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-blue-900/30 rounded-full flex items-center justify-center">
+                                        <Home size={24} className="text-blue-400" />
+                                    </div>
+                                </div>
+                                <h3 className="text-slate-400 text-sm font-medium mb-1">Meus Imóveis</h3>
+                                <div className="text-3xl font-bold text-white mb-3">{stats.properties}</div>
+                                <div className="flex flex-wrap gap-2">
+                                    {stats.propertiesAtivos > 0 && (
+                                        <span className="text-xs px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 flex items-center gap-1">
+                                            <CheckCircle size={12} /> {stats.propertiesAtivos} Ativo(s)
+                                        </span>
+                                    )}
+                                    {stats.propertiesPendentes > 0 && (
+                                        <span className="text-xs px-2 py-1 rounded bg-yellow-500/10 text-yellow-400 flex items-center gap-1">
+                                            <Clock size={12} /> {stats.propertiesPendentes} Pendente(s)
+                                        </span>
+                                    )}
+                                    {stats.propertiesReprovados > 0 && (
+                                        <span className="text-xs px-2 py-1 rounded bg-red-500/10 text-red-400 flex items-center gap-1">
+                                            <XCircle size={12} /> {stats.propertiesReprovados} Reprovado(s)
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Vendas Fechadas */}
+                            <div
+                                onClick={() => navigate('/properties?status=venda_faturada')}
+                                className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-green-900/30 rounded-full flex items-center justify-center">
+                                        <TrendingUp size={24} className="text-green-400" />
+                                    </div>
+                                </div>
+                                <h3 className="text-slate-400 text-sm font-medium mb-1">Vendas Fechadas</h3>
+                                <div className="text-3xl font-bold text-white">{stats.vendasFechadas}</div>
+                            </div>
+
+                            {/* Locações Fechadas */}
+                            <div
+                                onClick={() => navigate('/properties?status=locacao_faturada')}
+                                className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-blue-900/30 rounded-full flex items-center justify-center">
+                                        <Key size={24} className="text-blue-400" />
+                                    </div>
+                                </div>
+                                <h3 className="text-slate-400 text-sm font-medium mb-1">Locações Fechadas</h3>
+                                <div className="text-3xl font-bold text-white">{stats.locacoesFechadas}</div>
+                            </div>
+
+                            {/* Imóveis em Parceria (Accepted) */}
+                            <div
+                                onClick={() => navigate('/partner-properties')}
+                                className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-emerald-900/30 rounded-full flex items-center justify-center">
+                                        <Handshake size={24} className="text-emerald-400" />
+                                    </div>
+                                </div>
+                                <h3 className="text-slate-400 text-sm font-medium mb-1">Parcerias Aceitas</h3>
+                                <div className="text-3xl font-bold text-white">{stats.acceptedPartnerships || 0}</div>
+                            </div>
+
+                            {/* Imóveis Parceiros (Available) */}
+                            <div
+                                onClick={() => navigate('/partner-properties')}
+                                className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-purple-900/30 rounded-full flex items-center justify-center">
+                                        <Building2 size={24} className="text-purple-400" />
+                                    </div>
+                                </div>
+                                <h3 className="text-slate-400 text-sm font-medium mb-1">Parcerias Disponíveis</h3>
+                                <div className="text-3xl font-bold text-white">{stats.availablePartnerships || 0}</div>
+                            </div>
+
+                            {/* Gerenciar Leads - Stat Format */}
+                            <div
+                                className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                                onClick={() => navigate('/leads')}
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-12 h-12 bg-purple-900/30 rounded-full flex items-center justify-center">
+                                        <CheckCircle size={24} className="text-purple-400" />
+                                    </div>
+                                </div>
+                                <h3 className="text-slate-400 text-sm font-medium mb-1">Gerenciar Leads</h3>
+                                <div className="text-lg font-bold text-white">Ver Todos</div>
                             </div>
                         </div>
                     </div>
@@ -499,7 +696,7 @@ export const Dashboard: React.FC = () => {
                     )}
                 </>
             )}
-
         </div>
     );
 };
+

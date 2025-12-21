@@ -80,7 +80,7 @@ export const SearchFilter = ({ brokerSlug }: { brokerSlug?: string }) => {
 
     return (
 
-        <div className="bg-midnight-950/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-8 max-w-4xl mx-auto -mt-12 md:-mt-24 relative z-20 mx-4 md:mx-auto group">
+        <div className="bg-midnight-950/50 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-8 max-w-4xl mx-auto -mt-12 md:-mt-24 relative z-20 mx-4 md:mx-auto group">
             {/* Decorative sheen */}
             <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-3xl" />
 

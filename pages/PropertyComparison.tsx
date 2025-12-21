@@ -213,12 +213,13 @@ export const PropertyComparison: React.FC = () => {
                 </button>
                 <div>
                     <h2 className="text-2xl font-bold text-white">Comparativo de Imóveis</h2>
-                    <p className="text-slate-400 text-sm">Comparando {properties.length} imóveis lado a lado</p>
+                    <p className="text-slate-400 text-sm">Comparando {properties.length} imóveis lado a lado.</p>
+                    <p className="text-yellow-500 text-sm">AVISO: Melhor experiência em computadores.</p>
                 </div>
             </div>
 
             <div className="overflow-x-auto">
-                <table className="w-full min-w-[800px] border-collapse">
+                <table className="max-w-auto min-w-auto border-collapse">
                     <thead>
                         <tr>
                             <th className="p-4 text-left w-48 bg-slate-900/50 sticky left-0 border-b border-slate-700"></th>
@@ -263,7 +264,7 @@ export const PropertyComparison: React.FC = () => {
                     <tbody className="text-slate-300">
                         {/* Operação */}
                         <tr>
-                            <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Operação</td>
+                            <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Oper.</td>
                             {properties.map(prop => (
                                 <td key={prop.id} className="p-4 border-b border-slate-800">
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${getOperationBadgeClass(prop.operacao)}`}>
@@ -275,7 +276,7 @@ export const PropertyComparison: React.FC = () => {
 
                         {/* Tipo Imóvel */}
                         <tr>
-                            <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Tipo Imóvel</td>
+                            <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Tipo</td>
                             {properties.map(prop => (
                                 <td key={prop.id} className="p-4 border-b border-slate-800">
                                     <span className="px-3 py-1 rounded-full bg-slate-700 text-xs font-medium">
@@ -287,7 +288,7 @@ export const PropertyComparison: React.FC = () => {
 
                         {/* Cidade/Bairro */}
                         <tr>
-                            <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Cidade/Bairro</td>
+                            <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Cid/Bairro</td>
                             {properties.map(prop => (
                                 <td key={prop.id} className="p-4 border-b border-slate-800">
                                     {prop.cidade} - {prop.bairro}
@@ -298,7 +299,7 @@ export const PropertyComparison: React.FC = () => {
                         {/* Preço Venda */}
                         {hasAnyValue('valor_venda') && (
                             <tr>
-                                <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Preço Venda</td>
+                                <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Venda</td>
                                 {properties.map(prop => (
                                     <td key={prop.id} className="p-4 border-b border-slate-800 text-lg font-bold text-red-400">
                                         {prop.valor_venda ? `R$ ${prop.valor_venda.toLocaleString('pt-BR')}` : '-'}
@@ -310,7 +311,7 @@ export const PropertyComparison: React.FC = () => {
                         {/* Preço Locação */}
                         {hasAnyValue('valor_locacao') && (
                             <tr>
-                                <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Preço Locação</td>
+                                <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Locação</td>
                                 {properties.map(prop => (
                                     <td key={prop.id} className="p-4 border-b border-slate-800 text-lg font-bold text-blue-400">
                                         {prop.valor_locacao ? `R$ ${prop.valor_locacao.toLocaleString('pt-BR')}` : '-'}
@@ -322,7 +323,7 @@ export const PropertyComparison: React.FC = () => {
                         {/* Preço Diária */}
                         {hasAnyValue('valor_diaria') && (
                             <tr>
-                                <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Preço Diária</td>
+                                <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Diária</td>
                                 {properties.map(prop => (
                                     <td key={prop.id} className="p-4 border-b border-slate-800 text-lg font-bold text-orange-400">
                                         {prop.valor_diaria ? `R$ ${prop.valor_diaria.toLocaleString('pt-BR')}` : '-'}
@@ -334,7 +335,7 @@ export const PropertyComparison: React.FC = () => {
                         {/* Preço Mensal */}
                         {hasAnyValue('valor_mensal') && (
                             <tr>
-                                <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Preço Mensal</td>
+                                <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Mensal</td>
                                 {properties.map(prop => (
                                     <td key={prop.id} className="p-4 border-b border-slate-800 text-lg font-bold text-orange-300">
                                         {prop.valor_mensal ? `R$ ${prop.valor_mensal.toLocaleString('pt-BR')}` : '-'}
@@ -346,7 +347,7 @@ export const PropertyComparison: React.FC = () => {
                         {/* Área Privativa */}
                         {hasAnyValue('area_priv') && (
                             <tr>
-                                <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Área Privativa</td>
+                                <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">Á. Priv</td>
                                 {properties.map(prop => (
                                     <td key={prop.id} className="p-4 border-b border-slate-800">
                                         {prop.area_priv > 0 ? `${prop.area_priv} m²` : '-'}
@@ -394,7 +395,7 @@ export const PropertyComparison: React.FC = () => {
                         {/* Características */}
                         {properties.some(p => p.caracteristicas.length > 0) && (
                             <tr>
-                                <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800 align-top">Características</td>
+                                <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800 align-top">Caract.</td>
                                 {properties.map(prop => (
                                     <td key={prop.id} className="p-4 border-b border-slate-800 align-top">
                                         <ul className="space-y-2">
@@ -445,7 +446,7 @@ export const PropertyComparison: React.FC = () => {
                                 <td className="p-4 font-bold text-white bg-slate-900/50 sticky left-0 border-b border-slate-800">
                                     <div className="flex items-center gap-2">
                                         <Globe size={18} />
-                                        Tour 360°
+                                        360°
                                     </div>
                                 </td>
                                 {properties.map(prop => (

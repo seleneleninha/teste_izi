@@ -61,7 +61,6 @@ interface Lead {
     data_perda?: string;
 }
 
-// Draggable Lead Card Component
 // Draggable LeadCard Component
 const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number; onMatch?: (lead: Lead) => void; onEdit?: (lead: Lead) => void; onArchive?: (lead: Lead) => void; onStatusChange?: (leadId: string, newStatus: string) => void; locked?: boolean }> = ({ lead, isDragging = false, matchCount = 0, onMatch, onEdit, onArchive, onStatusChange, locked = false }) => {
     const {
@@ -150,7 +149,7 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
                                     e.stopPropagation();
                                     if (onArchive) onArchive(lead);
                                 }}
-                                className="p-1.5 hover:bg-gray-100 hover:bg-gray-700/30 rounded text-gray-600"
+                                className="p-1.5 hover:bg-slate-700/30 rounded text-slate-400"
                                 title="Arquivar Lead"
                             >
                                 <Archive size={14} />
@@ -227,7 +226,6 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
 };
 
 // Droppable Column Component
-// Droppable Column Component
 const DroppableColumn: React.FC<{
     id: string;
     label: string;
@@ -245,7 +243,7 @@ const DroppableColumn: React.FC<{
     return (
         <div ref={setNodeRef} className="bg-slate-800 rounded-3xl border border-slate-700 shadow-sm transition-all hover:shadow-md">
             {/* Column Header acting as Stage Card Header */}
-            <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-gray-50/50 bg-slate-800/50">
+            <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-midnight-950/50 rounded-t-3xl">
                 <div className="flex items-center gap-4">
                     <div className={`p-2 rounded-3xl shadow-sm bg-slate-700`}>
                         {Icon && <Icon size={20} className={color.replace('bg-', 'text-')} />}

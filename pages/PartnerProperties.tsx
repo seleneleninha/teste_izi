@@ -429,7 +429,7 @@ export const PartnerProperties: React.FC = () => {
                                         : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
                                         }`}
                                 >
-                                    {radius ? `${radius}km` : 'Estado'}
+                                    {radius ? `${radius}km` : '+20km'}
                                 </button>
                             ))}
                         </div>
@@ -477,6 +477,13 @@ export const PartnerProperties: React.FC = () => {
                                 <h2 className="text-2xl font-bold text-white">
                                     {availableProperties.length} {availableProperties.length === 1 ? 'imóvel disponível' : 'imóveis disponíveis para Parceria'}
                                 </h2>
+                                {isTrialUser && (
+                                    <p className="text-sm font-bold text-amber-500 mt-1 animate-pulse">
+                                        Como você está em período de teste, você NÃO PODE OFERECER/ACEITAR PARCERIAS, somente ver.
+                                        <br />
+                                        <span onClick={() => navigate('/upgrade')} className="underline cursor-pointer hover:text-amber-400">Faça UPGRADE do plano.</span>
+                                    </p>
+                                )}
                             </div>
 
                             {/* View Mode Toggle */}
@@ -526,28 +533,11 @@ export const PartnerProperties: React.FC = () => {
                                             <div className="flex flex-col gap-2 w-full">
                                                 <button
                                                     onClick={() => navigateToProperty(navigate, property, true)}
-                                                    className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-3xl font-medium transition-colors flex items-center justify-center gap-2"
+                                                    className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-3xl text-xs transition-colors flex items-center justify-center gap-2"
                                                 >
-                                                    <Eye size={24} />
-                                                    Detalhes
+                                                    <Eye size={18} />
+                                                    Ver
                                                 </button>
-                                                {!isTrialUser && (
-                                                    <button
-                                                        onClick={() => onToggle(property, property.isPartnership || false)}
-                                                        className={`px-4 py-2 rounded-full font-medium transition-colors flex items-center justify-center gap-2 ${property.isPartnership
-                                                            ? 'bg-red-500 hover:bg-red-600 text-white'
-                                                            : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/50'
-                                                            }`}
-                                                    >
-                                                        <Handshake size={24} />
-                                                        {property.isPartnership ? 'Remover' : 'Aceitar'}
-                                                    </button>
-                                                )}
-                                                {isTrialUser && (
-                                                    <div className="p-2 bg-amber-500/20 text-xs text-amber-300 rounded-full text-center border border-amber-500/30">
-                                                        Faça UPGRADE para aceitar parcerias
-                                                    </div>
-                                                )}
                                             </div>
                                         }
                                     />
@@ -663,7 +653,7 @@ export const PartnerProperties: React.FC = () => {
                 {!missingCity && filteredProperties.length === 0 && (
                     <div className="text-center py-12">
                         <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Handshake className="text-gray-400" size={40} />
+                            <Handshake className="text-gray-400" size={24} />
                         </div>
                         <h3 className="text-xl font-bold text-white mb-2">
                             Nenhum imóvel disponível. Aumente o Raio de Atuação.
@@ -680,7 +670,7 @@ export const PartnerProperties: React.FC = () => {
                         <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                                    <Handshake className="text-emerald-500" size={28} />
+                                    <Handshake className="text-emerald-500" size={24} />
                                     {acceptedProperties.length} {acceptedProperties.length === 1 ? 'parceria ativa' : 'parcerias ativas'}
                                 </h2>
                             </div>
@@ -699,14 +689,14 @@ export const PartnerProperties: React.FC = () => {
                                                     className="flex-1 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-medium transition-colors flex items-center justify-center gap-2"
                                                     title="Ver Anúncio"
                                                 >
-                                                    <Eye size={24} />
+                                                    <Eye size={18} />
                                                 </button>
                                                 <button
                                                     onClick={() => onToggle(property, true)}
                                                     className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full font-medium transition-colors"
                                                     title="Remover"
                                                 >
-                                                    <Handshake size={24} />
+                                                    <Handshake size={18} />
                                                 </button>
                                             </div>
                                         }

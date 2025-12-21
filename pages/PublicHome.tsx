@@ -334,16 +334,16 @@ export const PublicHome: React.FC = () => {
             </section>
 
             {/* Search Filter Component - Floating & Glass */}
-            <div className="container mx-auto px-4 relative z-20 -mt-32 mb-20">
+            <div className="container mx-auto px-4 relative z-20 -mt-32 mb-0">
                 <SearchFilter />
             </div>
 
             {/* Browse by Type Section (Glass Tiles) */}
-            <section className="py-24 bg-midnight-900 relative overflow-hidden">
+            <section className="py-24 bg-midnight-950 relative overflow-hidden">
 
                 <div className="container mx-auto px-4 relative z-10">
-                    <h2 className="text-4xl md:text-5xl font-heading font-bold mb-16 text-white text-center">
-                        Explore por <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">Categoria</span>
+                    <h2 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
+                        <span className="w-2 h-8 bg-blue-500 rounded-full" /> Explore por <span className="text-blue-400">Categoria</span>
                     </h2>
                     <div className="grid grid-cols-3 lg:grid-cols-6 gap-6">
                         {[
@@ -394,14 +394,14 @@ export const PublicHome: React.FC = () => {
             </section>
 
             {/* Recent Properties (Midnight Lux Style) */}
-            <section className="py-24 bg-midnight-950 relative border-t border-white/5">
+            <section className="py-24 bg-midnight-900 relative border-t border-white/5">
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
                         <div>
-                            <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-2">
-                                Oportunidades <span className="text-emerald-400">Recentes</span>
+                            <h2 className="text-3xl font-bold mb-2 text-white flex items-center gap-3">
+                                <span className="w-2 h-8 bg-red-500 rounded-full" /> Acabaram <span className="text-red-400">de Chegar</span>
                             </h2>
-                            <p className="text-gray-400 max-w-lg">
+                            <p className="text-xl text-gray-400 font-bold max-w-lg">
                                 Confira os imóveis mais novos cadastrados em nossa plataforma.
                             </p>
                         </div>
@@ -441,12 +441,12 @@ export const PublicHome: React.FC = () => {
             </section>
 
             {/* Cities & Neighborhoods (Destination Cards) */}
-            <section className="py-24 bg-midnight-900 relative">
+            <section className="py-24 bg-midnight-950 relative">
                 <div className="container mx-auto px-4">
                     {/* Cities */}
                     <div className="mb-20">
                         <h3 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
-                            <span className="w-2 h-8 bg-emerald-500 rounded-full" /> Principais Cidades
+                            <span className="w-2 h-8 bg-pink-500 rounded-full" /> Principais <span className="text-pink-400">Cidades</span>
                         </h3>
                         {/* Note: cityCounts needs to be populated in fetchData */}
                         <HorizontalScroll itemWidth={280} gap={20} itemsPerPage={4}>
@@ -503,7 +503,7 @@ export const PublicHome: React.FC = () => {
                     {/* Neighborhoods (Pills Style) */}
                     <div>
                         <h3 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
-                            <span className="w-2 h-8 bg-purple-500 rounded-full" /> Bairros em Alta
+                            <span className="w-2 h-8 bg-emerald-500 rounded-full" /> Bairros <span className="text-emerald-400">em Alta</span>
                         </h3>
                         <div className="flex flex-wrap gap-3">
                             {neighborhoods.map((bairro, idx) => (

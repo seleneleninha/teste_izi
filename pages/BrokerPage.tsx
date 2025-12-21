@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { MapPin, Phone, Mail, Building2, Home, MessageCircle, CheckCircle2, Search, Heart, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign, Map as MapIcon, Building, MapPinHouse, MapPinned, Tractor, Trees, TreePalm, ArrowRight } from 'lucide-react';
+import { MapPin, Phone, Mail, Building2, Home, MessageCircle, CheckCircle2, Search, Heart, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign, Map as MapIcon, Building, MapPinHouse, MapPinned, Tractor, Trees, TreePalm, ArrowRight, Heading2Icon } from 'lucide-react';
 import { HorizontalScroll } from '../components/HorizontalScroll';
 import { PropertyCard } from '../components/PropertyCard';
 import { NoPropertiesFound } from '../components/NoPropertiesFound';
@@ -279,14 +279,14 @@ export const BrokerPage: React.FC = () => {
                 </div>
 
                 <div className="container mx-auto px-4 z-10 text-center relative mt-[-60px]">
-                    <h1 className="text-4xl md:text-7xl font-heading font-bold text-white mb-6 leading-tight animate-float">
+                    <h2 className="text-4xl md:text-7xl font-heading font-bold text-white mb-2 leading-tight animate-float">
                         {/* First Message - Emerald */}
                         {broker.mensagem_boasvindas && (
                             <p className="text-3xl md:text-4xl font-heading font-bold text-emerald-400 leading-tight">
-                                "{broker.mensagem_boasvindas}"
+                                {broker.mensagem_boasvindas}
                             </p>
                         )}
-                    </h1>
+                    </h2>
 
                     <div className="container mx-auto px-4 z-10 relative">
                         <div className="flex flex-col items-center gap-6 justify-center animate-fadeIn max-w-4xl mx-auto">
@@ -306,7 +306,7 @@ export const BrokerPage: React.FC = () => {
             </section>
 
             {/* Search Filter Component - Floating & Glass */}
-            <div className="container mx-auto px-4 relative z-20 -mt-32 mb-20">
+            <div className="container mx-auto px-4 relative z-20 -mt-32 mb-0">
                 <SearchFilter brokerSlug={slug} />
             </div>
 
@@ -316,9 +316,9 @@ export const BrokerPage: React.FC = () => {
                 <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none" />
 
                 <div className="container mx-auto px-4 relative z-10">
-                    <h2 className="text-4xl md:text-5xl font-heading font-bold mb-16 text-white text-center">
-                        Explore <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500">por tipo</span>
-                    </h2>
+                    <h3 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
+                        <span className="w-2 h-8 bg-blue-500 rounded-full" /> Explore por <span className="text-blue-400">Categoria</span>
+                    </h3>
                     <div className="grid grid-cols-3 lg:grid-cols-6 gap-6">
                         {[
                             { label: 'Apto', type: 'apartamento', icon: <Building size={28} /> },
@@ -361,14 +361,14 @@ export const BrokerPage: React.FC = () => {
             </section>
 
             {/* Imóveis em Destaque (Featured) */}
-            <section className="py-24 bg-midnight-950 relative border-t border-white/5">
+            <section className="py-24 bg-midnight-900 relative border-t border-white/5">
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
                         <div>
-                            <h2 className="text-3xl md:text-4xl font-heading font-bold text-white mb-2">
-                                Imóveis em <span className="text-emerald-400">Destaque</span>
-                            </h2>
-                            <p className="text-gray-400 max-w-lg">
+                            <h3 className="text-3xl font-bold mb-2 text-white flex items-center gap-3">
+                                <span className="w-2 h-8 bg-red-500 rounded-full" /> Imóveis em <span className="text-red-400">Destaque</span>
+                            </h3>
+                            <p className="text-xl text-gray-400 font-bold max-w-lg">
                                 As melhores oportunidades selecionadas para você.
                             </p>
                         </div>
@@ -415,13 +415,12 @@ export const BrokerPage: React.FC = () => {
 
             {/* Veja Outras Opções - Imóveis de Parceria */}
             {partneredProperties.length > 0 && (
-                <section className="py-24 bg-midnight-900/50 relative">
+                <section className="py-24 bg-midnight-950/50 relative">
                     <div className="container mx-auto px-4 relative z-10">
                         <div className="flex items-center gap-3 mb-12">
-                            <div className="w-1 h-8 bg-purple-500 rounded-full"></div>
-                            <h2 className="text-3xl font-heading font-bold text-white">
-                                Veja outras <span className="text-purple-400">Opções</span>
-                            </h2>
+                            <h3 className="text-3xl font-bold text-white flex items-center gap-3">
+                                <span className="w-2 h-8 bg-purple-500 rounded-full" /> Veja Outras <span className="text-purple-400">Opções</span>
+                            </h3>
                         </div>
 
                         <HorizontalScroll itemWidth={330} gap={24} itemsPerPage={4}>
@@ -437,12 +436,12 @@ export const BrokerPage: React.FC = () => {
 
 
             {/* Cities & Neighborhoods */}
-            <section className="py-24 bg-midnight-950 relative">
+            <section className="py-24 bg-midnight-900 relative">
                 <div className="container mx-auto px-4">
                     {/* Cities */}
                     <div className="mb-20">
                         <h3 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
-                            <span className="w-2 h-8 bg-emerald-500 rounded-full" /> Principais Cidades
+                            <span className="w-2 h-8 bg-pink-500 rounded-full" /> Principais <span className="text-pink-400">Cidades</span>
                         </h3>
                         <HorizontalScroll itemWidth={280} gap={20} itemsPerPage={4}>
                             {topCities.map((city, idx) => (
@@ -497,7 +496,7 @@ export const BrokerPage: React.FC = () => {
                     {/* Neighborhoods (Pills Style) */}
                     <div>
                         <h3 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
-                            <span className="w-2 h-8 bg-purple-500 rounded-full" /> Bairros em Alta
+                            <span className="w-2 h-8 bg-emerald-500 rounded-full" /> Bairros <span className="text-emerald-400">em Alta</span>
                         </h3>
                         <div className="flex flex-wrap gap-3">
                             {topNeighborhoods.map((bairro, idx) => (

@@ -10,11 +10,12 @@ import { AIAssistant } from './AIAssistant';
 import { PublicAIAssistant } from './PublicAIAssistant';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { MobileBottomNav } from './MobileBottomNav';
 
 export const DashboardLayout: React.FC = () => {
     const { theme } = useTheme();
     const location = useLocation();
-    const { user } = useAuth();
+    const { user, role } = useAuth();
     const [searchParams] = useSearchParams();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showMessages, setShowMessages] = useState(false);
@@ -110,13 +111,10 @@ export const DashboardLayout: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 bg-midnight-950 transition-colors duration-200 flex">
-            {/* Mobile hamburger */}
-            <button className="bg-emerald-500 bg-emerald-600 rounded-full md:hidden p-2 fixed top-6 left-6 z-[60] shadow-lg shadow-emerald-500/20 active:scale-95 transition-transform animate-pulse" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            {/* Sidebar - Hidden on mobile, visible on desktop */}
+            <div className="hidden md:block">
+                <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            </div>
 
             {/* Main content area with margin to account for fixed sidebar */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden md:ml-64">
@@ -176,6 +174,9 @@ export const DashboardLayout: React.FC = () => {
                         <Outlet />
                     </div>
                 </main>
+
+                {/* Mobile Bottom Navigation */}
+                <MobileBottomNav isClient={role === 'Cliente'} />
             </div>
         </div>
     );

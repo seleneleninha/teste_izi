@@ -55,6 +55,7 @@ export const DeactivatePropertyModal: React.FC<DeactivatePropertyModalProps> = (
 
         setIsSubmitting(true);
         try {
+            // 1. Update property status
             const { error } = await supabase
                 .from('anuncios')
                 .update({
@@ -65,6 +66,17 @@ export const DeactivatePropertyModal: React.FC<DeactivatePropertyModalProps> = (
                 .eq('id', propertyId);
 
             if (error) throw error;
+
+            // 2. Remove from ALL users' favorites
+            const { error: favoritesError } = await supabase
+                .from('favoritos')
+                .delete()
+                .eq('anuncio_id', propertyId);
+
+            if (favoritesError) {
+                console.error('Error removing from favorites:', favoritesError);
+                // Don't throw - property is already deactivated, this is cleanup
+            }
 
             const successMessage = selectedReason.includes('faturada')
                 ? '🎉 Parabéns pela conclusão!'

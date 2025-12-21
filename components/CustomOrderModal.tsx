@@ -13,6 +13,8 @@ interface CustomOrderModalProps {
         cidade?: string;
         bairro?: string;
         valorMax?: number;
+        nome_cliente?: string;
+        whatsapp?: string;
     };
 }
 
@@ -24,11 +26,11 @@ export const CustomOrderModal: React.FC<CustomOrderModalProps> = ({
     prefilledData
 }) => {
     const [formData, setFormData] = useState({
-        nome_cliente: '',
-        whatsapp: '',
+        nome_cliente: prefilledData?.nome_cliente || '',
+        whatsapp: prefilledData?.whatsapp || '',
         operacao: prefilledData?.operacao || '',
         tipo_imovel: prefilledData?.tipoImovel || '',
-        cidade: prefilledData?.cidade || 'Natal',
+        cidade: prefilledData?.cidade || '',
         bairros_interesse: prefilledData?.bairro ? [prefilledData.bairro] : [''],
         preco_minimo: 0,
         preco_maximo: prefilledData?.valorMax || 0,
@@ -60,6 +62,22 @@ export const CustomOrderModal: React.FC<CustomOrderModalProps> = ({
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
 
+    // Update formData when prefilledData changes
+    React.useEffect(() => {
+        if (prefilledData) {
+            setFormData(prev => ({
+                ...prev,
+                nome_cliente: prefilledData.nome_cliente || prev.nome_cliente,
+                whatsapp: prefilledData.whatsapp || prev.whatsapp,
+                operacao: prefilledData.operacao || prev.operacao,
+                tipo_imovel: prefilledData.tipoImovel || prev.tipo_imovel,
+                cidade: prefilledData.cidade || prev.cidade,
+                bairros_interesse: prefilledData.bairro ? [prefilledData.bairro] : prev.bairros_interesse,
+                preco_maximo: prefilledData.valorMax || prev.preco_maximo
+            }));
+        }
+    }, [prefilledData]);
+
     // Função para resetar formulário
     const resetForm = () => {
         setFormData({
@@ -67,7 +85,7 @@ export const CustomOrderModal: React.FC<CustomOrderModalProps> = ({
             whatsapp: '',
             operacao: '',
             tipo_imovel: '',
-            cidade: 'Natal',
+            cidade: '',
             bairros_interesse: [''],
             preco_minimo: 0,
             preco_maximo: 0,
@@ -370,7 +388,7 @@ export const CustomOrderModal: React.FC<CustomOrderModalProps> = ({
                                         className="w-full px-2 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm placeholder:text-gray-500 text-center"
                                         placeholder="m²"
                                     />
-                                    <div className="text-xs text-gray-500 text-center mt-1">Área</div>
+                                    <div className="text-xs text-gray-500 text-center mt-1">Área Priv.</div>
                                 </div>
                                 <div>
                                     <input
@@ -392,7 +410,7 @@ export const CustomOrderModal: React.FC<CustomOrderModalProps> = ({
                                         className="w-full px-2 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm placeholder:text-gray-500 text-center"
                                         placeholder="0"
                                     />
-                                    <div className="text-xs text-gray-500 text-center mt-1">Banh.</div>
+                                    <div className="text-xs text-gray-500 text-center mt-1">Banheiros</div>
                                 </div>
                                 <div>
                                     <input

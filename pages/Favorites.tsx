@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
 import { PropertyCard } from '../components/PropertyCard';
+import { HorizontalScroll } from '../components/HorizontalScroll';
 import { Heart, Search, X, Loader2, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/ToastContext';
@@ -19,8 +20,8 @@ export const Favorites: React.FC = () => {
         if (selectedIds.includes(id)) {
             setSelectedIds(prev => prev.filter(curr => curr !== id));
         } else {
-            if (selectedIds.length >= 4) {
-                addToast('Você pode selecionar no máximo 4 imóveis para comparar.', 'error');
+            if (selectedIds.length >= 3) {
+                addToast('Você pode selecionar no máximo 3 imóveis para comparar.', 'error');
                 return;
             }
             setSelectedIds(prev => [...prev, id]);
@@ -53,7 +54,7 @@ export const Favorites: React.FC = () => {
             if (favs && favs.length > 0) {
                 const ids = favs.map(f => f.anuncio_id);
 
-                // Then fetch properties
+                // Then fetch properties - ONLY ACTIVE ONES
                 const { data: properties } = await supabase
                     .from('anuncios')
                     .select(`
@@ -61,7 +62,8 @@ export const Favorites: React.FC = () => {
                         tipo_imovel (tipo),
                         operacao (tipo)
                     `)
-                    .in('id', ids);
+                    .in('id', ids)
+                    .eq('status', 'ativo'); // ✅ Only show active properties
 
                 if (properties) {
                     const formatted = properties.map(p => ({
@@ -105,7 +107,7 @@ export const Favorites: React.FC = () => {
                         <div>
                             <h3 className="text-white font-bold text-lg mb-1">💡 Você pode comparar imóveis!</h3>
                             <p className="text-slate-300 text-sm">
-                                Clique nos checkboxes <span className="inline-flex items-center px-2 py-0.5 bg-black/40 rounded-full text-xs font-bold mx-1">Comparar</span> no canto superior direito dos cards para selecionar até 4 imóveis e comparar lado a lado.
+                                Clique nos checkboxes <span className="inline-flex items-center px-2 py-0.5 bg-black/40 rounded-full text-xs font-bold mx-1">Comparar</span> para selecionar até 3 imóveis e comparar lado a lado.
                             </p>
                         </div>
                     </div>
@@ -131,7 +133,7 @@ export const Favorites: React.FC = () => {
                 </div>
             ) : (
                 <div className="pb-24">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <HorizontalScroll>
                         {favorites.map(property => (
                             <PropertyCard
                                 key={property.id}
@@ -139,13 +141,27 @@ export const Favorites: React.FC = () => {
                                 isDashboard={true}
                                 isSelected={selectedIds.includes(property.id)}
                                 onSelect={(e) => toggleSelection(property.id, e)}
+                                onFavoriteRemove={async (propertyId) => {
+                                    try {
+                                        await supabase
+                                            .from('favoritos')
+                                            .delete()
+                                            .eq('user_id', user?.id)
+                                            .eq('anuncio_id', propertyId);
+                                        setFavorites(prev => prev.filter(p => p.id !== propertyId));
+                                        setSelectedIds(prev => prev.filter(id => id !== propertyId));
+                                        addToast('Removido dos favoritos', 'success');
+                                    } catch (error) {
+                                        addToast('Erro ao remover favorito', 'error');
+                                    }
+                                }}
                             />
                         ))}
-                    </div>
+                    </HorizontalScroll>
 
                     {/* Comparison Floating Bar */}
                     {selectedIds.length > 0 && (
-                        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 shadow-2xl rounded-full px-6 py-3 border border-slate-700 flex items-center gap-4 z-50 animate-fade-in-up">
+                        <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 shadow-2xl rounded-full px-6 py-3 border border-slate-700 flex items-center gap-4 z-[60] animate-fade-in-up">
                             <span className="text-white font-medium">
                                 {selectedIds.length} selecionado{selectedIds.length !== 1 && 's'}
                             </span>
