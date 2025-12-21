@@ -169,12 +169,20 @@ export const Dashboard: React.FC = () => {
             // Fetch recent properties - ONLY for current user
             const { data: props } = await supabase
                 .from('anuncios')
-                .select('*')
+                .select('*, tipo_imovel(tipo), operacao(tipo)')
                 .eq('user_id', user.id)
                 .order('created_at', { ascending: false })
                 .limit(3);
 
-            if (props) setRecentProperties(props);
+            if (props) {
+                // Flatten the nested objects for PropertyCard
+                const formattedProps = props.map(p => ({
+                    ...p,
+                    tipo_imovel: p.tipo_imovel?.tipo || 'Imóvel',
+                    operacao: p.operacao?.tipo?.toLowerCase() || 'venda' // Normalize for label lookup
+                }));
+                setRecentProperties(formattedProps);
+            }
 
             // Fetch notifications - ONLY for current user
             const { data: notifs } = await supabase
@@ -313,8 +321,13 @@ export const Dashboard: React.FC = () => {
             <div className="mb-8">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                        <h2 className="text-2xl md:text-3xl font-bold text-white">Bem-vindo(a) de volta, {userName}!</h2>
-                        {role?.toLowerCase() === 'admin' ? <p className="text-slate-400 mt-2 text-sm md:text-base">Acompanhe o crescimento da Plataforma.</p> : <p className="text-slate-400 mt-2 text-sm md:text-base">Vamos melhorar seus números e ampliar sua possibilidade de ganhos?</p>}
+                        <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+                            Bem-vindo, <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">{userName}</span>! 👋
+                        </h2>
+                        {role?.toLowerCase() === 'admin' ?
+                            <p className="text-slate-400 mt-2 font-medium">Visão Geral do Sistema</p> :
+                            <p className="text-slate-400 mt-2 font-medium">Vamos bater as metas hoje?</p>
+                        }
                     </div>
                 </div>
             </div>
@@ -530,7 +543,7 @@ export const Dashboard: React.FC = () => {
 
                             {/* Sua Página - Stat Format */}
                             <div
-                                className="bg-purple-500/30 p-6 rounded-3xl shadow-sm border border-white hover:shadow-md transition-all group animate-pulse"
+                                className="bg-purple-500/30 p-6 rounded-3xl shadow-sm border border-white/20 hover:border-purple-400 hover:bg-purple-500/40 hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 group"
                             >
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -563,7 +576,7 @@ export const Dashboard: React.FC = () => {
 
                             {/* Anunciar Imóvel - Stat Format */}
                             <div
-                                className="bg-red-500/30 p-6 rounded-3xl shadow-sm border border-white hover:shadow-md transition-all cursor-pointer group animate-pulse"
+                                className="bg-red-500/30 p-6 rounded-3xl shadow-sm border border-white/20 hover:border-red-400 hover:bg-red-500/40 hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
                                 onClick={() => navigate('/add-property')}
                             >
                                 <div className="flex items-center justify-between mb-4">
@@ -578,7 +591,7 @@ export const Dashboard: React.FC = () => {
                             {/* Meus Imóveis */}
                             <div
                                 onClick={() => navigate('/properties')}
-                                className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-pointer group"
+                                className="bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 hover:border-blue-500/50 hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
                             >
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="w-12 h-12 bg-blue-900/30 rounded-full flex items-center justify-center">
@@ -676,6 +689,63 @@ export const Dashboard: React.FC = () => {
                                 <div className="text-lg font-bold text-white">Ver Todos</div>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Recent Properties Section */}
+                    <div className="mb-8">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Home className="text-emerald-500" size={24} />
+                                Seus Últimos Imóveis
+                            </h3>
+                            {recentProperties.length > 0 && (
+                                <button
+                                    onClick={() => navigate('/properties')}
+                                    className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+                                >
+                                    Ver todos
+                                </button>
+                            )}
+                        </div>
+
+                        {recentProperties.length > 0 ? (
+                            <>
+                                {/* Mobile: Horizontal Scroll */}
+                                <div className="md:hidden overflow-x-auto pb-6 -mx-4 px-4 scrollbar-hide">
+                                    <div className="flex gap-4 snap-x snap-mandatory w-max">
+                                        {recentProperties.map((property) => (
+                                            <div key={property.id} className="w-[85vw] max-w-[320px] snap-center">
+                                                <PropertyCard property={property} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Desktop: Grid */}
+                                <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {recentProperties.map((property) => (
+                                        <PropertyCard key={property.id} property={property} />
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            // Empty State
+                            <div className="bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-3xl p-12 text-center group hover:border-emerald-500/50 transition-colors">
+                                <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                                    <Plus className="text-slate-400 group-hover:text-emerald-500 transition-colors" size={40} />
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">Comece seu Portfólio</h3>
+                                <p className="text-slate-400 max-w-md mx-auto mb-8">
+                                    Você ainda não tem imóveis cadastrados. Adicione seu primeiro imóvel agora e comece a gerar leads.
+                                </p>
+                                <button
+                                    onClick={() => navigate('/add-property')}
+                                    className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg shadow-emerald-600/20"
+                                >
+                                    Cadastrar Primeiro Imóvel
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Onboarding Tour */}
