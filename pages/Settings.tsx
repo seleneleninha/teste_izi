@@ -81,6 +81,21 @@ export const Settings: React.FC = () => {
     marketing: false
   });
 
+  const handlePushPrompt = () => {
+    const OneSignal = (window as any).OneSignal;
+    if (OneSignal) {
+      if (OneSignal.Notifications) {
+        OneSignal.Notifications.requestPermission();
+      } else if (typeof OneSignal.showNativePrompt === 'function') {
+        OneSignal.showNativePrompt();
+      } else {
+        addToast('Método OneSignal não encontrado', 'error');
+      }
+    } else {
+      addToast('OneSignal não inicializado', 'error');
+    }
+  };
+
   // LGPD States
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [exportingData, setExportingData] = useState(false);
@@ -711,9 +726,11 @@ export const Settings: React.FC = () => {
               )}
             </div>
 
-            {/* 4. Security Section (Merged) */}
+            {/* 4. Security Section */}
             <div className="mb-8 pt-6 border-t border-slate-700/50">
-              <h4 className="text-lg font-bold text-white mb-4 flex items-center"><Lock size={20} className="mr-2 text-emerald-500" /> Segurança</h4>
+              <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                <Lock size={20} className="mr-2 text-emerald-500" /> Segurança
+              </h4>
 
               <div className="bg-slate-900/30 rounded-2xl p-5 border border-slate-700/50 mb-6">
                 <h5 className="font-medium text-white mb-3">Alterar Senha</h5>
@@ -747,7 +764,7 @@ export const Settings: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col md:flex-row gap-4 mb-8">
                 <button
                   onClick={handleExportData}
                   disabled={exportingData}
@@ -764,9 +781,53 @@ export const Settings: React.FC = () => {
                   Excluir Conta
                 </button>
               </div>
-              <DeleteAccountModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} />
             </div>
 
+            {/* 5. Notification Preferences */}
+            <div className="mb-8 pt-6 border-t border-slate-700/50">
+              <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                <Bell size={20} className="mr-2 text-emerald-500" /> Preferências de Notificação
+              </h4>
+
+              <div className="bg-slate-900/30 rounded-2xl p-6 border border-slate-700/50">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                  <div>
+                    <h5 className="font-bold text-white mb-1">Notificações Push</h5>
+                    <p className="text-slate-400 text-sm">Receba alertas em tempo real sobre novos leads, mensagens e aprovações no seu navegador ou celular.</p>
+                  </div>
+                  <button
+                    onClick={handlePushPrompt}
+                    className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95"
+                  >
+                    <Bell size={18} />
+                    Ativar no Navegador
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { key: 'leads', label: 'Novos Leads & Encomendas' },
+                    { key: 'messages', label: 'Mensagens do Chat' },
+                    { key: 'properties', label: 'Aprovações de Imóveis' },
+                    { key: 'marketing', label: 'Novidades e Parcerias' }
+                  ].map((item) => (
+                    <div key={item.key} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                      <span className="text-sm font-medium text-gray-200">{item.label}</span>
+                      <button
+                        onClick={() => toggleNotification(item.key as any)}
+                        className={`w-12 h-6 rounded-full transition-colors relative ${notifications[item.key as keyof typeof notifications] ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notifications[item.key as keyof typeof notifications] ? 'left-7' : 'left-1'}`} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <DeleteAccountModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} />
+
+            {/* Sticky Save Button (at the bottom of tab content) */}
             <div className="sticky bottom-0 bg-slate-800/95 backdrop-blur-sm p-4 -mx-6 -mb-6 md:-mx-8 md:-mb-8 border-t border-slate-700 mt-4 rounded-b-3xl flex justify-end z-10">
               <button
                 onClick={handleSaveProfile}
@@ -777,7 +838,6 @@ export const Settings: React.FC = () => {
                 {saving ? 'Salvando...' : 'Salvar Alterações'}
               </button>
             </div>
-
           </div>
         )}
 
@@ -1043,12 +1103,7 @@ export const Settings: React.FC = () => {
             </div>
           </div>
         )}
-
-
-
-
-
       </div>
-    </div >
+    </div>
   );
 };

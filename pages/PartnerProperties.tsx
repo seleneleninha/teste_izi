@@ -485,8 +485,6 @@ export const PartnerProperties: React.FC = () => {
                     </div>
                 )}
 
-
-
                 {/* Available Properties Section */}
                 {!missingCity && availableProperties.length > 0 && (
                     <div className="mb-12">
@@ -497,13 +495,15 @@ export const PartnerProperties: React.FC = () => {
                                 </h2>
                                 {isTrialUser && (
                                     <p className="text-sm font-bold text-amber-500 mt-1 animate-pulse">
-                                        Como você está em período de teste, você NÃO PODE OFERECER/ACEITAR PARCERIAS, somente ver.
+                                        No período de teste, você NÃO PODE OFERECER/ACEITAR PARCERIAS, somente ver.
                                         <br />
                                         <span onClick={() => navigate('/upgrade')} className="underline cursor-pointer hover:text-amber-400">Faça UPGRADE do plano.</span>
                                     </p>
                                 )}
                             </div>
+                            <div>
 
+                            </div>
                             {/* View Mode Toggle */}
                             <div className="flex gap-1 bg-slate-900 border border-slate-700 p-1 justify-between rounded-xl">
                                 <button
@@ -558,7 +558,6 @@ export const PartnerProperties: React.FC = () => {
                                                         title="Ver Anúncio"
                                                     >
                                                         <Eye size={18} />
-                                                        Ver
                                                     </button>
                                                     {!isTrialUser && (
                                                         <button
@@ -566,7 +565,6 @@ export const PartnerProperties: React.FC = () => {
                                                             className="flex-[1.5] px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-3xl text-xs font-bold transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
                                                         >
                                                             <Handshake size={18} />
-                                                            Aceitar Parceria
                                                         </button>
                                                     )}
                                                 </div>
@@ -774,7 +772,7 @@ export const PartnerProperties: React.FC = () => {
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => navigateToProperty(navigate, property, true)}
-                                                    className="flex-1 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-full font-medium transition-colors flex items-center justify-center gap-2"
+                                                    className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-full font-medium transition-colors flex items-center justify-center gap-2"
                                                     title="Ver Anúncio"
                                                 >
                                                     <Eye size={18} />

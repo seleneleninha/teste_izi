@@ -526,7 +526,7 @@ export const Dashboard: React.FC = () => {
                                     <TrendingUp className="text-emerald-400" size={20} /> Crescimento de Usuários
                                 </h3>
                                 <div className="h-[250px] w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
+                                    <ResponsiveContainer width="100%" height={250}>
                                         <AreaChart data={growthData}>
                                             <defs>
                                                 <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
@@ -553,7 +553,7 @@ export const Dashboard: React.FC = () => {
                                     <Home className="text-blue-400" size={20} /> Entrada de Imóveis
                                 </h3>
                                 <div className="h-[250px] w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
+                                    <ResponsiveContainer width="100%" height={250}>
                                         <BarChart data={growthData}>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
                                             <XAxis dataKey="name" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />

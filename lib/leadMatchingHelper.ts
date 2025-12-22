@@ -35,7 +35,11 @@ export async function findMatchingProperties(leadId: string): Promise<PropertyMa
             return [];
         }
 
-        return data || [];
+        // Map property_id (from SQL) to id (for frontend interface)
+        return (data || []).map((p: any) => ({
+            ...p,
+            id: p.property_id || p.id // Fallback to id if available
+        }));
     } catch (error) {
         console.error('Error in findMatchingProperties:', error);
         return [];
@@ -142,12 +146,14 @@ export async function getSubtypes(typeId: string): Promise<{ id: string; subtipo
 
 /**
  * Calculate match score between a lead and a property
- * NEW SYSTEM: 20 points per field (100 total)
- * - Operation: 20 points
- * - Property Type: 20 points
- * - City: 20 points
- * - Neighborhood: 20 points (matches ANY of 3 neighborhoods)
- * - Budget: 20 points (ONLY if lead has budget filled AND property is within range)
+ * NEW SYSTEM (Total 100 pts): 
+ * - Operation: 20 pts
+ * - Property Type: 20 pts
+ * - City: 20 pts
+ * - Neighborhood 1: 10 pts
+ * - Neighborhood 2: 5 pts
+ * - Neighborhood 3: 5 pts
+ * - Budget: 20 pts (within range)
  */
 export function calculateMatchScore(
     lead: {
@@ -168,6 +174,8 @@ export function calculateMatchScore(
         bairro: string;
         valor_venda?: number;
         valor_locacao?: number;
+        valor_diaria?: number;
+        valor_mensal?: number;
     }
 ): number {
     let score = 0;
@@ -187,19 +195,19 @@ export function calculateMatchScore(
         score += 20;
     }
 
-    // Field 4: Neighborhood (20 points) - Match if property is in ANY of the 3 neighborhoods
-    const leadNeighborhoods = [
-        lead.bairro_interesse,
-        lead.bairro_interesse_2,
-        lead.bairro_interesse_3
-    ].filter(Boolean); // Remove empty values
-
-    if (leadNeighborhoods.includes(property.bairro)) {
-        score += 20;
+    // Field 4: Neighborhoods (Max 20 points split 10/5/5)
+    if (lead.bairro_interesse === property.bairro) {
+        score += 10;
+    }
+    if (lead.bairro_interesse_2 === property.bairro) {
+        score += 5;
+    }
+    if (lead.bairro_interesse_3 === property.bairro) {
+        score += 5;
     }
 
-    // Field 5: Budget (20 points) - ONLY if lead has budget filled
-    const propertyValue = property.valor_venda || property.valor_locacao || 0;
+    // Field 5: Budget (20 points)
+    const propertyValue = property.valor_venda || property.valor_locacao || property.valor_diaria || property.valor_mensal || 0;
     const hasBudget = lead.orcamento_min && lead.orcamento_min > 0 && lead.orcamento_max && lead.orcamento_max > 0;
 
     if (hasBudget && propertyValue >= lead.orcamento_min && propertyValue <= lead.orcamento_max) {

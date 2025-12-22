@@ -199,7 +199,7 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
                                     <h3 className="text-lg font-bold mb-2 text-white">Ainda com dúvidas?</h3>
                                     <p className="text-gray-400 text-sm mb-4">Teste nossa Plataforma GRATUITAMENTE por 14 dias. Sem cartão de crédito e sem compromisso. Cancele quando quiser.</p>
                                     <button
-                                        onClick={() => window.open('http://localhost:3000/#/partner', '_blank')}
+                                        onClick={() => window.open('http://localhost:3000/partner', '_blank')}
                                         className="w-full rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 -lg transition-all text-sm shadow-lg shadow-emerald-500/20"
                                     >
                                         QUERO TESTAR!

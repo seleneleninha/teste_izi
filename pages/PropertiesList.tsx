@@ -984,7 +984,7 @@ export const PropertiesList: React.FC = () => {
                                                                                 e.stopPropagation();
                                                                                 navigate(`/add-property?id=${prop.id}`);
                                                                             }}
-                                                                            className="flex-1 px-2 py-2 bg-yellow-600/50 text-white rounded-full text-sm font-medium hover:bg-yellow-600/20 flex items-center justify-center transition-colors"
+                                                                            className="p-1.5 bg-yellow-500 hover:bg-yellow-500 text-white rounded-full transition-colors border border-yellow-500/20"
                                                                             title="Editar"
                                                                         >
                                                                             <Edit2 size={16} className="mr-1.5" />
@@ -998,10 +998,10 @@ export const PropertiesList: React.FC = () => {
                                                                                     propertyTitle: prop.titulo
                                                                                 });
                                                                             }}
-                                                                            className="flex-1 px-2 py-2 bg-red-600/50 text-white rounded-full text-sm font-medium hover:bg-red-600/20 flex items-center justify-center transition-colors"
+                                                                            className="p-1.5 bg-red-500 hover:bg-red-500 text-white rounded-full transition-colors border border-red-500/20"
                                                                             title="Inativar Imóvel"
                                                                         >
-                                                                            Inativar
+                                                                            <Trash2 size={16} className="mr-1.5 align-items-center" />
                                                                         </button>
                                                                     </>
                                                                 ) : undefined

@@ -266,7 +266,66 @@ export async function testWhatsAppConnection(): Promise<boolean> {
 // ========================================
 
 /**
- * Gera link do WhatsApp (para PropertyDetails e outros)
+ * Track WhatsApp click (analytics)
+ */
+export async function trackWhatsAppClick(brokerId: string, propertyId: string, source: string = 'property-details'): Promise<void> {
+    try {
+        console.log(`WhatsApp click tracked: Property ${propertyId} by Broker ${brokerId} from ${source}`);
+        // Here you would typically send this to an analytics service or your own DB table
+    } catch (e) {
+        console.error('Error tracking WhatsApp click:', e);
+    }
+}
+
+/**
+ * Formata mensagem de propriedade para WhatsApp com suporte a templates
+ */
+export function formatPropertyMessage(options: {
+    property: any,
+    brokerName?: string,
+    template?: 'availability' | 'share',
+    senderName?: string,
+    senderPhone?: string,
+    propertyUrl?: string
+}): string {
+    const { property, brokerName, template = 'share', senderName, senderPhone, propertyUrl } = options;
+
+    if (!property) return '';
+
+    const operacaoRaw = (property.operacao?.tipo || property.operacao || '').toLowerCase();
+    const isLocacao = operacaoRaw.includes('locação') || operacaoRaw.includes('aluguel');
+    const valor = property.valor_venda || property.valor_locacao || property.valor_diaria || property.valor_mensal || 0;
+    const valorFormatado = formatPrice(valor);
+
+    const endereco = `${property.bairro || 'Bairro não informado'}, ${property.cidade || 'Cidade não informada'}`;
+    const descBasica = `${property.quartos || 0} quartos | ${property.vagas || 0} vagas`;
+
+    if (template === 'availability') {
+        const signature = senderName ? `\n\nAguardo seu retorno.\n*${senderName}*\n${senderPhone || ''}` : '\n\nAguardo seu retorno!';
+
+        return `Olá ${brokerName || 'Parceiro(a)'}! Tudo bem? Tenho um Cliente para esse imóvel e gostaria de checar a *disponibilidade*:\n\n` +
+            `🏡 *${property.titulo}*\n` +
+            `📍 ${endereco}\n` +
+            `💰 ${valorFormatado}${isLocacao ? '/mês' : ''}\n` +
+            `🔗 Veja o anúncio: ${propertyUrl || 'Link não disponível'}\n\n` +
+            `*Resposta rápida:*\n` +
+            `*Envie 1* = Sim, está disponível. Pode agendar a visita com seu Cliente\n\n` +
+            `*Envie 2* = Vou checar com o(a) Proprietário(a) e lhe retorno.\n\n` +
+            `*Envie 3* = Não, infelizmente o(a) Proprietário(a) já vendeu/alugou o imóvel. Vou inativar na Plataforma.` +
+            signature;
+    }
+
+    // Default 'share' template
+    return `Olá! Tenho interesse neste imóvel:\n\n` +
+        `🏡 *${property.titulo}*\n` +
+        `📍 ${endereco}\n` +
+        `💰 ${valorFormatado}${isLocacao ? '/mês' : ''}\n` +
+        `🛏️ ${descBasica}\n\n` +
+        `Gostaria de mais informações!`;
+}
+
+/**
+ * Gera link do WhatsApp
  */
 export function generateWhatsAppLink(params: { phone: string; message?: string }): string {
     if (!params.phone) {
@@ -276,30 +335,4 @@ export function generateWhatsAppLink(params: { phone: string; message?: string }
     const cleanPhone = formatPhoneNumber(params.phone);
     const encodedMessage = params.message ? encodeURIComponent(params.message) : '';
     return `https://wa.me/${cleanPhone}${encodedMessage ? `?text=${encodedMessage}` : ''}`;
-}
-
-/**
- * Formata mensagem de propriedade para WhatsApp
- */
-export function formatPropertyMessage(property: any): string {
-    const operacao = property.operacao === 'locacao' ? 'Alugar' : 'Comprar';
-    const valor = property.valor_venda || property.valor_locacao || 0;
-
-    return `Olá! Tenho interesse neste imóvel:\n\n` +
-        `🏡 ${property.titulo}\n` +
-        `📍 ${property.bairro}, ${property.cidade}\n` +
-        `💰 ${formatPrice(valor)}\n` +
-        `🛏️ ${property.quartos} quartos | 🚗 ${property.vagas} vagas\n\n` +
-        `Gostaria de mais informações!`;
-}
-
-/**
- * Track WhatsApp click (analytics placeholder)
- */
-export function trackWhatsAppClick(propertyId: string, source: string = 'property-details'): void {
-    // Analytics tracking - can be implemented later
-    console.log(`WhatsApp click tracked: ${propertyId} from ${source}`);
-
-    // TODO: Implement analytics tracking
-    // Example: Google Analytics, Mixpanel, etc.
 }

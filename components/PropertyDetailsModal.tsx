@@ -42,7 +42,8 @@ export const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({ prop
     const { user } = useAuth();
     const [property, setProperty] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    // const [currentImageIndex, setCurrentImageIndex] = useState(0); // Replaced by page/direction
+    const [currentUserName, setCurrentUserName] = useState<string | null>(null);
+    const [currentUserPhone, setCurrentUserPhone] = useState<string | null>(null);
     const [currentUserSlug, setCurrentUserSlug] = useState<string | null>(null);
     const [[page, direction], setPage] = useState([0, 0]);
 
@@ -60,16 +61,26 @@ export const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({ prop
             return;
         }
 
+        // Generate property URL
+        const prodUrl = getPropertyUrl({
+            ...property,
+            tipo_imovel: property.tipo_imovel?.tipo || property.tipo_imovel,
+            operacao: property.operacao?.tipo || property.operacao
+        }, property.perfis?.slug);
+
         // Track click
         if (ownerId && property.id) {
             await trackWhatsAppClick(ownerId, property.id, 'interest_modal');
         }
 
-        // Generate message
+        // Generate message with sender details and URL
         const message = formatPropertyMessage({
             property: property,
             brokerName: ownerName,
-            template: 'availability'
+            template: 'availability',
+            senderName: currentUserName || '',
+            senderPhone: currentUserPhone || '',
+            propertyUrl: prodUrl
         });
 
         const whatsappUrl = generateWhatsAppLink({
@@ -80,8 +91,6 @@ export const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({ prop
         window.open(whatsappUrl, '_blank');
     };
 
-    // State for current user name
-    const [currentUserName, setCurrentUserName] = useState<string | null>(null);
 
     // Fetch current user slug and name
     useEffect(() => {
@@ -90,13 +99,14 @@ export const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({ prop
             try {
                 const { data, error } = await supabase
                     .from('perfis')
-                    .select('slug, nome, sobrenome')
+                    .select('slug, nome, sobrenome, whatsapp')
                     .eq('id', user.id)
                     .single();
 
                 if (data) {
                     setCurrentUserSlug(data.slug);
                     setCurrentUserName(data.nome ? `${data.nome}${data.sobrenome ? ' ' + data.sobrenome : ''}` : null);
+                    setCurrentUserPhone(data.whatsapp);
                 }
             } catch (error) {
                 console.error('Error fetching user profile:', error);
@@ -191,23 +201,26 @@ Vamos agendar uma visita?`;
     };
 
     return (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4 animate-in fade-in duration-200">
-            <div className="bg-slate-800 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative flex flex-col md:flex-row">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[150] p-4 animate-in fade-in duration-300">
+            <div className="bg-slate-900/90 border border-white/10 rounded-[2.5rem] shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden relative flex flex-col md:flex-row shadow-primary-500/10">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 z-[30] p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+                    className="absolute top-6 right-6 z-[30] p-2.5 bg-slate-900/80 text-white rounded-full hover:bg-slate-800 transition-all border border-white/5 shadow-xl hover:scale-110 active:scale-95"
                 >
                     <X size={20} />
                 </button>
 
                 {loading ? (
-                    <div className="w-full h-96 flex items-center justify-center">
-                        <Loader2 className="animate-spin text-primary-500" size={48} />
+                    <div className="w-full h-[500px] flex items-center justify-center bg-slate-900/50">
+                        <div className="flex flex-col items-center gap-4">
+                            <Loader2 className="animate-spin text-primary-500" size={48} />
+                            <span className="text-slate-400 font-medium animate-pulse uppercase tracking-widest text-xs">Carregando detalhes...</span>
+                        </div>
                     </div>
                 ) : property ? (
                     <>
                         {/* Image Gallery - Left Side (Desktop) or Top (Mobile) */}
-                        <div className="w-full md:w-1/2 bg-slate-900 relative h-72 md:h-auto min-h-[300px] md:min-h-full">
+                        <div className="w-full md:w-1/2 bg-slate-950 relative h-72 md:h-auto min-h-[350px] md:min-h-full border-r border-white/5">
                             {photos.length > 0 ? (
                                 <div className="absolute inset-0 overflow-hidden">
                                     <AnimatePresence initial={false} custom={direction}>
@@ -240,229 +253,227 @@ Vamos agendar uma visita?`;
                                         />
                                     </AnimatePresence>
 
-                                    {/* Mobile Gradient Overlay */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none md:hidden" />
+                                    {/* Glass Overlay for navigation */}
+                                    <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent pointer-events-none" />
 
                                     {photos.length > 1 && (
                                         <>
                                             <button
                                                 onClick={prevImage}
-                                                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors backdrop-blur-sm z-10"
+                                                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-slate-900/40 hover:bg-slate-900/80 text-white rounded-full transition-all backdrop-blur-md z-10 border border-white/10 flex items-center justify-center shadow-lg hover:scale-110"
                                             >
-                                                <ChevronLeft size={20} className="md:w-6 md:h-6" />
+                                                <ChevronLeft size={24} />
                                             </button>
                                             <button
                                                 onClick={nextImage}
-                                                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors backdrop-blur-sm z-10"
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-slate-900/40 hover:bg-slate-900/80 text-white rounded-full transition-all backdrop-blur-md z-10 border border-white/10 flex items-center justify-center shadow-lg hover:scale-110"
                                             >
-                                                <ChevronRight size={20} className="md:w-6 md:h-6" />
+                                                <ChevronRight size={24} />
                                             </button>
                                         </>
                                     )}
-                                    <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-medium z-10">
-                                        {currentImageIndex + 1} / {photos.length}
+                                    <div className="absolute bottom-6 left-6 bg-slate-900/60 backdrop-blur-xl text-white px-4 py-2 rounded-2xl text-[10px] font-bold z-10 border border-white/10 uppercase tracking-widest">
+                                        FOTO {currentImageIndex + 1} de {photos.length}
                                     </div>
                                 </div>
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                    Sem fotos
+                                <div className="w-full h-full flex flex-col items-center justify-center text-slate-700 font-bold uppercase tracking-widest gap-4">
+                                    <XCircle size={64} className="opacity-20" />
+                                    <span>Nenhuma foto disponível</span>
                                 </div>
                             )}
                         </div>
 
                         {/* Details - Right Side (Desktop) or Bottom (Mobile) */}
-                        <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col">
-                            <div className="flex-1">
-                                <div className="flex flex-wrap items-center gap-2 mb-2">
-                                    <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${(property.operacao?.tipo || '').toLowerCase().includes('venda') ? 'bg-red-900/40 text-red-200 border-red-700/50' :
-                                        (property.operacao?.tipo || '').toLowerCase().includes('locação') ? 'bg-blue-900/40 text-blue-200 border-blue-700/50' :
-                                            (property.operacao?.tipo || '').toLowerCase().includes('temporada') ? 'bg-orange-900/40 text-orange-200 border-orange-700/50' :
-                                                'bg-gray-700 text-gray-300 border-gray-600'
+                        <div className="w-full md:w-1/2 overflow-y-auto max-h-screen md:max-h-full scrollbar-thin scrollbar-thumb-white/10">
+                            <div className="p-8 md:p-10">
+                                <div className="flex flex-wrap items-center gap-3 mb-6">
+                                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] border ${(property.operacao?.tipo || '').toLowerCase().includes('venda') ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/50' :
+                                        (property.operacao?.tipo || '').toLowerCase().includes('locação') ? 'bg-blue-950/40 text-blue-400 border-blue-900/50' :
+                                            'bg-slate-800 text-slate-400 border-slate-700'
                                         }`}>
                                         {property.operacao?.tipo || 'Operação'}
-                                    </div>
-                                    <div className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-purple-900/40 text-purple-200 border-purple-700/50">
+                                    </span>
+                                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] border bg-slate-800 text-slate-200 border-white/10">
                                         {property.tipo_imovel?.tipo || 'Imóvel'}
-                                    </div>
-
-                                    <div className="flex flex-wrap items-center gap-3 text-slate-400 text-sm mb-1">
-                                        <div className="flex items-center gap-1">
-                                            <MapPin size={14} className="text-primary-500" />
-                                            {property.bairro}, {property.cidade}
-                                        </div>
-                                        <div className="text-slate-600">•</div>
-                                        <div className="font-mono text-xs opacity-70">
-                                            Ref: {property.cod_imovel || property.id?.slice(0, 6)}
-                                        </div>
+                                    </span>
+                                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                                        <div className="w-1 h-1 rounded-full bg-slate-700" />
+                                        REF: {property.cod_imovel || property.id?.slice(0, 6)}
                                     </div>
                                 </div>
 
-                                <h2 className="text-2xl font-bold text-white mb-2 leading-tight">
+                                <h2 className="text-3xl font-black text-white mb-4 leading-[1.1] tracking-tight uppercase">
                                     {property.titulo}
                                 </h2>
 
-                                <div className="mb-6">
-                                    {/* Price Logic based on operation */}
+                                <div className="flex items-center gap-2 text-slate-400 text-sm mb-8 bg-white/5 w-fit px-4 py-2 rounded-2xl border border-white/5">
+                                    <MapPin size={16} className="text-primary-500" />
+                                    <span className="font-bold">{property.bairro}</span>
+                                    <span className="opacity-40">•</span>
+                                    <span>{property.cidade}</span>
+                                </div>
+
+                                <div className="mb-10 p-6 bg-slate-800/30 rounded-[2rem] border border-white/5">
+                                    {/* Price Logic */}
                                     {(property.operacao?.tipo || '').toLowerCase().includes('temporada') ? (
-                                        <div className="flex flex-col gap-1">
+                                        <div className="space-y-2">
                                             {property.valor_diaria > 0 && (
-                                                <div className="text-2xl font-bold text-primary-400">
-                                                    {formatCurrency(property.valor_diaria)} <span className="text-sm font-normal text-slate-500">/dia</span>
+                                                <div className="text-2xl font-black text-emerald-400 tracking-tighter">
+                                                    {formatCurrency(property.valor_diaria)} <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">/dia</span>
                                                 </div>
                                             )}
                                             {property.valor_mensal > 0 && (
-                                                <div className="text-xl font-bold text-primary-400/80">
-                                                    {formatCurrency(property.valor_mensal)} <span className="text-sm font-normal text-slate-500">/mês</span>
+                                                <div className="text-xl font-black text-emerald-400/70 tracking-tighter">
+                                                    {formatCurrency(property.valor_mensal)} <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">/mês</span>
                                                 </div>
-                                            )}
-                                            {!property.valor_diaria && !property.valor_mensal && (
-                                                <div className="text-2xl font-bold text-primary-400">Sob Consulta</div>
                                             )}
                                         </div>
                                     ) : (property.operacao?.tipo || '').toLowerCase().includes('venda') ? (
-                                        <div className="text-3xl font-bold text-primary-400">
+                                        <div className="text-3xl font-black text-emerald-400 tracking-tighter">
                                             {property.valor_venda > 0 ? formatCurrency(property.valor_venda) : 'Sob Consulta'}
                                         </div>
                                     ) : (property.operacao?.tipo || '').toLowerCase().includes('locação') || (property.operacao?.tipo || '').toLowerCase().includes('aluguel') ? (
-                                        <div className="text-3xl font-bold text-primary-400">
-                                            {property.valor_locacao > 0 ? formatCurrency(property.valor_locacao) : 'Sob Consulta'} <span className="text-sm font-normal text-slate-500">/mês</span>
+                                        <div className="text-3xl font-black text-emerald-400 tracking-tighter">
+                                            {property.valor_locacao > 0 ? formatCurrency(property.valor_locacao) : 'Sob Consulta'} <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">/mês</span>
                                         </div>
                                     ) : (
-                                        <div className="text-3xl font-bold text-primary-400">
+                                        <div className="text-3xl font-black text-emerald-400 tracking-tighter">
                                             {formatCurrency(property.valor_venda || property.valor_locacao || property.valor_diaria || property.valor_mensal)}
                                         </div>
                                     )}
 
-                                    {(property.valor_condo > 0 || property.valor_iptu > 0) && (
-                                        <div className="flex flex-wrap gap-4 mt-2 text-xs text-slate-400">
-                                            {property.valor_condo > 0 && (
-                                                <span>Cond.: <strong className="text-slate-200">{formatCurrency(property.valor_condo)}</strong></span>
-                                            )}
-                                            {property.valor_iptu > 0 && (
-                                                <span>IPTU: <strong className="text-slate-200">{formatCurrency(property.valor_iptu)}</strong></span>
-                                            )}
+                                    <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-white/5 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                        {property.valor_condo > 0 && (
+                                            <div className="flex flex-col">
+                                                <span className="opacity-60 mb-0.5">Condomínio</span>
+                                                <span className="text-slate-300 text-sm font-black">{formatCurrency(property.valor_condo)}</span>
+                                            </div>
+                                        )}
+                                        {property.valor_iptu > 0 && (
+                                            <div className="flex flex-col">
+                                                <span className="opacity-60 mb-0.5">IPTU Anual</span>
+                                                <span className="text-slate-300 text-sm font-black">{formatCurrency(property.valor_iptu)}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10 pb-10 border-b border-white/5">
+                                    <div className="bg-slate-800/40 p-3 rounded-2xl border border-white/5 text-center">
+                                        <Bed className="mx-auto text-primary-500 mb-2" size={20} />
+                                        <span className="block font-black text-white text-lg leading-none mb-1">{property.quartos}</span>
+                                    </div>
+                                    <div className="bg-slate-800/40 p-3 rounded-2xl border border-white/5 text-center">
+                                        <Bath className="mx-auto text-primary-500 mb-2" size={20} />
+                                        <span className="block font-black text-white text-lg leading-none mb-1">{property.banheiros}</span>
+                                    </div>
+                                    <div className="bg-slate-800/40 p-3 rounded-2xl border border-white/5 text-center">
+                                        <Car className="mx-auto text-primary-500 mb-2" size={20} />
+                                        <span className="block font-black text-white text-lg leading-none mb-1">{property.vagas}</span>
+                                    </div>
+                                    <div className="bg-slate-800/40 p-3 rounded-2xl border border-white/5 text-center">
+                                        <Square className="mx-auto text-primary-500 mb-2" size={20} />
+                                        <span className="block font-black text-white text-lg leading-none mb-1">{property.area_priv}m²</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-10">
+                                    <div>
+                                        <h3 className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4 flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                                            Descrição do Imóvel
+                                        </h3>
+                                        <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-line font-medium bg-slate-800/20 p-6 rounded-3xl border border-white/5">
+                                            {property.descricao || 'O proprietário ainda não forneceu uma descrição detalhada para este imóvel.'}
+                                        </p>
+                                    </div>
+
+                                    {/* Features & Characteristics */}
+                                    {(property.caracteristicas || property.features) && (
+                                        <div>
+                                            <h3 className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+                                                Características e Diferenciais
+                                            </h3>
+                                            <div className="flex flex-wrap gap-2.5">
+                                                {(typeof property.caracteristicas === 'string'
+                                                    ? property.caracteristicas.split(',')
+                                                    : (property.caracteristicas || property.features || [])
+                                                ).map((feat: string, i: number) => (
+                                                    feat && <span key={i} className="px-3 py-1.5 bg-slate-800/50 hover:bg-slate-800 text-slate-300 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-white/5 transition-colors">
+                                                        {feat.trim()}
+                                                    </span>
+                                                ))}
+                                                {property.aceita_financiamento && (
+                                                    <span className="px-3 py-1.5 bg-emerald-950/30 text-emerald-400 border border-emerald-500/20 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                                                        <ShieldCheck size={12} /> Financiável
+                                                    </span>
+                                                )}
+                                                {property.aceita_permuta && (
+                                                    <span className="px-3 py-1.5 bg-blue-950/30 text-blue-400 border border-blue-500/20 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                                                        <Handshake size={12} /> Permuta
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 mb-8 border-y border-slate-700 py-4">
-                                    <div className="text-center">
-                                        <Bed className="mx-auto text-gray-400 mb-1" size={20} />
-                                        <span className="block font-bold text-white">{property.quartos}</span>
-                                        <span className="text-xs text-gray-500">Quartos</span>
-                                    </div>
-                                    {(property.suites || 0) > 0 && (
-                                        <div className="text-center">
-                                            <div className="relative inline-block">
-                                                <Bed className="mx-auto text-primary-500 mb-1" size={20} />
-                                                <span className="absolute -top-1 -right-2 text-[10px] bg-primary-900 text-primary-200 px-1 rounded-full">S</span>
-                                            </div>
-                                            <span className="block font-bold text-white">{property.suites}</span>
-                                            <span className="text-xs text-gray-500">Suítes</span>
-                                        </div>
-                                    )}
-                                    <div className="text-center">
-                                        <Bath className="mx-auto text-gray-400 mb-1" size={20} />
-                                        <span className="block font-bold text-white">{property.banheiros}</span>
-                                        <span className="text-xs text-gray-500">Banheiros</span>
-                                    </div>
-                                    <div className="text-center">
-                                        <Car className="mx-auto text-gray-400 mb-1" size={20} />
-                                        <span className="block font-bold text-white">{property.vagas}</span>
-                                        <span className="text-xs text-gray-500">Vagas</span>
-                                    </div>
-                                    <div className="text-center">
-                                        <Square className="mx-auto text-gray-400 mb-1" size={20} />
-                                        <span className="block font-bold text-white">{property.area_priv}</span>
-                                        <span className="text-xs text-gray-500">m²</span>
-                                    </div>
-                                </div>
-
-                                <div className="prose dark:prose-invert max-w-none mb-6">
-                                    <h3 className="text-sm font-bold uppercase text-gray-400 mb-2">Descrição</h3>
-                                    <p className="text-slate-300 text-sm line-clamp-6 whitespace-pre-line">
-                                        {property.descricao}
-                                    </p>
-                                </div>
-
-                                {/* Features & Characteristics */}
-                                {(property.caracteristicas || property.features) && (
-                                    <div className="mb-6">
-                                        <h3 className="text-sm font-bold uppercase text-gray-400 mb-3">Destaques</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {/* Handle both string (DB) and array (migrated) formats */}
-                                            {(typeof property.caracteristicas === 'string'
-                                                ? property.caracteristicas.split(',')
-                                                : (property.caracteristicas || property.features || [])
-                                            ).map((feat: string, i: number) => (
-                                                feat && <span key={i} className="px-2 py-1 bg-slate-700 rounded-full text-xs text-slate-300 border border-slate-600">
-                                                    {feat.trim()}
-                                                </span>
-                                            ))}
-                                            {property.aceita_financiamento && (
-                                                <span className="px-2 py-1 bg-green-900/40 text-green-300 border border-green-700/50 rounded text-xs flex items-center gap-1">
-                                                    <CheckCircle size={10} /> Aceita Financiamento
-                                                </span>
-                                            )}
-                                            {property.aceita_permuta && (
-                                                <span className="px-2 py-1 bg-blue-900/40 text-blue-300 border border-blue-700/50 rounded text-xs flex items-center gap-1">
-                                                    <Handshake size={10} /> Aceita Permuta
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <button
-                                onClick={handleDirectWhatsApp}
-                                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-3xl font-bold transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 mb-6"
-                            >
-                                <MessageCircle size={20} />
-                                Checar Disponibilidade
-                            </button>
-
-                            {/* Actions */}
-                            <div className="mt-auto p-6 border-t border-slate-700">
-                                {lead ? (
-                                    <div className="space-y-3">
-
-                                        <div className="bg-red-950/30 backdrop-blur-sm border border-red-900/40 rounded-3xl p-4 space-y-3">
-                                            <div className="flex items-center gap-2 justify-center text-red-300/90 text-sm font-bold animate-pulse text-center leading-tight">
-                                                <AlertCircle size={16} className="shrink-0" />
-                                                <span>
-                                                    Dica: Verifique a disponibilidade antes de enviar. Evite perda de tempo e de seu Cliente!
-                                                </span>
-                                            </div>
-
-                                            <button
-                                                onClick={handleWhatsAppShare}
-                                                className="w-full py-3 bg-white hover:bg-red-50 border border-red-100 text-slate-700 rounded-2xl font-bold transition-all flex flex-col items-center justify-center gap-0.5 shadow-sm"
-                                            >
-                                                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-slate-500">
-                                                    <Share2 size={14} />
-                                                    <span>Enviar anúncio para</span>
+                                <div className="mt-12 pt-10 border-t border-white/5 flex flex-col gap-4">
+                                    {lead ? (
+                                        <>
+                                            <div className="bg-red-950/20 border border-red-500/20 rounded-3xl p-6 text-center">
+                                                <div className="flex items-center gap-2 justify-center text-red-400 text-[18px] font-black uppercase tracking-[0.1em] mb-3">
+                                                    <AlertCircle size={18} />
+                                                    DICA DE SEGURANÇA
                                                 </div>
-                                                <span className="font-bold text-red-600 text-lg leading-none">{lead.nome}</span>
-                                            </button>
-                                        </div>
+                                                <p className="text-slate-400 text-sm font-medium leading-relaxed mb-6">
+                                                    Verifique a disponibilidade antes de enviar para seu cliente. Evite frustrações e perda de tempo!
+                                                </p>
 
-                                    </div>
-                                ) : (
-                                    <button
-                                        onClick={() => onClose()} // Just close if no lead (preview mode)
-                                        className="w-full py-3 bg-slate-700 text-white rounded-full font-bold transition-colors"
-                                    >
-                                        Fechar
-                                    </button>
-                                )}
+                                                <button
+                                                    onClick={handleDirectWhatsApp}
+                                                    className="w-full py-4 bg-red-600 hover:bg-red-500 text-white rounded-[2rem] font-black uppercase tracking-widest transition-all shadow-xl shadow-red-900/40 flex items-center justify-center gap-3 active:scale-95 group"
+                                                >
+                                                    <MessageCircle size={22} className="group-hover:rotate-12 transition-transform" />
+                                                    Checar Disponibilidade
+                                                </button>
+                                            </div>
+
+                                            <div className="bg-slate-800/30 border border-white/5 rounded-3xl p-6">
+                                                <div className="flex items-center gap-2 justify-center text-slate-500 text-[10px] font-black uppercase tracking-[0.1em] mb-4">
+                                                    PARA SEU CLIENTE
+                                                </div>
+                                                <button
+                                                    onClick={handleWhatsAppShare}
+                                                    className="w-full py-5 bg-white hover:bg-slate-50 text-slate-900 rounded-[2rem] font-black transition-all flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg"
+                                                >
+                                                    <div className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest text-slate-500">
+                                                        <Share2 size={16} />
+                                                        <span>Enviar anúncio para</span>
+                                                    </div>
+                                                    <span className="text-2xl font-black text-slate-950 uppercase tracking-tighter leading-none">{lead.nome}</span>
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <button
+                                            onClick={onClose}
+                                            className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-3xl font-black uppercase tracking-widest transition-colors border border-white/5"
+                                        >
+                                            Fechar Detalhes
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </>
                 ) : (
-                    <div className="w-full h-96 flex flex-col items-center justify-center text-gray-500">
-                        <p>Imóvel não encontrado</p>
-                        <button onClick={onClose} className="mt-4 text-primary-500 hover:underline">Fechar</button>
+                    <div className="w-full h-[500px] flex flex-col items-center justify-center text-slate-500 bg-slate-900">
+                        <XCircle size={64} className="opacity-20 mb-4" />
+                        <p className="font-bold uppercase tracking-widest">Imóvel não encontrado</p>
+                        <button onClick={onClose} className="mt-6 text-primary-500 hover:text-primary-400 font-bold uppercase tracking-widest text-xs border-b border-primary-500 pb-1">Voltar</button>
                     </div>
                 )}
             </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Globe, Heart, Users, LogOut, ShoppingCart, User, CheckSquare, CreditCard, Clock, Percent, DollarSign, LayoutDashboard, Settings } from 'lucide-react';
+import { X, Globe, Heart, Users, LogOut, ShoppingCart, User, CheckSquare, CreditCard, Clock, Percent, DollarSign, LayoutDashboard, Settings, Bell } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
 interface MoreMenuSheetProps {
@@ -25,13 +25,33 @@ export const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, i
         onClose();
     };
 
+    const handlePushToggle = () => {
+        console.log("OneSignal: Push toggle clicked");
+        const OneSignal = (window as any).OneSignal;
+        if (OneSignal) {
+            console.log("OneSignal: Triggering Notifications.requestPermission");
+            // Em v16+, o método mudou para OneSignal.Notifications.requestPermission()
+            if (OneSignal.Notifications) {
+                OneSignal.Notifications.requestPermission();
+            } else if (typeof OneSignal.showNativePrompt === 'function') {
+                OneSignal.showNativePrompt();
+            } else {
+                console.error("OneSignal: Method requestPermission/showNativePrompt not found");
+            }
+        } else {
+            console.error("OneSignal: SDK not found or not initialized");
+        }
+        onClose();
+    };
+
     let menuItems = [];
 
     if (isAdmin) {
         menuItems = [
             { icon: Clock, label: 'Trial', path: '/admin/trial-settings', color: 'amber', onClick: null },
             { icon: Percent, label: 'Cupons', path: '/admin/coupons', color: 'emerald', onClick: null },
-            { icon: Settings, label: 'Configs', path: '/settings', color: 'blue', onClick: null },
+            { icon: Bell, label: 'Notificações', path: null, color: 'blue', onClick: handlePushToggle },
+            { icon: Settings, label: 'Configs', path: '/settings', color: 'slate', onClick: null },
             { icon: LogOut, label: 'Sair', path: null, color: 'red', onClick: handleLogout },
         ];
     } else if (isClient) {
@@ -45,6 +65,7 @@ export const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, i
             { icon: Globe, label: 'Mercado iziBrokerz', path: '/properties?mode=market', color: 'blue', onClick: null },
             { icon: Users, label: 'Leads (CRM)', path: '/leads', color: 'purple', onClick: null },
             { icon: Heart, label: 'Favoritos', path: '/favorites', color: 'red', onClick: null },
+            { icon: Bell, label: 'Notificações', path: null, color: 'emerald', onClick: handlePushToggle },
             { icon: Settings, label: 'Ajustes', path: '/settings', color: 'slate', onClick: null },
             { icon: LogOut, label: 'Sair', path: null, color: 'red', onClick: handleLogout },
         ];

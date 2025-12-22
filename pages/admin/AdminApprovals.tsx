@@ -7,6 +7,7 @@ import {
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../components/AuthContext';
 import { useToast } from '../../components/ToastContext';
+import { sendPushNotification } from '../../lib/onesignalHelper';
 import { useNavigate } from 'react-router-dom';
 import { PropertyCard } from '../../components/PropertyCard';
 
@@ -210,6 +211,14 @@ export const AdminApprovals: React.FC = () => {
                 link: `/properties/${property.id}`
             });
 
+            // Push Notification
+            await sendPushNotification(
+                'Anúncio Aprovado! 🎉',
+                `Seu imóvel "${property.titulo}" já está ativo no portal.`,
+                property.user_id,
+                `/properties?id=${property.id}`
+            );
+
             addToast('Anúncio ativo com sucesso!', 'success');
             fetchProperties();
         } catch (error: any) {
@@ -272,8 +281,16 @@ export const AdminApprovals: React.FC = () => {
                 titulo: notifTitle,
                 mensagem: notifMessage,
                 tipo: 'reprovacao',
-                link: `/properties/${selectedProperty.id}/edit` // Assuming edit route
+                link: `/properties?edit=${selectedProperty.id}` // Corrected link for editing
             });
+
+            // Push Notification
+            await sendPushNotification(
+                notifTitle,
+                notifMessage,
+                selectedProperty.user_id,
+                `/properties?edit=${selectedProperty.id}`
+            );
 
             addToast('Anúncio reprovado e notificação enviada.', 'success');
             setShowRejectModal(false);
@@ -553,10 +570,10 @@ export const AdminApprovals: React.FC = () => {
                                                             <div className="flex gap-2 text-xs text-slate-400 mt-0.5">
                                                                 <span className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700">{property.tipo_imovel}</span>
                                                                 <span className={`px-1.5 py-0.5 rounded border font-semibold ${property.operacao === 'Venda'
-                                                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                                        : property.operacao === 'Locação' || property.operacao === 'Aluguel'
-                                                                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                                                            : 'bg-slate-900 border-slate-700'
+                                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                                                    : property.operacao === 'Locação' || property.operacao === 'Aluguel'
+                                                                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                                        : 'bg-slate-900 border-slate-700'
                                                                     }`}>{property.operacao}</span>
                                                             </div>
                                                         </div>

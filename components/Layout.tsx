@@ -82,6 +82,22 @@ export const DashboardLayout: React.FC = () => {
         }
     };
 
+    const deleteReadNotifications = async () => {
+        try {
+            const { error } = await supabase
+                .from('notificacoes')
+                .delete()
+                .eq('user_id', user?.id)
+                .eq('lida', true);
+
+            if (!error) {
+                setNotifications(prev => prev.filter(n => !n.lida));
+            }
+        } catch (error) {
+            console.error('Error deleting read notifications:', error);
+        }
+    };
+
     const unreadCount = notifications.filter(n => !n.lida).length;
 
     // Close notifications when clicking outside
@@ -150,6 +166,7 @@ export const DashboardLayout: React.FC = () => {
                                 <NotificationDropdown
                                     notifications={notifications}
                                     onMarkAsRead={markAllAsRead}
+                                    onDeleteRead={deleteReadNotifications}
                                     onClose={() => setShowNotifications(false)}
                                 />
                             )}
@@ -202,14 +219,6 @@ export const PublicLayout: React.FC = () => {
     // Extract broker slug from path (first segment after /)
     const brokerSlug = isBrokerPage && pathSegments[0] ? pathSegments[0] : null;
 
-    // DEBUG: Log broker page detection
-    console.log('PublicLayout DEBUG:');
-    console.log('  pathname:', location.pathname);
-    console.log('  isFixedRoute:', isFixedRoute);
-    console.log('  isAdminRoute:', isAdminRoute);
-    console.log('  isPropertyRoute:', isPropertyRoute);
-    console.log('  isBrokerPage:', isBrokerPage);
-    console.log('  brokerSlug:', brokerSlug);
 
     useEffect(() => {
         const fetchBrokerLogo = async () => {

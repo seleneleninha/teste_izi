@@ -342,7 +342,7 @@ export const Leads: React.FC = () => {
                 <h2 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
                     Gestão de Leads
                 </h2>
-                <p className="text-slate-400 text-xs font-medium leading-tight">Gerencie seu funil de vendas e acompanhe seus clientes</p>
+                <p className="text-slate-400 text-xs font-medium leading-tight">Gerencie e acompanhe seus clientes no funil</p>
             </div>
         );
         return () => setHeaderContent(null);
@@ -770,7 +770,6 @@ export const Leads: React.FC = () => {
     return (
         <div className="flex flex-col">
             {/* Controls */}
-            {/* Controls */}
             <div className="mt-8 flex flex-col md:flex-row justify-end items-start md:items-center mb-6 gap-4">
                 {/* Title moved to Header */}
                 <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800 space-x-2">
@@ -795,7 +794,7 @@ export const Leads: React.FC = () => {
                             setIsModalOpen(true);
                         }}
                         className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all flex items-center shadow-lg shadow-emerald-900/20 active:scale-95 border border-emerald-500/20">
-                        <Plus size={18} className="mr-2" /> Novo Lead
+                        Novo Lead
                     </button>
                 </div>
             </div>
@@ -864,8 +863,8 @@ export const Leads: React.FC = () => {
 
             {/* New Lead Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 m-4">
-                    <div className="bg-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+                    <div className="bg-slate-800 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto border border-white/10">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-lg font-bold text-white">{editingLeadId ? 'Editar Lead' : 'Novo Lead'}</h3>
                             <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-300"><X size={20} /></button>
@@ -1073,13 +1072,12 @@ export const Leads: React.FC = () => {
             )}
 
             {/* Matching Properties Modal */}
-            {/* Matching Properties Modal */}
             {matchModalOpen && selectedLeadForMatch && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-slate-800 rounded-3xl shadow-xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+                    <div className="bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto border border-white/10 animate-in fade-in slide-in-from-bottom-4 duration-300">
                         <button
                             onClick={() => setMatchModalOpen(false)}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-200"
+                            className="absolute top-6 right-6 text-slate-400 hover:text-white bg-white/5 p-2 rounded-full transition-colors z-10"
                         >
                             <X size={20} />
                         </button>
@@ -1118,47 +1116,64 @@ export const Leads: React.FC = () => {
                                         const formatPrice = (val: number) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 
                                         return (
-                                            <div key={prop.id} className="bg-slate-700/50 p-4 rounded-3xl border border-slate-600 flex justify-between items-center hover:bg-slate-700 transition-colors">
-                                                <div>
-                                                    <h4 className="font-bold text-white text-lg">{prop.titulo}</h4>
+                                            <div key={prop.id} className="group bg-slate-700/30 hover:bg-slate-700/50 p-4 rounded-3xl border border-white/5 hover:border-white/10 flex gap-4 transition-all duration-300">
+                                                {/* Property Image Preview */}
+                                                <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-slate-800 border border-white/5">
+                                                    {prop.imagem ? (
+                                                        <img
+                                                            src={prop.imagem}
+                                                            alt={prop.titulo}
+                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-slate-600">
+                                                            <Target size={24} />
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-bold text-white text-base truncate group-hover:text-primary-400 transition-colors uppercase tracking-tight">{prop.titulo}</h4>
 
                                                     {/* Badges Row */}
-                                                    <div className="flex flex-wrap gap-2 mt-2 mb-2">
-                                                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${opColor}`}>
-                                                            {opName}
-                                                        </span>
-                                                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border bg-purple-900/40 text-purple-200 border-purple-700/50">
-                                                            {typeName}
-                                                        </span>
+                                                    <div className="flex flex-wrap gap-2 mt-1.5 mb-2">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[9px] uppercase text-slate-500 font-bold tracking-widest pl-0.5">Operação</span>
+                                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg border ${opColor} mt-0.5`}>
+                                                                {opName}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[9px] uppercase text-slate-500 font-bold tracking-widest pl-0.5">Imóvel</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg border bg-slate-800 text-slate-300 border-white/10 mt-0.5">
+                                                                {typeName}
+                                                            </span>
+                                                        </div>
                                                     </div>
 
-                                                    <span className="text-sm text-slate-400 block mb-1">{prop.cidade} - {prop.bairro}</span>
+                                                    <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-2">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                                                        {prop.cidade} - {prop.bairro}
+                                                    </div>
 
                                                     {/* Price Logic */}
-                                                    <div className="text-xl text-primary-400 font-bold">
+                                                    <div className="text-lg text-emerald-400 font-black tracking-tight">
                                                         {opLower.includes('temporada') ? (
                                                             <div className="flex flex-col">
                                                                 {prop.valor_diaria && prop.valor_diaria > 0 && (
-                                                                    <span>{formatPrice(prop.valor_diaria)} <span className="text-xs font-normal text-slate-500">/dia</span></span>
+                                                                    <span>{formatPrice(prop.valor_diaria)} <span className="text-[10px] uppercase font-bold text-slate-500">/dia</span></span>
                                                                 )}
                                                                 {prop.valor_mensal && prop.valor_mensal > 0 && (
-                                                                    <span>{formatPrice(prop.valor_mensal)} <span className="text-xs font-normal text-slate-500">/mês</span></span>
-                                                                )}
-                                                                {(!prop.valor_diaria || prop.valor_diaria <= 0) && (!prop.valor_mensal || prop.valor_mensal <= 0) && (
-                                                                    <span className="text-sm">Sob Consulta</span>
+                                                                    <span>{formatPrice(prop.valor_mensal)} <span className="text-[10px] uppercase font-bold text-slate-500">/mês</span></span>
                                                                 )}
                                                             </div>
                                                         ) : opLower.includes('venda/locação') || opLower.includes('venda/locacao') ? (
-                                                            // For Venda/Locação: show BOTH prices
-                                                            <div className="flex flex-col gap-1">
+                                                            <div className="flex items-baseline gap-2">
                                                                 {prop.valor_venda && prop.valor_venda > 0 && (
-                                                                    <span className="text-base">{formatPrice(prop.valor_venda)} <span className="text-xs font-normal text-slate-500">venda</span></span>
+                                                                    <span>{formatPrice(prop.valor_venda)}</span>
                                                                 )}
                                                                 {prop.valor_locacao && prop.valor_locacao > 0 && (
-                                                                    <span className="text-base">{formatPrice(prop.valor_locacao)} <span className="text-xs font-normal text-slate-500">/mês</span></span>
-                                                                )}
-                                                                {(!prop.valor_venda || prop.valor_venda <= 0) && (!prop.valor_locacao || prop.valor_locacao <= 0) && (
-                                                                    <span className="text-sm">Sob Consulta</span>
+                                                                    <span className="text-sm opacity-60">| {formatPrice(prop.valor_locacao)}/mês</span>
                                                                 )}
                                                             </div>
                                                         ) : opLower.includes('venda') ? (
@@ -1170,25 +1185,27 @@ export const Leads: React.FC = () => {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="text-right">
-                                                        <div className="text-xs text-slate-400">Match</div>
-                                                        <div className={`text-xl font-bold ${prop.match_score >= 80 ? 'text-green-500' :
-                                                            prop.match_score >= 60 ? 'text-yellow-500' :
-                                                                'text-gray-500'
+
+                                                <div className="flex flex-col justify-between items-end gap-2">
+                                                    <div className="text-right bg-slate-800/50 p-2 rounded-2xl border border-white/5 min-w-[70px]">
+                                                        <div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mb-0.5">Match</div>
+                                                        <div className={`text-lg font-black leading-none ${prop.match_score >= 80 ? 'text-emerald-500' :
+                                                            prop.match_score >= 60 ? 'text-amber-500' :
+                                                                'text-slate-500'
                                                             }`}>
                                                             {prop.match_score}%
                                                         </div>
                                                     </div>
+
                                                     <button
                                                         onClick={() => {
                                                             setViewingPropertyId(prop.id);
                                                             setIsDetailsModalOpen(true);
                                                         }}
-                                                        className="p-2 bg-slate-600 rounded-full shadow-sm hover:shadow text-primary-500 hover:text-primary-600 transition-all"
+                                                        className="w-10 h-10 bg-primary-600 hover:bg-primary-500 rounded-2xl shadow-lg shadow-primary-600/20 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 group/btn"
                                                         title="Ver Detalhes e Enviar"
                                                     >
-                                                        <ArrowRight size={18} />
+                                                        <ArrowRight size={20} className="group-hover/btn:translate-x-0.5 transition-transform" />
                                                     </button>
                                                 </div>
                                             </div>

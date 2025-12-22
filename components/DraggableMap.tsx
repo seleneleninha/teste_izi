@@ -159,7 +159,7 @@ export const DraggableMap: React.FC<DraggableMapProps> = ({
                 ref={mapContainerRef}
                 className="w-full h-80 rounded-3xl border-2 border-midnight-800 overflow-hidden shadow-lg z-0"
             />
-            <div className="mt-2 p-3 bg-midnight-950/20 border border-midnight-800 rounded-full">
+            <div className="mt-2 p-3 bg-midnight-950/20 border border-midnight-800 rounded-2xl">
                 <p className="text-md text-gray-50">
                     <strong>💡 Dica:</strong> Arraste o marcador para ajustar a localização exata do imóvel
                 </p>

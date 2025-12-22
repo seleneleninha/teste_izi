@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { UploadCloud, Check, Sparkles, Wand2, Loader2, Tag, MapPin, DollarSign, Home, Info, Search, AlertCircle, AlertTriangle, History, ShieldCheck, Save } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { UploadCloud, Check, Sparkles, Wand2, Loader2, Tag, MapPin, DollarSign, Home, Info, Search, AlertCircle, AlertTriangle, History, ShieldCheck, Save, Calendar, Trash2, Play, Maximize2, Star, Percent } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { generatePropertyDescription, evaluatePropertyPrice } from '../lib/geminiHelper';
+import { generatePropertyDescription } from '../lib/geminiHelper';
 import { useHeader } from '../components/HeaderContext';
+import { sendPushNotification } from '../lib/onesignalHelper';
 
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
@@ -11,6 +13,7 @@ import { geocodeAddress } from '../lib/geocodingHelper';
 import { DraggableMap } from '../components/DraggableMap';
 import { formatCurrencyInput, formatAreaInput } from '../lib/formatters';
 import imageCompression from 'browser-image-compression';
+import { div } from 'framer-motion/client';
 
 // Interface for the form data
 interface PropertyFormData {
@@ -147,7 +150,7 @@ export default function AddProperty() {
                 <h2 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
                     {editingId ? 'Editar Imóvel' : 'Cadastrar Novo Imóvel'}
                 </h2>
-                <p className="text-slate-400 text-xs font-medium leading-tight">Preencha os dados do imóvel. Nossa IA ajudará em algumas etapas.</p>
+                <p className="text-slate-400 text-xs font-medium leading-tight">Preencha os <span className="text-red-500">campos obrigatórios*</span>, por favor</p>
             </div>
         );
         return () => setHeaderContent(null);
@@ -439,7 +442,49 @@ export default function AddProperty() {
             }
 
             if (error) throw error;
-            if (error) throw error;
+
+            // --- ADMIN NOTIFICATION ---
+            try {
+                // Fetch all admins
+                const { data: admins, error: adminQueryError } = await supabase
+                    .from('perfis')
+                    .select('id, email')
+                    .eq('is_admin', true);
+
+                console.log('DEBUG: Admins found for notification:', admins);
+                if (adminQueryError) console.error('DEBUG: Admin query error:', adminQueryError);
+
+                if (admins && admins.length > 0) {
+                    const adminNotifications = admins.map(adm => ({
+                        user_id: adm.id,
+                        titulo: 'Novo Anúncio Pendente 🏠',
+                        mensagem: `O imóvel "${formData.title}" foi enviado por ${user.email} e aguarda aprovação.`,
+                        link: '/admin/approvals',
+                        tipo: 'alert'
+                    }));
+
+                    console.log('DEBUG: Inserting internal notifications for admins...');
+                    const { error: insError } = await supabase.from('notificacoes').insert(adminNotifications);
+                    if (insError) console.error('DEBUG: Internal notification insert error:', insError);
+
+                    // Send Push for each admin
+                    for (const adm of admins) {
+                        console.log('DEBUG: Attempting push for admin:', adm.id);
+                        await sendPushNotification(
+                            'Novo Anúncio Pendente 🏠',
+                            `O imóvel "${formData.title}" foi enviado e aguarda aprovação.`,
+                            adm.id,
+                            '/admin/approvals'
+                        );
+                    }
+                } else {
+                    console.warn('DEBUG: No admins found to notify!');
+                }
+            } catch (adminNotifError) {
+                console.error('Error notifying admins:', adminNotifError);
+                // Don't block property creation if admin notification fails
+            }
+            // ---------------------------
 
             addToast(editingId ? 'Imóvel atualizado com sucesso! Aguardando nova aprovação.' : 'Imóvel cadastrado com sucesso! Aguardando aprovação.', 'success');
             navigate('/properties');
@@ -694,73 +739,6 @@ export default function AddProperty() {
         }
     };
 
-    const handleEvaluatePrice = async () => {
-        // Validate required fields for price evaluation
-        if (!formData.city || !formData.neighborhood || !formData.privateArea) {
-            addToast('Preencha cidade, bairro e área privativa para avaliar o preço.', 'warning');
-            return;
-        }
-
-        setIsEvaluating(true);
-
-        try {
-            const city = formData.city;
-            const hood = formData.neighborhood;
-
-            // Fetch similar properties from database
-            const { data: similarProps } = await supabase
-                .from('anuncios')
-                .select('valor_venda, area_util, quartos')
-                .eq('cidade', city)
-                .eq('bairro', hood)
-                .gt('valor_venda', 0) // Ensure valid price
-                .limit(5);
-
-            const mappedProps = (similarProps || []).map(p => ({
-                valor: p.valor_venda,
-                area: p.area_util,
-                quartos: p.quartos || 0
-            }));
-
-            // If few properties found, add some mock data based on averages for the area to allow AI to work
-            // This is afallback for new databases with few records
-            if (mappedProps.length < 3) {
-                console.log('Poucos imóveis similares encontrados, usando estimativa base...');
-            }
-
-            const tipoNome = tiposImovel.find(t => t.id === formData.tipoImovelId)?.tipo || 'Imóvel';
-
-            const evaluation = await evaluatePropertyPrice({
-                tipo: tipoNome,
-                bairro: hood,
-                cidade: city,
-                quartos: Number(formData.bedrooms) || 0,
-                area: Number(formData.privateArea) || 0,
-                similarProperties: mappedProps
-            });
-
-            if (evaluation) {
-                setPriceEvaluation(evaluation);
-                addToast('Avaliação de preço concluída!', 'success');
-            } else {
-                setPriceEvaluation(null); // Clear previous
-                addToast(`Dados insuficientes na região (${mappedProps.length} imóveis similares encontrados).`, 'warning');
-            }
-
-            if (evaluation) {
-                setPriceEvaluation(evaluation);
-                addToast('Avaliação de preço concluída!', 'success');
-            } else {
-                addToast('Não foi possível avaliar o preço neste momento.', 'warning');
-            }
-        } catch (error) {
-            console.error('Error evaluating price:', error);
-            addToast('Erro ao avaliar preço.', 'error');
-        } finally {
-            setIsEvaluating(false);
-        }
-    };
-
     const handleImageDelete = (index: number) => {
         setImages(prev => prev.filter((_, i) => i !== index));
     };
@@ -961,10 +939,8 @@ export default function AddProperty() {
     }
 
     return (
-        <div className="mt-6 max-w-5xl mx-auto pb-12">
-            <div className="mb-8">
-                {/* Title moved to Header */}
-            </div>
+        <div className="mt-0 md:mt-6 max-w-5xl mx-auto pb-12">
+
 
             {/* Rejection Banner */}
             {rejectionData && propertyStatus === 'reprovado' && (
@@ -975,7 +951,7 @@ export default function AddProperty() {
                             <h3 className="text-lg font-bold text-red-200 mb-2">
                                 Atenção: Este anúncio foi reprovado
                             </h3>
-                            <div className="bg-slate-800 p-4 rounded-full border border-red-900/30 mb-4">
+                            <div className="bg-slate-800 p-4 rounded-3xl border border-red-900/30 mb-4">
                                 <p className="font-bold text-red-300 mb-1">Motivo da Reprovação:</p>
                                 <p className="text-gray-300 whitespace-pre-line">
                                     {rejectionData.reason}
@@ -1016,13 +992,10 @@ export default function AddProperty() {
             )}
 
             {/* Stepper - Mobile Horizontal Scroll / Desktop Centered */}
-            <div className="mb-8 sticky top-[68px] z-20 md:static md:z-auto bg-slate-900 py-2 md:py-0 -mx-4 px-4 md:mx-0 md:px-0">
-                <div className="flex flex-row md:justify-between items-center overflow-x-auto no-scrollbar gap-4 md:gap-0 snap-x">
-                    {/* Connecting Line (Desktop Only) */}
-                    <div className="hidden md:block absolute top-[26px] left-0 w-full h-1 bg-slate-700 -z-10 rounded"></div>
+            <div className="mb-14 sticky top-[64px] md:static md:z-auto bg-slate-950/80 backdrop-blur-xl py-2 md:py-6 -mx-4 px-4 md:mx-0 md:px-0 border-b border-white/5 md:border-none z-20">
+                <div className="max-w-4xl mx-auto flex flex-row justify-between items-center overflow-x-auto no-scrollbar gap-4 md:gap-0 snap-x py-4">
 
                     {steps.map((s) => {
-                        // Check validation status for this step (simplified logic for UI)
                         let isCompleted = step > s.num;
                         let isCurrent = step === s.num;
 
@@ -1030,25 +1003,33 @@ export default function AddProperty() {
                             <button
                                 key={s.num}
                                 onClick={() => changeStep(s.num)}
-                                className={`flex flex-shrink-0 flex-col items-center relative group min-w-[80px] snap-start focus:outline-none`}
+                                className={`flex flex-shrink-0 flex-col items-center relative group min-w-[85px] snap-center focus:outline-none transition-all duration-300 ${isCurrent ? 'scale-110' : 'opacity-60 hover:opacity-100'}`}
                             >
                                 <div
-                                    className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center font-bold border-1 md:border-2 transition-all duration-300 
+                                    className={`w-12 h-12 md:w-14 md:h-14 rounded-[1.25rem] flex items-center justify-center font-bold border transition-all duration-500 shadow-2xl
                                     ${isCompleted || isCurrent
-                                            ? 'bg-emerald-500 text-white'
-                                            : 'bg-slate-800 border-slate-600 text-gray-400 group-hover:border-primary-300'
+                                            ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400 shadow-emerald-500/20'
+                                            : 'bg-slate-900 border-white/5 text-slate-500'
                                         }`}
                                 >
-                                    {isCompleted ? <Check size={20} /> : <s.icon size={18} />}
+                                    {isCompleted ? <Check size={22} strokeWidth={3} /> : <s.icon size={20} className={isCurrent ? 'animate-pulse' : ''} />}
+
+                                    {/* Active Glow */}
+                                    {isCurrent && (
+                                        <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full -z-10 animate-pulse"></div>
+                                    )}
                                 </div>
-                                <span className={`mt-2 text-[10px] md:text-xs font-bold uppercase tracking-wider whitespace-nowrap 
-                                    ${isCompleted || isCurrent ? 'text-primary-400' : 'text-gray-400'}`}>
+                                <span className={`mt-3 text-[9px] font-black uppercase tracking-[0.15em] whitespace-nowrap transition-colors
+                                    ${isCompleted || isCurrent ? 'text-emerald-400' : 'text-slate-500'}`}>
                                     {s.label}
                                 </span>
 
                                 {/* Mobile Active Indicator */}
                                 {isCurrent && (
-                                    <div className="md:hidden h-1 w-full bg-primary-500 rounded-2xl mt-1"></div>
+                                    <motion.div
+                                        layoutId="activeStep"
+                                        className="md:hidden h-1 w-6 bg-emerald-400 rounded-full mt-2"
+                                    />
                                 )}
                             </button>
                         );
@@ -1057,424 +1038,333 @@ export default function AddProperty() {
             </div>
 
             {/* Form Content */}
-            <div className="bg-slate-800 rounded-3xl p-6 md:p-8 shadow-lg border border-slate-700 min-h-[450px] animate-in fade-in duration-300">
+            <div className="bg-slate-900/40 backdrop-blur-md rounded-[2.5rem] p-6 md:p-12 border border-white/10 shadow-2xl relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+                {/* Decorative background element */}
+                <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary-500/5 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
 
                 {/* STEP 1: LOCALIZAÇÃO E DADOS BÁSICOS */}
                 {step === 1 && (
-                    <div className="space-y-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        {/* Header Section */}
+                        <div className="flex items-center gap-4 mb-10">
+                            <div className="p-3 rounded-2xl bg-red-500/10 text-red-500 shadow-inner">
+                                <MapPin size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-black text-white uppercase tracking-tight">Identidade e Localização</h3>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Dados fundamentais e endereço do seu imóvel</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-bold text-gray-300 mb-2">Título do Anúncio <span className="text-red-500">*</span></label>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Título do Anúncio <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     name="title"
                                     value={formData.title}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                    className="w-full px-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all font-medium placeholder:text-slate-700"
                                     placeholder="Ex: Lindo Apartamento no Centro com Vista Mar"
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-bold text-gray-300 mb-2">Operação <span className="text-red-500">*</span></label>
-                                <select
-                                    name="operacaoId"
-                                    value={formData.operacaoId}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-3 pr-10 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
-                                >
-                                    <option value="">Selecione...</option>
-                                    {operacoes.map(op => (
-                                        <option key={op.id} value={op.id}>{op.tipo}</option>
-                                    ))}
-                                </select>
+                            <div className="group">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Operação <span className="text-red-500">*</span></label>
+                                <div className="relative">
+                                    <select
+                                        name="operacaoId"
+                                        value={formData.operacaoId}
+                                        onChange={handleInputChange}
+                                        className="w-full px-6 py-4 pr-12 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all appearance-none font-medium"
+                                    >
+                                        <option value="" className="bg-slate-900">Selecione...</option>
+                                        {operacoes.map(op => (
+                                            <option key={op.id} value={op.id} className="bg-slate-900">{op.tipo}</option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
+                                        <Tag size={18} />
+                                    </div>
+                                </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-bold text-gray-300 mb-2">Tipo de Imóvel <span className="text-red-500">*</span></label>
-                                <select
-                                    name="tipoImovelId"
-                                    value={formData.tipoImovelId}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-3 pr-10 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
-                                >
-                                    <option value="">Selecione...</option>
-                                    {tiposDisponiveis.map(tipo => (
-                                        <option key={tipo.id} value={tipo.id}>{tipo.tipo}</option>
-                                    ))}
-                                </select>
-                                {isTemporada && <p className="text-xs text-emerald-600 text-emerald-400 mt-1">🏖️ Tipos disponíveis para Temporada</p>}
+                            <div className="group">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Tipo de Imóvel <span className="text-red-500">*</span></label>
+                                <div className="relative">
+                                    <select
+                                        name="tipoImovelId"
+                                        value={formData.tipoImovelId}
+                                        onChange={handleInputChange}
+                                        className="w-full px-6 py-4 pr-12 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all appearance-none font-medium"
+                                    >
+                                        <option value="" className="bg-slate-900">Selecione...</option>
+                                        {tiposDisponiveis.map(tipo => (
+                                            <option key={tipo.id} value={tipo.id} className="bg-slate-900">{tipo.tipo}</option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
+                                        <Home size={18} />
+                                    </div>
+                                </div>
+                                {isTemporada && <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mt-2 ml-1 flex items-center gap-1.5"><Sparkles size={12} /> Sugerido para Temporada</p>}
                             </div>
 
                             {/* Subtipo - Hidden for Temporada */}
                             {!isTemporada && (
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-300 mb-2">Subtipo <span className="text-red-500">*</span></label>
-                                    <select
-                                        name="subtipoImovelId"
-                                        value={formData.subtipoImovelId}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 pr-10 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
-                                    >
-                                        <option value="">Selecione...</option>
-                                        {subtiposImovel
-                                            .filter(sub => !formData.tipoImovelId || sub.tipo_imovel === formData.tipoImovelId)
-                                            .map(sub => (
-                                                <option key={sub.id} value={sub.id}>{sub.subtipo}</option>
-                                            ))}
-                                    </select>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="border-t border-slate-700 pt-6">
-                            <h3 className="text-lg font-bold text-white mb-4 flex items-center">
-                                <MapPin className="mr-2 text-primary-500" /> Endereço do Imóvel
-                            </h3>
-
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-300 mb-2">CEP <span className="text-red-500">*</span></label>
+                                <div className="group">
+                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Subtipo <span className="text-red-500">*</span></label>
                                     <div className="relative">
-                                        <input
-                                            type="text"
-                                            name="cep"
-                                            value={formData.cep}
+                                        <select
+                                            name="subtipoImovelId"
+                                            value={formData.subtipoImovelId}
                                             onChange={handleInputChange}
-                                            onBlur={handleCepBlur}
-                                            maxLength={9}
-                                            className={`w-full px-4 py-3 rounded-2xl bg-slate-900 border focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all ${cepError ? 'border-red-500' : 'border-slate-600'}`}
-                                            placeholder="00000-000"
-                                        />
-                                        {isLoadingCep && <Loader2 className="absolute right-3 top-3.5 animate-spin text-primary-500" size={18} />}
-                                    </div>
-                                    {cepError && <p className="text-xs text-red-500 mt-1 flex items-center"><AlertCircle size={12} className="mr-1" /> {cepError}</p>}
-                                </div>
-
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-bold text-gray-300 mb-2">Endereço <span className="text-red-500">*</span></label>
-                                    <input
-                                        type="text"
-                                        name="address"
-                                        value={formData.address}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
-                                        placeholder="Rua, Avenida..."
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-300 mb-2">Número</label>
-                                    <input
-                                        type="text"
-                                        name="number"
-                                        value={formData.number}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
-                                        placeholder="123"
-                                    />
-                                </div>
-
-                                <div className="md:col-span-1">
-                                    <label className="block text-sm font-bold text-gray-300 mb-2">Complemento</label>
-                                    <input
-                                        type="text"
-                                        name="complement"
-                                        value={formData.complement}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
-                                        placeholder="Apto 101"
-                                    />
-                                </div>
-
-                                <div className="md:col-span-1">
-                                    <label className="block text-sm font-bold text-gray-300 mb-2">Bairro <span className="text-red-500">*</span></label>
-                                    <input
-                                        type="text"
-                                        name="neighborhood"
-                                        value={formData.neighborhood}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
-                                    />
-                                </div>
-
-                                <div className="md:col-span-1">
-                                    <label className="block text-sm font-bold text-gray-300 mb-2">Cidade <span className="text-red-500">*</span></label>
-                                    <input
-                                        type="text"
-                                        name="city"
-                                        value={formData.city}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
-                                    />
-                                </div>
-
-                                <div className="md:col-span-1">
-                                    <label className="block text-sm font-bold text-gray-300 mb-2">UF <span className="text-red-500">*</span></label>
-                                    <input
-                                        type="text"
-                                        name="state"
-                                        value={formData.state}
-                                        onChange={handleInputChange}
-                                        maxLength={2}
-                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all uppercase"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Manual Geocoding Test Button (if automatic fails) */}
-                            {formData.city && !formData.latitude && (
-                                <div className="mt-4 p-4 bg-amber-50 bg-amber-900/20 border border-amber-200 border-amber-800 rounded-3xl">
-                                    <p className="text-sm text-amber-200 mb-3">
-                                        <strong>⚠️ Buscando coordenadas automaticamente, um momento...</strong><br />
-                                        Clique no botão abaixo para tentar buscar manualmente:
-                                    </p>
-                                    <button
-                                        type="button"
-                                        onClick={async () => {
-                                            setIsLoadingCep(true);
-                                            try {
-                                                console.log('Tentando geocodificação manual...');
-                                                const coords = await geocodeAddress({
-                                                    street: formData.address || '',
-                                                    number: formData.number || 's/n',
-                                                    neighborhood: formData.neighborhood || '',
-                                                    city: formData.city,
-                                                    state: formData.state,
-                                                    postalCode: formData.cep.replace(/\D/g, '')
-                                                });
-
-                                                console.log('Resultado geocodificação manual:', coords);
-
-                                                if (coords) {
-                                                    setFormData(prev => ({
-                                                        ...prev,
-                                                        latitude: coords.latitude.toString(),
-                                                        longitude: coords.longitude.toString()
-                                                    }));
-                                                    addToast('Coordenadas obtidas! Mapa exibido abaixo.', 'success');
-                                                } else {
-                                                    addToast('Não foi possível obter coordenadas. Verifique o endereço.', 'error');
-                                                }
-                                            } catch (error) {
-                                                console.error('Erro na geocodificação:', error);
-                                                addToast('Erro ao buscar coordenadas.', 'error');
-                                            } finally {
-                                                setIsLoadingCep(false);
-                                            }
-                                        }}
-                                        disabled={isLoadingCep}
-                                        className="w-full px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl font-medium transition-colors flex items-center justify-center disabled:opacity-50"
-                                    >
-                                        {isLoadingCep ? (
-                                            <>
-                                                <Loader2 className="animate-spin mr-2" size={18} />
-                                                Buscando...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <MapPin className="mr-2" size={18} />
-                                                Buscar Coordenadas Manualmente
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Coordinate Info */}
-                            {formData.latitude && formData.longitude && (
-                                <div className="mt-4 p-3 bg-emerald-900/20 border-emerald-800 rounded-2xl flex items-center text-sm text-emerald-300">
-                                    <MapPin size={16} className="mr-2 flex-shrink-0" />
-                                    <div>
-                                        <strong>Coordenadas localizadas:</strong><br />
-                                        Latitude: {formData.latitude}, Longitude: {formData.longitude}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Interactive Map - Shows automatically after coordinates are fetched */}
-                            {formData.latitude && formData.longitude && (
-                                <div className="mt-6">
-                                    <h4 className="text-lg font-bold text-white mb-4">Localização no Mapa</h4>
-                                    <DraggableMap
-                                        latitude={parseFloat(formData.latitude)}
-                                        longitude={parseFloat(formData.longitude)}
-                                        address={`${formData.address}, ${formData.number} - ${formData.neighborhood}, ${formData.city}/${formData.state}`}
-                                        onLocationChange={(lat, lng) => {
-                                            setFormData(prev => ({
-                                                ...prev,
-                                                latitude: lat.toString(),
-                                                longitude: lng.toString()
-                                            }));
-                                        }}
-                                        onAddressChange={(addressData) => {
-                                            setFormData(prev => ({
-                                                ...prev,
-                                                cep: addressData.cep || prev.cep,
-                                                address: addressData.address || prev.address,
-                                                neighborhood: addressData.neighborhood || prev.neighborhood,
-                                                city: addressData.city || prev.city,
-                                                state: addressData.state || prev.state
-                                            }));
-                                            addToast('Localização e endereço atualizados!', 'success');
-                                        }}
-                                    />
-                                </div>
-                            )}
-
-                            {formData.latitude && (
-                                <div className="mt-4 p-3 bg-blue-900/20 border-blue-900/30 rounded-2xl flex items-center text-sm text-blue-300">
-                                    <MapPin size={16} className="mr-2" />
-                                    Coordenadas localizadas: {formData.latitude}, {formData.longitude}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-
-
-                {/* STEP 3: DETALHES DO IMÓVEL */}
-                {step === 3 && (
-                    <div>
-                        <h3 className="text-xl font-bold text-white mb-6">Características e Descrição</h3>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Quartos</label>
-                                <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-2xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Suítes</label>
-                                <input type="number" name="suites" value={formData.suites} onChange={handleInputChange} className="w-full px-4 py-2 rounded-2xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Banheiros</label>
-                                <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-2xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Vagas</label>
-                                <input type="number" name="garage" value={formData.garage} onChange={handleInputChange} className="w-full px-4 py-2 rounded-2xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Área Privativa (m²) <span className="text-red-500">*</span></label>
-                                <input type="text" inputMode="numeric" name="privateArea" value={formData.privateArea} onChange={handleInputChange} placeholder="120" className="w-full px-4 py-2 rounded-2xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Área Total (m²)</label>
-                                <input type="text" inputMode="numeric" name="totalArea" value={formData.totalArea} onChange={handleInputChange} placeholder="150" className="w-full px-4 py-2 rounded-2xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
-                            </div>
-                        </div>
-
-                        {/* Botão de Avaliação de Preço - Movido para cá */}
-                        <div className="mt-8 p-4 bg-yellow-900/20 border b-2 border-yellow-500/30 rounded-3xl flex items-start justify-between items-center bg-slate-800 shadow-sm mb-8">
-                            <div className="flex items-start">
-                                <Info className="text-yellow-400 mt-0.5 mr-3 shrink-0" />
-                                <div>
-                                    <p className="text-sm text-yellow-200 font-medium">
-                                        {priceEvaluation ? 'Avaliação de Preço (IA)' : 'Sugestão de Preço (IA)'}
-                                    </p>
-                                    <p className="text-sm text-yellow-200/80 mt-1">
-                                        {priceEvaluation ? priceEvaluation.suggestion : 'Lembrando que essa informação é fornecida por IA e pode não refletir a realidade do imóvel.'}
-                                        {priceEvaluation && priceEvaluation.min > 0 && (
-                                            <span className="block mt-1 font-bold">
-                                                Faixa sugerida: R$ {priceEvaluation.min.toLocaleString('pt-BR')} - R$ {priceEvaluation.max.toLocaleString('pt-BR')}
-                                            </span>
-                                        )}
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={handleEvaluatePrice}
-                                disabled={isEvaluating}
-                                className="ml-4 px-4 py-2 bg-yellow-900/40 text-yellow-300 text-sm font-bold rounded-2xl hover:bg-yellow-900 transition-colors flex items-center whitespace-nowrap border-yellow-700"
-                            >
-                                {isEvaluating ? <Loader2 size={16} className="animate-spin mr-2" /> : <Sparkles size={16} className="mr-2" />}
-                                {isEvaluating ? 'Avaliando...' : 'Avaliar'}
-                            </button>
-                        </div>
-
-                        <div className="mb-8">
-                            <label className="block text-xs font-bold text-gray-300 mb-3">Comodidades e Infraestrutura</label>
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                                {availableFeatures.map(feature => (
-                                    <label key={feature.id} className={`flex items-center p-3 rounded-2xl border cursor-pointer transition-all ${formData.features.includes(feature.nome) ? 'bg-primary-900/20 border-primary-500 text-primary-300' : 'border-slate-700 hover:bg-slate-700'}`}>
-                                        <input
-                                            type="checkbox"
-                                            className="hidden"
-                                            checked={formData.features.includes(feature.nome)}
-                                            onChange={() => handleFeatureToggle(feature.nome)}
-                                        />
-                                        <div className={`w-4 h-4 rounded border flex items-center justify-center mr-2 ${formData.features.includes(feature.nome) ? 'bg-primary-500 border-primary-500' : 'border-gray-400'}`}>
-                                            {formData.features.includes(feature.nome) && <Check size={10} className="text-white" />}
+                                            className="w-full px-6 py-4 pr-12 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all appearance-none font-medium"
+                                        >
+                                            <option value="" className="bg-slate-900">Selecione...</option>
+                                            {subtiposImovel
+                                                .filter(sub => !formData.tipoImovelId || sub.tipo_imovel === formData.tipoImovelId)
+                                                .map(sub => (
+                                                    <option key={sub.id} value={sub.id} className="bg-slate-900">{sub.subtipo}</option>
+                                                ))}
+                                        </select>
+                                        <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
+                                            <Wand2 size={18} />
                                         </div>
-                                        <span className="text-sm">{feature.nome}</span>
-                                    </label>
-                                ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-4 mb-8 pt-10 border-t border-white/5">
+                            <div className="p-2.5 rounded-xl bg-red-500/10 text-red-500">
+                                <MapPin size={20} />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-black text-white uppercase tracking-widest">Localização Precisa</h4>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">Endereço detalhado para exibição no mapa</p>
                             </div>
                         </div>
 
-                        <div className="relative">
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-bold text-gray-300">Descrição do Imóvel <span className="text-red-500">*</span></label>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="col-span-2 lg:col-span-1">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">CEP <span className="text-red-500">*</span></label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        name="cep"
+                                        value={formData.cep}
+                                        onChange={handleInputChange}
+                                        onBlur={handleCepBlur}
+                                        maxLength={9}
+                                        className={`w-full px-6 py-4 rounded-2xl bg-slate-950/40 border focus:ring-4 outline-none text-white transition-all font-medium placeholder:text-slate-700 ${cepError ? 'border-red-500/50 focus:ring-red-500/10' : 'border-white/5 focus:border-primary-500/50 focus:ring-primary-500/10'}`}
+                                        placeholder="00000-000"
+                                    />
+                                    {isLoadingCep && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-primary-500" size={18} />}
+                                </div>
+                                {cepError && <p className="text-[10px] text-red-400 font-bold uppercase mt-2 ml-1 flex items-center gap-1.5"><AlertCircle size={12} /> {cepError}</p>}
+                            </div>
+
+                            <div className="col-span-2">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Endereço <span className="text-red-500">*</span></label>
+                                <input
+                                    type="text"
+                                    name="address"
+                                    value={formData.address}
+                                    onChange={handleInputChange}
+                                    className="w-full px-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all font-medium placeholder:text-slate-700"
+                                    placeholder="Rua, Avenida..."
+                                />
+                            </div>
+
+                            <div className="col-span-1">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Número</label>
+                                <input
+                                    type="text"
+                                    name="number"
+                                    value={formData.number}
+                                    onChange={handleInputChange}
+                                    className="w-full px-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all font-medium placeholder:text-slate-700"
+                                    placeholder="123"
+                                />
+                            </div>
+
+                            <div className="col-span-1">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Complemento</label>
+                                <input
+                                    type="text"
+                                    name="complement"
+                                    value={formData.complement}
+                                    onChange={handleInputChange}
+                                    className="w-full px-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all font-medium placeholder:text-slate-700"
+                                    placeholder="Apto 101"
+                                />
+                            </div>
+
+                            <div className="col-span-1">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Bairro <span className="text-red-500">*</span></label>
+                                <input
+                                    type="text"
+                                    name="neighborhood"
+                                    value={formData.neighborhood}
+                                    onChange={handleInputChange}
+                                    className="w-full px-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all font-medium"
+                                />
+                            </div>
+
+                            <div className="col-span-1">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Cidade <span className="text-red-500">*</span></label>
+                                <input
+                                    type="text"
+                                    name="city"
+                                    value={formData.city}
+                                    onChange={handleInputChange}
+                                    className="w-full px-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all font-medium"
+                                />
+                            </div>
+
+                            <div className="col-span-1 lg:max-w-[120px]">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">UF <span className="text-red-500">*</span></label>
+                                <input
+                                    type="text"
+                                    name="state"
+                                    value={formData.state}
+                                    onChange={handleInputChange}
+                                    maxLength={2}
+                                    className="w-full px-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all uppercase font-medium"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Manual Geocoding Test Button (if automatic fails) */}
+                        {formData.city && !formData.latitude && (
+                            <div className="mt-8 p-6 bg-amber-500/5 border border-amber-500/20 rounded-[2rem] animate-in zoom-in duration-500">
+                                <div className="flex items-start gap-4 mb-4">
+                                    <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+                                        <AlertTriangle size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-amber-200/80 font-medium leading-relaxed">
+                                            <strong className="text-amber-400">Buscando...</strong><br />
+                                            Clique abaixo para tentar localizar manualmente:
+                                        </p>
+                                    </div>
+                                </div>
                                 <button
-                                    onClick={generateDescription}
-                                    disabled={isGeneratingDesc}
-                                    className="flex items-center text-xs px-3 py-1.5 bg-blue-900/30 text-blue-400 rounded-2xl hover:bg-blue-900/50 transition-colors"
+                                    type="button"
+                                    onClick={async () => {
+                                        setIsLoadingCep(true);
+                                        try {
+                                            const coords = await geocodeAddress({
+                                                street: formData.address || '',
+                                                number: formData.number || 's/n',
+                                                neighborhood: formData.neighborhood || '',
+                                                city: formData.city,
+                                                state: formData.state,
+                                                postalCode: formData.cep.replace(/\D/g, '')
+                                            });
+
+                                            if (coords) {
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    latitude: coords.latitude.toString(),
+                                                    longitude: coords.longitude.toString()
+                                                }));
+                                                addToast('Coordenadas localizadas!', 'success');
+                                            } else {
+                                                addToast('Endereço não encontrado no mapa.', 'error');
+                                            }
+                                        } catch (error) {
+                                            addToast('Erro ao buscar coordenadas.', 'error');
+                                        } finally {
+                                            setIsLoadingCep(false);
+                                        }
+                                    }}
+                                    disabled={isLoadingCep}
+                                    className="w-full px-6 py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-2xl font-black uppercase tracking-widest transition-all flex items-center justify-center disabled:opacity-50 active:scale-95 shadow-xl shadow-amber-500/20"
                                 >
-                                    {isGeneratingDesc ? <Loader2 size={14} className="animate-spin mr-1.5" /> : <Wand2 size={14} className="mr-1.5" />}
-                                    Gerar Texto Inteligente
+                                    {isLoadingCep ? (
+                                        <>
+                                            <Loader2 className="animate-spin mr-2" size={18} />
+                                            Localizando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <MapPin className="mr-2" size={18} strokeWidth={3} />
+                                            Localizar no Mapa
+                                        </>
+                                    )}
                                 </button>
                             </div>
-                            <textarea
-                                name="description"
-                                value={formData.description}
-                                onChange={handleInputChange}
-                                className="w-full px-4 py-3 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-40 resize-none transition-all text-sm leading-relaxed whitespace-pre-wrap"
-                                placeholder="Descreva os pontos fortes do imóvel..."
-                            ></textarea>
+                        )}
 
-                            {/* Generated Description Options */}
-                            {generatedDescriptions.length > 0 && (
-                                <div className="mt-4 space-y-3">
-                                    <p className="text-xs font-bold text-slate-400 uppercase">Opções Geradas pela IA - Clique para usar:</p>
-                                    {generatedDescriptions.map((desc, idx) => {
-                                        const labels = ['Conservadora', 'Popular (com emojis)', 'Mix'];
-                                        return (
-                                            <button
-                                                key={idx}
-                                                type="button"
-                                                onClick={() => setFormData(prev => ({ ...prev, description: desc }))}
-                                                className={`w-full text-left p-4 rounded-3xl border-2 transition-all ${formData.description === desc
-                                                    ? 'border-primary-500 bg-primary-50 bg-primary-900/20'
-                                                    : 'border-slate-700 hover:border-primary-700'
-                                                    }`}
-                                            >
-                                                <div className="flex items-start">
-                                                    <span className="flex-shrink-0 w-6 h-6 rounded-2xl bg-primary-500 text-white text-xs flex items-center justify-center mr-3 mt-0.5">
-                                                        {idx + 1}
-                                                    </span>
-                                                    <div className="flex-1">
-                                                        <p className="text-xs font-bold text-primary-400 mb-1">{labels[idx]}</p>
-                                                        <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{desc}</p>
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
+                        {/* Coordinate Info */}
+                        {formData.latitude && formData.longitude && (
+                            <div className="mt-8 p-5 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl flex items-center gap-4 animate-in slide-in-from-left duration-500">
+                                <div className="p-2 rounded-full bg-emerald-500/20 text-emerald-400">
+                                    <ShieldCheck size={18} />
                                 </div>
-                            )}
-                        </div>
+                                <div className="text-xs">
+                                    <p className="font-black text-emerald-400 uppercase tracking-widest mb-1">Localização Confirmada</p>
+                                    <p className="text-slate-400 font-medium">{formData.latitude}, {formData.longitude}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Interactive Map - Shows automatically after coordinates are fetched */}
+                        {formData.latitude && formData.longitude && (
+                            <div className="mt-6">
+                                <h4 className="text-lg font-bold text-white mb-4">Localização no Mapa</h4>
+                                <DraggableMap
+                                    latitude={parseFloat(formData.latitude)}
+                                    longitude={parseFloat(formData.longitude)}
+                                    address={`${formData.address}, ${formData.number} - ${formData.neighborhood}, ${formData.city}/${formData.state}`}
+                                    onLocationChange={(lat, lng) => {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            latitude: lat.toString(),
+                                            longitude: lng.toString()
+                                        }));
+                                    }}
+                                    onAddressChange={(addressData) => {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            cep: addressData.cep || prev.cep,
+                                            address: addressData.address || prev.address,
+                                            neighborhood: addressData.neighborhood || prev.neighborhood,
+                                            city: addressData.city || prev.city,
+                                            state: addressData.state || prev.state
+                                        }));
+                                        addToast('Localização e endereço atualizados!', 'success');
+                                    }}
+                                />
+                            </div>
+                        )}
+
+                        {formData.latitude && (
+                            <div className="mt-4 p-3 bg-blue-900/20 border-blue-900/30 rounded-2xl flex items-center text-sm text-blue-300">
+                                <MapPin size={16} className="mr-2" />
+                                Coordenadas localizadas: {formData.latitude}, {formData.longitude}
+                            </div>
+                        )}
                     </div>
                 )}
 
                 {/* STEP 2: FINANCEIRO */}
                 {step === 2 && (
-                    <div>
-                        <h3 className="text-xl font-bold text-white mb-6">Valores e Taxas</h3>
+                    <div className="space-y-10">
+                        {/* Header Section */}
+                        <div className="flex items-center gap-4 mb-10">
+                            <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500 shadow-inner">
+                                <DollarSign size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-black text-white uppercase tracking-tight">Finanças e Comercial</h3>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Valores, taxas e condições de negócio</p>
+                            </div>
+                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             {/* Lógica para determinar visibilidade baseada na operação */}
                             {(() => {
                                 const operacaoNome = operacoes.find(op => op.id === formData.operacaoId)?.tipo?.toLowerCase() || '';
@@ -1483,55 +1373,58 @@ export default function AddProperty() {
 
                                 return (
                                     <>
-                                        <div className="space-y-6 md:col-span-2">
+                                        <div className="space-y-8">
                                             {/* Temporada Fields */}
                                             {isTemporada && (
                                                 <>
-                                                    <div>
-                                                        <label className="block text-sm font-bold text-gray-300 mb-2">🏖️ Valor da Diária</label>
+                                                    <div className="group">
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">🏖️ Valor da Diária</label>
                                                         <div className="relative">
-                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
+                                                            <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 font-black">R$</div>
                                                             <input
                                                                 type="text"
                                                                 name="valorDiaria"
                                                                 value={formData.valorDiaria}
                                                                 onChange={handleInputChange}
-                                                                className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
-                                                                placeholder="500,00"
+                                                                className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 outline-none text-white transition-all font-black text-xl placeholder:text-slate-800"
+                                                                placeholder="0,00"
                                                             />
                                                         </div>
                                                     </div>
-                                                    <div>
-                                                        <label className="block text-sm font-bold text-gray-300 mb-2">📅 Valor Mensal (opcional)</label>
+                                                    <div className="group">
+                                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">📅 Valor Mensal (opcional)</label>
                                                         <div className="relative">
-                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
+                                                            <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 font-black">R$</div>
                                                             <input
                                                                 type="text"
                                                                 name="valorMensal"
                                                                 value={formData.valorMensal}
                                                                 onChange={handleInputChange}
-                                                                className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
-                                                                placeholder="8.000,00"
+                                                                className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 outline-none text-white transition-all font-black text-xl placeholder:text-slate-800"
+                                                                placeholder="0,00"
                                                             />
+                                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600">
+                                                                <Calendar size={18} />
+                                                            </div>
                                                         </div>
-                                                        <p className="text-xs text-slate-400 mt-1">Para estadias longas ou mensalistas</p>
+                                                        <p className="text-[10px] text-slate-500 font-medium mt-2 ml-1 italic">Para estadias longas ou mensalistas</p>
                                                     </div>
                                                 </>
                                             )}
 
                                             {/* Venda Fields */}
                                             {isVenda && (
-                                                <div>
-                                                    <label className="block text-sm font-bold text-gray-300 mb-2">Valor de Venda</label>
+                                                <div className="group">
+                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Valor de Venda</label>
                                                     <div className="relative">
-                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
+                                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 font-black">R$</div>
                                                         <input
                                                             type="text"
                                                             name="salePrice"
                                                             value={formData.salePrice}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
-                                                            placeholder="1.000.000,00"
+                                                            className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all font-black text-xl placeholder:text-slate-800"
+                                                            placeholder="0,00"
                                                         />
                                                     </div>
                                                 </div>
@@ -1539,100 +1432,111 @@ export default function AddProperty() {
 
                                             {/* Locação Fields */}
                                             {isLocacao && (
-                                                <div>
-                                                    <label className="block text-sm font-bold text-gray-300 mb-2">Valor de Locação</label>
+                                                <div className="group">
+                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Valor de Locação</label>
                                                     <div className="relative">
-                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
+                                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 font-black">R$</div>
                                                         <input
                                                             type="text"
                                                             name="rentPrice"
                                                             value={formData.rentPrice}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
-                                                            placeholder="5.000,00"
+                                                            className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all font-black text-xl placeholder:text-slate-800"
+                                                            placeholder="0,00"
                                                         />
                                                     </div>
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div className="space-y-6 md:col-span-2">
+                                        <div className="space-y-8">
                                             {/* Condomínio - Para LOCAÇÃO ou VENDA de Apartamento */}
                                             {!isTemporada && (isLocacao || (isVenda && tiposImovel.find(t => t.id === formData.tipoImovelId)?.tipo?.toLowerCase().includes('apartamento'))) && (
-                                                <div>
-                                                    <label className="block text-sm font-bold text-gray-300 mb-2">Condomínio (Mês)</label>
+                                                <div className="group">
+                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Condomínio (Mês)</label>
                                                     <div className="relative">
-                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
+                                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 font-black">R$</div>
                                                         <input
                                                             type="text"
                                                             name="condoFee"
                                                             value={formData.condoFee}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                                                            placeholder="800,00"
+                                                            className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all font-medium"
+                                                            placeholder="0,00"
                                                         />
                                                     </div>
                                                 </div>
                                             )}
 
                                             {!isTemporada && (
-                                                <div>
-                                                    <label className="block text-sm font-bold text-gray-300 mb-2">IPTU (Ano)</label>
+                                                <div className="group">
+                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">IPTU (Ano)</label>
                                                     <div className="relative">
-                                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
+                                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 font-black">R$</div>
                                                         <input
                                                             type="text"
                                                             name="iptu"
                                                             value={formData.iptu}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                                                            placeholder="2.500,00"
+                                                            className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all font-medium"
+                                                            placeholder="0,00"
                                                         />
                                                     </div>
                                                 </div>
                                             )}
 
-                                            {!isTemporada && isLocacao && (
-                                                <div className="mt-3 flex items-center">
-                                                    <label className="relative inline-flex items-center cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={formData.taxasInclusas}
-                                                            onChange={(e) => setFormData(prev => ({ ...prev, taxasInclusas: e.target.checked }))}
-                                                            className="sr-only peer"
-                                                        />
-                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-2xl peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
-                                                        <span className="ml-3 text-sm font-medium text-gray-300">
+                                            <div className="pt-2 space-y-4">
+                                                {!isTemporada && isLocacao && (
+                                                    <label className="flex items-center group cursor-pointer select-none">
+                                                        <div className="relative">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={formData.taxasInclusas}
+                                                                onChange={(e) => setFormData(prev => ({ ...prev, taxasInclusas: e.target.checked }))}
+                                                                className="sr-only peer"
+                                                            />
+                                                            <div className="w-12 h-6 bg-slate-800 rounded-full peer peer-checked:bg-emerald-500/20 border border-white/5 transition-all"></div>
+                                                            <div className="absolute left-1 top-1 w-4 h-4 bg-slate-500 rounded-full transition-all peer-checked:left-7 peer-checked:bg-emerald-500 shadow-lg"></div>
+                                                        </div>
+                                                        <span className="ml-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] group-hover:text-slate-200 transition-colors">
                                                             Taxas inclusas no valor?
                                                         </span>
                                                     </label>
-                                                </div>
-                                            )}
+                                                )}
 
-                                            {!isTemporada && isVenda && (
-                                                <div className="pt-2">
-                                                    <label className="relative inline-flex items-center cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={formData.aceitaFinanciamento}
-                                                            onChange={(e) => setFormData(prev => ({ ...prev, aceitaFinanciamento: e.target.checked }))}
-                                                            className="sr-only peer"
-                                                        />
-                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-2xl peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
-                                                        <span className="ml-3 text-sm font-medium text-gray-300">
+                                                {!isTemporada && isVenda && (
+                                                    <label className="flex items-center group cursor-pointer select-none">
+                                                        <div className="relative">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={formData.aceitaFinanciamento}
+                                                                onChange={(e) => setFormData(prev => ({ ...prev, aceitaFinanciamento: e.target.checked }))}
+                                                                className="sr-only peer"
+                                                            />
+                                                            <div className="w-12 h-6 bg-slate-800 rounded-full peer peer-checked:bg-emerald-500/20 border border-white/5 transition-all"></div>
+                                                            <div className="absolute left-1 top-1 w-4 h-4 bg-slate-500 rounded-full transition-all peer-checked:left-7 peer-checked:bg-emerald-500 shadow-lg"></div>
+                                                        </div>
+                                                        <span className="ml-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] group-hover:text-slate-200 transition-colors">
                                                             Aceita Financiamento?
                                                         </span>
                                                     </label>
-                                                </div>
-                                            )}
+                                                )}
+                                            </div>
 
                                             {/* Temporada info box */}
                                             {isTemporada && (
-                                                <div className="p-4 bg-emerald-900/20 border-emerald-900/50 rounded-2xl">
-                                                    <p className="text-sm text-emerald-300">
-                                                        🏖️ <strong>Imóvel para Temporada</strong><br />
-                                                        O valor da diária será exibido no anúncio. Se houver valor mensal, também será mostrado como opção para estadias longas.
-                                                    </p>
+                                                <div className="p-6 bg-emerald-500/5 border border-emerald-500/10 rounded-3xl animate-in fade-in zoom-in duration-500">
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                                                            <Sparkles size={20} />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Modo Temporada Ativo</p>
+                                                            <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                                                                O valor da diária será o destaque. Estadias longas poderão ver o valor mensal como opção preferencial.
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
@@ -1643,56 +1547,275 @@ export default function AddProperty() {
 
                         {/* Partnership Field - Hidden for Trial Users */}
                         {!isTrial && (
-                            <div className="mt-8 p-6 bg-slate-900/50 border-slate-700 rounded-2xl">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div>
-                                        <h4 className="text-lg font-bold text-white">Aceita Parceria neste Imóvel?</h4>
-                                        <p className="text-sm text-slate-400 mt-1">Permitir que outros Corretores trabalhem este imóvel</p>
+                            <div className="mt-12 p-8 bg-slate-950/40 border border-white/5 rounded-[2.5rem] relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 blur-3xl rounded-full -z-10 transition-all group-hover:bg-primary-500/10"></div>
+
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2.5 rounded-xl bg-primary-500/10 text-primary-500">
+                                            <ShieldCheck size={20} />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-black text-white uppercase tracking-widest">Aceita Parceria?</h4>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">Colabore com outros corretores e amplie seus ganhos</p>
+                                        </div>
                                     </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.aceitaParceria}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, aceitaParceria: e.target.checked }))}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-2xl peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
-                                        <span className="ml-3 text-sm font-medium text-gray-300">
+
+                                    <label className="flex items-center cursor-pointer select-none">
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.aceitaParceria}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, aceitaParceria: e.target.checked }))}
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-16 h-8 bg-slate-800 rounded-full peer peer-checked:bg-primary-500/20 border border-white/5 transition-all"></div>
+                                            <div className="absolute left-1.5 top-1.5 w-5 h-5 bg-slate-500 rounded-full transition-all peer-checked:left-9 peer-checked:bg-primary-500 shadow-xl"></div>
+                                        </div>
+                                        <span className="ml-4 text-xs font-black text-white uppercase tracking-widest min-w-[40px]">
                                             {formData.aceitaParceria ? 'SIM' : 'NÃO'}
                                         </span>
                                     </label>
                                 </div>
 
-                                {formData.aceitaParceria && (
-                                    <div className="mt-4 p-4 bg-red-900/20 border-l-4 border-red-500 rounded-2xl">
-                                        <p className="text-sm text-red-200 leading-relaxed">
-                                            <strong>ATENÇÃO:</strong> Caso você aceite a parceria com outros Corretores neste imóvel,
-                                            desde já <strong>VOCÊ CONCORDA E ACEITA</strong> a divisão do comissionamento padrão
-                                            (<strong>"fifty" 50/50</strong>), sem nada a reclamar posteriormente.
-                                            <br /><br />
-                                            <strong>A Plataforma NÃO SE RESPONSABILIZA PELAS PARCERIAS FEITAS ENTRE OS Corretores.</strong>
-                                        </p>
-                                    </div>
-                                )}
+                                <AnimatePresence>
+                                    {formData.aceitaParceria && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="p-6 bg-red-500/5 border border-red-500/10 rounded-3xl relative">
+                                                <div className="flex gap-4">
+                                                    <div className="p-2 h-fit rounded-lg bg-red-500/10 text-red-500 shrink-0">
+                                                        <AlertTriangle size={24} />
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        <p className="text-[14px] font-black text-red-400 uppercase tracking-[0.2em]">Condições Importantes</p>
+                                                        <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                                                            Ao aceitar, VOCÊ CONCORDA COM A DIVISÃO DA COMISSÃO PADRÃO (FIFTY 50/50) estabelecida pela Mercado.
+                                                            <br className="mb-2" />
+                                                            <span className="text-slate-400 italic block mt-2 pt-2 border-t border-red-500/10 animate-pulse">A Plataforma não intermedia e nem se responsabiliza pelas parcerias realizadas entre os Corretores Parceiros.</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* STEP 3: DETALHES DO IMÓVEL */}
+                {step === 3 && (
+                    <div className="space-y-10">
+                        {/* Header Section */}
+                        <div className="flex items-center gap-4 mb-10">
+                            <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-500 shadow-inner">
+                                <Home size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-black text-white uppercase tracking-tight">Atributos e Detalhes</h3>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Características físicas e diferenciais únicos</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+                            {[
+                                { name: 'bedrooms', label: 'Quartos', icon: null },
+                                { name: 'suites', label: 'Suítes', icon: null },
+                                { name: 'bathrooms', label: 'Banheiros', icon: null },
+                                { name: 'garage', label: 'Vagas', icon: null },
+                            ].map((field) => (
+                                <div key={field.name} className="group">
+                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">{field.label}</label>
+                                    <input
+                                        type="number"
+                                        name={field.name}
+                                        value={formData[field.name as keyof PropertyFormData] as string}
+                                        onChange={handleInputChange}
+                                        className="w-full px-6 py-4 rounded-full bg-slate-950/40 border border-white/5 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 outline-none text-white transition-all font-black text-center"
+                                    />
+                                </div>
+                            ))}
+
+                            <div className="col-span-1 group">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Área Privativa <span className="text-red-500">*</span></label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        name="privateArea"
+                                        value={formData.privateArea}
+                                        onChange={handleInputChange}
+                                        placeholder="0"
+                                        className="w-full pl-6 pr-14 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 outline-none text-white transition-all font-black text-xl placeholder:text-slate-800"
+                                    />
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600 font-bold text-xs">m²</div>
+                                </div>
+                            </div>
+
+                            <div className="col-span-1 group">
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Área Total</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        name="totalArea"
+                                        value={formData.totalArea}
+                                        onChange={handleInputChange}
+                                        placeholder="0"
+                                        className="w-full pl-6 pr-14 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 outline-none text-white transition-all font-black text-xl placeholder:text-slate-800"
+                                    />
+                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600 font-bold text-xs">m²</div>
+                                </div>
+                            </div>
+                        </div>
 
 
+                        <div className="mb-10">
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500">
+                                    <Sparkles size={20} />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-black text-white uppercase tracking-widest">Comodidades e Infraestrutura</h4>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">Selecione os diferenciais que o imóvel oferece</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                {availableFeatures.map(feature => (
+                                    <label
+                                        key={feature.id}
+                                        className={`flex items-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer select-none ${formData.features.includes(feature.nome)
+                                            ? 'bg-blue-500/10 border-blue-500/50 text-blue-400'
+                                            : 'bg-slate-950/20 border-white/5 text-slate-500 hover:bg-slate-950/40 hover:border-white/10'
+                                            }`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            className="hidden"
+                                            checked={formData.features.includes(feature.nome)}
+                                            onChange={() => handleFeatureToggle(feature.nome)}
+                                        />
+                                        <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all ${formData.features.includes(feature.nome)
+                                            ? 'bg-blue-500 border-blue-500'
+                                            : 'border-slate-800'
+                                            }`}>
+                                            {formData.features.includes(feature.nome) && <Check size={12} strokeWidth={4} className="text-slate-950" />}
+                                        </div>
+                                        <span className="text-[11px] font-black uppercase tracking-wider">{feature.nome}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="relative pt-10 border-t border-white/5">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500">
+                                        <Wand2 size={20} />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-black text-white uppercase tracking-widest">Descrição do Imóvel</h4>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">Destaque os pontos fortes e diferenciais únicos</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={generateDescription}
+                                    disabled={isGeneratingDesc}
+                                    className="flex items-center h-fit text-[10px] font-black uppercase tracking-widest px-5 py-3 bg-blue-500/10 text-blue-400 rounded-xl hover:bg-blue-500/20 transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    {isGeneratingDesc ? <Loader2 size={14} className="animate-spin mr-2" /> : <Sparkles size={14} className="mr-2" />}
+                                    Gerar Texto com IA
+                                </button>
+                            </div>
+                            <textarea
+                                name="description"
+                                value={formData.description}
+                                onChange={handleInputChange}
+                                className="w-full px-8 py-6 rounded-[2rem] bg-slate-950/40 border border-white/5 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 outline-none text-white h-52 resize-none transition-all text-sm leading-relaxed whitespace-pre-wrap placeholder:text-slate-800"
+                                placeholder="Descreva os pontos fortes e diferenciais únicos do imóvel..."
+                            ></textarea>
+
+                            {/* Generated Description Options */}
+                            <AnimatePresence>
+                                {generatedDescriptions.length > 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-8 space-y-4"
+                                    >
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Opções Geradas pela IA <span className="text-slate-600 font-medium lowercase">— Clique para aplicar</span></p>
+                                        <div className="grid grid-cols-1 gap-4">
+                                            {generatedDescriptions.map((desc, idx) => {
+                                                const labels = ['Conservadora', 'Popular (com emojis)', 'Mix'];
+                                                const isSelected = formData.description === desc;
+                                                return (
+                                                    <button
+                                                        key={idx}
+                                                        type="button"
+                                                        onClick={() => setFormData(prev => ({ ...prev, description: desc }))}
+                                                        className={`w-full text-left p-6 rounded-[2rem] border transition-all relative overflow-hidden group ${isSelected
+                                                            ? 'border-blue-500/50 bg-blue-500/5'
+                                                            : 'border-white/5 bg-slate-950/20 hover:border-white/10 hover:bg-slate-950/40'
+                                                            }`}
+                                                    >
+                                                        {isSelected && (
+                                                            <div className="absolute top-0 right-0 p-4 text-blue-500">
+                                                                <Check size={18} strokeWidth={3} />
+                                                            </div>
+                                                        )}
+                                                        <div className="flex items-start">
+                                                            <div className={`flex-shrink-0 w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center mr-4 transition-all ${isSelected ? 'bg-blue-500 text-slate-950' : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700'
+                                                                }`}>
+                                                                {idx + 1}
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <p className={`text-[10px] font-black uppercase tracking-widest mb-2 ${isSelected ? 'text-blue-400' : 'text-slate-500'}`}>Estilo {labels[idx]}</p>
+                                                                <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap font-medium">{desc}</p>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     </div>
                 )}
 
                 {/* STEP 4: FOTOS E MÍDIA */}
                 {step === 4 && (
-                    <div>
-                        <h3 className="text-xl font-bold text-white mb-6">Galeria de Imagens</h3>
+                    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        {/* Header Section */}
+                        <div className="flex items-center gap-4 mb-10">
+                            <div className="p-3 rounded-2xl bg-pink-500/10 text-pink-500 shadow-inner">
+                                <UploadCloud size={24} />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-black text-white uppercase tracking-tight">Fotos e Mídia</h3>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Gerencie a identidade visual do seu imóvel</p>
+                            </div>
+                        </div>
 
-                        {/* Info/Dica - estilizada no padrão */}
+                        {/* Info/Dica - estilizada no padrão premium */}
                         {images.length > 0 && (
-                            <div className="mb-6 p-4 bg-blue-900/20 border border-blue-800/30 rounded-2xl">
-                                <div className="flex items-start gap-3">
-                                    <div className="flex-1">
-                                        <p className="text-sm text-blue-300 font-medium">
-                                            💡 Arraste as imagens para reordenar. A primeira imagem sempre será o destaque do anúncio.
+                            <div className="p-6 bg-primary-500/5 border border-white/5 rounded-[2rem] relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 blur-3xl rounded-full -z-10"></div>
+                                <div className="flex items-start gap-4">
+                                    <div className="p-2 rounded-xl bg-primary-500/10 text-primary-500">
+                                        <Info size={20} />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-primary-400 uppercase tracking-widest">Dica de Especialista</p>
+                                        <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                                            Arraste as imagens para reordenar. A <span className="text-white font-bold">primeira imagem</span> será a capa principal do seu anúncio. Use fotos horizontais e bem iluminadas para maior engajamento.
                                         </p>
                                     </div>
                                 </div>
@@ -1700,8 +1823,7 @@ export default function AddProperty() {
                         )}
 
                         {/* Grid de Imagens */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                             {images.map((img, idx) => {
                                 const isDestaque = idx === 0;
 
@@ -1730,15 +1852,12 @@ export default function AddProperty() {
                                             setImages(newImages);
                                             setDraggedIndex(null);
                                         }}
-                                        // Touch events for mobile
                                         onTouchStart={(e) => {
                                             setDraggedIndex(idx);
                                             setTouchStartY(e.touches[0].clientY);
                                         }}
                                         onTouchMove={(e) => {
                                             if (draggedIndex === null) return;
-                                            // preventDefault removed - using CSS touchAction instead
-
                                             const touch = e.touches[0];
                                             const element = document.elementFromPoint(touch.clientX, touch.clientY);
                                             const targetDiv = element?.closest('[data-image-index]');
@@ -1746,21 +1865,17 @@ export default function AddProperty() {
                                             if (targetDiv) {
                                                 const targetIndex = parseInt(targetDiv.getAttribute('data-image-index') || '');
                                                 if (!isNaN(targetIndex) && targetIndex !== draggedIndex) {
-                                                    // Visual feedback
-                                                    targetDiv.classList.add('border-primary-400', 'border-4');
+                                                    targetDiv.classList.add('border-primary-500', 'ring-4', 'ring-primary-500/20');
                                                     setTimeout(() => {
-                                                        targetDiv.classList.remove('border-primary-400', 'border-4');
+                                                        targetDiv.classList.remove('border-primary-500', 'ring-4', 'ring-primary-500/20');
                                                     }, 100);
                                                 }
                                             }
                                         }}
                                         onTouchEnd={(e) => {
                                             if (draggedIndex === null) return;
-
                                             const touch = e.changedTouches[0];
                                             const element = document.elementFromPoint(touch.clientX, touch.clientY);
-
-                                            // Busca melhorada com fallbacks
                                             let targetDiv = element?.closest('[data-image-index]');
                                             if (!targetDiv && element?.tagName === 'IMG') {
                                                 targetDiv = element.parentElement?.closest('[data-image-index]');
@@ -1778,45 +1893,67 @@ export default function AddProperty() {
                                                     setImages(newImages);
                                                 }
                                             }
-
                                             setDraggedIndex(null);
                                             setTouchStartY(0);
                                         }}
                                         data-image-index={idx}
-                                        className={`aspect-square rounded-2xl overflow-hidden border relative group shadow-sm transition-all cursor-move ${isDestaque
-                                            ? 'border-primary-500 border-2 ring-2 ring-primary-500/30'
-                                            : 'border-slate-700 hover:border-primary-400'
-                                            } ${draggedIndex === idx ? 'opacity-50 scale-95' : ''}`}
+                                        className={`group aspect-square rounded-[2.5rem] overflow-hidden border-2 relative transition-all duration-500 cursor-grab active:cursor-grabbing ${isDestaque
+                                            ? 'border-primary-500 shadow-2xl shadow-primary-500/20 scale-100'
+                                            : 'border-white/5 hover:border-primary-500/50 grayscale-[0.3] hover:grayscale-0'
+                                            } ${draggedIndex === idx ? 'opacity-20 scale-90 blur-sm' : ''}`}
                                     >
+                                        {/* Featured Badge */}
                                         {isDestaque && (
-                                            <div className="absolute top-2 left-2 z-10 bg-midnight-950 text-white text-xs font-bold px-2 py-1 rounded-2xl shadow-lg flex items-center gap-1">
-                                                <span>⭐</span> DESTAQUE
+                                            <div className="absolute top-4 left-4 z-20 overflow-hidden rounded-xl">
+                                                <div className="absolute inset-0 bg-primary-500 blur-sm animate-pulse"></div>
+                                                <div className="relative bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-3 py-1.5 flex items-center gap-2 border border-white/10 uppercase tracking-widest leading-none">
+                                                    <Star size={10} className="fill-primary-500 text-primary-500" />
+                                                    Capa Principal
+                                                </div>
                                             </div>
                                         )}
+
                                         <img
                                             src={img}
-                                            className="w-full h-full object-cover pointer-events-none"
-                                            alt="preview"
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            alt={`Property ${idx + 1}`}
                                             draggable={false}
                                         />
-                                        {/* Botão Exclu SEMPRE VISÍVEL */}
-                                        <button
-                                            type="button"
-                                            onClick={() => handleImageDelete(idx)}
-                                            className="absolute bottom-2 right-2 z-10 bg-red-500 text-white p-1.5 rounded-2xl hover:bg-red-600 shadow-lg transition-colors"
-                                            title="Excluir imagem"
-                                        >
-                                            ✕
-                                        </button>
-                                        <div className="absolute bottom-2 right-2 bg-slate-800/80 text-white text-xs px-2 py-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                                            ↕️ Arraste para reordenar
+
+                                        {/* Overlay gradient */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                                        {/* Actions */}
+                                        <div className="absolute inset-x-0 bottom-4 px-4 flex justify-between items-center translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 z-30">
+                                            <div className="flex items-center gap-2 text-white/70">
+                                                <Maximize2 size={14} />
+                                                <span className="text-[10px] font-bold uppercase tracking-wider">Preview</span>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleImageDelete(idx)}
+                                                className="p-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 hover:scale-110 active:scale-95 shadow-xl transition-all duration-300"
+                                                title="Remover foto"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </div>
+
+                                        {/* Drag handle hint for mobile/non-hover */}
+                                        {!isDestaque && (
+                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                                <div className="p-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+                                                    <Search size={20} className="text-white" />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
 
                             {/* Card de Upload Compacto - como próxima imagem */}
-                            <label className="aspect-square rounded-2xl overflow-hidden border-2 border-dashed border-slate-600 hover:border-primary-500 bg-slate-900/50 cursor-pointer transition-all group flex flex-col items-center justify-center">
+                            <label className="aspect-square rounded-[2.5rem] overflow-hidden border-2 border-dashed border-white/10 hover:border-primary-500 bg-slate-950/40 cursor-pointer transition-all duration-500 group flex flex-col items-center justify-center relative">
                                 <input
                                     type="file"
                                     multiple
@@ -1825,14 +1962,15 @@ export default function AddProperty() {
                                     onChange={handleImageUpload}
                                     disabled={uploading}
                                 />
-                                <div className="text-center p-4">
-                                    <div className="w-12 h-12 bg-slate-800 text-gray-400 group-hover:text-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-2 transition-colors">
+                                <div className="absolute inset-0 bg-primary-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div className="text-center p-6 relative z-10">
+                                    <div className="w-16 h-16 bg-white/5 text-slate-400 group-hover:text-primary-500 rounded-3xl flex items-center justify-center mx-auto mb-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 border border-white/5">
                                         {uploading ? <Loader2 size={24} className="animate-spin" /> : <UploadCloud size={24} />}
                                     </div>
-                                    <p className="text-xs font-bold text-white mb-1">
+                                    <p className="text-xs font-black text-white uppercase tracking-widest mb-1">
                                         {uploading ? 'Enviando...' : images.length > 0 ? 'Adicionar' : 'Upload'}
                                     </p>
-                                    <p className="text-xs text-slate-400">
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
                                         {images.length > 0 ? 'Mais fotos' : 'Fotos aqui'}
                                     </p>
                                 </div>
@@ -1840,60 +1978,103 @@ export default function AddProperty() {
                         </div>
 
                         {/* Media Section */}
-                        <div className="mb-8 border-t border-slate-700 pt-8">
-                            <h3 className="text-xl font-bold text-white mb-6">Mídias</h3>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="pt-8 border-t border-white/5 space-y-12">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2.5 rounded-xl bg-red-500/10 text-red-500">
+                                    <Play size={20} />
+                                </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-300 mb-2">Vídeo do Imóvel (YouTube/Vimeo)</label>
-                                    <input
-                                        type="text"
-                                        name="videoUrl"
-                                        value={formData.videoUrl}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
-                                        placeholder="https://youtube.com/watch?v=..."
-                                    />
+                                    <h4 className="text-sm font-black text-white uppercase tracking-widest">Mídias Imersivas</h4>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">Adicione vídeos e tours virtuais</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Vídeo do Imóvel (YouTube/Vimeo)</label>
+                                    <div className="relative group">
+                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary-500 transition-colors">
+                                            <Play size={20} />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            name="videoUrl"
+                                            value={formData.videoUrl}
+                                            onChange={handleInputChange}
+                                            className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all font-medium"
+                                            placeholder="https://youtube.com/watch?v=..."
+                                        />
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-bold text-gray-300 mb-2">Tour 360º (Link)</label>
-                                    <input
-                                        type="url"
-                                        name="tourVirtualUrl"
-                                        value={formData.tourVirtualUrl}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
-                                        placeholder="https://exemplo.com/tour360"
-                                    />
-                                    <p className="text-xs text-slate-400 mt-1">💡 Cole o link do tour virtual 360º do imóvel</p>
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Tour 360º (Link)</label>
+                                    <div className="relative group">
+                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary-500 transition-colors">
+                                            <Maximize2 size={20} />
+                                        </div>
+                                        <input
+                                            type="url"
+                                            name="tourVirtualUrl"
+                                            value={formData.tourVirtualUrl}
+                                            onChange={handleInputChange}
+                                            className="w-full pl-14 pr-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all font-medium"
+                                            placeholder="https://exemplo.com/tour360"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Observações */}
-                        <div className="mb-8">
-                            <label className="block text-sm font-bold text-gray-300 mb-2">Observações Adicionais</label>
-                            <textarea
-                                name="observacoes"
-                                value={formData.observacoes}
-                                onChange={handleInputChange}
-                                className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-24 resize-none transition-all text-sm leading-relaxed whitespace-pre-wrap"
-                                placeholder="Informações adicionais sobre o imóvel que que você acha pertinente o Cliente saber..."
-                            ></textarea>
-                            <p className="text-xs text-slate-400 mt-1">💡 Este campo será exibido publicamente no anúncio.</p>
+                        <div className="pt-8 border-t border-white/5 space-y-6">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500">
+                                    <Info size={20} />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-black text-white uppercase tracking-widest">Observações Adicionais</h4>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">Notas importantes para o cliente</p>
+                                </div>
+                            </div>
+
+                            <div className="relative group">
+                                <textarea
+                                    name="observacoes"
+                                    value={formData.observacoes}
+                                    onChange={handleInputChange}
+                                    className="w-full px-6 py-4 rounded-3xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white h-40 resize-none transition-all text-sm leading-relaxed whitespace-pre-wrap font-medium"
+                                    placeholder="Informações adicionais sobre o imóvel que você acha pertinente o Cliente saber..."
+                                ></textarea>
+                                <div className="absolute bottom-4 right-6 flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest pointer-events-none">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
+                                    Público
+                                </div>
+                            </div>
                         </div>
 
+                        {/* IA Detected Tags */}
                         {detectedTags.length > 0 && (
-                            <div className="bg-indigo-900/20 border-indigo-900/30 animate-in fade-in slide-in-from-top-2">
-                                <h4 className="text-sm font-bold text-indigo-300 mb-3 flex items-center">
-                                    <Sparkles size={16} className="mr-2" /> Características Detectadas pela IA
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
+                            <div className="pt-8 border-t border-white/5 space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2.5 rounded-xl bg-primary-500/10 text-primary-500 shadow-lg shadow-primary-500/10">
+                                        <Sparkles size={20} className="animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-black text-white uppercase tracking-widest">Inteligência Visual</h4>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">Características detectadas automaticamente</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap gap-3">
                                     {detectedTags.map((tag, idx) => (
-                                        <span key={idx} className="px-3 py-1.5 bg-slate-800 text-sm font-medium text-gray-300 rounded-2xl border border-indigo-200 border-indigo-800 flex items-center shadow-sm">
-                                            <Tag size={12} className="mr-1.5 text-indigo-500" /> {tag}
-                                        </span>
+                                        <div
+                                            key={idx}
+                                            className="px-4 py-2 bg-primary-500/5 border border-primary-500/20 rounded-xl flex items-center gap-2 group hover:bg-primary-500/10 hover:border-primary-500/40 transition-all duration-300"
+                                        >
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+                                            <span className="text-[10px] font-black text-primary-400 uppercase tracking-widest">{tag}</span>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
@@ -1903,19 +2084,19 @@ export default function AddProperty() {
 
                 {/* STEP 5: SMART REVIEW & VALIDATION */}
                 {step === 5 && (
-                    <div className="space-y-6">
-                        <div className="text-center mb-8">
-                            <div className="w-20 h-20 bg-primary-900/30 text-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <ShieldCheck size={40} />
+                    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <div className="text-center space-y-4">
+                            <div className="inline-flex p-4 rounded-3xl bg-primary-500/10 text-primary-500 mb-2 shadow-inner">
+                                <ShieldCheck size={48} />
                             </div>
-                            <h3 className="text-2xl font-bold text-white mb-2">Revisão e Validação</h3>
-                            <p className="text-slate-400 max-w-2xl mx-auto">
-                                Verifique se todas as etapas obrigatórias foram preenchidas antes de enviar o imóvel para aprovação.
+                            <h3 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight">Revisão Final</h3>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] max-w-xl mx-auto">
+                                Verifique se todos os dados estão corretos antes de publicar seu anúncio exclusivo na IziBrokerz.
                             </p>
                         </div>
 
-                        {/* Validation Checklist */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+                        {/* Validation Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
                             {/* 1. Localização */}
                             {(() => {
                                 const isValid =
@@ -1929,125 +2110,91 @@ export default function AddProperty() {
                                     formData.neighborhood;
 
                                 return (
-                                    <div className={`p-4 rounded-2xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
-                                        <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-amber-900/30 text-amber-400'}`}>
-                                            {isValid ? <Check size={16} /> : <AlertTriangle size={16} />}
-                                        </div>
-                                        <div>
-                                            <h4 className={`font-bold ${isValid ? 'text-green-300' : 'text-amber-300'}`}>Localização e Dados Básicos</h4>
-                                            <p className="text-sm text-gray-400 mt-1">
-                                                {isValid ? 'Todos os dados obrigatórios preenchidos.' : 'Faltam dados obrigatórios (Título, Tipo, Endereço).'}
-                                            </p>
-                                            {formData.title && (
-                                                <p className="text-sm text-slate-300 mt-2">
-                                                    <strong>Título:</strong> {formData.title}
+                                    <div className={`p-8 rounded-[2rem] border transition-all duration-500 relative overflow-hidden group ${isValid ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
+                                        <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full -z-10 transition-all ${isValid ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}></div>
+                                        <div className="flex items-start gap-4">
+                                            <div className={`p-3 rounded-2xl ${isValid ? 'bg-emerald-500/10 text-emerald-500 shadow-emerald-500/20 shadow-lg' : 'bg-amber-500/10 text-amber-500 shadow-amber-500/20 shadow-lg'}`}>
+                                                {isValid ? <Check size={24} /> : <AlertTriangle size={24} />}
+                                            </div>
+                                            <div className="flex-1 space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <p className={`text-[10px] font-black uppercase tracking-widest ${isValid ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                                        Etapa 01: Identidade
+                                                    </p>
+                                                    {!isValid && (
+                                                        <button onClick={() => changeStep(1)} className="text-[10px] font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest underline decoration-2 underline-offset-4">Corrigir</button>
+                                                    )}
+                                                </div>
+                                                <h4 className="text-lg font-black text-white uppercase tracking-tight">Dados de Identificação</h4>
+                                                <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                                                    {isValid ? 'Títulos, tipos e localização devidamente preenchidos.' : 'Faltam informações essenciais de localização ou títulos.'}
                                                 </p>
-                                            )}
-                                            {formData.address && (
-                                                <p className="text-sm text-slate-300 mt-1">
-                                                    <strong>Endereço:</strong> {formData.address}, {formData.number} - {formData.neighborhood}, {formData.city}/{formData.state}
-                                                </p>
-                                            )}
-                                            {!isValid && (
-                                                <button onClick={() => changeStep(1)} className="text-sm font-bold text-amber-600 hover:underline mt-2">
-                                                    Corrigir Etapa 1
-                                                </button>
-                                            )}
+                                            </div>
                                         </div>
                                     </div>
                                 );
                             })()}
 
-                            {/* 2. Detalhes - (Less strict, mostly optional but good to check description) */}
+                            {/* 2. Financeiro */}
                             {(() => {
-                                const isValid = formData.description && formData.description.length > 10;
-                                return (
-                                    <div className={`p-4 rounded-2xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-blue-900/10 border-blue-800'}`}>
-                                        <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-blue-900/30 text-blue-400'}`}>
-                                            {isValid ? <Check size={16} /> : <Info size={16} />}
-                                        </div>
-                                        <div>
-                                            <h4 className={`font-bold ${isValid ? 'text-green-300' : 'text-blue-300'}`}>Detalhes do Imóvel</h4>
-                                            <p className="text-sm text-gray-400 mt-1">
-                                                {isValid ? 'Descrição preenchida.' : 'Adicione uma descrição detalhada para atrair mais clientes.'}
-                                            </p>
-                                            {formData.description && (
-                                                <p className="text-sm text-slate-300 mt-2 line-clamp-2">
-                                                    <strong>Descrição:</strong> {formData.description.substring(0, 100)}...
-                                                </p>
-                                            )}
-                                            {(formData.bedrooms || formData.bathrooms || formData.garage) && (
-                                                <p className="text-sm text-slate-300 mt-1">
-                                                    <strong>Características:</strong> {formData.bedrooms} quartos, {formData.bathrooms} banheiros, {formData.garage} vagas
-                                                </p>
-                                            )}
-                                            {!isValid && (
-                                                <button onClick={() => changeStep(3)} className="text-sm font-bold text-blue-600 hover:underline mt-2">
-                                                    Revisar Etapa 3
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })()}
-
-                            {/* 3. Financeiro */}
-                            {(() => {
-                                // Check based on operation type
                                 const operacaoTipo = operacoes.find(o => o.id === formData.operacaoId)?.tipo?.toLowerCase() || '';
                                 const isVenda = operacaoTipo.includes('venda') && !isTemporada;
                                 const isLocacao = (operacaoTipo.includes('locação') || operacaoTipo.includes('aluguel')) && !isTemporada;
 
-                                let isValid = true;
-                                let msg = 'Valores definidos.';
-
-                                // Temporada não requer valores obrigatórios (podem ser NULL)
-                                // Proprietário pode querer alugar só por diária, só por mensal, ou ambos
-                                if (isVenda && !formData.salePrice) {
-                                    isValid = false;
-                                    msg = 'Informe o Valor de Venda.';
-                                } else if (isLocacao && !formData.rentPrice) {
-                                    isValid = false;
-                                    msg = 'Informe o Valor de Locação.';
-                                } else if (isTemporada && !formData.valorDiaria && !formData.valorMensal) {
-                                    isValid = false;
-                                    msg = 'Informe pelo menos um valor: Diária ou Mensal.';
-                                }
+                                const isValid =
+                                    (isTemporada && (formData.valorDiaria || formData.valorMensal)) ||
+                                    (isVenda && formData.salePrice) ||
+                                    (isLocacao && formData.rentPrice);
 
                                 return (
-                                    <div className={`p-4 rounded-2xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
-                                        <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-amber-900/30 text-amber-400'}`}>
-                                            {isValid ? <Check size={16} /> : <AlertTriangle size={16} />}
-                                        </div>
-                                        <div>
-                                            <h4 className={`font-bold ${isValid ? 'text-green-300' : 'text-amber-300'}`}>Financeiro</h4>
-                                            <p className="text-sm text-gray-400 mt-1">
-                                                {msg}
-                                            </p>
-                                            {(() => {
-                                                const operacaoNome = operacoes.find(o => o.id === formData.operacaoId)?.tipo || '';
-                                                let valorDisplay = '';
-
-                                                if (isTemporada) {
-                                                    if (formData.valorDiaria) valorDisplay += `Diária: R$ ${formData.valorDiaria}`;
-                                                    if (formData.valorMensal) valorDisplay += (valorDisplay ? ' | ' : '') + `Mensal: R$ ${formData.valorMensal}`;
-                                                } else if (formData.salePrice) {
-                                                    valorDisplay = `R$ ${formData.salePrice}`;
-                                                } else if (formData.rentPrice) {
-                                                    valorDisplay = `R$ ${formData.rentPrice}`;
-                                                }
-
-                                                return valorDisplay && (
-                                                    <p className="text-sm text-slate-300 mt-2">
-                                                        <strong>{operacaoNome}:</strong> {valorDisplay}
+                                    <div className={`p-8 rounded-[2rem] border transition-all duration-500 relative overflow-hidden group ${isValid ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
+                                        <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full -z-10 transition-all ${isValid ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}></div>
+                                        <div className="flex items-start gap-4">
+                                            <div className={`p-3 rounded-2xl ${isValid ? 'bg-emerald-500/10 text-emerald-500 shadow-emerald-500/20 shadow-lg' : 'bg-amber-500/10 text-amber-500 shadow-amber-500/20 shadow-lg'}`}>
+                                                {isValid ? <Check size={24} /> : <AlertTriangle size={24} />}
+                                            </div>
+                                            <div className="flex-1 space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <p className={`text-[10px] font-black uppercase tracking-widest ${isValid ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                                        Etapa 02: Comercial
                                                     </p>
-                                                );
-                                            })()}
-                                            {!isValid && (
-                                                <button onClick={() => changeStep(2)} className="text-sm font-bold text-amber-600 hover:underline mt-2">
-                                                    Corrigir Etapa 2
-                                                </button>
-                                            )}
+                                                    {!isValid && (
+                                                        <button onClick={() => changeStep(2)} className="text-[10px] font-black text-amber-500 hover:text-amber-400 uppercase tracking-widest underline decoration-2 underline-offset-4">Corrigir</button>
+                                                    )}
+                                                </div>
+                                                <h4 className="text-lg font-black text-white uppercase tracking-tight">Valoração Comercial</h4>
+                                                <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                                                    {isValid ? 'Os valores de venda ou locação foram definidos.' : 'Certifique-se de informar os preços do imóvel.'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            {/* 3. Detalhes */}
+                            {(() => {
+                                const isValid = formData.description && formData.description.length > 20;
+
+                                return (
+                                    <div className={`p-8 rounded-[2rem] border transition-all duration-500 relative overflow-hidden group ${isValid ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-blue-500/5 border-blue-500/20'}`}>
+                                        <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full -z-10 transition-all ${isValid ? 'bg-emerald-500/10' : 'bg-blue-500/10'}`}></div>
+                                        <div className="flex items-start gap-4">
+                                            <div className={`p-3 rounded-2xl ${isValid ? 'bg-emerald-500/10 text-emerald-500 shadow-emerald-500/20 shadow-lg' : 'bg-blue-500/10 text-blue-500 shadow-blue-500/20 shadow-lg'}`}>
+                                                {isValid ? <Check size={24} /> : <Info size={24} />}
+                                            </div>
+                                            <div className="flex-1 space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <p className={`text-[10px] font-black uppercase tracking-widest ${isValid ? 'text-emerald-400' : 'text-blue-400'}`}>
+                                                        Etapa 03: Atributos
+                                                    </p>
+                                                    <button onClick={() => changeStep(3)} className={`text-[10px] font-black uppercase tracking-widest underline decoration-2 underline-offset-4 ${isValid ? 'text-slate-400 hover:text-white' : 'text-blue-500 hover:text-blue-400'}`}>Revisar</button>
+                                                </div>
+                                                <h4 className="text-lg font-black text-white uppercase tracking-tight">Detalhes e Comodidades</h4>
+                                                <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                                                    {isValid ? 'Descrição e características físicas revisadas.' : 'Uma descrição detalhada ajuda a converter mais contatos.'}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -2055,42 +2202,105 @@ export default function AddProperty() {
 
                             {/* 4. Fotos */}
                             {(() => {
-                                const isValid = images.length >= 1; // Require at least 1 photo
+                                const isValid = images.length >= 1;
+
                                 return (
-                                    <div className={`p-4 rounded-2xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-red-900/10 border-red-800'}`}>
-                                        <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
-                                            {isValid ? <Check size={16} /> : <AlertCircle size={16} />}
-                                        </div>
-                                        <div>
-                                            <h4 className={`font-bold ${isValid ? 'text-green-300' : 'text-red-300'}`}>Fotos</h4>
-                                            <p className="text-sm text-gray-400 mt-1">
-                                                {isValid ? `${images.length} foto${images.length > 1 ? 's' : ''} carregada${images.length > 1 ? 's' : ''}.` : 'É obrigatório enviar pelo menos 1 foto.'}
-                                            </p>
-                                            {images.length > 0 && (
-                                                <div className="mt-2 flex gap-2 overflow-x-auto">
-                                                    {images.slice(0, 3).map((img, idx) => (
-                                                        <img key={idx} src={img} alt="" className="w-16 h-16 rounded object-cover border border-slate-600" />
-                                                    ))}
-                                                    {images.length > 3 && (
-                                                        <div className="w-16 h-16 rounded bg-slate-700 flex items-center justify-center text-xs text-slate-400 border border-slate-600">
-                                                            +{images.length - 3}
-                                                        </div>
-                                                    )}
+                                    <div className={`p-8 rounded-[2rem] border transition-all duration-500 relative overflow-hidden group ${isValid ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
+                                        <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full -z-10 transition-all ${isValid ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}></div>
+                                        <div className="flex items-start gap-4">
+                                            <div className={`p-3 rounded-2xl ${isValid ? 'bg-emerald-500/10 text-emerald-500 shadow-emerald-500/20 shadow-lg' : 'bg-red-500/10 text-red-500 shadow-red-500/20 shadow-lg'}`}>
+                                                {isValid ? <Check size={24} /> : <AlertCircle size={24} />}
+                                            </div>
+                                            <div className="flex-1 space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                    <p className={`text-[10px] font-black uppercase tracking-widest ${isValid ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                        Etapa 04: Visual
+                                                    </p>
+                                                    <button onClick={() => changeStep(4)} className={`text-[10px] font-black uppercase tracking-widest underline decoration-2 underline-offset-4 ${isValid ? 'text-slate-400 hover:text-white' : 'text-red-500 hover:text-red-400'}`}>
+                                                        {isValid ? 'Adicionar' : 'Corrigir'}
+                                                    </button>
                                                 </div>
-                                            )}
-                                            {!isValid && (
-                                                <button onClick={() => changeStep(4)} className="text-sm font-bold text-red-600 hover:underline mt-2">
-                                                    Adicionar Fotos na Etapa 4
-                                                </button>
-                                            )}
+                                                <h4 className="text-lg font-black text-white uppercase tracking-tight">Galeria de Mídia</h4>
+                                                <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                                                    {isValid ? `${images.length} imagem(ns) pronta(s) para exibição.` : 'É obrigatório o envio de pelo menos uma foto de capa.'}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 );
                             })()}
                         </div>
 
+                        {/* Smart Preview Card */}
+                        <div className="p-12 bg-slate-950/40 border border-white/5 rounded-[3rem] max-w-5xl mx-auto relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 blur-[100px] rounded-full -z-10"></div>
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
+                                <div className="lg:col-span-1">
+                                    <div className="aspect-[4/5] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl relative">
+                                        {images.length > 0 ? (
+                                            <img src={images[0]} className="w-full h-full object-cover" alt="Preview" />
+                                        ) : (
+                                            <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+                                                <UploadCloud size={48} className="text-slate-700" />
+                                            </div>
+                                        )}
+                                        <div className="absolute top-4 left-4">
+                                            <div className="bg-black/60 backdrop-blur-md text-white text-[8px] font-black px-2.5 py-1 rounded-lg border border-white/10 uppercase tracking-[0.2em]">Preview do Card</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="lg:col-span-2 space-y-8">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-3">
+                                            <span className="px-3 py-1 bg-primary-500 text-white text-[8px] font-black rounded-lg uppercase tracking-widest leading-none">
+                                                {operacoes.find(o => o.id === formData.operacaoId)?.tipo || 'Imóvel'}
+                                            </span>
+                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{tiposImovel.find(t => t.id === formData.tipoImovelId)?.nome || 'Residencial'}</span>
+                                        </div>
+                                        <h2 className="text-3xl font-black text-white uppercase tracking-tight leading-none">{formData.title || 'Título do Imóvel'}</h2>
+                                        <div className="flex items-center gap-2 text-slate-400">
+                                            <MapPin size={14} className="text-primary-500" />
+                                            <span className="text-xs font-bold uppercase tracking-wider">{formData.neighborhood ? `${formData.neighborhood}, ${formData.city}` : 'Localização não definida'}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-4 border-y border-white/5 py-6">
+                                        <div className="text-center">
+                                            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Quartos</p>
+                                            <p className="text-lg font-black text-white">{formData.bedrooms || '0'}</p>
+                                        </div>
+                                        <div className="text-center border-x border-white/5">
+                                            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Vagas</p>
+                                            <p className="text-lg font-black text-white">{formData.garage || '0'}</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Área</p>
+                                            <p className="text-lg font-black text-white">{formData.privateArea || '0'}<span className="text-[10px] ml-0.5">m²</span></p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-baseline justify-between pt-2">
+                                        <div>
+                                            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Investimento</p>
+                                            <p className="text-4xl font-black text-primary-500 leading-none">
+                                                <span className="text-lg mr-2">R$</span>
+                                                {(() => {
+                                                    const operacaoTipo = operacoes.find(o => o.id === formData.operacaoId)?.tipo?.toLowerCase() || '';
+                                                    if (isTemporada) return formData.valorDiaria || formData.valorMensal || 'Consulte';
+                                                    if (operacaoTipo.includes('venda')) return formData.salePrice || 'Consulte';
+                                                    return formData.rentPrice || 'Consulte';
+                                                })()}
+                                            </p>
+                                        </div>
+                                        {isTemporada && <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">Modo Temporada</span>}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* FINAL ACTION BUTTON */}
-                        <div className="flex justify-center mt-8">
+                        <div className="flex flex-col items-center gap-6 mt-8">
                             {(() => {
                                 // Global Validation Check
                                 const operacaoTipo = operacoes.find(o => o.id === formData.operacaoId)?.tipo?.toLowerCase() || '';
@@ -2114,58 +2324,66 @@ export default function AddProperty() {
                                     images.length >= 1;
 
                                 return (
-                                    <button
-                                        onClick={handleSubmit}
-                                        disabled={!isFormValid || loading}
-                                        className={`
-                                           px-12 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all
-                                           ${isFormValid
-                                                ? 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white transform hover:scale-105'
-                                                : 'bg-slate-700 text-gray-500 cursor-not-allowed'}
-                                       `}
-                                    >
-                                        {loading ? (
-                                            <>
-                                                <Loader2 className="animate-spin mr-2" />
-                                                Salvando...
-                                            </>
-                                        ) : (
-                                            <>
-                                                {isFormValid ? <ShieldCheck size={24} /> : <AlertTriangle size={24} />}
-                                                {isFormValid ? (editingId ? 'Atualizar Anúncio' : 'Salvar e Enviar para Aprovação') : 'Preencha os dados obrigatórios'}
-                                            </>
+                                    <>
+                                        <button
+                                            onClick={handleSubmit}
+                                            disabled={!isFormValid || loading}
+                                            className={`
+                                                    group relative px-16 py-6 rounded-[2.5rem] font-bold text-xl transition-all duration-500 overflow-hidden
+                                                    ${isFormValid
+                                                    ? 'bg-gradient-to-r from-primary-600 to-primary-400 text-white shadow-[0_20px_50px_rgba(59,130,246,0.3)] hover:shadow-[0_20px_50px_rgba(59,130,246,0.5)] scale-100 hover:scale-105 active:scale-95'
+                                                    : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-50 grayscale'}
+                                                `}
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:animate-shimmer"></div>
+                                            <div className="flex items-center justify-center gap-4 relative z-10">
+                                                {loading ? (
+                                                    <>
+                                                        <Loader2 className="animate-spin" size={28} />
+                                                        <span className="uppercase tracking-widest text-sm font-black">Processando...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        {isFormValid ? <ShieldCheck size={28} className="text-white" /> : <AlertTriangle size={28} />}
+                                                        <span className="uppercase tracking-widest text-sm font-black">
+                                                            {isFormValid ? (editingId ? 'Confirmar Atualização' : 'Publicar este Imóvel') : 'Preencha os dados obrigatórios'}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </button>
+                                        {!isFormValid && (
+                                            <p className="text-[10px] text-amber-500 font-bold uppercase tracking-widest animate-pulse">Existem campos obrigatórios pendentes de atenção</p>
                                         )}
-                                    </button>
+                                    </>
                                 );
                             })()}
                         </div>
                     </div>
                 )}
-
-
-                {/* Footer Actions (Hidden on Step 5 because it has its own main action button) */}
-                {
-                    step < 5 && (
-                        <div className="flex justify-between mt-8">
-                            <button
-                                onClick={() => step > 1 ? changeStep(step - 1) : navigate('/dashboard')}
-                                className="px-6 py-3 rounded-2xl bg-slate-800 border border-slate-700 text-gray-200 font-medium hover:bg-slate-700 transition-colors"
-                            >
-                                {step === 1 ? 'Cancelar' : 'Voltar'}
-                            </button>
-                            <div className="flex space-x-4">
-                                <button
-                                    onClick={() => changeStep(step + 1)}
-                                    className="px-6 py-3 rounded-2xl bg-primary-600 hover:bg-primary-700 text-white font-bold transition-all shadow-lg shadow-primary-600/30 flex items-center"
-                                >
-                                    Próxima Etapa
-                                    <Check size={18} className="ml-2" />
-                                </button>
-                            </div>
-                        </div>
-                    )
-                }
             </div>
-        </div>
+
+
+            {/* Footer Actions (Hidden on Step 5 because it has its own main action button) */}
+            {
+                step < 5 && (
+                    <div className="flex flex-row justify-between items-center mt-12 pt-10 border-t border-white/5 gap-4">
+                        <button
+                            onClick={() => step > 1 ? changeStep(step - 1) : navigate('/dashboard')}
+                            className="flex-1 px-4 py-3.5 md:px-8 md:py-4 rounded-[2rem] bg-slate-900 border border-white/5 text-slate-400 text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-slate-800 hover:text-white transition-all active:scale-95"
+                        >
+                            {step === 1 ? 'Cancelar' : 'Voltar'}
+                        </button>
+                        <button
+                            onClick={() => changeStep(step + 1)}
+                            className="flex-1 px-4 py-3.5 md:px-10 md:py-4 rounded-[2rem] bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] md:text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-900/40 flex items-center justify-center gap-2 active:scale-95 group"
+                        >
+                            Próxima Etapa
+                            <Check size={18} className="group-hover:scale-110 transition-transform hidden md:block" />
+                        </button>
+                    </div>
+                )
+            }
+        </div >
     );
 }

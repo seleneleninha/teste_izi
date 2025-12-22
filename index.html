@@ -10,6 +10,44 @@
   <link rel="preconnect" href="https://pqlvqlqypyqyqyx.supabase.co"> <!-- Preconnect to your Supabase URL -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/index.css">
+
+  <!-- OneSignal Push Notifications -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function (OneSignal) {
+      console.log("OneSignal initializing...");
+      await OneSignal.init({
+        appId: "532585a7-f7f6-41d6-8b4e-87847b3564ef",
+        safari_web_id: "web.onesignal.auto.08e72fe8-7d9e-49e9-8aad-204d649fdf9c",
+        notifyButton: {
+          enable: true,
+          position: 'bottom-right',
+          displayPredicate: function () {
+            // Em v16, verificamos a permissão através do namespace Notifications
+            if (window.OneSignal && window.OneSignal.Notifications) {
+              const perm = window.OneSignal.Notifications.permission;
+              console.log("OneSignal Bell Predicate: permission =", perm);
+              return perm !== 'granted';
+            }
+            return true;
+          },
+          offset: {
+            bottom: '120px', // More space for mobile nav
+            right: '25px',
+          },
+          colors: {
+            'circle.background': '#ef4444',
+            'circle.foreground': 'white',
+          }
+        },
+        allowLocalhostAsSecureOrigin: true,
+        serviceWorkerPath: "OneSignalSDKWorker.js",
+        serviceWorkerParam: { scope: "/" }
+      });
+      console.log("OneSignal initialized. Permission:", OneSignal.Notifications.permission);
+    });
+  </script>
 </head>
 
 <body class="bg-midnight-950 text-gray-50 transition-colors duration-200">
