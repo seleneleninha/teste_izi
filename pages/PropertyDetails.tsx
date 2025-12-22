@@ -11,6 +11,7 @@ import { supabase } from '../lib/supabaseClient';
 import { analyzeNeighborhood } from '../lib/geminiHelper';
 import { useAuth } from '../components/AuthContext'; // Import useAuth
 import { useToast } from '../components/ToastContext'; // Import useToast
+import { getOptimizedImageUrl } from '../lib/imageUtils';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -549,7 +550,6 @@ export const PropertyDetails: React.FC = () => {
                         <AnimatePresence initial={false} custom={direction}>
                             <motion.img
                                 key={page}
-                                src={property.images && property.images.length > 0 ? property.images[imageIndex] : 'https://picsum.photos/seed/prop1/800/600'}
                                 custom={direction}
                                 variants={variants}
                                 initial="enter"
@@ -574,6 +574,9 @@ export const PropertyDetails: React.FC = () => {
                                 alt={property.title}
                                 className="w-full h-full object-cover transition-transform duration-500 cursor-pointer absolute top-0 left-0" // Absolute is key for stack effect
                                 onClick={() => setIsGalleryOpen(true)}
+                                src={getOptimizedImageUrl(property.images && property.images.length > 0 ? property.images[imageIndex] : 'https://picsum.photos/seed/prop1/800/600', { width: 1200, quality: 85 })}
+                                fetchPriority={imageIndex === 0 ? "high" : "auto"}
+                                decoding="async"
                             />
                         </AnimatePresence>
 

@@ -364,6 +364,7 @@ export const PublicHome: React.FC = () => {
                         src={bgImage}
                         alt="Background"
                         className="w-full h-full object-cover transition-opacity duration-500"
+                        fetchPriority="high"
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-midnight-950/95"></div>
                 </div>

@@ -7,6 +7,7 @@ import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from './ToastContext';
 import { LoginPromptModal } from './LoginPromptModal';
+import { getOptimizedImageUrl } from '../lib/imageUtils';
 
 interface PropertyCardProps {
     property: {
@@ -220,7 +221,6 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                         <AnimatePresence initial={false} custom={direction}>
                             <motion.img
                                 key={page}
-                                src={photosArray[imageIndex]}
                                 custom={direction}
                                 variants={variants}
                                 initial="enter"
@@ -246,6 +246,9 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                                 }}
                                 className="absolute w-full h-full object-cover"
                                 alt={property.titulo}
+                                loading="lazy"
+                                decoding="async"
+                                src={getOptimizedImageUrl(photosArray[imageIndex], { width: 800, quality: 75 })}
                                 onError={(e) => {
                                     (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x600?text=Sem+Foto';
                                 }}
