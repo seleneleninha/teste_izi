@@ -500,9 +500,9 @@ export const PublicHome: React.FC = () => {
                 <div className="container mx-auto px-4">
                     {/* Cities */}
                     <div className="mb-20">
-                        <h3 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
+                        <h2 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
                             <span className="w-2 h-8 bg-pink-500 rounded-full" /> Principais <span className="text-pink-400">Cidades</span>
-                        </h3>
+                        </h2>
                         {/* Note: cityCounts needs to be populated in fetchData */}
                         <HorizontalScroll itemWidth={280} gap={20} itemsPerPage={4}>
                             {cities.map((city, idx) => (
@@ -557,9 +557,9 @@ export const PublicHome: React.FC = () => {
 
                     {/* Neighborhoods (Pills Style) */}
                     <div>
-                        <h3 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
+                        <h2 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
                             <span className="w-2 h-8 bg-emerald-500 rounded-full" /> Bairros <span className="text-emerald-400">em Alta</span>
-                        </h3>
+                        </h2>
                         <div className="flex flex-wrap gap-3">
                             {neighborhoods.map((bairro, idx) => (
                                 <button

@@ -112,6 +112,7 @@ export const Navbar = () => {
                                         : 'text-white/80 hover:bg-white/20 hover:text-red-300'
                                         }`}
                                     title="Sair"
+                                    aria-label="Sair da conta"
                                 >
                                     <LogOut size={20} />
                                 </button>
@@ -133,6 +134,7 @@ export const Navbar = () => {
                     <button
                         className="md:hidden p-2 text-gray-200 hover:text-emerald-400"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
                     >
                         {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>

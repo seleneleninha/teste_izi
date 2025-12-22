@@ -362,12 +362,14 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                         <button
                             onClick={prevImage}
                             className="absolute left-2 top-1/3 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/60 backdrop-blur-sm text-white p-2 rounded-full transition-colors hover:scale-110 active:scale-95"
+                            aria-label="Imagem anterior"
                         >
                             <ChevronLeft size={24} />
                         </button>
                         <button
                             onClick={nextImage}
                             className="absolute right-2 top-1/3 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/60 backdrop-blur-sm text-white p-2 rounded-full transition-colors hover:scale-110 active:scale-95"
+                            aria-label="Próxima imagem"
                         >
                             <ChevronRight size={24} />
                         </button>
@@ -380,12 +382,14 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                         <button
                             onClick={prevImage}
                             className="absolute left-2 top-1/3 -translate-y-1/2 z-20 bg-black/30 active:bg-black/60 backdrop-blur-sm text-white p-1.5 rounded-full transition-colors"
+                            aria-label="Imagem anterior"
                         >
                             <ChevronLeft size={20} />
                         </button>
                         <button
                             onClick={nextImage}
                             className="absolute right-2 top-1/3 -translate-y-1/2 z-20 bg-black/30 active:bg-black/60 backdrop-blur-sm text-white p-1.5 rounded-full transition-colors"
+                            aria-label="Próxima imagem"
                         >
                             <ChevronRight size={20} />
                         </button>
@@ -497,7 +501,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                                 )}
                             </div>
                             {!actions && (
-                                <button className="self-end bg-emerald-500 hover:bg-emerald-600 text-white p-2 rounded-full shadow-lg shadow-emerald-500/30 transition-all hover:scale-110 active:scale-100 group-hover:bg-emerald-400">
+                                <button
+                                    className="self-end bg-emerald-500 hover:bg-emerald-600 text-white p-2 rounded-full shadow-lg shadow-emerald-500/30 transition-all hover:scale-110 active:scale-100 group-hover:bg-emerald-400"
+                                    aria-label={`Ver detalhes de ${property.titulo}`}
+                                >
                                     <Eye size={20} />
                                 </button>
                             )}

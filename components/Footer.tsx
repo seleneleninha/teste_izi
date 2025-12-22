@@ -107,11 +107,11 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
                                 </div>
                             ) : (
                                 <div className="flex gap-4">
-                                    <button className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-emerald-500 transition-colors text-gray-400 hover:text-white">
+                                    <button className="min-w-[44px] min-h-[44px] rounded-full bg-white/5 flex items-center justify-center hover:bg-emerald-500 transition-colors text-gray-400 hover:text-white" aria-label="Instagram">
                                         <span className="sr-only">Instagram</span>
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" x2="17.51" y1="6.5" y2="6.5" /></svg>
                                     </button>
-                                    <button className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-blue-500 transition-colors text-gray-400 hover:text-white">
+                                    <button className="min-w-[44px] min-h-[44px] rounded-full bg-white/5 flex items-center justify-center hover:bg-blue-500 transition-colors text-gray-400 hover:text-white" aria-label="LinkedIn">
                                         <span className="sr-only">LinkedIn</span>
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect width="4" height="12" x="2" y="9" /><circle cx="4" cy="4" r="2" /></svg>
                                     </button>
@@ -122,7 +122,7 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
 
                         {/* Column 2: Broker Links or Platform Explore */}
                         <div>
-                            <h4 className="text-lg font-bold mb-6 text-gray-200">{isBrokerPage ? 'Navegação' : 'Explorar'}</h4>
+                            <h3 className="text-lg font-bold mb-6 text-gray-200">{isBrokerPage ? 'Navegação' : 'Explorar'}</h3>
                             <ul className="space-y-3 text-gray-400 text-sm">
                                 {isBrokerPage && brokerSlug ? (
                                     <>
@@ -143,7 +143,7 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
 
                         {/* Column 3: Contact or Institutional */}
                         <div>
-                            <h4 className="text-lg font-bold mb-6 text-gray-200">{isBrokerPage ? 'Fale Comigo' : 'Institucional'}</h4>
+                            <h3 className="text-lg font-bold mb-6 text-gray-200">{isBrokerPage ? 'Fale Comigo' : 'Institucional'}</h3>
                             <ul className="space-y-3 text-gray-400 text-sm">
                                 {isBrokerPage && partner ? (
                                     <>
@@ -181,7 +181,7 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
                         <div className={isBrokerPage ? "" : "bg-white/5 p-6 rounded-3xl border border-white/10"}>
                             {isBrokerPage ? (
                                 <div>
-                                    <h4 className="text-lg font-bold mb-6 text-gray-200">Localização</h4>
+                                    <h3 className="text-lg font-bold mb-6 text-gray-200">Localização</h3>
                                     {partner?.endereço ? (
                                         <div className="text-gray-400 text-sm space-y-1">
                                             <p>{partner.endereço}, {partner.numero}</p>
@@ -196,7 +196,7 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
                                 </div>
                             ) : (
                                 <>
-                                    <h4 className="text-lg font-bold mb-2 text-white">Ainda com dúvidas?</h4>
+                                    <h3 className="text-lg font-bold mb-2 text-white">Ainda com dúvidas?</h3>
                                     <p className="text-gray-400 text-sm mb-4">Teste nossa Plataforma GRATUITAMENTE por 14 dias. Sem cartão de crédito e sem compromisso. Cancele quando quiser.</p>
                                     <button
                                         onClick={() => window.open('http://localhost:3000/#/partner', '_blank')}
