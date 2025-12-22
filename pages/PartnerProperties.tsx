@@ -425,8 +425,10 @@ export const PartnerProperties: React.FC = () => {
                 {userLocation && !missingCity && (
                     <div className="mb-8 bg-slate-800 rounded-3xl p-6 border border-slate-700">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-white flex items-center gap-2">
-                                <MapPin size={20} className="text-primary-500" />
+                            <h3 className="text-lg font-bold text-white flex items-center gap-3">
+                                <div className="p-2 bg-emerald-500/20 rounded-xl border border-emerald-500/30">
+                                    <MapPin size={20} className="text-emerald-400" />
+                                </div>
                                 Filtrar por Raio de Atuação
                             </h3>
                             <span className="font-bold text-white">
@@ -439,9 +441,9 @@ export const PartnerProperties: React.FC = () => {
                                 <button
                                     key={radius || 'all'}
                                     onClick={() => setUserRadius(radius || 999)}
-                                    className={`px-3 py-2 rounded-full font-medium transition-all ${(radius === null && userRadius >= 999) || userRadius === radius
-                                        ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                                        : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                                    className={`px-3 py-2.5 rounded-2xl font-bold transition-all border ${(radius === null && userRadius >= 999) || userRadius === radius
+                                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 border-emerald-400'
+                                        : 'bg-slate-700/50 text-slate-400 border-slate-600/50 hover:bg-slate-700 hover:text-white'
                                         }`}
                                 >
                                     {radius ? `${radius}km` : '+20km'}
@@ -449,9 +451,10 @@ export const PartnerProperties: React.FC = () => {
                             ))}
                         </div>
 
-                        <p className="text-md text-gray-400 mt-4">
-                            💡 Dica: Escolha um raio menor para focar em imóveis próximos à sua região de atuação
-                        </p>
+                        <div className="flex items-center gap-2 mt-4 text-sm text-slate-400 bg-slate-900/40 p-3 rounded-2xl border border-slate-700/30">
+                            <span className="text-emerald-400">💡</span>
+                            <p>Escolha um raio menor para focar em imóveis próximos à sua região de atuação</p>
+                        </div>
                     </div>
                 )}
 
@@ -487,7 +490,7 @@ export const PartnerProperties: React.FC = () => {
                 {/* Available Properties Section */}
                 {!missingCity && availableProperties.length > 0 && (
                     <div className="mb-12">
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
                             <div>
                                 <h2 className="text-2xl font-bold text-white">
                                     {availableProperties.length} {availableProperties.length === 1 ? 'imóvel disponível' : 'imóveis disponíveis para Parceria'}
@@ -502,11 +505,11 @@ export const PartnerProperties: React.FC = () => {
                             </div>
 
                             {/* View Mode Toggle */}
-                            <div className="flex gap-1 bg-slate-900 border border-slate-700 p-1 rounded-xl">
+                            <div className="flex gap-1 bg-slate-900 border border-slate-700 p-1 justify-between rounded-xl">
                                 <button
                                     onClick={() => setViewMode('list')}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${viewMode === 'list'
-                                        ? 'bg-slate-700 text-white shadow-md'
+                                        ? 'bg-emerald-700 text-white shadow-md'
                                         : 'text-slate-400 hover:text-white hover:bg-slate-800'
                                         }`}
                                     title="Visualização em Lista"
@@ -517,7 +520,7 @@ export const PartnerProperties: React.FC = () => {
                                 <button
                                     onClick={() => setViewMode('grid')}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${viewMode === 'grid'
-                                        ? 'bg-slate-700 text-white shadow-md'
+                                        ? 'bg-emerald-700 text-white shadow-md'
                                         : 'text-slate-400 hover:text-white hover:bg-slate-800'
                                         }`}
                                     title="Visualização em Cards"
@@ -528,7 +531,7 @@ export const PartnerProperties: React.FC = () => {
                                 <button
                                     onClick={() => setViewMode('map')}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${viewMode === 'map'
-                                        ? 'bg-slate-700 text-white shadow-md'
+                                        ? 'bg-emerald-700 text-white shadow-md'
                                         : 'text-slate-400 hover:text-white hover:bg-slate-800'
                                         }`}
                                     title="Visualização em Mapa"
@@ -539,28 +542,39 @@ export const PartnerProperties: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Grid View */}
+                        {/* Grid View (Horizontal Scroll for consistency) */}
                         {viewMode === 'grid' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <HorizontalScroll itemWidth={320} gap={24} itemsPerPage={3}>
                                 {availableProperties.map((property) => (
-                                    <PropertyCard
-                                        key={property.id}
-                                        property={property}
-                                        isDashboard={true}
-                                        actions={
-                                            <div className="flex flex-col gap-2 w-full">
-                                                <button
-                                                    onClick={() => navigateToProperty(navigate, property, true)}
-                                                    className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-3xl text-xs transition-colors flex items-center justify-center gap-2"
-                                                >
-                                                    <Eye size={18} />
-                                                    Ver
-                                                </button>
-                                            </div>
-                                        }
-                                    />
+                                    <div key={property.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
+                                        <PropertyCard
+                                            property={property}
+                                            isDashboard={true}
+                                            actions={
+                                                <div className="flex gap-2 w-full">
+                                                    <button
+                                                        onClick={() => navigateToProperty(navigate, property, true)}
+                                                        className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-3xl text-xs transition-colors border border-slate-600 flex items-center justify-center gap-2"
+                                                        title="Ver Anúncio"
+                                                    >
+                                                        <Eye size={18} />
+                                                        Ver
+                                                    </button>
+                                                    {!isTrialUser && (
+                                                        <button
+                                                            onClick={() => onToggle(property, false)}
+                                                            className="flex-[1.5] px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-3xl text-xs font-bold transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                                                        >
+                                                            <Handshake size={18} />
+                                                            Aceitar Parceria
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            }
+                                        />
+                                    </div>
                                 ))}
-                            </div>
+                            </HorizontalScroll>
                         )}
 
                         {/* List View */}

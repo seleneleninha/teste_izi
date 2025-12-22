@@ -522,7 +522,7 @@ export const Settings: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('account')}
-            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap text-sm font-medium
+            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-10 py-2.5 rounded-xl transition-all whitespace-nowrap text-sm font-medium
               ${activeTab === 'account'
                 ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-600/50'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
