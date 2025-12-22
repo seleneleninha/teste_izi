@@ -11,6 +11,7 @@ import { PublicAIAssistant } from './PublicAIAssistant';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { MobileBottomNav } from './MobileBottomNav';
+import { useHeader } from './HeaderContext';
 
 export const DashboardLayout: React.FC = () => {
     const { theme } = useTheme();
@@ -94,8 +95,12 @@ export const DashboardLayout: React.FC = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const { headerContent } = useHeader();
+
     // Extract page title from path
     const getTitle = () => {
+        if (headerContent) return headerContent;
+
         const path = location.pathname.substring(1);
         if (!path) return 'Dashboard';
         // Handle dynamic routes or complex paths simply
@@ -110,7 +115,7 @@ export const DashboardLayout: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 bg-midnight-950 transition-colors duration-200 flex">
+        <div className="min-h-screen bg-midnight-950 transition-colors duration-200 flex">
             {/* Sidebar - Hidden on mobile, visible on desktop */}
             <div className="hidden md:block">
                 <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -120,24 +125,15 @@ export const DashboardLayout: React.FC = () => {
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden md:ml-64">
                 {/* Topbar - Increased Z-Index */}
                 <header className="bg-slate-800 border-b border-slate-700 h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm z-[50]">
-                    <div className="flex items-center">
-                        <h1 className="p-14 text-xl font-bold text-white truncate">
+                    <div className="flex items-center w-full">
+                        <div className="text-xl font-bold text-white truncate w-full">
                             {getTitle()}
-                        </h1>
+                        </div>
                     </div>
 
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4 shrink-0 bg-slate-800 pl-4">
 
 
-                        {/* Messages Button */}
-                        <button
-                            onClick={() => setShowMessages(true)}
-                            className="p-2 rounded-full bg-blue-50 bg-blue-900/30 text-blue-600 text-blue-400 hover:bg-blue-100 hover:bg-blue-900/50 shadow-sm transition-colors relative"
-                            title="Mensagens"
-                        >
-                            <Send size={20} />
-                            {/* Optional: unread count badge */}
-                        </button>
 
                         <div className="relative" ref={notifRef}>
                             <button
@@ -161,12 +157,6 @@ export const DashboardLayout: React.FC = () => {
                     </div>
                 </header>
 
-                <MessagesDrawer
-                    isOpen={showMessages}
-                    onClose={() => setShowMessages(false)}
-                    initialChatId={searchParams.get('openChat')}
-                />
-
                 {/* Main Content */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-900 scroll-smooth">
                     <TrialBanner />
@@ -176,7 +166,7 @@ export const DashboardLayout: React.FC = () => {
                 </main>
 
                 {/* Mobile Bottom Navigation */}
-                <MobileBottomNav isClient={role === 'Cliente'} />
+                <MobileBottomNav isClient={role === 'Cliente'} isAdmin={role === 'Admin' || role === 'admin'} />
             </div>
         </div>
     );
@@ -347,7 +337,7 @@ export const PublicLayout: React.FC = () => {
             )}
 
             {/* Persistence for Public Chat */}
-            <PublicAIAssistant />
+            <PublicAIAssistant brokerSlug={brokerSlug || undefined} />
 
             <div className={!isBrokerPage ? "pt-[73px]" : ""}>
                 <Outlet />

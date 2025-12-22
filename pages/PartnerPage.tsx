@@ -193,7 +193,7 @@ export const PartnerPage: React.FC = () => {
                 </div>
 
                 <div className="container mx-auto px-4 relative z-10 text-center">
-                    <span className="inline-block py-1 px-3 rounded-full bg-emerald-100 bg-emerald-900/30 text-emerald-600 text-emerald-400 text-lg font-semibold mb-6 animate-fade-in-up">
+                    <span className="inline-block py-1 px-3 rounded-full bg-emerald-500/30 text-white text-lg font-semibold mb-6 animate-fade-in-up">
                         Para Corretores Autônomos de todo Brasil
                     </span>
                     <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight animate-fade-in-up delay-100">
@@ -443,8 +443,8 @@ export const PartnerPage: React.FC = () => {
                                 <Trophy className="text-red-500 w-8 h-8" />
                             </div>
 
-                            <h2 className="text-3xl md:text-5xl font-black text-white mb-4 italic tracking-tight">
-                                "AINDA ACHA QUE TÁ CARO???"
+                            <h2 className="text-2xl md:text-5xl font-black text-white mb-4 italic tracking-tight">
+                                "AINDA ACHA QUE ESTÁ CARO???"
                             </h2>
                             <p className="text-xl md:text-2xl text-gray-400 font-light mb-10">
                                 Por tudo isso que oferecemos... <span className="text-emerald-400 font-bold">TEM CERTEZA?</span>
@@ -453,25 +453,22 @@ export const PartnerPage: React.FC = () => {
                             <div className="bg-slate-950/50 rounded-2xl p-8 mb-8 backdrop-blur-sm border border-slate-800">
                                 <h3 className="text-xl font-bold text-white mb-6 flex items-center justify-center gap-2">
                                     <Ticket className="text-yellow-500" />
-                                    QUER UM CUPOM DE DESCONTO?
+                                    Quer Um Cupom de Desconto?
                                     <Ticket className="text-yellow-500" />
                                 </h3>
 
                                 {/* Dynamic Slider */}
                                 <div className="mb-8 px-4">
-                                    <div className="flex justify-between text-sm text-gray-500 font-bold mb-2">
-                                        <span>0%</span>
-                                        <span>10%</span>
-                                        <span>20%</span>
-                                        <span>30%</span>
-                                        <span>40%</span>
-                                        <span className="text-red-500">50%</span>
+                                    <div className="flex justify-between items-end mb-2">
+                                        <span className="text-yellow-500 text-xs">10%</span>
+                                        <span className="text-green-500 font-medium text-md">30%</span>
+                                        <span className="text-blue-500 font-bold text-lg">50%</span>
                                     </div>
                                     <input
                                         type="range"
-                                        min="0"
+                                        min="10"
                                         max="50"
-                                        step="10"
+                                        step="20"
                                         value={simulatedDiscount}
                                         onChange={(e) => {
                                             if (!appliedCoupon) {
@@ -491,7 +488,7 @@ export const PartnerPage: React.FC = () => {
                                         onClick={() => setShowCouponInput(true)}
                                         className="px-10 py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white rounded-full font-black text-xl shadow-lg shadow-red-900/30 transform hover:scale-105 transition-all w-full md:w-auto"
                                     >
-                                        AGORA SIM... QUERO MEU CUPOM!
+                                        AGORA SIM! QUERO MEU CUPOM!
                                     </button>
                                 ) : showCouponInput && !appliedCoupon ? (
                                     <div className="flex flex-col md:flex-row gap-4 justify-center items-center animate-in fade-in zoom-in duration-300">

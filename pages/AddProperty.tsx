@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { UploadCloud, Check, Sparkles, Wand2, Loader2, Tag, MapPin, DollarSign, Home, Info, Search, AlertCircle, AlertTriangle, History, ShieldCheck, Save } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { generatePropertyDescription, evaluatePropertyPrice } from '../lib/geminiHelper';
+import { useHeader } from '../components/HeaderContext';
 
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
@@ -98,6 +99,7 @@ export default function AddProperty() {
     const [searchParams] = useSearchParams();
     const { user } = useAuth();
     const { addToast } = useToast();
+    const { setHeaderContent } = useHeader();
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<PropertyFormData>(INITIAL_DATA);
     const [loading, setLoading] = useState(false);
@@ -137,6 +139,19 @@ export default function AddProperty() {
             return tiposImovel.filter(t => TIPOS_PERMITIDOS_PADRAO.includes(t.tipo));
         }
     }, [isTemporada, tiposImovel]);
+
+    // Header Title
+    useEffect(() => {
+        setHeaderContent(
+            <div className="flex flex-col justify-center">
+                <h2 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
+                    {editingId ? 'Editar Imóvel' : 'Cadastrar Novo Imóvel'}
+                </h2>
+                <p className="text-slate-400 text-xs font-medium leading-tight">Preencha os dados do imóvel. Nossa IA ajudará em algumas etapas.</p>
+            </div>
+        );
+        return () => setHeaderContent(null);
+    }, [editingId, setHeaderContent]);
 
     // Fetch user trial status and property count
     useEffect(() => {
@@ -465,50 +480,6 @@ export default function AddProperty() {
         { num: 5, label: 'Revisão', icon: Check }
     ];
 
-    // Auto-save para localStorage (apenas quando NÃO está editando)
-    useEffect(() => {
-        const propertyId = searchParams.get('id');
-        if (!propertyId) {
-            // Salvar formData
-            localStorage.setItem('addProperty_draft_formData', JSON.stringify(formData));
-            // Salvar images
-            localStorage.setItem('addProperty_draft_images', JSON.stringify(images));
-            // Salvar step atual
-            localStorage.setItem('addProperty_draft_step', step.toString());
-        }
-    }, [formData, images, step, searchParams]);
-
-    // Auto-load do localStorage ao montar componente
-    useEffect(() => {
-        const propertyId = searchParams.get('id');
-        if (!propertyId) {
-            try {
-                const savedFormData = localStorage.getItem('addProperty_draft_formData');
-                const savedImages = localStorage.getItem('addProperty_draft_images');
-                const savedStep = localStorage.getItem('addProperty_draft_step');
-
-                if (savedFormData) {
-                    const parsed = JSON.parse(savedFormData);
-                    // Só carregar se tiver dados relevantes (não vazio)
-                    if (parsed.title || parsed.description || parsed.address) {
-                        setFormData(parsed);
-                        addToast('📋 Rascunho anterior restaurado!', 'info');
-                    }
-                }
-                if (savedImages) {
-                    const parsed = JSON.parse(savedImages);
-                    if (parsed.length > 0) {
-                        setImages(parsed);
-                    }
-                }
-                if (savedStep) {
-                    setStep(parseInt(savedStep));
-                }
-            } catch (error) {
-                console.error('Erro ao carregar rascunho:', error);
-            }
-        }
-    }, [searchParams, addToast]);
 
     // Campos que devem receber formatação de moeda (R$ 1.000.000)
     const currencyFields = ['salePrice', 'rentPrice', 'condoFee', 'iptu', 'valorDiaria', 'valorMensal'];
@@ -992,12 +963,7 @@ export default function AddProperty() {
     return (
         <div className="mt-6 max-w-5xl mx-auto pb-12">
             <div className="mb-8">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-3xl font-bold text-white">{editingId ? 'Editar Imóvel' : 'Cadastrar Novo Imóvel'}</h2>
-                        <p className="text-slate-400 mt-1">Preencha os dados do imóvel. Nossa IA ajudará em etapas chave.</p>
-                    </div>
-                </div>
+                {/* Title moved to Header */}
             </div>
 
             {/* Rejection Banner */}
@@ -1067,7 +1033,7 @@ export default function AddProperty() {
                                 className={`flex flex-shrink-0 flex-col items-center relative group min-w-[80px] snap-start focus:outline-none`}
                             >
                                 <div
-                                    className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold border-2 md:border-4 transition-all duration-300 
+                                    className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center font-bold border-1 md:border-2 transition-all duration-300 
                                     ${isCompleted || isCurrent
                                             ? 'bg-emerald-500 text-white'
                                             : 'bg-slate-800 border-slate-600 text-gray-400 group-hover:border-primary-300'
@@ -1082,7 +1048,7 @@ export default function AddProperty() {
 
                                 {/* Mobile Active Indicator */}
                                 {isCurrent && (
-                                    <div className="md:hidden h-1 w-full bg-primary-500 rounded-full mt-1"></div>
+                                    <div className="md:hidden h-1 w-full bg-primary-500 rounded-2xl mt-1"></div>
                                 )}
                             </button>
                         );
@@ -1104,7 +1070,7 @@ export default function AddProperty() {
                                     name="title"
                                     value={formData.title}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                    className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                     placeholder="Ex: Lindo Apartamento no Centro com Vista Mar"
                                 />
                             </div>
@@ -1115,7 +1081,7 @@ export default function AddProperty() {
                                     name="operacaoId"
                                     value={formData.operacaoId}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 pr-10 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                                    className="w-full px-4 py-3 pr-10 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
                                 >
                                     <option value="">Selecione...</option>
                                     {operacoes.map(op => (
@@ -1130,7 +1096,7 @@ export default function AddProperty() {
                                     name="tipoImovelId"
                                     value={formData.tipoImovelId}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-3 pr-10 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                                    className="w-full px-4 py-3 pr-10 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
                                 >
                                     <option value="">Selecione...</option>
                                     {tiposDisponiveis.map(tipo => (
@@ -1148,7 +1114,7 @@ export default function AddProperty() {
                                         name="subtipoImovelId"
                                         value={formData.subtipoImovelId}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 pr-10 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
+                                        className="w-full px-4 py-3 pr-10 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
                                     >
                                         <option value="">Selecione...</option>
                                         {subtiposImovel
@@ -1177,7 +1143,7 @@ export default function AddProperty() {
                                             onChange={handleInputChange}
                                             onBlur={handleCepBlur}
                                             maxLength={9}
-                                            className={`w-full px-4 py-3 rounded-full bg-slate-900 border focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all ${cepError ? 'border-red-500' : 'border-slate-600'}`}
+                                            className={`w-full px-4 py-3 rounded-2xl bg-slate-900 border focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all ${cepError ? 'border-red-500' : 'border-slate-600'}`}
                                             placeholder="00000-000"
                                         />
                                         {isLoadingCep && <Loader2 className="absolute right-3 top-3.5 animate-spin text-primary-500" size={18} />}
@@ -1192,7 +1158,7 @@ export default function AddProperty() {
                                         name="address"
                                         value={formData.address}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="Rua, Avenida..."
                                     />
                                 </div>
@@ -1204,7 +1170,7 @@ export default function AddProperty() {
                                         name="number"
                                         value={formData.number}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="123"
                                     />
                                 </div>
@@ -1216,7 +1182,7 @@ export default function AddProperty() {
                                         name="complement"
                                         value={formData.complement}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="Apto 101"
                                     />
                                 </div>
@@ -1228,7 +1194,7 @@ export default function AddProperty() {
                                         name="neighborhood"
                                         value={formData.neighborhood}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                     />
                                 </div>
 
@@ -1239,7 +1205,7 @@ export default function AddProperty() {
                                         name="city"
                                         value={formData.city}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                     />
                                 </div>
 
@@ -1251,7 +1217,7 @@ export default function AddProperty() {
                                         value={formData.state}
                                         onChange={handleInputChange}
                                         maxLength={2}
-                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all uppercase"
+                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all uppercase"
                                     />
                                 </div>
                             </div>
@@ -1298,7 +1264,7 @@ export default function AddProperty() {
                                             }
                                         }}
                                         disabled={isLoadingCep}
-                                        className="w-full px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-full font-medium transition-colors flex items-center justify-center disabled:opacity-50"
+                                        className="w-full px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl font-medium transition-colors flex items-center justify-center disabled:opacity-50"
                                     >
                                         {isLoadingCep ? (
                                             <>
@@ -1317,7 +1283,7 @@ export default function AddProperty() {
 
                             {/* Coordinate Info */}
                             {formData.latitude && formData.longitude && (
-                                <div className="mt-4 p-3 bg-emerald-900/20 border-emerald-800 rounded- flex items-center text-sm text-emerald-300">
+                                <div className="mt-4 p-3 bg-emerald-900/20 border-emerald-800 rounded-2xl flex items-center text-sm text-emerald-300">
                                     <MapPin size={16} className="mr-2 flex-shrink-0" />
                                     <div>
                                         <strong>Coordenadas localizadas:</strong><br />
@@ -1357,7 +1323,7 @@ export default function AddProperty() {
                             )}
 
                             {formData.latitude && (
-                                <div className="mt-4 p-3 bg-blue-900/20 border-blue-900/30 rounded-full flex items-center text-sm text-blue-300">
+                                <div className="mt-4 p-3 bg-blue-900/20 border-blue-900/30 rounded-2xl flex items-center text-sm text-blue-300">
                                     <MapPin size={16} className="mr-2" />
                                     Coordenadas localizadas: {formData.latitude}, {formData.longitude}
                                 </div>
@@ -1376,27 +1342,27 @@ export default function AddProperty() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Quartos</label>
-                                <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-2xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Suítes</label>
-                                <input type="number" name="suites" value={formData.suites} onChange={handleInputChange} className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="number" name="suites" value={formData.suites} onChange={handleInputChange} className="w-full px-4 py-2 rounded-2xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Banheiros</label>
-                                <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleInputChange} className="w-full px-4 py-2 rounded-2xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Vagas</label>
-                                <input type="number" name="garage" value={formData.garage} onChange={handleInputChange} className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="number" name="garage" value={formData.garage} onChange={handleInputChange} className="w-full px-4 py-2 rounded-2xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Área Privativa (m²) <span className="text-red-500">*</span></label>
-                                <input type="text" inputMode="numeric" name="privateArea" value={formData.privateArea} onChange={handleInputChange} placeholder="120" className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="text" inputMode="numeric" name="privateArea" value={formData.privateArea} onChange={handleInputChange} placeholder="120" className="w-full px-4 py-2 rounded-2xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Área Total (m²)</label>
-                                <input type="text" inputMode="numeric" name="totalArea" value={formData.totalArea} onChange={handleInputChange} placeholder="150" className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
+                                <input type="text" inputMode="numeric" name="totalArea" value={formData.totalArea} onChange={handleInputChange} placeholder="150" className="w-full px-4 py-2 rounded-2xl bg-slate-900 border border-slate-600 outline-none dark:text-white focus:border-primary-500" />
                             </div>
                         </div>
 
@@ -1422,7 +1388,7 @@ export default function AddProperty() {
                                 type="button"
                                 onClick={handleEvaluatePrice}
                                 disabled={isEvaluating}
-                                className="ml-4 px-4 py-2 bg-yellow-900/40 text-yellow-300 text-sm font-bold rounded-full hover:bg-yellow-900 transition-colors flex items-center whitespace-nowrap border-yellow-700"
+                                className="ml-4 px-4 py-2 bg-yellow-900/40 text-yellow-300 text-sm font-bold rounded-2xl hover:bg-yellow-900 transition-colors flex items-center whitespace-nowrap border-yellow-700"
                             >
                                 {isEvaluating ? <Loader2 size={16} className="animate-spin mr-2" /> : <Sparkles size={16} className="mr-2" />}
                                 {isEvaluating ? 'Avaliando...' : 'Avaliar'}
@@ -1433,7 +1399,7 @@ export default function AddProperty() {
                             <label className="block text-xs font-bold text-gray-300 mb-3">Comodidades e Infraestrutura</label>
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                                 {availableFeatures.map(feature => (
-                                    <label key={feature.id} className={`flex items-center p-3 rounded-full border cursor-pointer transition-all ${formData.features.includes(feature.nome) ? 'bg-primary-900/20 border-primary-500 text-primary-300' : 'border-slate-700 hover:bg-slate-700'}`}>
+                                    <label key={feature.id} className={`flex items-center p-3 rounded-2xl border cursor-pointer transition-all ${formData.features.includes(feature.nome) ? 'bg-primary-900/20 border-primary-500 text-primary-300' : 'border-slate-700 hover:bg-slate-700'}`}>
                                         <input
                                             type="checkbox"
                                             className="hidden"
@@ -1455,7 +1421,7 @@ export default function AddProperty() {
                                 <button
                                     onClick={generateDescription}
                                     disabled={isGeneratingDesc}
-                                    className="flex items-center text-xs px-3 py-1.5 bg-blue-900/30 text-blue-400 rounded-full hover:bg-blue-900/50 transition-colors"
+                                    className="flex items-center text-xs px-3 py-1.5 bg-blue-900/30 text-blue-400 rounded-2xl hover:bg-blue-900/50 transition-colors"
                                 >
                                     {isGeneratingDesc ? <Loader2 size={14} className="animate-spin mr-1.5" /> : <Wand2 size={14} className="mr-1.5" />}
                                     Gerar Texto Inteligente
@@ -1486,7 +1452,7 @@ export default function AddProperty() {
                                                     }`}
                                             >
                                                 <div className="flex items-start">
-                                                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-500 text-white text-xs flex items-center justify-center mr-3 mt-0.5">
+                                                    <span className="flex-shrink-0 w-6 h-6 rounded-2xl bg-primary-500 text-white text-xs flex items-center justify-center mr-3 mt-0.5">
                                                         {idx + 1}
                                                     </span>
                                                     <div className="flex-1">
@@ -1530,7 +1496,7 @@ export default function AddProperty() {
                                                                 name="valorDiaria"
                                                                 value={formData.valorDiaria}
                                                                 onChange={handleInputChange}
-                                                                className="w-full pl-10 pr-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
+                                                                className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
                                                                 placeholder="500,00"
                                                             />
                                                         </div>
@@ -1544,7 +1510,7 @@ export default function AddProperty() {
                                                                 name="valorMensal"
                                                                 value={formData.valorMensal}
                                                                 onChange={handleInputChange}
-                                                                className="w-full pl-10 pr-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
+                                                                className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
                                                                 placeholder="8.000,00"
                                                             />
                                                         </div>
@@ -1564,7 +1530,7 @@ export default function AddProperty() {
                                                             name="salePrice"
                                                             value={formData.salePrice}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
+                                                            className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
                                                             placeholder="1.000.000,00"
                                                         />
                                                     </div>
@@ -1582,7 +1548,7 @@ export default function AddProperty() {
                                                             name="rentPrice"
                                                             value={formData.rentPrice}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
+                                                            className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white font-medium text-lg"
                                                             placeholder="5.000,00"
                                                         />
                                                     </div>
@@ -1602,7 +1568,7 @@ export default function AddProperty() {
                                                             name="condoFee"
                                                             value={formData.condoFee}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
+                                                            className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
                                                             placeholder="800,00"
                                                         />
                                                     </div>
@@ -1619,7 +1585,7 @@ export default function AddProperty() {
                                                             name="iptu"
                                                             value={formData.iptu}
                                                             onChange={handleInputChange}
-                                                            className="w-full pl-10 pr-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
+                                                            className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
                                                             placeholder="2.500,00"
                                                         />
                                                     </div>
@@ -1635,7 +1601,7 @@ export default function AddProperty() {
                                                             onChange={(e) => setFormData(prev => ({ ...prev, taxasInclusas: e.target.checked }))}
                                                             className="sr-only peer"
                                                         />
-                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
+                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-2xl peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
                                                         <span className="ml-3 text-sm font-medium text-gray-300">
                                                             Taxas inclusas no valor?
                                                         </span>
@@ -1652,7 +1618,7 @@ export default function AddProperty() {
                                                             onChange={(e) => setFormData(prev => ({ ...prev, aceitaFinanciamento: e.target.checked }))}
                                                             className="sr-only peer"
                                                         />
-                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
+                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-2xl peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
                                                         <span className="ml-3 text-sm font-medium text-gray-300">
                                                             Aceita Financiamento?
                                                         </span>
@@ -1662,7 +1628,7 @@ export default function AddProperty() {
 
                                             {/* Temporada info box */}
                                             {isTemporada && (
-                                                <div className="p-4 bg-emerald-900/20 border-emerald-900/50 rounded-full">
+                                                <div className="p-4 bg-emerald-900/20 border-emerald-900/50 rounded-2xl">
                                                     <p className="text-sm text-emerald-300">
                                                         🏖️ <strong>Imóvel para Temporada</strong><br />
                                                         O valor da diária será exibido no anúncio. Se houver valor mensal, também será mostrado como opção para estadias longas.
@@ -1677,7 +1643,7 @@ export default function AddProperty() {
 
                         {/* Partnership Field - Hidden for Trial Users */}
                         {!isTrial && (
-                            <div className="mt-8 p-6 bg-slate-900/50 border-slate-700 rounded-3xl">
+                            <div className="mt-8 p-6 bg-slate-900/50 border-slate-700 rounded-2xl">
                                 <div className="flex items-center justify-between mb-4">
                                     <div>
                                         <h4 className="text-lg font-bold text-white">Aceita Parceria neste Imóvel?</h4>
@@ -1690,7 +1656,7 @@ export default function AddProperty() {
                                             onChange={(e) => setFormData(prev => ({ ...prev, aceitaParceria: e.target.checked }))}
                                             className="sr-only peer"
                                         />
-                                        <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
+                                        <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-2xl peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
                                         <span className="ml-3 text-sm font-medium text-gray-300">
                                             {formData.aceitaParceria ? 'SIM' : 'NÃO'}
                                         </span>
@@ -1698,7 +1664,7 @@ export default function AddProperty() {
                                 </div>
 
                                 {formData.aceitaParceria && (
-                                    <div className="mt-4 p-4 bg-red-900/20 border-l-4 border-red-500 rounded">
+                                    <div className="mt-4 p-4 bg-red-900/20 border-l-4 border-red-500 rounded-2xl">
                                         <p className="text-sm text-red-200 leading-relaxed">
                                             <strong>ATENÇÃO:</strong> Caso você aceite a parceria com outros Corretores neste imóvel,
                                             desde já <strong>VOCÊ CONCORDA E ACEITA</strong> a divisão do comissionamento padrão
@@ -1722,7 +1688,7 @@ export default function AddProperty() {
 
                         {/* Info/Dica - estilizada no padrão */}
                         {images.length > 0 && (
-                            <div className="mb-6 p-4 bg-blue-900/20 border border-blue-800/30 rounded-3xl">
+                            <div className="mb-6 p-4 bg-blue-900/20 border border-blue-800/30 rounded-2xl">
                                 <div className="flex items-start gap-3">
                                     <div className="flex-1">
                                         <p className="text-sm text-blue-300 font-medium">
@@ -1817,13 +1783,13 @@ export default function AddProperty() {
                                             setTouchStartY(0);
                                         }}
                                         data-image-index={idx}
-                                        className={`aspect-square rounded-3xl overflow-hidden border relative group shadow-sm transition-all cursor-move ${isDestaque
+                                        className={`aspect-square rounded-2xl overflow-hidden border relative group shadow-sm transition-all cursor-move ${isDestaque
                                             ? 'border-primary-500 border-2 ring-2 ring-primary-500/30'
                                             : 'border-slate-700 hover:border-primary-400'
                                             } ${draggedIndex === idx ? 'opacity-50 scale-95' : ''}`}
                                     >
                                         {isDestaque && (
-                                            <div className="absolute top-2 left-2 z-10 bg-midnight-950 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+                                            <div className="absolute top-2 left-2 z-10 bg-midnight-950 text-white text-xs font-bold px-2 py-1 rounded-2xl shadow-lg flex items-center gap-1">
                                                 <span>⭐</span> DESTAQUE
                                             </div>
                                         )}
@@ -1837,12 +1803,12 @@ export default function AddProperty() {
                                         <button
                                             type="button"
                                             onClick={() => handleImageDelete(idx)}
-                                            className="absolute bottom-2 right-2 z-10 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 shadow-lg transition-colors"
+                                            className="absolute bottom-2 right-2 z-10 bg-red-500 text-white p-1.5 rounded-2xl hover:bg-red-600 shadow-lg transition-colors"
                                             title="Excluir imagem"
                                         >
                                             ✕
                                         </button>
-                                        <div className="absolute bottom-2 right-2 bg-slate-800/80 text-white text-xs px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="absolute bottom-2 right-2 bg-slate-800/80 text-white text-xs px-2 py-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
                                             ↕️ Arraste para reordenar
                                         </div>
                                     </div>
@@ -1850,7 +1816,7 @@ export default function AddProperty() {
                             })}
 
                             {/* Card de Upload Compacto - como próxima imagem */}
-                            <label className="aspect-square rounded-3xl overflow-hidden border-2 border-dashed border-slate-600 hover:border-primary-500 bg-slate-900/50 cursor-pointer transition-all group flex flex-col items-center justify-center">
+                            <label className="aspect-square rounded-2xl overflow-hidden border-2 border-dashed border-slate-600 hover:border-primary-500 bg-slate-900/50 cursor-pointer transition-all group flex flex-col items-center justify-center">
                                 <input
                                     type="file"
                                     multiple
@@ -1860,7 +1826,7 @@ export default function AddProperty() {
                                     disabled={uploading}
                                 />
                                 <div className="text-center p-4">
-                                    <div className="w-12 h-12 bg-slate-800 text-gray-400 group-hover:text-primary-500 rounded-full flex items-center justify-center mx-auto mb-2 transition-colors">
+                                    <div className="w-12 h-12 bg-slate-800 text-gray-400 group-hover:text-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-2 transition-colors">
                                         {uploading ? <Loader2 size={24} className="animate-spin" /> : <UploadCloud size={24} />}
                                     </div>
                                     <p className="text-xs font-bold text-white mb-1">
@@ -1885,7 +1851,7 @@ export default function AddProperty() {
                                         name="videoUrl"
                                         value={formData.videoUrl}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="https://youtube.com/watch?v=..."
                                     />
                                 </div>
@@ -1897,7 +1863,7 @@ export default function AddProperty() {
                                         name="tourVirtualUrl"
                                         value={formData.tourVirtualUrl}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
+                                        className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white transition-all"
                                         placeholder="https://exemplo.com/tour360"
                                     />
                                     <p className="text-xs text-slate-400 mt-1">💡 Cole o link do tour virtual 360º do imóvel</p>
@@ -1912,7 +1878,7 @@ export default function AddProperty() {
                                 name="observacoes"
                                 value={formData.observacoes}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-24 resize-none transition-all text-sm leading-relaxed whitespace-pre-wrap"
+                                className="w-full px-4 py-3 rounded-2xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white h-24 resize-none transition-all text-sm leading-relaxed whitespace-pre-wrap"
                                 placeholder="Informações adicionais sobre o imóvel que que você acha pertinente o Cliente saber..."
                             ></textarea>
                             <p className="text-xs text-slate-400 mt-1">💡 Este campo será exibido publicamente no anúncio.</p>
@@ -1925,7 +1891,7 @@ export default function AddProperty() {
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
                                     {detectedTags.map((tag, idx) => (
-                                        <span key={idx} className="px-3 py-1.5 bg-slate-800 text-sm font-medium text-gray-300 rounded-full border border-indigo-200 border-indigo-800 flex items-center shadow-sm">
+                                        <span key={idx} className="px-3 py-1.5 bg-slate-800 text-sm font-medium text-gray-300 rounded-2xl border border-indigo-200 border-indigo-800 flex items-center shadow-sm">
                                             <Tag size={12} className="mr-1.5 text-indigo-500" /> {tag}
                                         </span>
                                     ))}
@@ -1939,7 +1905,7 @@ export default function AddProperty() {
                 {step === 5 && (
                     <div className="space-y-6">
                         <div className="text-center mb-8">
-                            <div className="w-20 h-20 bg-primary-900/30 text-primary-500 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                            <div className="w-20 h-20 bg-primary-900/30 text-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                 <ShieldCheck size={40} />
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-2">Revisão e Validação</h3>
@@ -1963,7 +1929,7 @@ export default function AddProperty() {
                                     formData.neighborhood;
 
                                 return (
-                                    <div className={`p-4 rounded-3xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
+                                    <div className={`p-4 rounded-2xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
                                         <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-amber-900/30 text-amber-400'}`}>
                                             {isValid ? <Check size={16} /> : <AlertTriangle size={16} />}
                                         </div>
@@ -1996,7 +1962,7 @@ export default function AddProperty() {
                             {(() => {
                                 const isValid = formData.description && formData.description.length > 10;
                                 return (
-                                    <div className={`p-4 rounded-3xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-blue-900/10 border-blue-800'}`}>
+                                    <div className={`p-4 rounded-2xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-blue-900/10 border-blue-800'}`}>
                                         <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-blue-900/30 text-blue-400'}`}>
                                             {isValid ? <Check size={16} /> : <Info size={16} />}
                                         </div>
@@ -2049,7 +2015,7 @@ export default function AddProperty() {
                                 }
 
                                 return (
-                                    <div className={`p-4 rounded-3xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
+                                    <div className={`p-4 rounded-2xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-amber-900/10 border-amber-800'}`}>
                                         <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-amber-900/30 text-amber-400'}`}>
                                             {isValid ? <Check size={16} /> : <AlertTriangle size={16} />}
                                         </div>
@@ -2091,7 +2057,7 @@ export default function AddProperty() {
                             {(() => {
                                 const isValid = images.length >= 1; // Require at least 1 photo
                                 return (
-                                    <div className={`p-4 rounded-3xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-red-900/10 border-red-800'}`}>
+                                    <div className={`p-4 rounded-2xl border flex items-start gap-3 transition-colors ${isValid ? 'bg-green-900/10 border-green-800' : 'bg-red-900/10 border-red-800'}`}>
                                         <div className={`mt-1 p-1 rounded-full ${isValid ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
                                             {isValid ? <Check size={16} /> : <AlertCircle size={16} />}
                                         </div>
@@ -2152,7 +2118,7 @@ export default function AddProperty() {
                                         onClick={handleSubmit}
                                         disabled={!isFormValid || loading}
                                         className={`
-                                           px-12 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all
+                                           px-12 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all
                                            ${isFormValid
                                                 ? 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white transform hover:scale-105'
                                                 : 'bg-slate-700 text-gray-500 cursor-not-allowed'}
@@ -2183,14 +2149,14 @@ export default function AddProperty() {
                         <div className="flex justify-between mt-8">
                             <button
                                 onClick={() => step > 1 ? changeStep(step - 1) : navigate('/dashboard')}
-                                className="px-6 py-3 rounded-3xl bg-slate-800 border border-slate-700 text-gray-200 font-medium hover:bg-slate-700 transition-colors"
+                                className="px-6 py-3 rounded-2xl bg-slate-800 border border-slate-700 text-gray-200 font-medium hover:bg-slate-700 transition-colors"
                             >
                                 {step === 1 ? 'Cancelar' : 'Voltar'}
                             </button>
                             <div className="flex space-x-4">
                                 <button
                                     onClick={() => changeStep(step + 1)}
-                                    className="px-6 py-3 rounded-3xl bg-primary-600 hover:bg-primary-700 text-white font-bold transition-all shadow-lg shadow-primary-600/30 flex items-center"
+                                    className="px-6 py-3 rounded-2xl bg-primary-600 hover:bg-primary-700 text-white font-bold transition-all shadow-lg shadow-primary-600/30 flex items-center"
                                 >
                                     Próxima Etapa
                                     <Check size={18} className="ml-2" />

@@ -55,55 +55,110 @@ interface PropertyMatch {
     area_priv?: number;
 }
 
-export const PublicAIAssistant: React.FC = () => {
+import { useChat } from './ChatContext';
+
+export const PublicAIAssistant: React.FC<{ brokerSlug?: string }> = ({ brokerSlug }) => {
     const navigate = useNavigate();
-    const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            role: 'assistant',
-            content: PLATFORM_KNOWLEDGE.voiceTone.responseVariations.greetings[Math.floor(Math.random() * PLATFORM_KNOWLEDGE.voiceTone.responseVariations.greetings.length)],
-            timestamp: new Date()
-        }
-    ]);
+
+    // PERSISTENT CONTEXT STATE
+    const {
+        isOpen, setIsOpen,
+        messages, setMessages,
+        conversationState, setConversationState,
+        conversationId, setConversationId,
+        brokerContextId, setBrokerContextId
+    } = useChat();
+
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [conversationId, setConversationId] = useState<string | null>(null);
-    const [conversationState, setConversationState] = useState<ConversationState>(createEmptyConversationState());
+    // Remove local state duplicates
+    // const [conversationId, setConversationId] = useState<string | null>(null);
+    // const [conversationState, setConversationState] = useState<ConversationState>(createEmptyConversationState());
     const [customOrderModalOpen, setCustomOrderModalOpen] = useState(false);
+    // const [brokerId, setBrokerId] = useState<string | null>(null); 
+
+    // Alias context ID for compatibility with existing code
+    const brokerId = brokerContextId;
+    const setBrokerId = setBrokerContextId;
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Quick questions - Just 3 options
     const quickQuestions = [
         "Quero ALUGAR um imóvel",
         "Quero COMPRAR um imóvel",
-        "Sou CORRETOR e quero virar PARCEIRO"
+        "Quais vantagens de ser Corretor Parceiro?"
     ];
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    // Initialize/Welcome message if empty (only once)
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        if (messages.length === 0) {
+            setMessages([{
+                role: 'assistant',
+                content: PLATFORM_KNOWLEDGE.voiceTone.responseVariations.greetings[Math.floor(Math.random() * PLATFORM_KNOWLEDGE.voiceTone.responseVariations.greetings.length)],
+                timestamp: new Date()
+            }]);
+        }
+    }, []);
 
-    // Initialize conversation session
+    // Scroll to bottom when messages change OR when opened (fix for "top of chat" bug)
+    useEffect(() => {
+        if (isOpen) {
+            // Small delay to ensure render
+            setTimeout(scrollToBottom, 100);
+        }
+    }, [messages, isOpen]);
+
+    // Initialize conversation session and fetch broker context
     useEffect(() => {
         const initSession = async () => {
-            const id = await getOrCreateConversation();
-            setConversationId(id);
+            if (!conversationId) {
+                const id = await getOrCreateConversation();
+                setConversationId(id);
+            }
+
+            // If brokerSlug is present, fetch their ID
+            if (brokerSlug) {
+                try {
+                    const { data } = await supabase
+                        .from('perfis')
+                        .select('id, nome, sobrenome')
+                        .eq('slug', brokerSlug)
+                        .single();
+
+                    if (data) {
+                        setBrokerId(data.id);
+                        console.log('🤖 IzA: Contexto definido para Corretor:', data.nome);
+                        // Optionally add a welcome message from the broker context
+                    }
+                } catch (err) {
+                    console.error('Error fetching broker context:', err);
+                }
+            }
         };
         initSession();
-    }, []);
+    }, [brokerSlug]); // Keep this logic to update broker context on navigation
+
 
     // Get available cities and neighborhoods from database
     const getAvailableLocations = async (): Promise<{ cities: string[], neighborhoods: string[] }> => {
         try {
-            const { data } = await supabase
+            let query = supabase
                 .from('anuncios')
                 .select('cidade, bairro')
                 .eq('status', 'ativo')
                 .or('status.eq.ativo,status.is.null');
+
+            // Filter by broker if in context
+            if (brokerId) {
+                query = query.eq('user_id', brokerId);
+            }
+
+            const { data } = await query;
 
             if (data) {
                 const cities = [...new Set(data.map(p => p.cidade).filter(Boolean))];
@@ -125,7 +180,8 @@ export const PublicAIAssistant: React.FC = () => {
                 cidade: state.cidade,
                 bairro: state.bairro,
                 bairros: state.bairros,
-                valorMax: state.valorMax
+                valorMax: state.valorMax,
+                contextoCorretor: brokerId ? 'SIM' : 'NÃO'
             });
 
             // Helper to execute query
@@ -147,12 +203,21 @@ export const PublicAIAssistant: React.FC = () => {
                         quartos,
                         vagas,
                         area_priv,
+                        user_id,
                         operacao_rel:operacao(tipo),
                         tipo_imovel_rel:tipo_imovel(tipo)
                     `)
                     .eq('status', 'ativo')
                     .or('status.eq.ativo,status.is.null')
                     .limit(5);
+
+                // 🎯 CRITICAL: Broker Context Filtering
+                // If we are on a broker page, PRIMARILY show their properties
+                // But if no results found, we might want to expand (user decision, for now let's be strict to "Assistente deste corretor")
+                if (brokerId) {
+                    query = query.eq('user_id', brokerId);
+                    console.log('🎯 Filtering by Broker ID:', brokerId);
+                }
 
                 // Exclude properties already shown
                 if (state.shownPropertyIds && state.shownPropertyIds.length > 0) {
@@ -173,6 +238,15 @@ export const PublicAIAssistant: React.FC = () => {
                     const orCondition = queryBairros.map(b => `bairro.ilike.%${b}%`).join(',');
                     query = query.or(orCondition);
                     console.log('🔍 SEARCH DEBUG - Added multiple bairros filter:', orCondition);
+                }
+
+                // STRICT FILTERING for Operation
+                if (state.operacao) {
+                    // We can't easily join-filter on supbase select string for many-to-one strictly without inner join implied
+                    // But we can filter client-side or use .not('operacao_rel', 'is', null) if we could filter inside join
+                    // For now, we rely on client-side filtering below for strictness, OR:
+                    // If we knew the IDs of operations, we could filter by operacao_id.
+                    // But we don't know them hardcoded. We'll rely on strict client-side filtering.
                 }
 
                 if (maxPrice) {
@@ -212,6 +286,8 @@ export const PublicAIAssistant: React.FC = () => {
 
             // 3. Third attempt: Same City, ANY Neighborhood
             if ((!data || data.length === 0) && state.cidade && searchBairros.length > 0) {
+                // ONLY if we are not restricted to a specific neighborhood by user explicitness?
+                // Usually the user might want suggestions.
                 console.log('🔍 SEARCH DEBUG - Attempt 3: City-wide search');
                 const result = await executeQuery([], state.valorMax);
                 data = result.data;
@@ -235,14 +311,6 @@ export const PublicAIAssistant: React.FC = () => {
                 const operacaoTipo = (p as any).operacao_rel?.tipo || '';
                 const tipoImovel = (p as any).tipo_imovel_rel?.tipo || '';
 
-                console.log(`🔍 Mapping property "${p.titulo}":`, {
-                    operacao_rel: (p as any).operacao_rel,
-                    tipo_imovel_rel: (p as any).tipo_imovel_rel,
-                    operacaoTipo,
-                    tipoImovel,
-                    cod_imovel: p.cod_imovel
-                });
-
                 return {
                     id: p.id,
                     titulo: p.titulo || '',
@@ -265,34 +333,42 @@ export const PublicAIAssistant: React.FC = () => {
             console.log('🔍 SEARCH DEBUG - Mapped properties:', mapped);
 
             const filtered = mapped.filter(p => {
-                // Filter by operacao if specified
+                // STRICT FILTERING: Eliminate items that don't match the operation
                 if (state.operacao) {
                     const opLower = p.operacao.toLowerCase();
-                    console.log(`🔍 Checking property "${p.titulo}" - operacao in DB: "${p.operacao}" | searching for: "${state.operacao}"`);
+                    const reqLower = state.operacao.toLowerCase();
 
-                    if (state.operacao === 'venda' && !opLower.includes('venda')) {
-                        console.log('🔍 SEARCH DEBUG - Filtered out (operacao):', p.titulo);
-                        return false;
+                    // Venda
+                    if (reqLower.includes('venda')) {
+                        if (!opLower.includes('venda')) return false;
                     }
-                    if ((state.operacao === 'locacao' || state.operacao === 'aluguel') &&
-                        !opLower.includes('locação') && !opLower.includes('locacao') && !opLower.includes('aluguel')) {
-                        console.log('🔍 SEARCH DEBUG - Filtered out (operacao):', p.titulo);
-                        return false;
+
+                    // Locação / Aluguel
+                    if ((reqLower.includes('locacao') || reqLower.includes('aluguel') || reqLower.includes('alugar'))) {
+                        if (!opLower.includes('locação') && !opLower.includes('locacao') && !opLower.includes('aluguel') && !opLower.includes('alugar')) return false;
                     }
-                    if (state.operacao === 'temporada' && !opLower.includes('temporada')) {
-                        console.log('🔍 SEARCH DEBUG - Filtered out (operacao):', p.titulo);
-                        return false;
+
+                    // Temporada: EXTREMELY STRICT
+                    if (reqLower.includes('temporada')) {
+                        if (!opLower.includes('temporada')) {
+                            console.log('❌ Eliminando (Não é temporada):', p.titulo);
+                            return false;
+                        }
                     }
                 }
-                // Filter by tipo if specified
+
+                // STRICT FILTERING: Eliminiate items that do not match the type
                 if (state.tipoImovel) {
                     const tipoLower = p.tipo_imovel.toLowerCase();
-                    if (!tipoLower.includes(state.tipoImovel)) {
-                        console.log('🔍 SEARCH DEBUG - Filtered out (tipo):', p.titulo);
+                    const reqTipo = state.tipoImovel.toLowerCase();
+
+                    // Check inclusion (e.g. "Casa" matches "Casa em Condomínio")
+                    if (!tipoLower.includes(reqTipo) && !reqTipo.includes(tipoLower)) {
+                        console.log('❌ Eliminando (Tipo incorreto):', p.titulo);
                         return false;
                     }
                 }
-                console.log('✅ SEARCH DEBUG - Property passed filters:', p.titulo);
+
                 return true;
             });
 
@@ -320,13 +396,12 @@ export const PublicAIAssistant: React.FC = () => {
             cod_imovel: property.cod_imovel
         });
 
-        console.log('🔗 Generated slug for property:', {
-            titulo: property.titulo,
-            cod_imovel: property.cod_imovel,
-            slug
-        });
+        // ✅ FIX: Use /imovel prefix OR broker context prefix
+        if (brokerSlug) {
+            return `/${brokerSlug}/imovel/${slug}`;
+        }
 
-        return `/${slug}`;
+        return `/imovel/${slug}`;
     };
 
     // Format currency
@@ -356,17 +431,31 @@ export const PublicAIAssistant: React.FC = () => {
     ];
 
     // Generate Quick Actions based on conversation state
-    const generateQuickActions = async (state: ConversationState, properties: PropertyMatch[]): Promise<QuickAction[]> => {
+    const generateQuickActions = async (state: ConversationState, properties: PropertyMatch[], lastUserMessage?: string): Promise<QuickAction[]> => {
         const actions: QuickAction[] = [];
 
-        // BROKER FLOW
+        // 0. CLOSING / GRATITUDE CHECK
+        if (lastUserMessage) {
+            const lowerMsg = lastUserMessage.toLowerCase();
+            const gratitudeKeywords = ['obrigado', 'obg', 'valeu', 'vlw', 'grato', 'até mais', 'tchau', 'encerrar', 'gostei', 'ótimo', 'excelente', 'show'];
+            if (gratitudeKeywords.some(kw => lowerMsg.includes(kw))) {
+                console.log('🎯 CLOSING DETECTED: Showing conversion actions');
+                return [
+                    { id: 'contact-whatsapp', text: '💬 Falar no WhatsApp', actionText: 'Quero falar no WhatsApp', category: 'broker', icon: '📱' },
+                    { id: 'schedule-visit', text: '📅 Agendar Visita', actionText: 'Quero agendar uma visita', category: 'broker', icon: '📅' },
+                    { id: 'restart-search', text: '🔄 Nova Busca', actionText: 'Quero fazer uma nova busca', category: 'operation', icon: '🔄' }
+                ];
+            }
+        }
+
+        // BROKER FLOW - Optimized based on Client Script (Focus: Parcerias, Site, Match)
         if (state.clientType === 'broker') {
-            console.log('🎯 Generating BROKER badges');
+            console.log('🎯 Generating BROKER badges (Survey Optimized v2)');
             return [
-                { id: 'broker-advertise', text: '📝 Anunciar Imóvel', actionText: 'Quero anunciar imóvel', category: 'broker', icon: '📝' },
-                { id: 'broker-partner', text: '🤝 Ser Parceiro', actionText: 'Quero ser parceiro', category: 'broker', icon: '🤝' },
-                { id: 'broker-plans', text: '💰 Ver Planos', actionText: 'Quais são os planos', category: 'broker', icon: '💰' },
-                { id: 'broker-features', text: '✨ Funcionalidades', actionText: 'Quais funcionalidades da plataforma', category: 'broker', icon: '✨' }
+                { id: 'broker-partner', text: 'Rede de Parcerias', actionText: 'Como funciona o sistema de parceria na iziBrokerz? Vale a pena?', category: 'broker', icon: '🤝' },
+                { id: 'broker-site', text: 'Página Profissional', actionText: 'Por que ter uma página de imóveis personalizada é importante?', category: 'broker', icon: '🌐' },
+                { id: 'broker-match', text: 'MATCH Inteligente', actionText: 'Como funciona o MATCH inteligente de imóveis para leads? É seguro cadastrar meus clientes?', category: 'broker', icon: '🎯' },
+                { id: 'broker-plans', text: 'Ver Planos', actionText: 'Quais são os planos e preços?', category: 'broker', icon: '💎' }
             ];
         }
 
@@ -394,18 +483,32 @@ export const PublicAIAssistant: React.FC = () => {
                 };
 
                 // Query to get available property types for this operation
-                const { data: tiposData } = await supabase
+                let query = supabase
                     .from('anuncios')
-                    .select('tipo_imovel(tipo)')
+                    .select('operacao(tipo), tipo_imovel(tipo)')
                     .eq('status', 'ativo')
                     .or('status.eq.ativo,status.is.null')
                     .not('tipo_imovel', 'is', null);
+
+                if (brokerId) {
+                    query = query.eq('user_id', brokerId);
+                }
+
+                const { data: tiposData } = await query;
 
                 if (tiposData && tiposData.length > 0) {
                     const typeCounts: Record<string, number> = {};
                     tiposData.forEach((item: any) => {
                         const tipo = item.tipo_imovel?.tipo;
-                        if (tipo) {
+                        const operacaoTipo = item.operacao?.tipo;
+
+                        // Strict Operation Filter
+                        const matchesOperacao = !state.operacao ||
+                            (state.operacao.includes('venda') && operacaoTipo?.toLowerCase().includes('venda')) ||
+                            ((state.operacao.includes('locacao') || state.operacao.includes('alugu')) && (operacaoTipo?.toLowerCase().includes('locaç') || operacaoTipo?.toLowerCase().includes('alugu'))) ||
+                            (state.operacao.includes('temporada') && operacaoTipo?.toLowerCase().includes('temporada'));
+
+                        if (tipo && matchesOperacao) {
                             typeCounts[tipo] = (typeCounts[tipo] || 0) + 1;
                         }
                     });
@@ -443,18 +546,86 @@ export const PublicAIAssistant: React.FC = () => {
             ];
         }
 
-        // 3. HAS TYPE, NO BAIRRO → Fetch neighborhoods from DB
-        if (state.tipoImovel && !state.bairro) {
-            console.log('🎯 Step 3: Has type, fetching neighborhoods from DB');
-            console.log('🔍 Searching for:', { operacao: state.operacao, tipoImovel: state.tipoImovel });
+        // 3. HAS TYPE, NO CITY → Fetch CITIES from DB
+        if (state.tipoImovel && !state.cidade && !state.bairro) {
+            console.log('🎯 Step 3a: Has type, fetching CITIES from DB');
+            console.log('🔍 Searching cities for:', { operacao: state.operacao, tipoImovel: state.tipoImovel });
             try {
-                // Query to get neighborhoods for this operation + type
-                const { data: bairrosData } = await supabase
+                let query = supabase
                     .from('anuncios')
-                    .select('bairro, operacao(tipo), tipo_imovel(tipo)')
+                    .select('cidade, operacao(tipo), tipo_imovel(tipo)')
                     .eq('status', 'ativo')
                     .or('status.eq.ativo,status.is.null')
-                    .not('bairro', 'is', null);
+                    .not('cidade', 'is', null);
+
+                if (brokerId) {
+                    query = query.eq('user_id', brokerId);
+                }
+
+                const { data: cidadesData } = await query;
+
+                if (cidadesData && cidadesData.length > 0) {
+                    const cityCounts: Record<string, number> = {};
+
+                    cidadesData.forEach((item: any) => {
+                        const operacaoTipo = item.operacao?.tipo;
+                        const tipoImovel = item.tipo_imovel?.tipo;
+                        const cidade = item.cidade;
+
+                        // STRICT Filter by current state
+                        const matchesOperacao = !state.operacao ||
+                            (state.operacao.includes('venda') && operacaoTipo?.toLowerCase().includes('venda')) ||
+                            ((state.operacao.includes('locacao') || state.operacao.includes('alugu')) && (operacaoTipo?.toLowerCase().includes('locaç') || operacaoTipo?.toLowerCase().includes('alugu'))) ||
+                            (state.operacao.includes('temporada') && operacaoTipo?.toLowerCase().includes('temporada'));
+
+                        const matchesTipo = !state.tipoImovel ||
+                            tipoImovel?.toLowerCase().includes(state.tipoImovel.toLowerCase());
+
+                        if (matchesOperacao && matchesTipo && cidade) {
+                            cityCounts[cidade] = (cityCounts[cidade] || 0) + 1;
+                        }
+                    });
+
+                    if (Object.keys(cityCounts).length > 0) {
+                        Object.entries(cityCounts)
+                            .sort(([a], [b]) => cityCounts[b] - cityCounts[a]) // Sort by count descending
+                            .slice(0, 5) // Top 5 cities
+                            .forEach(([cidade, count]) => {
+                                actions.push({
+                                    id: `city-${cidade}`,
+                                    text: `${cidade} (${count})`,
+                                    actionText: cidade,
+                                    category: 'neighborhood', // Use same color style
+                                    icon: '🏙️',
+                                    count
+                                });
+                            });
+
+                        // Fallback to neighborhoods if only 1 city with high confidence or no logic change
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching cities:', error);
+            }
+        }
+
+        // 4. HAS TYPE & CITY, NO BAIRRO → Fetch NEIGHBORHOODS from DB
+        if (state.tipoImovel && state.cidade && !state.bairro) {
+            console.log('🎯 Step 4: Has city, fetching NEIGHBORHOODS from DB');
+            try {
+                let query = supabase
+                    .from('anuncios')
+                    .select('bairro, cidade, operacao(tipo), tipo_imovel(tipo)')
+                    .eq('status', 'ativo')
+                    .or('status.eq.ativo,status.is.null')
+                    .not('bairro', 'is', null)
+                    .ilike('cidade', `%${state.cidade}%`); // Filter by city DB-side for efficiency
+
+                if (brokerId) {
+                    query = query.eq('user_id', brokerId);
+                }
+
+                const { data: bairrosData } = await query;
 
                 if (bairrosData && bairrosData.length > 0) {
                     const neighborhoodCounts: Record<string, number> = {};
@@ -464,12 +635,14 @@ export const PublicAIAssistant: React.FC = () => {
                         const tipoImovel = item.tipo_imovel?.tipo;
                         const bairro = item.bairro;
 
-                        // Filter by current state
+                        // STRICT Filter again (redundancy is safety)
                         const matchesOperacao = !state.operacao ||
-                            operacaoTipo?.toLowerCase().includes(state.operacao.toLowerCase()) ||
-                            operacaoTipo?.includes('/'); // Venda/Locação matches both
+                            (state.operacao.includes('venda') && operacaoTipo?.toLowerCase().includes('venda')) ||
+                            ((state.operacao.includes('locacao') || state.operacao.includes('alugu')) && (operacaoTipo?.toLowerCase().includes('locaç') || operacaoTipo?.toLowerCase().includes('alugu'))) ||
+                            (state.operacao.includes('temporada') && operacaoTipo?.toLowerCase().includes('temporada'));
 
-                        const matchesTipo = tipoImovel?.toLowerCase() === state.tipoImovel?.toLowerCase();
+                        const matchesTipo = !state.tipoImovel ||
+                            tipoImovel?.toLowerCase().includes(state.tipoImovel.toLowerCase());
 
                         if (matchesOperacao && matchesTipo && bairro) {
                             neighborhoodCounts[bairro] = (neighborhoodCounts[bairro] || 0) + 1;
@@ -478,7 +651,7 @@ export const PublicAIAssistant: React.FC = () => {
 
                     if (Object.keys(neighborhoodCounts).length > 0) {
                         Object.entries(neighborhoodCounts)
-                            .sort(([a], [b]) => a.localeCompare(b))  // Sort alphabetically
+                            .sort(([a], [b]) => a.localeCompare(b))
                             .forEach(([bairro, count]) => {
                                 actions.push({
                                     id: `bairro-${bairro}`,
@@ -498,24 +671,25 @@ export const PublicAIAssistant: React.FC = () => {
             }
         }
 
-        // 4. HAS BAIRRO → Check property count to decide next step
-        if (state.bairro && properties.length > 0) {
-            console.log('🎯 Step 4: Has bairro, checking property count:', properties.length);
+        // 5. PROPERTIES FOUND → Check property count to decide next step
+        if ((state.bairro || state.cidade) && properties.length > 0) {
+            console.log('🎯 Step 5: Properties found, checking count:', properties.length);
 
-            // 4a. If ≤3 properties → Don't show price badges, just show property links directly
-            if (properties.length <= 3) {
-                console.log('✅ ≤3 properties found - showing links directly without price filter');
-                return []; // No quick actions needed, links will be shown
+            // If ≤4 properties → Don't show price badges, just show property links directly
+            if (properties.length <= 4) {
+                console.log('✅ ≤4 properties found - showing links directly');
+                return [];
             }
 
-            // 4b. If >3 properties → Show price range badges to filter
-            console.log('📊 >3 properties found - showing price ranges');
-            const ranges = state.operacao === 'locacao' ? RENTAL_PRICE_RANGES : SALE_PRICE_RANGES;
-            const priceField = state.operacao === 'locacao' ? 'valor_locacao' : 'valor_venda';
+            // If >4 properties → Show price range badges
+            console.log('📊 >4 properties found - showing price ranges');
+            const isRent = state.operacao?.includes('locacao') || state.operacao?.includes('alugu') || state.operacao?.includes('temporada');
+            const ranges = isRent ? RENTAL_PRICE_RANGES : SALE_PRICE_RANGES;
+            const priceField = isRent ? 'valor_locacao' : 'valor_venda';
 
             ranges.forEach(range => {
                 const count = properties.filter(p => {
-                    const price = priceField === 'valor_locacao' ? p.valor_locacao : p.valor_venda;
+                    const price = isRent ? (p.valor_locacao || p.valor_mensal) : p.valor_venda;
                     return price && price >= range.min && price <= range.max;
                 }).length;
 
@@ -534,24 +708,22 @@ export const PublicAIAssistant: React.FC = () => {
             return actions;
         }
 
-        // 5. NO PROPERTIES FOUND → Offer alternatives
-        if (state.bairro && properties.length === 0) {
+        // 6. NO PROPERTIES FOUND → Offer alternatives
+        if ((state.bairro || state.cidade) && properties.length === 0) {
             console.log('🚨 No properties found - offering alternatives');
 
-            // Option 1: Suggest searching nearby or expanding search
             actions.push({
                 id: 'expand-search',
-                text: '🔍 Ver bairros próximos',
-                actionText: 'Mostrar bairros próximos',
+                text: 'Ver outros bairros',
+                actionText: 'Mostrar outros bairros',
                 category: 'neighborhood',
                 icon: '🔍'
             });
 
-            // Option 2: Custom order (lead generation)
             actions.push({
                 id: 'custom-order',
-                text: '📝 Encomendar imóvel personalizado',
-                actionText: 'Quero encomendar um im óvel',
+                text: 'Encomendar imóvel personalizado',
+                actionText: 'Quero encomendar um imóvel',
                 category: 'broker',
                 icon: '📝'
             });
@@ -675,6 +847,7 @@ INFORMAÇÕES JÁ COLETADAS DO CLIENTE:
 
         try {
             console.log('💬 HANDLE SEND - Input:', textToSend);
+            let propertyContext = '';
 
             // Extract information from user message
             let newState = extractInfoFromMessage(textToSend, conversationState);
@@ -693,12 +866,35 @@ INFORMAÇÕES JÁ COLETADAS DO CLIENTE:
 
             // Detect client type from quick questions
             const lowerInput = textToSend.toLowerCase();
-            if (lowerInput.includes('comprar') || lowerInput.includes('alugar') || lowerInput.includes('imóvel')) {
+
+            // BROKER INTERCEPT: If mentioning "anunciar" or "corretor", process as broker
+            if (lowerInput.includes('corretor') || lowerInput.includes('parceiro') || lowerInput.includes('planos') || (lowerInput.includes('anunciar') && (newState.clientType === 'broker' || lowerInput.includes('corretor')))) {
+                newState.clientType = 'broker';
+                console.log('👤 CLIENT TYPE: broker (intercept)');
+
+                // Specific override for "Anunciar" intent from broker
+                if (lowerInput.includes('anunciar')) {
+                    propertyContext = `CONTEXTO CORRETOR: O usuário quer ANUNCIAR um imóvel.
+                    INSTRUÇÃO:
+                    - NÃO pergunte que tipo de imóvel ele quer comprar.
+                    - Explique que ele pode anunciar gratuitamente por 14 dias clicando no botão abaixo ou acessando a página /anunciar.
+                    - Seja encorajador.
+                    - Diga claramente: "Clique no botão 'Anunciar Imóvel' para começar agora mesmo!"`;
+                }
+
+                // Specific override for "Planos/Preços" intent from broker
+                if (lowerInput.includes('planos')) {
+                    propertyContext = `CONTEXTO CORRETOR: O usuário quer saber sobre PLANOS e PREÇOS.
+                    INSTRUÇÃO:
+                    - Diga que nossos planos são flexíveis, baratos e cabem no bolso.
+                    - MENCIONE que temos o plano GRATUITO para começar.
+                    - NÃO pergunte sobre imóveis para comprar/alugar.
+                    - Forneça o link direto: [Ver Tabela de Planos](/partner)
+                    - Diga para clicar no link para ver os detalhes completos.`;
+                }
+            } else if (lowerInput.includes('comprar') || lowerInput.includes('alugar') || lowerInput.includes('imóvel')) {
                 newState.clientType = 'buyer';
                 console.log('👤 CLIENT TYPE: buyer (from keywords)');
-            } else if (lowerInput.includes('corretor') || lowerInput.includes('parceiro')) {
-                newState.clientType = 'broker';
-                console.log('👤 CLIENT TYPE: broker');
             }
 
             // Detect location from database
@@ -715,7 +911,6 @@ INFORMAÇÕES JÁ COLETADAS DO CLIENTE:
             let matchingProperties: PropertyMatch[] = [];
             let propertyLinks: { text: string; url: string }[] = [];
             let searchAttempted = false;
-            let propertyContext = '';  // Declare early to avoid ReferenceError
 
             if (newState.clientType === 'buyer' && matchScore >= 0.6) {
                 searchAttempted = true;
@@ -812,13 +1007,18 @@ INSTRUÇÃO IMPORTANTE:
                 const msgCount = messages.filter(m => m.role === 'user').length;
                 const shouldAggressivelySell = msgCount === 1 || msgCount % 4 === 0;
 
-                if (shouldAggressivelySell) {
+                const pricingInfo = JSON.stringify(PLATFORM_KNOWLEDGE.pricing);
+
+                if (shouldAggressivelySell || textToSend.toLowerCase().includes('planos')) {
                     specificInstructions = `
 CLIENTE É CORRETOR - use o pitch de vendas:
 ${PLATFORM_KNOWLEDGE.brokerPitch.headline}
 
 PRINCIPAIS BENEFÍCIOS para enfatizar (escolha 1 ou 2 por vez, não todos):
 ${PLATFORM_KNOWLEDGE.brokerPitch.mainBenefits.map(b => `- ${b.icon} ${b.title}: ${b.description}`).join('\n')}
+
+INFORMAÇÕES DE PREÇOS E PLANOS (Use se perguntado):
+${pricingInfo}
 
 GANCHO PRINCIPAL: ${PLATFORM_KNOWLEDGE.trialOffer.description}
 CTA: Direcione para a página /anunciar com o Teste Grátis de 14 dias!
@@ -830,6 +1030,9 @@ SEGURANÇA: ${PLATFORM_KNOWLEDGE.brokerPitch.security.description}
 CLIENTE É CORRETOR - Ajude com dúvidas sobre a plataforma, mas mantenha o tom profissional.
 Responda a dúvida específica dele de forma útil.
 Deixe um leve gancho no final (muito sutil) sobre como ser parceiro ajuda nisso, mas SEM forçar a venda agora.
+
+INFORMAÇÕES DE PREÇOS:
+${pricingInfo}
 `;
                 }
             } else {
@@ -887,6 +1090,7 @@ ${PLATFORM_KNOWLEDGE.voiceTone.goldenRules.map(r => `- ${r}`).join('\n')}
 - EVITE REPETIÇÕES: Não use a mesma frase de "explorar mapa" duas vezes seguidas.
 - ❌ NUNCA diga "Estou procurando" ou "Vou procurar" - VOCÊ NÃO PROCURA, você PERGUNTA ao cliente!
 - ✅ SEMPRE dirija perguntas DIRETAMENTE ao cliente: "Qual faixa de valor você procura?"
+- ✅ SE O CLIENTE AGRADECER/FINALIZAR (Ex: "Obrigado", "Valeu", "Gostei"): Agradeça e sugira IMEDIATAMENTE: "Fico feliz que tenha gostado! Que tal agendar uma visita ou tirar dúvidas pelo WhatsApp no botão do imóvel?". NÃO ofereça mais buscas, 🎯 FOCO EM CONVERSÃO (Visita/WhatsApp).
 
 CONTEXTO BRASILEIRO:
 - Fale como uma corretora local, amiga e profissional.
@@ -930,7 +1134,7 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                 console.log('🔗 propertyLinks.length:', propertyLinks.length);
 
                 // Generate Quick Actions based on current state and found properties
-                const quickActions = await generateQuickActions(newState, matchingProperties);
+                const quickActions = await generateQuickActions(newState, matchingProperties, textToSend);
                 console.log('🎯 Quick Actions generated:', quickActions.length, quickActions);
 
                 const assistantMessage: Message = {
@@ -1037,6 +1241,40 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
         setIsOpen(false);
     };
 
+    const renderMessageContent = (content: string) => {
+        const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+
+        while ((match = linkRegex.exec(content)) !== null) {
+            if (match.index > lastIndex) {
+                parts.push(content.substring(lastIndex, match.index));
+            }
+
+            const [_, text, url] = match;
+            parts.push(
+                <button
+                    key={`link-${match.index}`}
+                    onClick={() => handleLinkClick(url)}
+                    className="text-emerald-400 font-bold hover:underline inline-flex items-center gap-1 mx-1"
+                >
+                    {text} <ExternalLink size={10} />
+                </button>
+            );
+
+            lastIndex = linkRegex.lastIndex;
+        }
+
+        if (lastIndex < content.length) {
+            parts.push(content.substring(lastIndex));
+        }
+
+        if (parts.length === 0) return content;
+
+        return <>{parts}</>;
+    };
+
     return (
         <>
             {!isOpen && (
@@ -1086,7 +1324,7 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                                         : 'bg-slate-800 text-white border border-slate-700 rounded-bl-none'
                                         }`}
                                 >
-                                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                    <p className="text-sm whitespace-pre-wrap">{renderMessageContent(message.content)}</p>
 
                                     {/* Property Links */}
                                     {message.links && message.links.length > 0 && (
@@ -1211,7 +1449,7 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                                 disabled={loading}
                             />
                             <button
-                                onClick={handleSend}
+                                onClick={() => handleSend()}
                                 disabled={!input.trim() || loading}
                                 className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 dark:disabled:bg-slate-600 text-white rounded-full p-3 transition-colors disabled:cursor-not-allowed"
                             >
@@ -1222,11 +1460,12 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                 </div>
             )}
 
-            {/* Custom Order Modal */}
+            {/* CustomOrderModal */}
             <CustomOrderModal
                 isOpen={customOrderModalOpen}
                 onClose={() => setCustomOrderModalOpen(false)}
                 conversationId={conversationId || undefined}
+                brokerId={brokerId || undefined}
                 prefilledData={{
                     operacao: conversationState.operacao || '',
                     tipoImovel: conversationState.tipoImovel || '',

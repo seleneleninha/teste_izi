@@ -419,7 +419,7 @@ export const PropertyDetails: React.FC = () => {
                     .select('id')
                     .eq('user_id', user.id)
                     .eq('anuncio_id', property.id)
-                    .single();
+                    .maybeSingle();
 
                 if (data) setIsFavorite(true);
             } catch (error) {
@@ -1028,7 +1028,7 @@ export const PropertyDetails: React.FC = () => {
 
                                     <button
                                         onClick={handleScheduleClick}
-                                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-3xl transition-colors flex items-center justify-center cursor-pointer"
+                                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-full transition-colors flex items-center justify-center cursor-pointer"
                                     >
                                         <Calendar size={18} className="mr-2" /> Agendar Visita
                                     </button>

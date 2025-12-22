@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MOCK_PROPERTIES } from '../constants';
-import { MapPin, Bed, Bath, Square, Filter, Search, Grid, Map as MapIcon, CheckSquare, Loader2, Edit2, Trash2, X, TrendingUp, Key, Pause, AlertTriangle, Home, ChevronDown } from 'lucide-react';
+import { MapPin, Bed, Bath, Square, Filter, Search, Grid, Map as MapIcon, CheckSquare, Loader2, Edit2, Trash2, X, TrendingUp, Key, Pause, AlertTriangle, Home, ChevronDown, List, UserCheck, UserX, BedDouble, Car, Ruler, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { PropertyCard } from '../components/PropertyCard';
 import { NoPropertiesFound } from '../components/NoPropertiesFound';
@@ -11,13 +11,15 @@ import { useAuth } from '../components/AuthContext';
 import { HorizontalScroll } from '../components/HorizontalScroll';
 import { Footer } from '../components/Footer';
 import { DeactivatePropertyModal } from '../components/DeactivatePropertyModal';
+import { useHeader } from '../components/HeaderContext';
 
 export const PropertiesList: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, role } = useAuth();
     const { addToast } = useToast();
-    const [view, setView] = useState<'grid' | 'map'>('grid');
+    const [view, setView] = useState<'grid' | 'map' | 'list'>('list'); // Default to List for Command Center
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
     const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -57,6 +59,7 @@ export const PropertiesList: React.FC = () => {
 
     // Seções expandidas - NOVO
     const [expandedSections, setExpandedSections] = useState<string[]>(['ativo']); // Ativos expandido por padrão
+    const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 
     // Determine context based on route
     const isDashboardRoute = location.pathname === '/properties';
@@ -95,6 +98,26 @@ export const PropertiesList: React.FC = () => {
         fetchProperties(typeParam, operacaoParam, qParam, priceParam, brokerParam);
     }, [location.search, isMyProperties, user]);
 
+
+    // Dynamic Header
+    const { setHeaderContent } = useHeader();
+    useEffect(() => {
+        const title = isMyProperties ? 'Meus Imóveis' : isMarketMode ? 'Mercado Imobiliário' : 'Buscar Imóveis';
+        const subtitle = isMyProperties ? 'Gerencie e mantenha seus anúncios atualizados.' : isMarketMode ? 'Você está visualizando todos os imóveis de sua Cidade' : 'Encontre o imóvel ideal para sua Família.';
+
+        setHeaderContent(
+            <div className="flex flex-col justify-center">
+                <h2 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
+                    {title}
+                </h2>
+                <p className="text-slate-400 text-xs font-medium leading-tight">
+                    {subtitle}
+                </p>
+            </div>
+        );
+        return () => setHeaderContent(null);
+    }, [isMyProperties, isMarketMode, setHeaderContent]);
+
     // Fetch broker's state (UF) when in Market Mode
     useEffect(() => {
         const fetchBrokerUF = async () => {
@@ -103,7 +126,7 @@ export const PropertiesList: React.FC = () => {
                     .from('perfis')
                     .select('uf')
                     .eq('id', user.id)
-                    .single();
+                    .maybeSingle();
 
                 if (data && !error) {
                     setBrokerUF(data.uf);
@@ -466,19 +489,47 @@ export const PropertiesList: React.FC = () => {
         );
     };
 
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedProperties = React.useMemo(() => {
+        // Apply Status Filter (Client-side)
+        let filtered = properties;
+        if (statusFilter !== 'todos') {
+            filtered = filtered.filter(p => p.status === statusFilter);
+        }
+
+        let sortableProperties = [...filtered];
+        if (sortConfig !== null) {
+            sortableProperties.sort((a, b) => {
+                // Handle nested properties or specific keys
+                let aValue = a[sortConfig.key];
+                let bValue = b[sortConfig.key];
+
+                // Example: Values might be strings or numbers
+                if (aValue < bValue) {
+                    return sortConfig.direction === 'asc' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return sortConfig.direction === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+        }
+        return sortableProperties;
+    }, [properties, sortConfig, statusFilter]);
+
     return (
         <div className="bg-slate-900 min-h-screen flex flex-col">
             <div className="container mx-auto px-4 py-8 flex-1">
                 {/* Header Controls */}
                 <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6">
-                    <div>
-                        <h2 className="text-3xl font-bold text-white">
-                            {isMyProperties ? 'Meus Imóveis' : isMarketMode ? 'Mercado Imobiliário' : 'Buscar Imóveis'}
-                        </h2>
-                        <p className="text-gray-400 mt-1">
-                            {isMyProperties ? 'Gerencie e mantenha seus anúncios atualizados.' : isMarketMode ? 'Você está visualizando todos os imóveis de sua Cidade' : 'Encontre o imóvel ideal para sua Família.'}
-                        </p>
-                    </div>
+                    {/* Title moved to Layout Header */}
 
                     {/* Filtros - Mobile First Layout */}
                     <div className="w-full space-y-3 mb-6">
@@ -525,22 +576,84 @@ export const PropertiesList: React.FC = () => {
 
                             </select>
 
-                            {/* Status - NOVO (apenas para Meus Imóveis) */}
-                            {isMyProperties && (
-                                <select
-                                    value={statusFilter}
-                                    onChange={e => setStatusFilter(e.target.value)}
-                                    className="bg-slate-800 border border-emerald-700/50 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all font-medium"
-                                >
-                                    <option value="todos" className="bg-slate-800">Todos ({stats.total})</option>
-                                    <option value="pendente" className="bg-slate-800">Pendentes ({properties.filter(p => p.status === 'pendente').length})</option>
-                                    <option value="reprovado" className="bg-slate-800">Reprovados ({properties.filter(p => p.status === 'reprovado').length})</option>
-                                    <option value="ativo" className="bg-slate-800">Ativos ({stats.ativos})</option>
-                                    <option value="venda_faturada" className="bg-slate-800">Vendidos ({stats.vendas})</option>
-                                    <option value="locacao_faturada" className="bg-slate-800">Alugados ({stats.locacoes})</option>
-                                    <option value="imovel_espera" className="bg-slate-800">Standby ({stats.standby})</option>
-                                    <option value="imovel_perdido" className="bg-slate-800">Perdidos ({stats.perdidos})</option>
-                                </select>
+                            {/* Status - NOVO (apenas para Meus Imóveis) - Custom Dropdown style like Admin */}
+                            {isDashboardRoute && isMyProperties && (
+                                <div className="relative w-full md:w-64 z-30">
+                                    <button
+                                        onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${statusDropdownOpen
+                                            ? 'bg-slate-800 border-emerald-500 ring-1 ring-emerald-500'
+                                            : 'bg-slate-800 border-slate-700 hover:border-slate-600'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="font-bold text-white text-sm">
+                                                {statusFilter === 'todos' ? 'Todos' :
+                                                    statusFilter === 'pendente' ? 'Pendentes' :
+                                                        statusFilter === 'reprovado' ? 'Reprovados' :
+                                                            statusFilter === 'ativo' ? 'Ativos' :
+                                                                statusFilter === 'venda_faturada' ? 'Vendidos' :
+                                                                    statusFilter === 'locacao_faturada' ? 'Alugados' :
+                                                                        statusFilter === 'imovel_espera' ? 'Standby' :
+                                                                            statusFilter === 'imovel_perdido' ? 'Perdidos' : statusFilter
+                                                }
+                                                <span className="text-slate-500 ml-1">
+                                                    ({
+                                                        statusFilter === 'todos' ? stats.total :
+                                                            statusFilter === 'pendente' ? properties.filter(p => p.status === 'pendente').length :
+                                                                statusFilter === 'reprovado' ? properties.filter(p => p.status === 'reprovado').length :
+                                                                    statusFilter === 'ativo' ? stats.ativos :
+                                                                        statusFilter === 'venda_faturada' ? stats.vendas :
+                                                                            statusFilter === 'locacao_faturada' ? stats.locacoes :
+                                                                                statusFilter === 'imovel_espera' ? stats.standby :
+                                                                                    statusFilter === 'imovel_perdido' ? stats.perdidos : 0
+                                                    })
+                                                </span>
+                                            </span>
+                                        </div>
+                                        <ChevronDown className={`transform transition-transform ${statusDropdownOpen ? 'rotate-180' : ''} text-slate-400`} size={16} />
+                                    </button>
+
+                                    {statusDropdownOpen && (
+                                        <>
+                                            <div
+                                                className="fixed inset-0 z-20"
+                                                onClick={() => setStatusDropdownOpen(false)}
+                                            />
+                                            <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 rounded-xl border border-slate-700 shadow-xl z-40 overflow-hidden max-h-[400px] overflow-y-auto">
+                                                {[
+                                                    { value: 'todos', label: 'Todos', count: stats.total },
+                                                    { value: 'pendente', label: 'Pendentes', count: properties.filter(p => p.status === 'pendente').length },
+                                                    { value: 'reprovado', label: 'Reprovados', count: properties.filter(p => p.status === 'reprovado').length },
+                                                    { value: 'ativo', label: 'Ativos', count: stats.ativos },
+                                                    { value: 'venda_faturada', label: 'Vendidos', count: stats.vendas },
+                                                    { value: 'locacao_faturada', label: 'Alugados', count: stats.locacoes },
+                                                    { value: 'imovel_espera', label: 'Standby', count: stats.standby },
+                                                    { value: 'imovel_perdido', label: 'Perdidos', count: stats.perdidos }
+                                                ]
+                                                    .filter(option => option.count > 0 || option.value === 'todos') // Ocultar zerados (exceto Todos)
+                                                    .map((option) => (
+                                                        <button
+                                                            key={option.value}
+                                                            onClick={() => {
+                                                                setStatusFilter(option.value);
+                                                                setStatusDropdownOpen(false);
+                                                            }}
+                                                            className={`w-full flex items-center justify-between p-3 hover:bg-slate-700/50 transition-colors border-b border-slate-700/50 last:border-0 ${statusFilter === option.value ? 'bg-slate-700/50' : ''
+                                                                }`}
+                                                        >
+                                                            <span className={`text-sm font-medium ${statusFilter === option.value ? 'text-white' : 'text-slate-300'}`}>
+                                                                {option.label}
+                                                            </span>
+                                                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-slate-900 border border-slate-700 ${statusFilter === option.value ? 'text-white' : 'text-slate-500'}`}>
+                                                                {option.count}
+                                                            </span>
+                                                        </button>
+                                                    ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             )}
                         </div>
 
@@ -564,11 +677,21 @@ export const PropertiesList: React.FC = () => {
                                 <span>Limpar</span>
                             </button>
 
-                            {/* Toggle Cards/Map */}
+                            {/* Toggle Cards/Map/List */}
                             <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700 col-span-2 md:col-span-1">
                                 <button
+                                    onClick={() => setView('list')}
+                                    className={`flex-1 px-3 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${view === 'list'
+                                        ? 'bg-emerald-600 text-white shadow-sm'
+                                        : 'text-gray-400 hover:text-white hover:bg-slate-700'
+                                        }`}
+                                >
+                                    <List size={18} />
+                                    <span className="sm:inline">Lista</span>
+                                </button>
+                                <button
                                     onClick={() => setView('grid')}
-                                    className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${view === 'grid'
+                                    className={`flex-1 px-3 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${view === 'grid'
                                         ? 'bg-emerald-600 text-white shadow-sm'
                                         : 'text-gray-400 hover:text-white hover:bg-slate-700'
                                         }`}
@@ -578,7 +701,7 @@ export const PropertiesList: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setView('map')}
-                                    className={`flex-1 px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${view === 'map'
+                                    className={`flex-1 px-3 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${view === 'map'
                                         ? 'bg-emerald-600 text-white shadow-sm'
                                         : 'text-gray-400 hover:text-white hover:bg-slate-700'
                                         }`}
@@ -613,8 +736,217 @@ export const PropertiesList: React.FC = () => {
                         />
                     ) : (
                         <>
-                            {view === 'map' ? (
-                                <div className="h-[500px] rounded-3xl overflow-hidden border border-slate-700 shadow-lg">
+                            {view === 'list' ? (
+                                <div className="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden animate-in fade-in duration-500 shadow-xl">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="bg-slate-900/50 text-slate-400 text-xs uppercase border-b border-slate-700/50">
+                                                    <th onClick={() => handleSort('titulo')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
+                                                        Imóvel / Código {sortConfig?.key === 'titulo' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                    </th>
+                                                    <th onClick={() => handleSort('tipo_imovel')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
+                                                        Tipo {sortConfig?.key === 'tipo_imovel' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                    </th>
+                                                    <th onClick={() => handleSort('operacao')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
+                                                        Operação {sortConfig?.key === 'operacao' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                    </th>
+                                                    <th onClick={() => handleSort('cidade')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
+                                                        Cidade {sortConfig?.key === 'cidade' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                    </th>
+                                                    <th onClick={() => handleSort('bairro')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
+                                                        Bairro {sortConfig?.key === 'bairro' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                    </th>
+                                                    <th className="p-4 font-semibold text-center" title="Detalhes">
+                                                        Características <div className="flex justify-center items-center gap-1"></div>
+                                                    </th>
+                                                    <th onClick={() => handleSort('valor_venda')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group text-right">
+                                                        Valores
+                                                    </th>
+                                                    <th className="p-4 font-semibold text-center">Status</th>
+                                                    <th className="p-4 font-semibold text-right">Ação</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-700/30">
+                                                {sortedProperties.map((prop) => {
+                                                    // Helper to format currency
+                                                    const formatCurrency = (val?: number) => val ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val) : '-';
+
+                                                    // Status styling
+                                                    const getStatusStyle = (status: string) => {
+                                                        const styles: any = {
+                                                            'ativo': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+                                                            'pendente': 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+                                                            'reprovado': 'bg-red-500/10 text-red-400 border-red-500/20',
+                                                            'venda_faturada': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+                                                            'locacao_faturada': 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+                                                            'imovel_espera': 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+                                                            'imovel_perdido': 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+                                                        };
+                                                        return styles[status] || styles['ativo'];
+                                                    };
+
+                                                    // Operation Badge Color (Updated Round 2)
+                                                    const getOperationBadge = (op: string) => {
+                                                        const normalizedOp = op?.toLowerCase() || '';
+                                                        if (normalizedOp.includes('venda')) return 'bg-red-500/10 text-red-500 border-red-500/20';
+                                                        if (normalizedOp.includes('loca')) return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+                                                        if (normalizedOp.includes('temporada')) return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+                                                        return 'bg-slate-700 text-slate-400 border-slate-600';
+                                                    }
+
+                                                    // Venda/Locação override if specific
+                                                    if (prop.operacao === 'Venda/Locação' || prop.operacao === 'Venda/Locacao') {
+                                                        // Fallback is tricky with above helper, handled by if check above but maybe specific green needed?
+                                                        // User requested Green for Venda/Locação. 
+                                                        // My helper check .includes('venda') first so returns red.
+                                                    }
+
+                                                    return (
+                                                        <tr key={prop.id} className="hover:bg-slate-800/50 transition-colors group">
+
+                                                            {/* Imóvel / Código */}
+                                                            <td className="p-4">
+                                                                <div>
+                                                                    <div onClick={() => navigate(`/property/${prop.id}`)} className="font-bold text-white text-sm hover:text-emerald-400 cursor-pointer transition-colors max-w-[175px] truncate" title={prop.titulo}>
+                                                                        {prop.titulo || 'Sem título'}
+                                                                    </div>
+                                                                    <div className="mt-1">
+                                                                        <span className="text-sm font-mono font-black text-emerald-400 tracking-wider">
+                                                                            CÓD: {prop.cod_imovel || 'N/A'}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+
+                                                            {/* Tipo */}
+                                                            <td className="p-4 text-sm text-slate-300">
+                                                                {prop.tipo_imovel}
+                                                            </td>
+
+                                                            {/* Operação */}
+                                                            <td className="p-4">
+                                                                <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${(prop.operacao === 'Venda/Locação' || prop.operacao === 'Venda/Locacao')
+                                                                    ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                                                                    : getOperationBadge(prop.operacao)
+                                                                    }`}>
+                                                                    {prop.operacao}
+                                                                </span>
+                                                            </td>
+
+                                                            {/* Cidade */}
+                                                            <td className="p-4 text-sm text-slate-300">
+                                                                {prop.cidade || ''}
+                                                            </td>
+
+                                                            {/* Bairro */}
+                                                            <td className="p-4 text-sm text-slate-300">
+                                                                {prop.bairro || ''}
+                                                            </td>
+
+                                                            {/* Metrics Compacted */}
+                                                            <td className="p-4">
+                                                                <div className="flex justify-center items-center gap-2 text-slate-400 text-xs">
+                                                                    <div className="flex items-center gap-1" title="Quartos"><BedDouble size={14} /> {prop.quartos || '-'}</div>
+                                                                    <div className="flex items-center gap-1" title="Banheiros"><Bath size={14} /> {prop.banheiros || '-'}</div>
+                                                                    <div className="flex items-center gap-1" title="Vagas"><Car size={14} /> {prop.vagas || '-'}</div>
+                                                                    <div className="flex items-center gap-1" title="Área"><Ruler size={14} /> {prop.area_priv ? `${prop.area_priv}m²` : '-'}</div>
+                                                                </div>
+                                                            </td>
+
+                                                            {/* Valores Stacked */}
+                                                            <td className="p-4 text-right">
+                                                                <div className="flex flex-col items-end gap-1">
+                                                                    {(prop.valor_venda > 0) && (
+                                                                        <div className="text-red-500 font-bold text-sm tracking-tight flex items-center gap-1">
+                                                                            {formatCurrency(prop.valor_venda)}
+                                                                            <span className="text-[10px] text-red-500/50 font-mono">V</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {(prop.valor_locacao > 0) && (
+                                                                        <div className="text-blue-500 font-bold text-sm tracking-tight flex items-center gap-1">
+                                                                            {formatCurrency(prop.valor_locacao)}
+                                                                            <span className="text-[10px] text-blue-500/50 font-mono">L</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {/* Temporada Logic */}
+                                                                    {(prop.operacao?.toLowerCase().includes('temporada')) && (
+                                                                        <>
+                                                                            {prop.valor_diaria > 0 && (
+                                                                                <div className="text-orange-500 font-bold text-sm tracking-tight flex items-center gap-1">
+                                                                                    {formatCurrency(prop.valor_diaria)}
+                                                                                    <span className="text-[10px] text-orange-500/50 font-mono">/dia</span>
+                                                                                </div>
+                                                                            )}
+                                                                            {prop.valor_mensal > 0 && (
+                                                                                <div className="text-orange-500 font-bold text-sm tracking-tight flex items-center gap-1">
+                                                                                    {formatCurrency(prop.valor_mensal)}
+                                                                                    <span className="text-[10px] text-orange-500/50 font-mono">/mês</span>
+                                                                                </div>
+                                                                            )}
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+
+                                                            <td className="p-4 text-center">
+                                                                <span className={`px-2 py-1 rounded-full text-[10px] uppercase font-bold border ${getStatusStyle(prop.status)}`}>
+                                                                    {prop.status === 'venda_faturada' ? 'VENDIDO' :
+                                                                        prop.status === 'locacao_faturada' ? 'ALUGADO' :
+                                                                            prop.status || 'ATIVO'}
+                                                                </span>
+                                                            </td>
+
+                                                            <td className="p-4 text-right">
+                                                                <div className="flex items-center justify-end gap-2">
+                                                                    {(isDashboardRoute && user && prop.user_id === user.id) && (
+                                                                        <>
+                                                                            <button
+                                                                                onClick={(e) => { e.stopPropagation(); navigate(`/add-property?id=${prop.id}`); }}
+                                                                                className="p-1.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 rounded-lg transition-colors border border-yellow-500/20"
+                                                                                title="Editar"
+                                                                            >
+                                                                                <Edit2 size={16} />
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setDeactivateModal({
+                                                                                        isOpen: true,
+                                                                                        propertyId: prop.id,
+                                                                                        propertyTitle: prop.titulo
+                                                                                    });
+                                                                                }}
+                                                                                className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors border border-red-500/20"
+                                                                                title="Inativar"
+                                                                            >
+                                                                                <Trash2 size={16} />
+                                                                            </button>
+                                                                        </>
+                                                                    )}
+                                                                    <button
+                                                                        onClick={() => window.open(`/property/${prop.id}`, '_blank')}
+                                                                        className="p-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors border border-slate-600"
+                                                                        title="Ver no Site"
+                                                                    >
+                                                                        <Search size={16} />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {sortedProperties.length === 0 && (
+                                        <div className="p-8 text-center text-slate-500">
+                                            Nenhum imóvel encontrado nesta lista.
+                                        </div>
+                                    )}
+                                </div>
+                            ) : view === 'map' ? (
+                                <div className="h-[400px] rounded-3xl overflow-hidden border border-slate-700 shadow-lg">
                                     <PropertyMap properties={properties} />
                                 </div>
                             ) : view === 'grid' ? (
@@ -682,7 +1014,6 @@ export const PropertiesList: React.FC = () => {
                                     })()}
                                 </div>
                             ) : isMyProperties ? (
-                                /* List View com Seções Colapsáveis por Status - Apenas Meus Imóveis */
                                 <div className="space-y-6">
                                     {/* Definição das seções */}
                                     {[

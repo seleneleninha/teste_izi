@@ -377,7 +377,7 @@ export const BrokerSearchPage: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="h-[500px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-0">
+                    <div className="h-[400px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-0">
                         <PropertyMap properties={properties} />
                     </div>
                 )}

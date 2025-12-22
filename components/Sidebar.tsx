@@ -99,8 +99,8 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
 
   return (
     <>
-      <div className={`h-screen w-64 bg-slate-900 text-white flex flex-col border-r border-slate-800 fixed left-0 top-0 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
-        <div className="p-6 flex items-center justify-between border-b border-slate-800">
+      <div className={`h-screen w-64 bg-slate-900 text-white flex flex-col border-r border-slate-700 fixed left-0 top-0 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+        <div className="h-20 px-6 flex items-center justify-between border-b border-slate-700">
           <div className="flex items-center space-x-3">
             {profile.avatar ? (
               <img

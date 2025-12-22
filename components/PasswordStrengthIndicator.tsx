@@ -20,8 +20,8 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
 
     const strengthColors = {
         weak: 'bg-red-500',
-        fair: 'bg-orange-500',
-        good: 'bg-yellow-500',
+        fair: 'bg-yellow-500',
+        good: 'bg-emerald-500',
         strong: 'bg-emerald-500'
     };
 
@@ -34,8 +34,8 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
 
     const strengthTextColors = {
         weak: 'text-red-500',
-        fair: 'text-orange-500',
-        good: 'text-yellow-500',
+        fair: 'text-yellow-500',
+        good: 'text-emerald-500',
         strong: 'text-emerald-500'
     };
 

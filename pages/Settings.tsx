@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
-import { User, Lock, Bell, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, AlertTriangle, ExternalLink, MapPin, Phone, Share2, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign, Download } from 'lucide-react';
+import { useHeader } from '../components/HeaderContext';
+import { User, Lock, Bell, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, AlertTriangle, ExternalLink, MapPin, Phone, Share2, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign, Download, Search, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { geocodeAddress } from '../lib/geocodingHelper';
 import { checkPasswordStrength, validateEmail, validatePhone, validateCRECI, sanitizeInput } from '../lib/validation';
@@ -12,8 +13,9 @@ import { DeleteAccountModal } from '../components/DeleteAccountModal';
 export const Settings: React.FC = () => {
   const { user, signOut, role } = useAuth();
   const { addToast } = useToast();
+  const { setHeaderContent } = useHeader();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'profile' | 'slug' | 'about' | 'security' | 'notifications'>('profile');
+  const [activeTab, setActiveTab] = useState<'account' | 'page' | 'branding'>('account');
 
   // Loading States
   const [loading, setLoading] = useState(false);
@@ -89,6 +91,18 @@ export const Settings: React.FC = () => {
     'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
     'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
   ];
+
+  useEffect(() => {
+    setHeaderContent(
+      <div className="flex flex-col justify-center">
+        <h2 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
+          Configurações da Conta
+        </h2>
+        <p className="text-slate-400 text-xs font-medium leading-tight">Gerencie seu perfil, segurança e preferências</p>
+      </div>
+    );
+    return () => setHeaderContent(null);
+  }, [setHeaderContent]);
 
   useEffect(() => {
     if (user?.id) {
@@ -497,93 +511,74 @@ export const Settings: React.FC = () => {
 
 
   return (
-    <div className="mt-6 max-w-5xl mx-auto pb-12">
-      <h2 className="text-2xl font-bold text-white mb-6">Configurações da Conta</h2>
+    <div className="max-w-5xl mx-auto pb-12">
+      {/* Title moved to Header */}
+
 
       {/* Unified Horizontal Tab Navigation */}
-      <div className="mb-6 sticky top-[68px] z-20 bg-midnight-50/95 bg-midnight-900/95 backdrop-blur-sm -mx-4 px-4 py-3">
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+      {/* Unified Horizontal Tab Navigation - Mobile First Scroll */}
+      <div className="mt-8 mb-8">
+        <div className="bg-slate-900/90 backdrop-blur-md border border-slate-700/50 p-1.5 rounded-2xl inline-flex gap-1 shadow-lg shadow-black/20 overflow-x-auto max-w-full no-scrollbar w-full md:w-auto">
+
           <button
-            onClick={() => setActiveTab('profile')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all whitespace-nowrap flex-shrink-0
-              ${activeTab === 'profile'
-                ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30 font-bold'
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-700 font-medium'
+            onClick={() => setActiveTab('account')}
+            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap text-sm font-medium
+              ${activeTab === 'account'
+                ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-600/50'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
               }`}
           >
-            <User size={18} />
-            <span>Perfil</span>
+            <User size={16} />
+            <span>Minha Conta</span>
           </button>
 
           {role !== 'Cliente' && (
-            <button
-              onClick={() => setActiveTab('slug')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all whitespace-nowrap flex-shrink-0
-                ${activeTab === 'slug'
-                  ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30 font-bold'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-700 font-medium'
-                }`}
-            >
-              <MapPin size={18} />
-              <span>Sua Página</span>
-            </button>
+            <>
+              <button
+                onClick={() => setActiveTab('page')}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap text-sm font-medium
+                  ${activeTab === 'page'
+                    ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-600/50'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                  }`}
+              >
+                <div className="relative">
+                  <MapPin size={16} />
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                </div>
+                <span>Página & Conteúdo</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('branding')}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap text-sm font-medium
+                  ${activeTab === 'branding'
+                    ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-600/50'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                  }`}
+              >
+                <Share2 size={16} />
+                <span>Marca & Redes</span>
+              </button>
+            </>
           )}
 
-          {role !== 'Cliente' && (
-            <button
-              onClick={() => setActiveTab('about')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all whitespace-nowrap flex-shrink-0
-                ${activeTab === 'about'
-                  ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30 font-bold'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-700 font-medium'
-                }`}
-            >
-              <User size={18} />
-              <span>Sobre & Redes</span>
-            </button>
-          )}
-
-          <button
-            onClick={() => setActiveTab('security')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all whitespace-nowrap flex-shrink-0
-              ${activeTab === 'security'
-                ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30 font-bold'
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-700 font-medium'
-              }`}
-          >
-            <Lock size={18} />
-            <span>Segurança</span>
-          </button>
-
-          {role !== 'Cliente' && (
-            <button
-              onClick={() => setActiveTab('notifications')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all whitespace-nowrap flex-shrink-0
-                ${activeTab === 'notifications'
-                  ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30 font-bold'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-700 font-medium'
-                }`}
-            >
-              <Bell size={18} />
-              <span>Notificações</span>
-            </button>
-          )}
         </div>
       </div>
 
       {/* Content Area */}
-      <div className="bg-slate-800 rounded-3xl shadow-sm border border-slate-700 p-6 md:p-8 min-h-[500px]">
+      <div className="bg-slate-800/50 rounded-3xl shadow-sm border border-slate-700/50 p-6 md:p-8 min-h-auto backdrop-blur-sm">
 
-        {activeTab === 'profile' && (
+        {activeTab === 'account' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300" data-tour="profile-settings">
-            <h3 className="text-xl font-bold text-white mb-6">Informações Pessoais</h3>
 
-            <div className="flex items-center mb-8">
+            {/* 1. Header & Avatar */}
+            <div className="flex flex-col md:flex-row items-center gap-6 mb-8 p-6 bg-slate-800/50 rounded-3xl border border-slate-700">
               <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                 <img
                   src={profile.avatar || `https://ui-avatars.com/api/?name=${profile.name}`}
                   alt="Profile"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-white border-slate-700 shadow-lg"
+                  className="w-24 h-24 rounded-full object-cover border-4 border-slate-600 shadow-lg group-hover:border-emerald-500 transition-colors"
                 />
                 <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   {uploading ? <Loader2 className="text-white animate-spin" size={24} /> : <Camera className="text-white" size={24} />}
@@ -596,311 +591,352 @@ export const Settings: React.FC = () => {
                 onChange={handleAvatarUpload}
                 accept="image/*"
               />
-              <div className="ml-6">
-                <h4 className="font-bold text-lg text-white">Sua Foto de Perfil</h4>
-                <p className="text-sm text-slate-400 mb-3">Faça o upload de uma nova foto.</p>
+              <div className="text-center md:text-left flex-1">
+                <h3 className="text-2xl font-bold text-white">{profile.name} {profile.sobrenome}</h3>
+                <p className="text-slate-400 text-sm mb-3">{profile.email}</p>
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-full text-sm font-medium text-gray-200 hover:bg-slate-600 transition-colors"
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-xl text-sm font-medium text-gray-200 transition-colors"
                 >
-                  {uploading ? 'Enviando...' : 'Fazer Upload'}
+                  {uploading ? 'Enviando...' : 'Alterar Foto'}
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-              {/* READ-ONLY VITAL FIELDS */}
+            {/* 2. Form Grid */}
+            <h4 className="text-lg font-bold text-white mb-4 flex items-center"><User size={20} className="mr-2 text-emerald-500" /> Dados Pessoais</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              {/* Read-Only Fields */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Nome <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={profile.name}
-                  disabled
-                  className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400 cursor-not-allowed"
-                  title="Este campo só pode ser alterado pelos administradores"
-                />
+                <label className="block text-xs font-medium text-slate-400 mb-1">Nome</label>
+                <input type="text" value={profile.name} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Sobrenome <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={profile.sobrenome}
-                  disabled
-                  className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400 cursor-not-allowed"
-                  title="Este campo só pode ser alterado pelos administradores"
-                />
+                <label className="block text-xs font-medium text-slate-400 mb-1">Sobrenome</label>
+                <input type="text" value={profile.sobrenome} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed" />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={profile.email}
-                  disabled
-                  className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400 cursor-not-allowed"
-                  title="Este campo só pode ser alterado pelos administradores"
-                />
+                <label className="block text-xs font-medium text-slate-400 mb-1">Email</label>
+                <input type="text" value={profile.email} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed" />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  WhatsApp <span className="text-red-500">*</span>
-                </label>
+                <label className="block text-xs font-medium text-slate-400 mb-1">WhatsApp <span className="text-emerald-500">*</span></label>
                 <input
                   type="tel"
                   value={profile.phone}
-                  disabled
                   onChange={e => setProfile({ ...profile, phone: e.target.value })}
-                  placeholder="(XX) XXXXX-XXXX"
-                  className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400 cursor-not-allowed"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white transition-all"
+                  placeholder="(00) 00000-0000"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+            {role !== 'Cliente' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">CPF</label>
+                  <input type="text" value={profile.cpf} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">CRECI</label>
+                  <input type="text" value={profile.creci} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">UF CRECI</label>
+                  <input type="text" value={profile.ufCreci} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed" />
+                </div>
+              </div>
+            )}
+
+            {/* 3. Address Section */}
+            <div className="mb-8 pt-6 border-t border-slate-700/50">
+              <h4 className="text-lg font-bold text-white mb-4 flex items-center"><MapPin size={20} className="mr-2 text-emerald-500" /> Endereço Profissional</h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">CEP (Busca Automática)</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={profile.cep}
+                      onChange={e => setProfile({ ...profile, cep: e.target.value })}
+                      onBlur={e => fetchCep(e.target.value)}
+                      placeholder="00000-000"
+                      maxLength={9}
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white pl-10 transition-all"
+                    />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                    {loadingCep && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-emerald-500">Buscando...</span>}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Logradouro</label>
+                  <input type="text" value={profile.logradouro} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="col-span-1">
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Número</label>
+                  <input type="text" value={profile.numero} onChange={e => setProfile({ ...profile, numero: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white" />
+                </div>
+                <div className="col-span-1">
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Complemento</label>
+                  <input type="text" value={profile.complemento} onChange={e => setProfile({ ...profile, complemento: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white" />
+                </div>
+                <div className="col-span-1">
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Bairro</label>
+                  <input type="text" value={profile.bairro} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500" />
+                </div>
+                <div className="col-span-1">
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Cidade - UF</label>
+                  <input type="text" value={`${profile.cidade} - ${profile.uf}`} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500" />
+                </div>
+              </div>
+
               {role !== 'Cliente' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      CPF <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.cpf}
-                      disabled
-                      className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400 cursor-not-allowed"
-                      title="Este campo só pode ser alterado pelos administradores"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      CRECI <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.creci}
-                      disabled
-                      className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400 cursor-not-allowed"
-                      title="Este campo só pode ser alterado pelos administradores"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      UF do CRECI <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={profile.ufCreci}
-                      disabled
-                      className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400 cursor-not-allowed"
-                      title="Este campo só pode ser alterado pelos administradores"
-                    />
-                  </div>
-                </>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="showAddress"
+                    checked={profile.showAddress}
+                    onChange={e => setProfile({ ...profile, showAddress: e.target.checked })}
+                    className="rounded border-slate-600 bg-slate-900 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                  />
+                  <label htmlFor="showAddress" className="text-sm text-slate-300 cursor-pointer select-none">
+                    Exibir meu endereço completo na minha página pública?
+                  </label>
+                </div>
               )}
             </div>
 
-            {/* Aviso ADM */}
+            {/* 4. Security Section (Merged) */}
+            <div className="mb-8 pt-6 border-t border-slate-700/50">
+              <h4 className="text-lg font-bold text-white mb-4 flex items-center"><Lock size={20} className="mr-2 text-emerald-500" /> Segurança</h4>
 
-            <div className="bg-red-800/50 p-6 rounded-3xl border border-red-100 border-red-900/30 mb-8">
-              <h4 className="font-bold text-red-200 mb-2 flex items-center">
-                <AlertTriangle size={18} className="mr-2" /> Dados Restritos
-              </h4>
-              <p className="text-sm text-red-200/70 mb-4">
-                Somente Administradores poderão alterar seus dados pessoais, por questões de segurança. Fale com um Administrador clicando no botão abaixo.
-              </p>
-              <a
-                href="mailto:admin@izibrokerz.com?subject=Solicitação de Alteração de Dados Pessoais&body=Olá, gostaria de solicitar a alteração dos meus dados pessoais cadastrados.%0D%0A%0D%0AMeu Nome: [SEU NOME]%0D%0AMeu Email: [SEU EMAIL]%0D%0A%0D%0ADados que preciso alterar:%0D%0A- [DESCREVA AQUI]"
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-colors flex items-center w-fit"
-              >
-                <Phone size={16} className="mr-2" />
-                Falar com ADMIN
-              </a>
-            </div>
-
-            {/* ADDRESS SECTION */}
-            <div className="border-t border-slate-700 pt-6 mb-8">
-              <h4 className="text-lg font-bold text-white mb-4 flex items-center">
-                <MapPin size={20} className="mr-2 text-primary-500" /> Endereço
-              </h4>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">CEP</label>
-                  <input
-                    type="text"
-                    value={profile.cep}
-                    onChange={e => setProfile({ ...profile, cep: e.target.value })}
-                    onBlur={e => fetchCep(e.target.value)}
-                    placeholder="00000-000"
-                    maxLength={9}
-                    className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                  />
-                  {loadingCep && <p className="text-xs text-primary-500 mt-1">Buscando CEP...</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Logradouro</label>
-                  <input
-                    type="text"
-                    value={profile.logradouro}
-                    disabled
-                    className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 md:grid-cols-5 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Número</label>
-                  <input
-                    type="text"
-                    value={profile.numero}
-                    onChange={e => setProfile({ ...profile, numero: e.target.value })}
-                    className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Complemento</label>
-                  <input
-                    type="text"
-                    value={profile.complemento}
-                    onChange={e => setProfile({ ...profile, complemento: e.target.value })}
-                    className="w-full px-4 py-2 rounded-full bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Bairro</label>
-                  <input
-                    type="text"
-                    value={profile.bairro}
-                    disabled
-                    className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Cidade</label>
-                  <input
-                    type="text"
-                    value={profile.cidade}
-                    disabled
-                    className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">UF</label>
-                  <input
-                    type="text"
-                    value={profile.uf}
-                    disabled
-                    className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 text-gray-400"
-                  />
-                </div>
-
-                {role !== 'Cliente' && (
-                  <div className="flex items-center gap-3">
+              <div className="bg-slate-900/30 rounded-2xl p-5 border border-slate-700/50 mb-6">
+                <h5 className="font-medium text-white mb-3">Alterar Senha</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                     <input
-                      type="checkbox"
-                      id="showAddress"
-                      checked={profile.showAddress}
-                      onChange={e => setProfile({ ...profile, showAddress: e.target.checked })}
-                      className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-primary-600 ring-offset-gray-800 focus:ring-2 bg-gray-700 border-gray-600"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Nova Senha"
+                      value={passwords.newPassword}
+                      onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-600 focus:border-emerald-500 outline-none text-white"
                     />
-                    <label htmlFor="showAddress" className="text-sm font-medium text-slate-300">
-                      Exibir Endereço Em Sua Página?
-                    </label>
+                    {passwords.newPassword && <div className="mt-2"><PasswordStrengthIndicator password={passwords.newPassword} /></div>}
                   </div>
-                )}
-
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      placeholder="Confirmar Senha"
+                      value={passwords.confirmPassword}
+                      onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-600 focus:border-emerald-500 outline-none text-white"
+                    />
+                    <button
+                      onClick={handleChangePassword}
+                      disabled={saving || !passwords.newPassword}
+                      className="px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
+                    >
+                      Atualizar
+                    </button>
+                  </div>
+                </div>
               </div>
+
+              <div className="flex flex-col md:flex-row gap-4">
+                <button
+                  onClick={handleExportData}
+                  disabled={exportingData}
+                  className="flex-1 px-4 py-3 bg-slate-900/50 hover:bg-slate-800 border border-slate-700 text-emerald-400 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  {exportingData ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                  Baixar meus Dados (LGPD)
+                </button>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="flex-1 px-4 py-3 bg-red-900/10 hover:bg-red-900/20 border border-red-900/30 text-red-400 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  Excluir Conta
+                </button>
+              </div>
+              <DeleteAccountModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} />
             </div>
 
-            <div className="flex justify-end pt-6 border-t border-slate-700">
+            <div className="sticky bottom-0 bg-slate-800/95 backdrop-blur-sm p-4 -mx-6 -mb-6 md:-mx-8 md:-mb-8 border-t border-slate-700 mt-4 rounded-b-3xl flex justify-end z-10">
               <button
                 onClick={handleSaveProfile}
                 disabled={saving}
-                className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-full shadow-lg shadow-primary-500/30 flex items-center transition-colors disabled:opacity-50"
+                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Save size={18} className="mr-2" />}
+                {saving ? <Loader2 size={20} className="mr-2 animate-spin" /> : <Save size={20} className="mr-2" />}
+                {saving ? 'Salvando...' : 'Salvar Alterações'}
+              </button>
+            </div>
+
+          </div>
+        )}
+
+        {activeTab === 'page' && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <h3 className="text-2xl font-bold text-white mb-2">Página & Conteúdo</h3>
+            <p className="text-slate-400 mb-8">Personalize como os clientes veem sua página profissional.</p>
+
+            {/* 1. SLUG / URL */}
+            {profile.slug && (
+              <div className="mb-8 flex flex-col md:flex-row md:items-center gap-4 bg-gradient-to-r from-slate-800 to-slate-900 p-6 rounded-3xl border border-slate-700 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                <div className="flex-1 min-w-0 z-10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="p-2 bg-emerald-500/10 rounded-xl text-emerald-400"><Share2 size={18} /></span>
+                    <p className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Link da Sua Página</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 border border-slate-700/50 backdrop-blur-sm flex items-center justify-between gap-3">
+                    <p className="text-sm md:text-base font-mono font-bold text-white truncate select-all">
+                      {window.location.origin}/{profile.slug || 'configurar-slug'}
+                    </p>
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/${profile.slug || 'configurar-slug'}`;
+                        navigator.clipboard.writeText(url);
+                        addToast('Copiado!', 'success');
+                      }}
+                      className="text-slate-400 hover:text-white"
+                      title="Copiar"
+                    >
+                      <Copy size={16} />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 z-10 w-full md:w-auto mt-2 md:mt-0">
+                  <button
+                    onClick={() => window.open(`/${profile.slug || 'configurar-slug'}`, '_blank')}
+                    className="w-full md:w-auto px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Eye size={18} /> Acessar Página
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 2. WELCOME MESSAGES */}
+            <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700 mb-8">
+              <h4 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
+                <span className="text-xl">👋</span> Mensagens de Boas-Vindas
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">
+                    Frase Principal (Topo - Branca)
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.boasVindas1}
+                    onChange={e => e.target.value.length <= 40 && setProfile({ ...profile, boasVindas1: e.target.value })}
+                    maxLength={40}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 outline-none text-white"
+                    placeholder="Ex: Os Melhores Imóveis"
+                  />
+                  <div className="flex justify-end mt-1"><span className="text-xs text-slate-500">{profile.boasVindas1.length}/40</span></div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">
+                    Frase de Destaque (Verde)
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.boasVindas2}
+                    onChange={e => e.target.value.length <= 40 && setProfile({ ...profile, boasVindas2: e.target.value })}
+                    maxLength={40}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-emerald-500/50 focus:border-emerald-500 outline-none text-emerald-400 font-medium"
+                    placeholder="Ex: Encontre aqui!"
+                  />
+                  <div className="flex justify-end mt-1"><span className="text-xs text-slate-500">{profile.boasVindas2.length}/40</span></div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. ABOUT & STATS */}
+            <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700 mb-8">
+              <h4 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
+                <span className="text-xl">📝</span> Sobre & Estatísticas
+              </h4>
+
+              <div className="mb-6">
+                <label className="block text-xs font-medium text-slate-400 mb-1">Sua Biografia (aparece na seção "Sobre")</label>
+                <textarea
+                  value={profile.sobreMim}
+                  onChange={e => e.target.value.length <= 800 && setProfile({ ...profile, sobreMim: e.target.value })}
+                  rows={5}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 outline-none text-white resize-none leading-relaxed"
+                  placeholder="Conte sua história profissional..."
+                />
+                <div className="flex justify-end mt-1"><span className="text-xs text-slate-500">{profile.sobreMim.length}/800</span></div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Imóveis Vendidos</label>
+                  <input
+                    type="number"
+                    value={profile.imoveisVendidos || ''}
+                    onChange={e => setProfile({ ...profile, imoveisVendidos: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 outline-none text-white text-center font-bold"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Clientes Atendidos</label>
+                  <input
+                    type="number"
+                    value={profile.clientesAtendidos || ''}
+                    onChange={e => setProfile({ ...profile, clientesAtendidos: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 outline-none text-white text-center font-bold"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="sticky bottom-0 bg-slate-800/95 backdrop-blur-sm p-4 -mx-6 -mb-6 md:-mx-8 md:-mb-8 border-t border-slate-700 mt-4 rounded-b-3xl flex justify-end z-10">
+              <button
+                onClick={handleSaveProfile}
+                disabled={saving}
+                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? <Loader2 size={20} className="mr-2 animate-spin" /> : <Save size={20} className="mr-2" />}
                 {saving ? 'Salvando...' : 'Salvar Alterações'}
               </button>
             </div>
           </div>
         )}
 
-        {activeTab === 'slug' && (
+        {activeTab === 'branding' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <h3 className="text-xl font-bold text-white mb-6">Personalize sua Página</h3>
+            <h3 className="text-2xl font-bold text-white mb-2">Marca & Redes Sociais</h3>
+            <p className="text-slate-400 mb-8">Defina sua identidade visual e conecte suas redes.</p>
 
-            {/* Slug Display and Visit Button */}
-            {/* Public Page URL Display - Enhanced */}
-            {profile.slug && (
-              <div className="mb-8 flex flex-col md:flex-row md:items-center gap-4 bg-gradient-to-r from-primary-50 to-white dark:from-slate-800 dark:to-slate-900 p-6 rounded-3xl border border-primary-100 border-primary-900/50 shadow-sm relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-
-                <div className="flex-1 min-w-0 z-10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-2 bg-primary-900/30 rounded-3xl text-primary-600 text-primary-400">
-                      <Share2 size={20} />
-                    </div>
-                    <p className="text-sm font-bold text-gray-200 uppercase tracking-wide">Endereço da Sua Página</p>
-                  </div>
-                  <div className="bg-white/50 dark:bg-black/20 rounded-3xl p-2 border border-slate-700/50 backdrop-blur-sm">
-                    <p className="text-base md:text-lg font-mono font-bold text-primary-700 text-primary-400 truncate select-all">
-                      {window.location.origin}/{profile.slug || 'configurar-slug'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 z-10 w-full md:w-auto">
-                  <button
-                    onClick={() => {
-                      const url = `${window.location.origin}/${profile.slug || 'configurar-slug'}`;
-                      navigator.clipboard.writeText(url);
-                      addToast('Link colado na sua área de transferência! 📋', 'success');
-                    }}
-                    className="flex-1 md:flex-none px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-full shadow-lg shadow-primary-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-                    title="Copiar Link"
-                  >
-                    <Share2 size={20} />
-                  </button>
-                  <button
-                    onClick={() => window.open(`/${profile.slug || 'configurar-slug'}`, '_blank')}
-                    className="px-4 py-3 bg-slate-800 border-2 border-primary-100 border-slate-600 text-primary-600 text-slate-300 font-bold rounded-full hover:bg-primary-50 hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
-                    title="Visitar Página"
-                  >
-                    <Eye size={20} />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4" data-tour="logo-upload">
-              {/* Logotipo (Modo Escuro apenas) */}
-              <div className="p-6 bg-slate-900/50 rounded-3xl border border-slate-700">
-                <h4 className="font-bold text-lg text-white mb-4">Logotipo</h4>
-                <p className="text-sm text-slate-400 mb-2">
-                  Sua marca será exibida no cabeçalho e rodapé da sua página.
-                </p>
-                <p className="text-md text-blue-600 text-blue-400 mb-4">
-                  💡 Dica: Use imagens PNG com fundo transparente para melhor resultado.
-                </p>
-                <div className="flex items-center gap-4">
-                  {profile.watermarkDark && (
-                    <img
-                      src={profile.watermarkDark}
-                      alt="Logotipo"
-                      className="w-32 h-32 object-contain border border-slate-600 rounded-3xl bg-slate-800 p-2"
-                    />
+            {/* 1. BRANDING GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" data-tour="logo-upload">
+              {/* Logotipo */}
+              <div className="p-6 bg-slate-900/50 rounded-3xl border border-slate-700 flex flex-col items-center text-center">
+                <div className="mb-4 p-3 bg-slate-800 rounded-2xl border border-slate-600">
+                  {profile.watermarkDark ? (
+                    <img src={profile.watermarkDark} alt="Logotipo" className="w-32 h-32 object-contain" />
+                  ) : (
+                    <div className="w-32 h-32 flex items-center justify-center text-slate-600"><Camera size={32} /></div>
                   )}
+                </div>
+                <h4 className="font-bold text-lg text-white mb-2">Logotipo Principal</h4>
+                <p className="text-xs text-slate-400 mb-4 max-w-xs">
+                  Sua marca no topo do site. Use PNG transparente.
+                </p>
+                <div className="mt-auto w-full">
                   <button
                     onClick={() => {
                       const input = document.createElement('input');
@@ -913,27 +949,28 @@ export const Settings: React.FC = () => {
                       input.click();
                     }}
                     disabled={uploading}
-                    className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-full text-sm font-medium text-gray-200 hover:bg-slate-600 transition-colors disabled:opacity-50"
+                    className="w-full py-2.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-xl text-sm font-medium text-white transition-colors disabled:opacity-50"
                   >
-                    {uploading ? 'Enviando...' : (profile.watermarkDark ? 'Alterar Imagem' : 'Fazer Upload')}
+                    {uploading ? 'Enviando...' : (profile.watermarkDark ? 'Alterar Logo' : 'Fazer Upload')}
                   </button>
                 </div>
               </div>
 
-              {/* Marca D'Água para Fotos */}
-              <div className="p-6 bg-blue-50 bg-blue-900/20 rounded-3xl border border-blue-200 border-blue-800">
-                <h4 className="font-bold text-lg text-white mb-4">Marca D'Água para Fotos</h4>
-                <p className="text-sm text-slate-400 mb-4">
-                  Esta marca será aplicada automaticamente nas fotos dos seus imóveis para proteger suas imagens.
-                </p>
-                <div className="flex items-center gap-4">
-                  {profile.marcaDagua && (
-                    <img
-                      src={profile.marcaDagua}
-                      alt="Marca d'água"
-                      className="w-32 h-32 object-contain border border-blue-300 border-blue-600 rounded-full bg-white/50 p-2"
-                    />
+              {/* Marca D'Água */}
+              <div className="p-6 bg-blue-900/10 rounded-3xl border border-blue-500/30 flex flex-col items-center text-center">
+                <div className="mb-4 p-3 bg-slate-800 rounded-2xl border border-slate-600 relative overflow-hidden">
+                  {profile.marcaDagua ? (
+                    <img src={profile.marcaDagua} alt="Marca d'água" className="w-32 h-32 object-contain relative z-10" />
+                  ) : (
+                    <div className="w-32 h-32 flex items-center justify-center text-slate-600"><Camera size={32} /></div>
                   )}
+                  <div className="absolute inset-0 bg-repeat opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '10px 10px' }}></div>
+                </div>
+                <h4 className="font-bold text-lg text-white mb-2">Marca D'Água</h4>
+                <p className="text-xs text-slate-400 mb-4 max-w-xs">
+                  Aplicada automaticamente nas fotos dos imóveis para proteção.
+                </p>
+                <div className="mt-auto w-full">
                   <button
                     onClick={() => {
                       const input = document.createElement('input');
@@ -946,462 +983,70 @@ export const Settings: React.FC = () => {
                       input.click();
                     }}
                     disabled={uploading}
-                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50"
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
                   >
-                    {uploading ? 'Enviando...' : (profile.marcaDagua ? 'Alterar Marca D\'água' : 'Fazer Upload')}
+                    {uploading ? 'Enviando...' : (profile.marcaDagua ? 'Alterar Marca' : 'Fazer Upload')}
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Welcome Messages Section */}
-            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-3xl border border-emerald-200 border-emerald-800 mb-6">
-              <h4 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
-                <span className="text-2xl">👋</span> Mensagens de Boas-Vindas
+            {/* 2. SOCIALS GRID */}
+            <div className="bg-slate-800/50 rounded-3xl border border-slate-700 p-6 mb-8">
+              <h4 className="font-bold text-lg text-white mb-6 flex items-center gap-2">
+                <span className="text-xl">🌐</span> Redes Conectadas
               </h4>
-              <p className="text-sm text-slate-400 mb-6">
-                Personalize as mensagens que seus clientes verão ao acessar sua página. Use duas frases curtas e impactantes!
-              </p>
-
-              {/* First Message - White */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Mensagem Principal (máximo 40 caracteres) - <span className="text-gray-500">Cor: Branca</span>
-                </label>
-                <input
-                  type="text"
-                  value={profile.boasVindas1}
-                  onChange={e => {
-                    const value = e.target.value;
-                    if (value.length <= 40) {
-                      setProfile({ ...profile, boasVindas1: value });
-                    }
-                  }}
-                  placeholder="Ex: Os Melhores Imóveis em Natal"
-                  maxLength={40}
-                  className="w-full px-4 py-3 rounded-3xl bg-slate-900 border border-emerald-300 border-emerald-700 focus:ring-2 focus:ring-emerald-500 outline-none text-white"
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-xs text-slate-400">
-                    💡 Frase curta e chamativa
-                  </p>
-                  <p className={`text-xs font-medium ${profile.boasVindas1.length >= 35 ? 'text-orange-600' : 'text-gray-500'}`}>
-                    {profile.boasVindas1.length}/40
-                  </p>
-                </div>
-              </div>
-
-              {/* Second Message - Emerald */}
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Mensagem de Destaque (máximo 40 caracteres) - <span className="text-emerald-600 font-bold">Cor: Verde (Destaque)</span>
-                </label>
-                <input
-                  type="text"
-                  value={profile.boasVindas2}
-                  onChange={e => {
-                    const value = e.target.value;
-                    if (value.length <= 40) {
-                      setProfile({ ...profile, boasVindas2: value });
-                    }
-                  }}
-                  placeholder="Ex: Encontre seu lar dos sonhos!"
-                  maxLength={40}
-                  className="w-full px-4 py-3 rounded-3xl bg-slate-900 border border-emerald-300 border-emerald-700 focus:ring-2 focus:ring-emerald-500 outline-none text-white"
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-xs text-emerald-600 text-emerald-400">
-                    ✨ Esta mensagem aparecerá em verde (destaque)
-                  </p>
-                  <p className={`text-xs font-medium ${profile.boasVindas2.length >= 35 ? 'text-orange-600' : 'text-gray-500'}`}>
-                    {profile.boasVindas2.length}/40
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-6 border-t border-slate-700">
-              <button
-                onClick={handleSaveProfile}
-                disabled={saving}
-                className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-full shadow-lg shadow-primary-500/30 flex items-center transition-colors disabled:opacity-50"
-              >
-                {saving ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Save size={18} className="mr-2" />}
-                {saving ? 'Salvando...' : 'Salvar Alterações'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'about' && (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <h3 className="text-xl font-bold text-white mb-6">Sobre Você & Redes Sociais</h3>
-
-            {/* Sobre Você Section */}
-            <div className="p-6 bg-slate-800 rounded-3xl border border-slate-700 mb-6">
-              <h4 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
-                <span className="text-2xl">📝</span> Sobre Você
-              </h4>
-              <p className="text-sm text-slate-400 mb-6">
-                Conte sua história profissional! Este texto aparecerá na sua página "Sobre" e ajudará seus clientes a conhecerem você melhor.
-              </p>
-
-              {/* Sobre Mim Textarea */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Sua História (máximo 800 caracteres)
-                </label>
-                <textarea
-                  value={profile.sobreMim}
-                  onChange={e => {
-                    const value = e.target.value;
-                    if (value.length <= 800) {
-                      setProfile({ ...profile, sobreMim: value });
-                    }
-                  }}
-                  placeholder="Ex: Com mais de 10 anos de experiência no mercado imobiliário, ajudo famílias a encontrarem o lar dos sonhos. Especialista em imóveis residenciais na Zona Sul de Natal..."
-                  maxLength={800}
-                  rows={6}
-                  className="w-full px-4 py-3 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none text-white resize-none"
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-xs text-slate-400">
-                    💡 Seja autêntico e conte sua trajetória profissional
-                  </p>
-                  <p className={`text-xs font-medium ${profile.sobreMim.length >= 750 ? 'text-orange-600' : 'text-gray-500'}`}>
-                    {profile.sobreMim.length}/800
-                  </p>
-                </div>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Imóveis Vendidos */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Imóveis Vendidos/Locados (opcional)
-                  </label>
-                  <input
-                    type="number"
-                    value={profile.imoveisVendidos || ''}
-                    onChange={e => setProfile({ ...profile, imoveisVendidos: parseInt(e.target.value) || 0 })}
-                    placeholder="Ex: 150"
-                    min="0"
-                    className="w-full px-4 py-3 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none text-white"
-                  />
-                  <p className="text-xs text-slate-400 mt-1">
-                    📊 Mostre sua experiência com números
-                  </p>
-                </div>
-
-                {/* Clientes Atendidos */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Clientes Atendidos (opcional)
-                  </label>
-                  <input
-                    type="number"
-                    value={profile.clientesAtendidos || ''}
-                    onChange={e => setProfile({ ...profile, clientesAtendidos: parseInt(e.target.value) || 0 })}
-                    placeholder="Ex: 300"
-                    min="0"
-                    className="w-full px-4 py-3 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none text-white"
-                  />
-                  <p className="text-xs text-slate-400 mt-1">
-                    👥 Quantas pessoas você já ajudou?
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Redes Sociais */}
-            <div className="p-6 bg-slate-800 rounded-3xl border border-slate-700">
-              <h4 className="font-bold text-lg text-white mb-4">Redes Sociais</h4>
-              <p className="text-sm text-slate-400 mb-6">
-                Adicione os links das suas redes sociais para que apareçam na sua página.
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                 {/* Instagram */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
-                    <Instagram size={16} className="text-pink-600" /> Instagram
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.instagram}
-                    onChange={e => setProfile({ ...profile, instagram: e.target.value })}
-                    placeholder="https://instagram.com/seu.usuario"
-                    className="w-full px-4 py-2 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                  />
+                  <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5"><Instagram size={14} className="text-pink-500" /> Instagram</label>
+                  <input type="text" value={profile.instagram} onChange={e => setProfile({ ...profile, instagram: e.target.value })} placeholder="instagram.com/seu.perfil" className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none text-white text-sm" />
                 </div>
-
                 {/* Facebook */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
-                    <Facebook size={16} className="text-blue-600" /> Facebook
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.facebook}
-                    onChange={e => setProfile({ ...profile, facebook: e.target.value })}
-                    placeholder="https://facebook.com/sua.pagina"
-                    className="w-full px-4 py-2 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                  />
+                  <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5"><Facebook size={14} className="text-blue-500" /> Facebook</label>
+                  <input type="text" value={profile.facebook} onChange={e => setProfile({ ...profile, facebook: e.target.value })} placeholder="facebook.com/sua.pagina" className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-white text-sm" />
                 </div>
-
                 {/* LinkedIn */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
-                    <Linkedin size={16} className="text-blue-700" /> LinkedIn
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.linkedin}
-                    onChange={e => setProfile({ ...profile, linkedin: e.target.value })}
-                    placeholder="https://linkedin.com/in/seu-perfil"
-                    className="w-full px-4 py-2 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                  />
+                  <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5"><Linkedin size={14} className="text-blue-400" /> LinkedIn</label>
+                  <input type="text" value={profile.linkedin} onChange={e => setProfile({ ...profile, linkedin: e.target.value })} placeholder="linkedin.com/in/voce" className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none text-white text-sm" />
                 </div>
-
                 {/* YouTube */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
-                    <Youtube size={16} className="text-red-600" /> YouTube
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.youtube}
-                    onChange={e => setProfile({ ...profile, youtube: e.target.value })}
-                    placeholder="https://youtube.com/@seu-canal"
-                    className="w-full px-4 py-2 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                  />
+                  <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5"><Youtube size={14} className="text-red-500" /> YouTube</label>
+                  <input type="text" value={profile.youtube} onChange={e => setProfile({ ...profile, youtube: e.target.value })} placeholder="youtube.com/@canal" className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none text-white text-sm" />
                 </div>
-
-                {/* X / Twitter */}
+                {/* Twitter */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
-                    <Twitter size={16} className="text-gray-200" /> X (Twitter)
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.x}
-                    onChange={e => setProfile({ ...profile, x: e.target.value })}
-                    placeholder="https://x.com/seu_usuario"
-                    className="w-full px-4 py-2 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                  />
+                  <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5"><Twitter size={14} className="text-sky-500" /> X (Twitter)</label>
+                  <input type="text" value={profile.x} onChange={e => setProfile({ ...profile, x: e.target.value })} placeholder="x.com/usuario" className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none text-white text-sm" />
                 </div>
-
                 {/* Threads */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
-                    <AtSign size={16} className="text-white" /> Threads
-                  </label>
-                  <input
-                    type="text"
-                    value={profile.threads}
-                    onChange={e => setProfile({ ...profile, threads: e.target.value })}
-                    placeholder="https://threads.net/@seu_usuario"
-                    className="w-full px-4 py-2 rounded-3xl bg-slate-900 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                  />
+                  <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5"><AtSign size={14} className="text-white" /> Threads</label>
+                  <input type="text" value={profile.threads} onChange={e => setProfile({ ...profile, threads: e.target.value })} placeholder="threads.net/@usuario" className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-white focus:ring-1 focus:ring-white outline-none text-white text-sm" />
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end pt-6 border-t border-slate-700 mt-6">
+            {/* Save Button */}
+            <div className="sticky bottom-0 bg-slate-800/95 backdrop-blur-sm p-4 -mx-6 -mb-6 md:-mx-8 md:-mb-8 border-t border-slate-700 mt-4 rounded-b-3xl flex justify-end z-10">
               <button
                 onClick={handleSaveProfile}
                 disabled={saving}
-                className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-full shadow-lg shadow-primary-500/30 flex items-center transition-colors disabled:opacity-50"
+                className="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Save size={18} className="mr-2" />}
+                {saving ? <Loader2 size={20} className="mr-2 animate-spin" /> : <Save size={20} className="mr-2" />}
                 {saving ? 'Salvando...' : 'Salvar Alterações'}
               </button>
             </div>
           </div>
         )}
 
-        {activeTab === 'security' && (
-          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <h3 className="text-xl font-bold text-white mb-6">Segurança da Conta</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 space-y-6">
-              <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-700">
-                <h4 className="font-bold text-white mb-4 flex items-center">
-                  <Lock size={18} className="mr-2 text-primary-500" /> Alterar Senha
-                </h4>
 
-                <div className="space-y-4 max-w-md">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Nova Senha</label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        value={passwords.newPassword}
-                        onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
-                        className="w-full px-4 py-2 rounded-3xl bg-slate-800 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
 
-                    {/* ✅ Password Strength Indicator */}
-                    {passwords.newPassword && (
-                      <PasswordStrengthIndicator password={passwords.newPassword} />
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Confirmar Nova Senha</label>
-                    <input
-                      type="password"
-                      value={passwords.confirmPassword}
-                      onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                      className="w-full px-4 py-2 rounded-full bg-slate-800 border border-slate-600 focus:ring-2 focus:ring-primary-500 outline-none text-white"
-                    />
-                  </div>
-                  <button
-                    onClick={handleChangePassword}
-                    disabled={saving || !passwords.newPassword}
-                    className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {saving ? 'Alterando...' : 'Atualizar Senha'}
-                  </button>
-                </div>
-              </div>
-
-              {/* LGPD Compliance Section */}
-              <div className="col-span-full space-y-6">
-                {/* Export Data */}
-                <div className="bg-emerald-900/10 p-6 rounded-3xl border border-emerald-900/30">
-                  <h4 className="font-bold text-emerald-400 mb-2 flex items-center">
-                    <Download size={18} className="mr-2" /> Seus Dados (LGPD)
-                  </h4>
-                  <p className="text-sm text-emerald-400/70 mb-4">
-                    Conforme a LGPD (Art. 18), você tem direito de acessar e exportar todos os seus dados armazenados na plataforma.
-                  </p>
-                  <button
-                    onClick={handleExportData}
-                    disabled={exportingData}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-sm font-bold transition-colors flex items-center disabled:opacity-50"
-                  >
-                    {exportingData ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Download size={16} className="mr-2" />}
-                    {exportingData ? 'Exportando...' : 'Baixar Meus Dados (JSON)'}
-                  </button>
-                </div>
-
-                {/* Delete Account */}
-                <div className="bg-red-900/10 p-6 rounded-3xl border border-red-900/30">
-                  <h4 className="font-bold text-red-400 mb-2 flex items-center">
-                    <AlertTriangle size={18} className="mr-2" /> Zona de Perigo
-                  </h4>
-                  <p className="text-sm text-red-400/70 mb-4">
-                    Excluir sua conta é uma ação <strong>irreversível</strong>. Seus dados serão anonimizados conforme a LGPD. Anúncios serão desassociados de você.
-                  </p>
-                  <button
-                    onClick={() => setShowDeleteModal(true)}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full text-sm font-bold transition-colors flex items-center"
-                  >
-                    <Trash2 size={16} className="mr-2" />
-                    Deletar Minha Conta
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Delete Modal */}
-            <DeleteAccountModal
-              isOpen={showDeleteModal}
-              onClose={() => setShowDeleteModal(false)}
-            />
-          </div>
-        )}
-
-        {activeTab === 'notifications' && (
-          <div className="gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <h3 className="text-xl font-bold text-white mb-6">Preferências de Notificação</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 space-y-4 mb-8">
-              <div className="flex items-center justify-between py-3 border-b border-slate-700">
-                <div>
-                  <h4 className="font-medium text-white">Novas Leads</h4>
-                  <p className="text-xs text-gray-500">Receber notificações quando um novo lead for cadastrado.</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={notifications.leads}
-                    onChange={() => toggleNotification('leads')}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between py-3 border-b border-slate-700">
-                <div>
-                  <h4 className="font-medium text-white">Mensagens</h4>
-                  <p className="text-xs text-gray-500">Receber notificações de novas mensagens no chat.</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={notifications.messages}
-                    onChange={() => toggleNotification('messages')}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between py-3 border-b border-slate-700">
-                <div>
-                  <h4 className="font-medium text-white">Atualizações de Imóveis</h4>
-                  <p className="text-xs text-gray-500">Receber alertas sobre mudanças em seus imóveis.</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={notifications.properties}
-                    onChange={() => toggleNotification('properties')}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between py-3 border-b border-slate-700">
-                <div>
-                  <h4 className="font-medium text-white">Marketing e Dicas</h4>
-                  <p className="text-xs text-gray-500">Receber novidades e dicas da Plataforma.</p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={notifications.marketing}
-                    onChange={() => toggleNotification('marketing')}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all border-gray-600 peer-checked:bg-primary-500"></div>
-                </label>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={saveNotifications}
-                disabled={saving}
-                className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-full shadow-lg shadow-primary-500/30 flex items-center transition-colors disabled:opacity-50"
-              >
-                {saving ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Save size={18} className="mr-2" />}
-                {saving ? 'Salvando...' : 'Salvar Preferências'}
-              </button>
-            </div>
-          </div>
-        )}
 
       </div>
     </div >

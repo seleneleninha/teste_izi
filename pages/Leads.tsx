@@ -12,6 +12,8 @@ import { useToast } from '../components/ToastContext';
 import { useAuth } from '../components/AuthContext';
 import { SalesFunnel } from '../components/SalesFunnel';
 import { QuickStats } from '../components/QuickStats';
+import { useHeader } from '../components/HeaderContext';
+
 import {
     DndContext,
     DragEndEvent,
@@ -94,8 +96,8 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
             style={style}
             {...attributes}
             {...listeners}
-            className={`bg-slate-800 p-4 rounded-3xl shadow-sm border border-slate-700 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group ${isDragging ? 'shadow-2xl ring-2 ring-primary-500 scale-105' : ''
-                } ${locked ? 'opacity-75' : ''}`}
+            className={`bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-700/50 hover:border-slate-500 transition-all cursor-grab active:cursor-grabbing group hover:shadow-lg ${isDragging ? 'shadow-2xl ring-2 ring-emerald-500/50 scale-105 z-50' : ''
+                } ${locked ? 'opacity-75 grayscale' : ''}`}
         >
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
@@ -241,29 +243,29 @@ const DroppableColumn: React.FC<{
     });
 
     return (
-        <div ref={setNodeRef} className="bg-slate-800 rounded-3xl border border-slate-700 shadow-sm transition-all hover:shadow-md">
+        <div ref={setNodeRef} className="bg-slate-900/40 rounded-3xl border border-slate-700/50 shadow-sm transition-all hover:shadow-md backdrop-blur-sm overflow-hidden">
             {/* Column Header acting as Stage Card Header */}
-            <div className="p-4 border-b border-slate-700 flex items-center justify-between bg-midnight-950/50 rounded-t-3xl">
+            <div className="p-4 border-b border-slate-700/50 flex items-center justify-between bg-slate-900/80">
                 <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-3xl shadow-sm bg-slate-700`}>
+                    <div className={`p-2 rounded-xl shadow-sm bg-slate-800 border border-slate-700`}>
                         {Icon && <Icon size={20} className={color.replace('bg-', 'text-')} />}
                     </div>
                     <div>
-                        <h3 className="font-bold text-white text-base">{label}</h3>
-                        {description && <p className="text-xs text-slate-400">{description}</p>}
+                        <h3 className="font-bold text-white text-base tracking-tight">{label}</h3>
+                        {description && <p className="text-xs text-slate-500 font-medium">{description}</p>}
                     </div>
                 </div>
                 <div className="text-right">
-                    <span className="text-xl font-bold text-white block">{leads.length}</span>
+                    <span className="text-xl font-bold text-emerald-400 block">{leads.length}</span>
                 </div>
             </div>
 
             {/* Leads List */}
-            <div className="p-4 min-h-[100px] space-y-3 bg-slate-900/20">
+            <div className="p-4 min-h-[100px] space-y-3 bg-slate-950/20">
                 {children}
                 {leads.length === 0 && (
-                    <div className="border-2 border-dashed border-slate-700 rounded-2xl p-6 text-center">
-                        <p className="text-sm text-gray-400">Arraste leads para cá</p>
+                    <div className="border-2 border-dashed border-slate-800 rounded-2xl p-6 text-center">
+                        <p className="text-sm text-slate-500 font-medium">Arraste leads para cá</p>
                     </div>
                 )}
             </div>
@@ -272,6 +274,7 @@ const DroppableColumn: React.FC<{
 };
 
 export const Leads: React.FC = () => {
+    const { setHeaderContent } = useHeader();
     const { addToast } = useToast();
     const { user } = useAuth();
     const [leads, setLeads] = useState<Lead[]>([]);
@@ -332,6 +335,18 @@ export const Leads: React.FC = () => {
         { status: 'Fechado', label: 'Fechados', color: 'bg-green-500', darkColor: 'bg-green-600', icon: CheckCircle, description: 'Negócio concluído' },
         { status: 'Perdido', label: 'Perdidos', color: 'bg-red-500', darkColor: 'bg-red-600', icon: XCircle, description: 'Leads perdidos' },
     ];
+
+    useEffect(() => {
+        setHeaderContent(
+            <div className="flex flex-col justify-center">
+                <h2 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
+                    Gestão de Leads
+                </h2>
+                <p className="text-slate-400 text-xs font-medium leading-tight">Gerencie seu funil de vendas e acompanhe seus clientes</p>
+            </div>
+        );
+        return () => setHeaderContent(null);
+    }, [setHeaderContent]);
 
     useEffect(() => {
         fetchLeads();
@@ -755,19 +770,18 @@ export const Leads: React.FC = () => {
     return (
         <div className="flex flex-col">
             {/* Controls */}
-            <div className="mt-6 flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-white">Gestão de Leads</h2>
-                </div>
-                <div className="flex space-x-3">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            {/* Controls */}
+            <div className="mt-8 flex flex-col md:flex-row justify-end items-start md:items-center mb-6 gap-4">
+                {/* Title moved to Header */}
+                <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800 space-x-2">
+                    <div className="relative group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-emerald-500 transition-colors" />
                         <input
                             type="text"
                             placeholder="Buscar leads..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none w-48 text-white"
+                            className="pl-9 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 focus:outline-none w-48 md:w-64 text-white transition-all hover:bg-slate-750"
                         />
                     </div>
                     <button
@@ -780,8 +794,8 @@ export const Leads: React.FC = () => {
                             });
                             setIsModalOpen(true);
                         }}
-                        className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-full text-sm font-medium transition-colors flex items-center">
-                        <Plus size={16} className="mr-2" /> Novo Lead
+                        className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all flex items-center shadow-lg shadow-emerald-900/20 active:scale-95 border border-emerald-500/20">
+                        <Plus size={18} className="mr-2" /> Novo Lead
                     </button>
                 </div>
             </div>

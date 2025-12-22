@@ -319,12 +319,12 @@ export const BrokerPage: React.FC = () => {
                     <h3 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
                         <span className="w-2 h-8 bg-blue-500 rounded-full" /> Explore por <span className="text-blue-400">Categoria</span>
                     </h3>
-                    <div className="grid grid-cols-3 lg:grid-cols-6 gap-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-6 gap-6">
                         {[
-                            { label: 'Apto', type: 'apartamento', icon: <Building size={28} /> },
-                            { label: 'Casa', type: 'casa', icon: <MapPinHouse size={28} /> },
-                            { label: 'Comercial', type: 'comercial', icon: <Building2 size={28} /> },
-                            { label: 'Rural', type: 'rural', icon: <Trees size={28} /> },
+                            { label: 'Apartamentos', type: 'apartamento', icon: <Building size={28} /> },
+                            { label: 'Casas', type: 'casa', icon: <MapPinHouse size={28} /> },
+                            { label: 'Comerciais', type: 'comercial', icon: <Building2 size={28} /> },
+                            { label: 'Rurais', type: 'rural', icon: <Trees size={28} /> },
                             { label: 'Temporada', type: 'temporada', icon: <TreePalm size={28} /> },
                             { label: 'Terrenos', type: 'terreno', icon: <MapPinned size={28} /> },
                         ]
@@ -342,17 +342,17 @@ export const BrokerPage: React.FC = () => {
                                     className="group relative h-40 rounded-3xl bg-midnight-900/40 backdrop-blur-sm border border-white/5 hover:border-emerald-500/30 transition-all duration-500 cursor-pointer flex flex-col items-center justify-center gap-3 hover:-translate-y-2 overflow-hidden"
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                    <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full blur opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
 
                                     <div className="relative z-10 text-gray-400 group-hover:text-emerald-400 transition-colors duration-300 p-3 bg-white/5 rounded-full group-hover:bg-emerald-500/10 group-hover:scale-110 transform">
                                         {category.icon}
+                                        {/* Notification Badge */}
+                                        <div className="absolute -top-2 -right-2 flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white shadow-sm ring-1 ring-white transition-transform duration-300 group-hover:scale-110">
+                                            {categoryCounts[category.type] || 0}
+                                        </div>
                                     </div>
 
                                     <div className="relative z-10 text-center">
                                         <h3 className="font-bold text-white text-base group-hover:text-emerald-100 transition-colors">{category.label}</h3>
-                                        <p className="text-xs text-gray-500 group-hover:text-emerald-400/80 transition-colors mt-1 font-medium">
-                                            {categoryCounts[category.type] || 0} opções
-                                        </p>
                                     </div>
                                 </div>
                             ))}
@@ -387,7 +387,7 @@ export const BrokerPage: React.FC = () => {
 
                     {/* Map View */}
                     {showMap && PropertyMap && (
-                        <div className="mb-12 h-[500px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-20">
+                        <div className="mb-12 h-[400px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-20">
                             <PropertyMap properties={allProperties} />
                         </div>
                     )}

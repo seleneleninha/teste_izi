@@ -124,7 +124,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                     .select('id')
                     .eq('user_id', user.id)
                     .eq('anuncio_id', property.id)
-                    .single();
+                    .maybeSingle();
 
                 if (data) setIsFavorite(true);
             } catch (error) {

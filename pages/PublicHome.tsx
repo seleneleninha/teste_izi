@@ -11,6 +11,7 @@ import { getRandomBackground } from '../lib/backgrounds';
 import { PartnersCarousel } from '../components/PartnersCarousel';
 import { PropertyGridSkeleton, CityCardSkeleton } from '../components/LoadingSkeleton';
 import { SEOHead, generateSchemaOrg } from '../components/SEOHead';
+import { useLocation } from '../components/LocationContext';
 
 
 interface Property {
@@ -44,6 +45,8 @@ export const PublicHome: React.FC = () => {
     const [showMap, setShowMap] = useState(false);
     const [PropertyMap, setPropertyMap] = useState<React.ComponentType<any> | null>(null);
     const [bgImage, setBgImage] = useState(getRandomBackground());
+    const { location } = useLocation();
+    const [activeCity, setActiveCity] = useState<string | null>(null);
 
     const cityImages: Record<string, string> = {
         'natal': '/cities/natal.png',
@@ -56,7 +59,9 @@ export const PublicHome: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchData();
+        if (location.loading) return; // Wait for location check to finish
+
+        fetchData(location.city);
         fetchCategoryCounts();
 
         // Dynamically import PropertyMap to avoid SSR issues
@@ -165,9 +170,10 @@ export const PublicHome: React.FC = () => {
         }
     };
 
-    const fetchData = async () => {
+    const fetchData = async (cityFilter?: string | null) => {
+        setLoading(true);
         try {
-            const { data: properties, error } = await supabase
+            let query = supabase
                 .from('anuncios')
                 .select(`
                     id, 
@@ -192,6 +198,46 @@ export const PublicHome: React.FC = () => {
                 .eq('status', 'ativo')
                 .order('created_at', { ascending: false })
                 .limit(16);
+
+            // 1. Try to fetch by City if available
+            if (cityFilter) {
+                // Clone the query or construct a specific one
+                const { data: cityProperties, error: cityError } = await supabase
+                    .from('anuncios')
+                    .select(`
+                        id, cod_imovel, titulo, cidade, bairro, valor_venda, valor_locacao, valor_diaria, valor_mensal, 
+                        fotos, quartos, banheiros, vagas, area_priv, latitude, longitude, operacao(tipo), tipo_imovel(tipo)
+                    `)
+                    .eq('status', 'ativo')
+                    .ilike('cidade', cityFilter)
+                    .order('created_at', { ascending: false })
+                    .limit(16);
+
+                if (!cityError && cityProperties && cityProperties.length > 0) {
+                    // Normalize nested objects
+                    const formattedCityProps = cityProperties.map(p => ({
+                        ...p,
+                        tipo_imovel: typeof p.tipo_imovel === 'object' ? p.tipo_imovel?.tipo : p.tipo_imovel,
+                        operacao: typeof p.operacao === 'object' ? p.operacao?.tipo : p.operacao
+                    }));
+
+                    setRecentProperties(formattedCityProps);
+                    // Set map markers
+                    setAllMapMarkers(formattedCityProps);
+                    setActiveCity(cityFilter);
+                    setLoading(false);
+
+                    // We also need cities/neighborhoods lists, which are fetched below based on 'properties'.
+                    // To keep it simple, we skip deriving lists from just city props and rely on fetchCategoryCounts or general fetch logic?
+                    // Let's just exit here for the properties part.
+                    return;
+                }
+                // If city fetch empty, fall through to default fetch (reset activeCity)
+                setActiveCity(null);
+            }
+
+            // 2. Default Fetch (No city or empty city results)
+            const { data: properties, error } = await query;
 
             if (error) {
                 console.error('Supabase error:', error);
@@ -345,9 +391,9 @@ export const PublicHome: React.FC = () => {
                     <h2 className="text-3xl font-bold mb-8 text-white flex items-center gap-3">
                         <span className="w-2 h-8 bg-blue-500 rounded-full" /> Explore por <span className="text-blue-400">Categoria</span>
                     </h2>
-                    <div className="grid grid-cols-3 lg:grid-cols-6 gap-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-6 gap-6">
                         {[
-                            { label: 'Aptos', type: 'apartamento', icon: <Building size={28} />, count: '24' },
+                            { label: 'Apartamentos', type: 'apartamento', icon: <Building size={28} />, count: '24' },
                             { label: 'Casas', type: 'casa', icon: <MapPinHouse size={28} />, count: '12' },
                             { label: 'Comerciais', type: 'comercial', icon: <Building2 size={28} />, count: '8' },
                             { label: 'Rurais', type: 'rural', icon: <Trees size={28} />, count: '5' },
@@ -374,18 +420,16 @@ export const PublicHome: React.FC = () => {
                                     {/* Hover Gradient Background */}
                                     <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                                    {/* Glow Effect */}
-                                    <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-full blur opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
-
                                     <div className="relative z-10 text-gray-400 group-hover:text-emerald-400 transition-colors duration-300 p-3 bg-white/5 rounded-full group-hover:bg-emerald-500/10 group-hover:scale-110 transform">
                                         {category.icon}
+                                        {/* Notification Badge */}
+                                        <div className="absolute -top-2 -right-2 flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white shadow-sm ring-1 ring-white transition-transform duration-300 group-hover:scale-110">
+                                            {categoryCounts[category.type]}
+                                        </div>
                                     </div>
 
                                     <div className="relative z-10 text-center">
                                         <h3 className="font-bold text-white text-base group-hover:text-emerald-100 transition-colors">{category.label}</h3>
-                                        <p className="text-xs text-gray-500 group-hover:text-emerald-400/80 transition-colors mt-1 font-medium">
-                                            {categoryCounts[category.type]} opções
-                                        </p>
                                     </div>
                                 </div>
                             ))}
@@ -398,11 +442,21 @@ export const PublicHome: React.FC = () => {
                 <div className="container mx-auto px-4 relative z-10">
                     <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
                         <div>
-                            <h2 className="text-3xl font-bold mb-2 text-white flex items-center gap-3">
-                                <span className="w-2 h-8 bg-red-500 rounded-full" /> Acabaram <span className="text-red-400">de Chegar</span>
+                            <h2 className="text-3xl font-bold mb-2 text-white flex flex-col md:flex-row md:items-center gap-3">
+                                <div>
+                                    <span className="w-2 h-8 bg-red-500 rounded-full inline-block mr-3 align-middle" />
+                                    Acabaram <span className="text-red-400">de Chegar</span>
+                                    {activeCity && (
+                                        <span className="ml-2 text-red-400 text-3xl animate-fade-in inline-block">
+                                            em {activeCity}
+                                        </span>
+                                    )}
+                                </div>
                             </h2>
                             <p className="text-xl text-gray-400 font-bold max-w-lg">
-                                Confira os imóveis mais novos cadastrados em nossa plataforma.
+                                {activeCity
+                                    ? `Selecionamos as melhores oportunidades em ${activeCity} para você.`
+                                    : "Confira os imóveis mais novos cadastrados em nossa plataforma."}
                             </p>
                         </div>
 
@@ -420,7 +474,7 @@ export const PublicHome: React.FC = () => {
 
                     {/* Map View */}
                     {showMap && PropertyMap && (
-                        <div className="mb-12 h-[500px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-20">
+                        <div className="mb-12 h-[400px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-20">
                             <PropertyMap properties={allMapMarkers} />
                         </div>
                     )}

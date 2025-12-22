@@ -171,7 +171,7 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
                                         <li><a href="/login" className="hover:text-emerald-400 transition-colors">Área do Corretor</a></li>
                                         <li><a href="/partner" className="hover:text-emerald-400 transition-colors">Seja um Parceiro</a></li>
                                         <li><a href="/about" className="hover:text-emerald-400 transition-colors">Sobre Nós</a></li>
-                                        <li><a href="#/contact" className="hover:text-emerald-400 transition-colors">Contato</a></li>
+                                        <li><a href="mailto:falecom@izibrokerz.com.br" className="hover:text-emerald-400 transition-colors">Contato</a></li>
                                     </>
                                 )}
                             </ul>

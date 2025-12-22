@@ -49,7 +49,7 @@ export const AIAssistant: React.FC = () => {
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-80 md:w-96 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 overflow-hidden animate-in fade-in slide-in-from-bottom-10 duration-200 flex flex-col max-h-[500px]">
+        <div className="mb-4 w-80 md:w-96 bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 overflow-hidden animate-in fade-in slide-in-from-bottom-10 duration-200 flex flex-col max-h-[400px]">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary-600 to-primary-500 p-4 flex justify-between items-center">
             <div className="flex items-center space-x-2 text-white">

@@ -33,60 +33,121 @@ export const PLATFORM_KNOWLEDGE = {
         ]
     },
 
-    // Pitch para Corretores (Atualizado)
+    // Tom de voz
+    voiceTone: {
+        style: 'Profissional, empática, proativa e amigável. Como uma consultora imobiliária experiente que realmente quer ajudar.',
+        rules: [
+            "SEMPRE use quebras de linha (pule uma linha) para separar assuntos diferentes na mesma mensagem. Isso melhora a leitura.",
+            "Seja direto e evite rodeios",
+            "Use linguagem amigável e acessível",
+            "Mostre entusiasmo genuíno",
+            "Personalize com o contexto da conversa",
+            "Use emojis com moderação (1-2 por mensagem)",
+            "Sempre termine com uma ação ou pergunta relevante",
+            "Se possível, chegando próximo do final da conversa, direcione o cliente com um CTA"
+        ],
+        goldenRules: [
+            "NUNCA seja insistente ou agressiva se o usuário disser 'não'.",
+            "NUNCA compartilhe dados pessoais de outros usuários.",
+            "NUNCA deixe o usuário sem resposta (sempre termine com uma pergunta ou ação).",
+            "NUNCA critique outras plataformas ou concorrentes.",
+            "NUNCA esqueça que seu objetivo final é conectar pessoas.",
+            "Respeite a quebra de linhas para não criar blocos de texto gigantes."
+        ],
+        responseVariations: {
+            greetings: [
+                "Olá! Sou a IzA. Como posso ajudar você hoje?",
+                "Oi! Bem-vindo à iziBrokerz. Estou aqui para te ajudar. O que você procura?",
+                "Olá! Tudo bem? Sou a assistente virtual da iziBrokerz. Vamos encontrar seu novo lar ou ampliar seus negócios?"
+            ],
+            // ... (rest unchanged)
+            fallback: [
+                "Não entendi muito bem. Você pode reformular? Estou aprendendo todos os dias! 🧠",
+                "Poderia explicar de outra forma? Quero muito te ajudar com isso.",
+                "Hmm, não tenho certeza se entendi. Você está buscando comprar, alugar ou é um corretor?"
+            ],
+            closing: [
+                "Qualquer coisa, estou por aqui! 👋",
+                "Espero ter ajudado! Se precisar de algo mais, é só chamar.",
+                "Tenha um ótimo dia! Conte comigo para o que precisar."
+            ],
+            brokerHooks: [
+                "Sabia que você pode testar nossa plataforma por 14 dias grátis? E sem cartão de crédito?",
+                "Nossa rede de parcerias está crescendo muito. Já pensou em anunciar seus imóveis aqui?",
+                "Temos ferramentas incríveis para corretores. Que tal dar uma olhada no nosso plano Básico?"
+            ]
+        }
+    },
+
+    // Tratamento de Objeções (Novo)
+    objections: {
+        security: {
+            trigger: ["seguro", "golpe", "confiável", "medo", "perigoso", "fake", "privacidade", "lgpd", "dados"],
+            response: "Fique tranquilo(a)! 🛡️ Nossos Corretores Parceiros passam por verificação rigorosa. Em relação aos dados: As informações do seu Cliente SÃO SUAS!!! A iziBrokerz em momento algum divulga esses dados, seguindo estritamente a LGPD. Usamos apenas para o MATCH Inteligente de forma segura."
+        },
+        price: {
+            trigger: ["caro", "preço alto", "valor alto", "muito dinheiro", "muito caro"],
+            response: "Entendo a preocupação. O investimento na plataforma se paga com uma única venda potencializada pelas nossas ferramentas de IA e Parcerias."
+        },
+        competition: {
+            trigger: ["zap", "outra plataforma"],
+            response: "Existem ótimas opções! O diferencial da iziBrokerz é o foco em Parcerias (Rede Colaborativa) e o uso de IA real para qualificar seus leads."
+        }
+    },
+
+    // Pitch para Corretores (Atualizado com pesquisa de dores)
     brokerPitch: {
-        headline: "Mais Leads. Mais Imóveis. Mais Parcerias. Mais Resultados!",
+        headline: "A Solução Completa para Vender Mais e Captar Leads Qualificados",
 
         mainBenefits: [
             {
-                title: "Página Personalizada com IA",
-                description: "Seu site profissional com assistente virtual que atende seus clientes 24h",
-                icon: "🏠"
-            },
-            {
-                title: "Sistema de Parcerias Inteligente",
-                description: "Amplie sua carteira de imóveis trabalhando em parceria com outros Corretores da sua região",
+                title: "Rede de Parcerias",
+                description: "No sistema de parcerias, aproximamos Corretores da sua região, criando oportunidades de negócios. O que você prefere... 50% de algo ou 100% de nada?! Ao aceitar parceria, seu imóvel aparece na página de todos os corretores parceiros da sua cidade!",
                 icon: "🤝"
             },
             {
-                title: "MATCH Automático",
-                description: "Cadastrou um cliente? Buscamos automaticamente imóveis compatíveis em toda nossa Plataforma!",
+                title: "Página Profissional",
+                description: "Por que divulgar somente um imóvel se você pode divulgar TODO seu portfólio? Ter sua própria vitrine de ofertas demonstra profissionalismo e cuidado com a imagem do seu negócio. É um diferencial de Alta Performance!",
+                icon: "🌐"
+            },
+            {
+                title: "MATCH Inteligente",
+                description: "Ao cadastrar um cliente, a iziBrokerz busca automaticamente imóveis compatíveis na região. Sem mistério, sem complicação! E fique tranquilo(a): as informações do seu cliente são SUAS e protegidas pela LGPD.",
                 icon: "🎯"
             },
             {
-                title: "Notificações em Tempo Real",
-                description: "Novo imóvel compatível com seu cliente? Avisamos você pelo WhatsApp!",
-                icon: "📲"
+                title: "Venda Mais com IA",
+                description: "Nossa Inteligência Artificial trabalha 24h para qualificar leads e te entregar oportunidades reais de negócio.",
+                icon: "🤖"
             },
             {
-                title: "CRM Simplificado",
-                description: "Sem firulas! Funil de vendas direto ao ponto, focado no que gera resultado",
+                title: "CRM Automático",
+                description: "Organize seus atendimentos sem perder tempo com planilhas.",
                 icon: "📊"
             },
             {
-                title: "Importação XML (Em breve)",
-                description: "Importe seus imóveis de outras plataformas com poucos cliques",
-                icon: "📥"
+                title: "Planos e Preços", // Changed specifically to catch 'Ver Planos' intent content
+                description: "Nossa plataforma oferece planos personalizados para cada momento da sua carreira. [Clique aqui](/partner) para ver nossos planos detalhados.",
+                icon: "💰"
             }
         ],
 
         security: {
-            title: "Rede Segura e Verificada",
-            description: "Todos os Corretores Parceiros são verificados no sistema CRECI/COFECI",
+            title: "Plataforma Verificada",
+            description: "Ambiente seguro com verificação rigorosa de todos os profissionais.",
             icon: "🔒"
         },
 
         focus: [
-            "MAIS LEADS",
-            "MAIS IMÓVEIS",
-            "MAIS PARCERIAS",
-            "MAIS POSSIBILIDADES DE GANHO",
-            "MATCH INTELIGENTE",
-            "INTEGRAÇÕES QUE FUNCIONAM"
+            "AUMENTAR VENDAS COM IA",
+            "CAPTAR MAIS LEADS",
+            "SITE PROFISSIONAL GRÁTIS",
+            "PARCERIAS QUE FUNCIONAM",
+            "AUTOMAÇÃO DE ATENDIMENTO"
         ],
 
-        ctaPage: "/anunciar",
-        ctaText: "Começar Teste Grátis de 14 dias"
+        ctaPage: "/partner", // Updated to partner page
+        ctaText: "Ver Planos e Começar Agora"
     },
 
     // Fluxo para Compradores/Locatários
@@ -270,69 +331,6 @@ export const PLATFORM_KNOWLEDGE = {
         responseTime: "Até 24 horas"
     },
 
-    // Tom de voz
-    voiceTone: {
-        style: 'Profissional, empática, proativa e amigável. Como uma consultora imobiliária experiente que realmente quer ajudar.',
-        rules: [
-            "Seja direto e evite rodeios",
-            "Use linguagem amigável e acessível",
-            "Mostre entusiasmo genuíno",
-            "Personalize com o contexto da conversa",
-            "Use emojis com moderação (1-2 por mensagem)",
-            "Sempre termine com uma ação ou pergunta relevante",
-            "Se possível, chegando próximo do final da conversa, direcione o cliente com um CTA (anúncio de imóvel ou direcione para uma página da plataforma"
-        ],
-        goldenRules: [
-            "NUNCA seja insistente ou agressiva se o usuário disser 'não'.",
-            "NUNCA compartilhe dados pessoais de outros usuários.",
-            "NUNCA deixe o usuário sem resposta (sempre termine com uma pergunta ou ação).",
-            "NUNCA use gírias excessivas ou linguagem muito informal.",
-            "NUNCA critique outras plataformas ou concorrentes.",
-            "NUNCA assuma que o usuário é corretor ou comprador sem indícios.",
-            "NUNCA envie links quebrados ou IDs internos.",
-            "NUNCA esqueça que seu objetivo final é conectar pessoas (lead ou parceria).",
-            "EVITE termos em inglês (ex: 'pricing', 'timing', 'knowhow'). Use equivalentes em português."
-        ],
-        responseVariations: {
-            greetings: [
-                "Olá! Sou a IzA. Como posso ajudar você hoje?",
-                "Oi! Bem-vindo à iziBrokerz. Estou aqui para te ajudar. O que você procura?",
-                "Olá! Tudo bem? Sou a assistente virtual da iziBrokerz. Vamos encontrar seu novo lar ou ampliar seus negócios?"
-            ],
-            fallback: [
-                "Não entendi muito bem. Você pode reformular? Estou aprendendo todos os dias! 🧠",
-                "Poderia explicar de outra forma? Quero muito te ajudar com isso.",
-                "Hmm, não tenho certeza se entendi. Você está buscando comprar, alugar ou é um corretor?"
-            ],
-            closing: [
-                "Qualquer coisa, estou por aqui! 👋",
-                "Espero ter ajudado! Se precisar de algo mais, é só chamar.",
-                "Tenha um ótimo dia! Conte comigo para o que precisar."
-            ],
-            brokerHooks: [
-                "Sabia que você pode testar nossa plataforma por 14 dias grátis? E sem cartão de crédito?",
-                "Nossa rede de parcerias está crescendo muito. Já pensou em anunciar seus imóveis aqui?",
-                "Temos ferramentas incríveis para corretores. Que tal dar uma olhada no nosso plano Básico?"
-            ]
-        }
-    },
-
-    // Tratamento de Objeções (Novo)
-    objections: {
-        security: {
-            trigger: ["seguro", "golpe", "confiável", "medo", "perigoso", "fake"],
-            response: "Pode ficar tranquilo(a)! 🛡️ Nossos Corretores Parceiros passam por verificação de CRECI/COFECI antes de entrarem na plataforma. Sua segurança é nossa prioridade número 1. Se notar algo estranho, me avise!"
-        },
-        price: {
-            trigger: ["caro", "preço alto", "valor alto", "muito dinheiro", "muito caro"],
-            response: "Entendo a preocupação com o valor. 💰 O mercado varia bastante por região. Que tal me dizer qual faixa de preço fica confortável para o seu bolso? Posso filtrar opções melhores!"
-        },
-        competition: {
-            trigger: ["zap", "quintoandar", "viva real", "olx", "chaves na mão", "kenlo", "tecimob", "outra plataforma"],
-            response: "São ótimas plataformas também! 🤝 O diferencial da iziBrokerz é que conectamos você diretamente ao Corretor especialista da região, sem intermediários burocráticos e com parcerias que aumentam as opções de imóveis."
-        }
-    },
-
     // Dicas Educacionais para Corretores (Novo)
     brokerEducation: [
         "📸 **Dica da IzA:** Fotos com iluminação natural e ambientes organizados aumentam em até 3x os cliques no anúncio!",
@@ -393,16 +391,34 @@ export function extractInfoFromMessage(message: string, state: ConversationState
     const lowerMessage = message.toLowerCase();
     const newState = { ...state };
 
-    // Detectar operação
-    if (!newState.operacao) {
-        for (const [operacao, keywords] of Object.entries(PLATFORM_KNOWLEDGE.buyerFlow.operacaoKeywords)) {
-            if (keywords.some(kw => lowerMessage.includes(kw))) {
-                newState.operacao = operacao;
-                if (!newState.answeredQuestions.includes('operacao')) {
-                    newState.answeredQuestions.push('operacao');
-                }
-                break;
+    // Detectar operação - AGGRESSIVE UPDATE (Handling Pivots)
+    for (const [operacao, keywords] of Object.entries(PLATFORM_KNOWLEDGE.buyerFlow.operacaoKeywords)) {
+        if (keywords.some(kw => lowerMessage.includes(kw))) {
+            const detectedOp = operacao;
+
+            // If operation changes (e.g. from 'venda' to 'locacao'), we must RESET the funnel
+            // Logic: "Buying an Apartment in Ponta Negra" != "Renting an Apartment in Ponta Negra". 
+            // The inventory is different.
+            if (newState.operacao && newState.operacao !== detectedOp) {
+                console.log(`🔄 PIVOT DETECTED: Changing operation from ${newState.operacao} to ${detectedOp}`);
+                newState.operacao = detectedOp;
+                // Reset dependent fields to force fresh search
+                newState.tipoImovel = null;
+                newState.bairro = null;
+                newState.bairros = [];
+                newState.cidade = null; // Maybe keep city? But safer to reset to be sure. Let's keep city if explicit? No, better reset.
+                newState.valorMin = null;
+                newState.valorMax = null;
+                // Don't reset clientType
+            } else {
+                // Standard assignment
+                newState.operacao = detectedOp;
             }
+
+            if (!newState.answeredQuestions.includes('operacao')) {
+                newState.answeredQuestions.push('operacao');
+            }
+            break;
         }
     }
 

@@ -38,8 +38,11 @@ const AvailabilityCheck = lazy(() => import('./pages/AvailabilityCheck').then(mo
 
 
 import { ToastProvider } from './components/ToastContext';
+import { LocationProvider } from './components/LocationContext';
 import { MagicVerification } from './pages/MagicVerification';
 import { LoadingFallback } from './components/LoadingFallback';
+import { ChatProvider } from './components/ChatContext';
+import { HeaderProvider } from './components/HeaderContext';
 
 const App: React.FC = () => {
   // ✅ Preload critical routes on idle
@@ -66,67 +69,73 @@ const App: React.FC = () => {
       <ThemeProvider>
         <AuthProvider>
           <ToastProvider>
-            <Router>
-              <ScrollToTop />
-              <Suspense fallback={<LoadingFallback />}>
-                <Routes>
-                  {/* Public Routes - Ordem importa! Mais específico primeiro */}
-                  <Route element={<PublicLayout />}>
-                    {/* Home */}
-                    <Route path="/" element={<PublicHome />} />
+            <ChatProvider>
+              <LocationProvider>
+                <HeaderProvider>
+                  <Router>
+                    <ScrollToTop />
+                    <Suspense fallback={<LoadingFallback />}>
+                      <Routes>
+                        {/* Public Routes - Ordem importa! Mais específico primeiro */}
+                        <Route element={<PublicLayout />}>
+                          {/* Home */}
+                          <Route path="/" element={<PublicHome />} />
 
-                    {/* Páginas fixas (específicas) */}
-                    <Route path="/search" element={<PropertiesList />} />
-                    <Route path="/buscar" element={<PropertiesList />} />
-                    <Route path="/partner" element={<PartnerPage />} />
-                    <Route path="/sell" element={<PartnerPage />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/terms" element={<TermsOfService />} />
-                    <Route path="/privacy" element={<PrivacyPolicy />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/favoritos" element={<Favorites />} />
+                          {/* Páginas fixas (específicas) */}
+                          <Route path="/search" element={<PropertiesList />} />
+                          <Route path="/buscar" element={<PropertiesList />} />
+                          <Route path="/partner" element={<PartnerPage />} />
+                          <Route path="/sell" element={<PartnerPage />} />
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/terms" element={<TermsOfService />} />
+                          <Route path="/privacy" element={<PrivacyPolicy />} />
+                          <Route path="/about" element={<About />} />
+                          <Route path="/favoritos" element={<Favorites />} />
 
-                    {/* Magic Link Verification */}
-                    <Route path="/v/:token" element={<MagicVerification />} />
+                          {/* Magic Link Verification */}
+                          <Route path="/v/:token" element={<MagicVerification />} />
 
-                    {/* Agent Profile */}
-                    <Route path="/agent/:id" element={<AgentProfile />} />
+                          {/* Agent Profile */}
+                          <Route path="/agent/:id" element={<AgentProfile />} />
 
-                    {/* Imóveis - Prefixo /imovel */}
-                    <Route path="/imovel/:slug" element={<PropertyDetails />} />
+                          {/* Imóveis - Prefixo /imovel */}
+                          <Route path="/imovel/:slug" element={<PropertyDetails />} />
 
-                    {/* Corretor - Páginas específicas com slug */}
-                    <Route path="/:slug/imovel/:propertySlug" element={<PropertyDetails />} />
-                    <Route path="/:slug/buscar" element={<BrokerSearchPage />} />
-                    <Route path="/:slug/sobre" element={<BrokerAboutPage />} />
+                          {/* Corretor - Páginas específicas com slug */}
+                          <Route path="/:slug/imovel/:propertySlug" element={<PropertyDetails />} />
+                          <Route path="/:slug/buscar" element={<BrokerSearchPage />} />
+                          <Route path="/:slug/sobre" element={<BrokerAboutPage />} />
 
-                    {/* Corretor - Página Principal (último, pega qualquer slug) */}
-                    <Route path="/:slug" element={<BrokerPage />} />
-                  </Route>
+                          {/* Corretor - Página Principal (último, pega qualquer slug) */}
+                          <Route path="/:slug" element={<BrokerPage />} />
+                        </Route>
 
-                  {/* Protected Routes - Require Authentication */}
-                  <Route element={<ProtectedRoute />}>
-                    <Route path="/availability/:id" element={<AvailabilityCheck />} />
-                    <Route element={<DashboardLayout />}>
-                      <Route path="/admin/approvals" element={<AdminApprovals />} />
-                      <Route path="/admin/plans" element={<AdminPlans />} />
-                      <Route path="/admin/coupons" element={<AdminCoupons />} />
-                      <Route path="/admin/financial" element={<AdminFinancial />} />
-                      <Route path="/admin/trial-settings" element={<AdminTrialSettings />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/properties" element={<PropertiesList />} />
-                      <Route path="/properties/:slug" element={<PropertyDetails />} />
-                      <Route path="/add-property" element={<AddProperty />} />
-                      <Route path="/partner-properties" element={<PartnerProperties />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/compare" element={<PropertyComparison />} />
-                      <Route path="/leads" element={<Leads />} />
-                      <Route path="/favorites" element={<Favorites />} />
-                    </Route>
-                  </Route>
-                </Routes>
-              </Suspense>
-            </Router>
+                        {/* Protected Routes - Require Authentication */}
+                        <Route element={<ProtectedRoute />}>
+                          <Route path="/availability/:id" element={<AvailabilityCheck />} />
+                          <Route element={<DashboardLayout />}>
+                            <Route path="/admin/approvals" element={<AdminApprovals />} />
+                            <Route path="/admin/plans" element={<AdminPlans />} />
+                            <Route path="/admin/coupons" element={<AdminCoupons />} />
+                            <Route path="/admin/financial" element={<AdminFinancial />} />
+                            <Route path="/admin/trial-settings" element={<AdminTrialSettings />} />
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/properties" element={<PropertiesList />} />
+                            <Route path="/properties/:slug" element={<PropertyDetails />} />
+                            <Route path="/add-property" element={<AddProperty />} />
+                            <Route path="/partner-properties" element={<PartnerProperties />} />
+                            <Route path="/settings" element={<Settings />} />
+                            <Route path="/compare" element={<PropertyComparison />} />
+                            <Route path="/leads" element={<Leads />} />
+                            <Route path="/favorites" element={<Favorites />} />
+                          </Route>
+                        </Route>
+                      </Routes>
+                    </Suspense>
+                  </Router>
+                </HeaderProvider>
+              </LocationProvider>
+            </ChatProvider>
           </ToastProvider>
         </AuthProvider>
       </ThemeProvider>

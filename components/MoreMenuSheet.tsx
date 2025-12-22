@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Globe, Heart, Users, LogOut, ShoppingCart, User } from 'lucide-react';
+import { X, Globe, Heart, Users, LogOut, ShoppingCart, User, CheckSquare, CreditCard, Clock, Percent, DollarSign, LayoutDashboard, Settings } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
 interface MoreMenuSheetProps {
     isOpen: boolean;
     onClose: () => void;
     isClient?: boolean;
+    isAdmin?: boolean;
 }
 
-export const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, isClient = false }) => {
+export const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, isClient = false, isAdmin = false }) => {
     const navigate = useNavigate();
     const { signOut } = useAuth();
 
@@ -24,17 +25,30 @@ export const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, i
         onClose();
     };
 
-    const menuItems = isClient ? [
-        { icon: User, label: 'Meu Perfil', path: '/settings', color: 'blue', onClick: null },
-        { icon: LogOut, label: 'Sair', path: null, color: 'red', onClick: handleLogout },
-    ] : [
-        { icon: Globe, label: 'Mercado iziBrokerz', path: '/properties?mode=market', color: 'blue', onClick: null },
-        { icon: Users, label: 'Leads (CRM)', path: '/leads', color: 'purple', onClick: null },
-        { icon: Heart, label: 'Favoritos', path: '/favorites', color: 'red', onClick: null },
-        { icon: Globe, label: '...', path: '/favorites', color: 'red', onClick: null },
-        { icon: Users, label: '...', path: '/favorites', color: 'red', onClick: null },
-        { icon: LogOut, label: 'Sair', path: null, color: 'red', onClick: handleLogout },
-    ];
+    let menuItems = [];
+
+    if (isAdmin) {
+        menuItems = [
+            { icon: Clock, label: 'Trial', path: '/admin/trial-settings', color: 'amber', onClick: null },
+            { icon: Percent, label: 'Cupons', path: '/admin/coupons', color: 'emerald', onClick: null },
+            { icon: Settings, label: 'Configs', path: '/settings', color: 'blue', onClick: null },
+            { icon: LogOut, label: 'Sair', path: null, color: 'red', onClick: handleLogout },
+        ];
+    } else if (isClient) {
+        menuItems = [
+            { icon: User, label: 'Meu Perfil', path: '/settings', color: 'blue', onClick: null },
+            { icon: LogOut, label: 'Sair', path: null, color: 'red', onClick: handleLogout },
+        ];
+    } else {
+        // Broker (Default)
+        menuItems = [
+            { icon: Globe, label: 'Mercado iziBrokerz', path: '/properties?mode=market', color: 'blue', onClick: null },
+            { icon: Users, label: 'Leads (CRM)', path: '/leads', color: 'purple', onClick: null },
+            { icon: Heart, label: 'Favoritos', path: '/favorites', color: 'red', onClick: null },
+            { icon: Settings, label: 'Ajustes', path: '/settings', color: 'slate', onClick: null },
+            { icon: LogOut, label: 'Sair', path: null, color: 'red', onClick: handleLogout },
+        ];
+    }
 
     if (!isOpen) return null;
 
@@ -47,7 +61,7 @@ export const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, i
             />
 
             {/* Bottom Sheet */}
-            <div className="fixed inset-x-0 bottom-0 z-[70] md:hidden animate-in slide-in-from-bottom duration-300">
+            <div className={`fixed inset-x-0 bottom-0 z-[70] md:hidden animate-in slide-in-from-bottom duration-300`}>
                 <div className="bg-slate-900 rounded-t-3xl shadow-2xl border-t border-slate-700">
                     {/* Handle */}
                     <div className="flex justify-center pt-3 pb-2">
@@ -68,7 +82,7 @@ export const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, i
                     {/* Menu Items */}
                     <div className="px-4 py-4 pb-safe-bottom">
                         <div className="grid grid-cols-3 gap-3">
-                            {menuItems.map((item) => {
+                            {menuItems.map((item, idx) => {
                                 const Icon = item.icon;
                                 const colorClasses = {
                                     emerald: 'bg-emerald-500/10 text-emerald-400',
@@ -79,13 +93,16 @@ export const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, i
                                     amber: 'bg-amber-500/10 text-amber-400',
                                 };
 
+                                // Safe color access
+                                const colorClass = colorClasses[item.color as keyof typeof colorClasses] || colorClasses.slate;
+
                                 return (
                                     <button
-                                        key={item.label}
+                                        key={idx}
                                         onClick={() => item.onClick ? item.onClick() : handleNavigate(item.path!)}
                                         className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-slate-800/50 hover:bg-slate-800 active:scale-95 transition-all min-h-[100px]"
                                     >
-                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colorClasses[item.color as keyof typeof colorClasses]}`}>
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colorClass}`}>
                                             <Icon size={24} />
                                         </div>
                                         <span className="text-xs font-semibold text-white text-center leading-tight">

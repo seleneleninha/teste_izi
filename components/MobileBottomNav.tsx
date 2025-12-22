@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Building2, Settings, Handshake, MoreHorizontal, Heart, ShoppingCart } from 'lucide-react';
+import { LayoutDashboard, Building2, Settings, Handshake, MoreHorizontal, Heart, ShoppingCart, CheckSquare, DollarSign, CreditCard } from 'lucide-react';
 import { MoreMenuSheet } from './MoreMenuSheet';
 import { CustomOrderModal } from './CustomOrderModal';
 import { useAuth } from './AuthContext';
@@ -41,18 +41,34 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ isAdmin = fals
         return location.pathname === path;
     };
 
-    // Define navigation items - TOP 4 (or 4 for clients with Encomendar) + More
-    const navItems: NavItem[] = isClient ? [
-        { icon: LayoutDashboard, label: 'Início', path: '/dashboard' },
-        { icon: Building2, label: 'Imóveis', path: '/properties' },
-        { icon: Heart, label: 'Favoritos', path: '/favorites' },
-        { icon: ShoppingCart, label: 'Encomendar', path: '/dashboard' },
-    ] : [
-        { icon: LayoutDashboard, label: 'Home', path: '/dashboard' },
-        { icon: Building2, label: 'Imóveis', path: '/properties' },
-        { icon: Handshake, label: 'Parceiros', path: '/partner-properties' },
-        { icon: Settings, label: 'Config', path: '/settings' },
-    ];
+    // Define navigation items logic
+    let navItems: NavItem[] = [];
+
+    if (isAdmin) {
+        // Admin Nav Items
+        navItems = [
+            { icon: LayoutDashboard, label: 'Dash', path: '/dashboard' },
+            { icon: CheckSquare, label: 'Aprov', path: '/admin/approvals' },
+            { icon: DollarSign, label: 'Finan', path: '/admin/financial' },
+            { icon: CreditCard, label: 'Planos', path: '/admin/plans' },
+        ];
+    } else if (isClient) {
+        // Client Nav Items
+        navItems = [
+            { icon: LayoutDashboard, label: 'Início', path: '/dashboard' },
+            { icon: Building2, label: 'Imóveis', path: '/properties' },
+            { icon: Heart, label: 'Favoritos', path: '/favorites' },
+            { icon: ShoppingCart, label: 'Encomendar', path: '/dashboard' },
+        ];
+    } else {
+        // Broker Nav Items (Default)
+        navItems = [
+            { icon: LayoutDashboard, label: 'Home', path: '/dashboard' },
+            { icon: Building2, label: 'Imóveis', path: '/properties' },
+            { icon: Handshake, label: 'Parceiros', path: '/partner-properties' },
+            { icon: Settings, label: 'Config', path: '/settings' },
+        ];
+    }
 
     return (
         <>
@@ -130,6 +146,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ isAdmin = fals
                 isOpen={showMoreMenu}
                 onClose={() => setShowMoreMenu(false)}
                 isClient={isClient}
+                isAdmin={isAdmin}
             />
 
             {/* Custom Order Modal */}
