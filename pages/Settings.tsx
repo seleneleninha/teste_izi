@@ -641,7 +641,8 @@ export const Settings: React.FC = () => {
                   type="tel"
                   value={profile.phone}
                   onChange={e => setProfile({ ...profile, phone: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white transition-all"
+                  disabled={role === 'Cliente'}
+                  className={`w-full px-4 py-2.5 rounded-xl bg-slate-900 border ${role === 'Cliente' ? 'border-slate-700 text-slate-500 cursor-not-allowed' : 'border-slate-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white'} outline-none transition-all`}
                   placeholder="(00) 00000-0000"
                 />
               </div>
@@ -666,7 +667,7 @@ export const Settings: React.FC = () => {
 
             {/* 3. Address Section */}
             <div className="mb-8 pt-6 border-t border-slate-700/50">
-              <h4 className="text-lg font-bold text-white mb-4 flex items-center"><MapPin size={20} className="mr-2 text-emerald-500" /> Endereço Profissional</h4>
+              <h4 className="text-lg font-bold text-white mb-4 flex items-center"><MapPin size={20} className="mr-2 text-emerald-500" /> Seu Endereço (opcional)</h4>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
@@ -732,35 +733,35 @@ export const Settings: React.FC = () => {
                 <Lock size={20} className="mr-2 text-emerald-500" /> Segurança
               </h4>
 
-              <div className="bg-slate-900/30 rounded-2xl p-5 border border-slate-700/50 mb-6">
+              <div className="bg-slate-900/30 rounded-2xl p-5 border border-slate-700/50 mb-6 font-geist">
                 <h5 className="font-medium text-white mb-3">Alterar Senha</h5>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+                  <div className="w-full">
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Nova Senha"
                       value={passwords.newPassword}
                       onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-600 focus:border-emerald-500 outline-none text-white"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-600 focus:border-emerald-500 outline-none text-white text-sm"
                     />
                     {passwords.newPassword && <div className="mt-2"><PasswordStrengthIndicator password={passwords.newPassword} /></div>}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="w-full">
                     <input
                       type="password"
                       placeholder="Confirmar Senha"
                       value={passwords.confirmPassword}
                       onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-600 focus:border-emerald-500 outline-none text-white"
+                      className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-600 focus:border-emerald-500 outline-none text-white text-sm"
                     />
-                    <button
-                      onClick={handleChangePassword}
-                      disabled={saving || !passwords.newPassword}
-                      className="px-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
-                    >
-                      Atualizar
-                    </button>
                   </div>
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={saving || !passwords.newPassword}
+                    className="w-full h-[42px] bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition-all disabled:opacity-50 whitespace-nowrap shadow-lg shadow-black/20"
+                  >
+                    {saving ? <Loader2 size={18} className="animate-spin mx-auto" /> : 'Atualizar'}
+                  </button>
                 </div>
               </div>
 
@@ -784,46 +785,48 @@ export const Settings: React.FC = () => {
             </div>
 
             {/* 5. Notification Preferences */}
-            <div className="mb-8 pt-6 border-t border-slate-700/50">
-              <h4 className="text-lg font-bold text-white mb-4 flex items-center">
-                <Bell size={20} className="mr-2 text-emerald-500" /> Preferências de Notificação
-              </h4>
+            {role !== 'Cliente' && (
+              <div className="mb-8 pt-6 border-t border-slate-700/50">
+                <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+                  <Bell size={20} className="mr-2 text-emerald-500" /> Preferências de Notificação
+                </h4>
 
-              <div className="bg-slate-900/30 rounded-2xl p-6 border border-slate-700/50">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                  <div>
-                    <h5 className="font-bold text-white mb-1">Notificações Push</h5>
-                    <p className="text-slate-400 text-sm">Receba alertas em tempo real sobre novos leads, mensagens e aprovações no seu navegador ou celular.</p>
-                  </div>
-                  <button
-                    onClick={handlePushPrompt}
-                    className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95"
-                  >
-                    <Bell size={18} />
-                    Ativar no Navegador
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    { key: 'leads', label: 'Novos Leads & Encomendas' },
-                    { key: 'messages', label: 'Mensagens do Chat' },
-                    { key: 'properties', label: 'Aprovações de Imóveis' },
-                    { key: 'marketing', label: 'Novidades e Parcerias' }
-                  ].map((item) => (
-                    <div key={item.key} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700">
-                      <span className="text-sm font-medium text-gray-200">{item.label}</span>
-                      <button
-                        onClick={() => toggleNotification(item.key as any)}
-                        className={`w-12 h-6 rounded-full transition-colors relative ${notifications[item.key as keyof typeof notifications] ? 'bg-emerald-500' : 'bg-slate-700'}`}
-                      >
-                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notifications[item.key as keyof typeof notifications] ? 'left-7' : 'left-1'}`} />
-                      </button>
+                <div className="bg-slate-900/30 rounded-2xl p-6 border border-slate-700/50">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h5 className="font-bold text-white mb-1">Notificações Push</h5>
+                      <p className="text-slate-400 text-sm">Receba alertas em tempo real sobre novos leads, mensagens e aprovações no seu navegador ou celular.</p>
                     </div>
-                  ))}
+                    <button
+                      onClick={handlePushPrompt}
+                      className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95"
+                    >
+                      <Bell size={18} />
+                      Ativar no Navegador
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { key: 'leads', label: 'Novos Leads & Encomendas' },
+                      { key: 'messages', label: 'Mensagens do Chat' },
+                      { key: 'properties', label: 'Aprovações de Imóveis' },
+                      { key: 'marketing', label: 'Novidades e Parcerias' }
+                    ].map((item) => (
+                      <div key={item.key} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                        <span className="text-sm font-medium text-gray-200">{item.label}</span>
+                        <button
+                          onClick={() => toggleNotification(item.key as any)}
+                          className={`w-12 h-6 rounded-full transition-colors relative ${notifications[item.key as keyof typeof notifications] ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                        >
+                          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notifications[item.key as keyof typeof notifications] ? 'left-7' : 'left-1'}`} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <DeleteAccountModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} />
 

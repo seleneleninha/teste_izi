@@ -93,7 +93,7 @@ export const About: React.FC = () => {
                         Excelência <span className="text-emerald-500">Acima</span> de Tudo
                     </h1>
                     <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-                        Nascida da experiência real de quem viveu cada desafio do mercado imobiliário brasileiro.
+                        Nascida da<span className="text-yellow-500 font-bold"> experiência real</span> de quem viveu cada desafio do mercado imobiliário brasileiro.
                     </p>
                 </div>
             </section>
@@ -155,7 +155,7 @@ export const About: React.FC = () => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                         {achievements.map((item, idx) => (
                             <div key={idx} className="text-center p-6 rounded-3xl bg-slate-800/50 backdrop-blur-sm border border-slate-700 hover:border-emerald-500/50 transition-colors group">
-                                <div className="text-3xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2 group-hover:scale-110 transition-transform">
+                                <div className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-400 mb-2 group-hover:scale-110 transition-transform">
                                     {item.number}
                                 </div>
                                 <div className="text-slate-400 font-medium text-sm md:text-base uppercase tracking-wider">
@@ -242,10 +242,14 @@ export const About: React.FC = () => {
             </section>
 
             {/* CTA */}
-            <section className="py-20 relative overflow-hidden">
-                <div className="absolute inset-0 bg-emerald-600">
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-                    <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500 rounded-full blur-3xl opacity-50"></div>
+            <section className="py-20 bg-slate-900 relative overflow-hidden">
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="/parceria.png"
+                        alt="Parceria Growth"
+                        className="w-full h-full object-cover opacity-50 mix-blend-overlay"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/30 to-slate-900/30"></div>
                 </div>
 
                 <div className="container mx-auto px-6 relative z-10 text-center text-white">

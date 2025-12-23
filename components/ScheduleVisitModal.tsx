@@ -44,8 +44,8 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
             if (userProfile) {
                 setFormData(prev => ({
                     ...prev,
-                    nome: userProfile.nome ? `${userProfile.nome} ${userProfile.sobrenome || ''}` : '',
-                    email: user.email || '',
+                    nome: userProfile.nome ? `${userProfile.nome} ${userProfile.sobrenome || ''}`.trim() : '',
+                    email: userProfile.email || user?.email || '',
                     telefone: userProfile.whatsapp || ''
                 }));
             }

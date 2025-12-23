@@ -543,11 +543,11 @@ export const PartnerPage: React.FC = () => {
             <section className="py-20 bg-slate-900 relative overflow-hidden">
                 <div className="absolute inset-0 z-0">
                     <img
-                        src="/partnership-growth.png"
-                        alt="Partnership Growth"
-                        className="w-full h-full object-cover opacity-90 mix-blend-overlay"
+                        src="/parceria.png"
+                        alt="Parceria Growth"
+                        className="w-full h-full object-cover opacity-50 mix-blend-overlay"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/90 to-slate-900/90"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/30 to-slate-900/30"></div>
                 </div>
                 <div className="container mx-auto px-4 text-center relative z-10">
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Pronto para transformar seus resultados?</h2>

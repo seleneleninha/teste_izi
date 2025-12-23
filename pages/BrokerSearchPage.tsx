@@ -7,7 +7,7 @@ import { NoPropertiesFound } from '../components/NoPropertiesFound';
 import { BrokerFooter } from '../components/BrokerFooter';
 import { BrokerNavbar } from '../components/BrokerNavbar';
 // ... (imports)
-import { Loader2, Search, X, ArrowLeft, Map as MapIcon, Grid } from 'lucide-react';
+import { Loader2, Search, X, MessageCircle, ArrowLeft, Map as MapIcon, Grid } from 'lucide-react';
 import { PropertyMap } from '../components/PropertyMap';
 import { formatCurrency } from '../lib/formatters';
 
@@ -393,6 +393,37 @@ export const BrokerSearchPage: React.FC = () => {
                     />
                 )}
             </div>
+
+            {/* CTA */}
+            <section className="py-20 bg-slate-900 relative overflow-hidden">
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="/parceria.png"
+                        alt="Parceria"
+                        className="w-full h-full object-cover opacity-50 mix-blend-overlay"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/30 to-slate-900/30"></div>
+                </div>
+
+                <div className="container mx-auto px-6 relative z-10 text-center text-white">
+                    <h2 className="text-3xl md:text-5xl font-bold mb-6">Pronto para <span className="text-emerald-400">Achar o Lar dos Sonhos?</span></h2>
+                    <p className="text-xl text-emerald-100 mb-10 max-w-2xl mx-auto">
+                        Deixe-me <span className="text-yellow-400 font-bold">ajudar você e sua Família</span> a realizar esse sonho tão importante na vida de vocês.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a
+                            href={`https://wa.me/55${broker.whatsapp.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center text-center w-full sm:w-auto gap-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold px-8 py-5 rounded-full transition-all shadow-xl shadow-emerald-500/40 hover:scale-105 active:scale-95"
+                        >
+                            <MessageCircle size={24} className="animate-pulse" />
+                            <span className="text-xl uppercase tracking-tighter">Fale Comigo no WhatsApp</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
 
             <BrokerFooter partner={{
                 name: `${broker.nome} ${broker.sobrenome}`,

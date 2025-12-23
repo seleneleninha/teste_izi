@@ -1008,7 +1008,8 @@ export const PropertyDetails: React.FC = () => {
                                             const message = formatPropertyMessage({
                                                 property: property,
                                                 brokerName: property.agent.name,
-                                                template: 'interest'
+                                                template: 'interest',
+                                                propertyUrl: window.location.href
                                             });
 
                                             // Handle phone number (might need to ensure country code)

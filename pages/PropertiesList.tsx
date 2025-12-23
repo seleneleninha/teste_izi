@@ -18,7 +18,11 @@ export const PropertiesList: React.FC = () => {
     const location = useLocation();
     const { user, role } = useAuth();
     const { addToast } = useToast();
-    const [view, setView] = useState<'grid' | 'map' | 'list'>('list'); // Default to List for Command Center
+
+    // Determine context based on route
+    const isDashboardRoute = location.pathname === '/properties';
+
+    const [view, setView] = useState<'grid' | 'map' | 'list'>(role === 'Cliente' ? 'grid' : (isDashboardRoute ? 'list' : 'grid')); // Default to Grid for public/clients, List for Command Center (brokers/admins)
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
     const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
     const [properties, setProperties] = useState<any[]>([]);
@@ -60,9 +64,6 @@ export const PropertiesList: React.FC = () => {
     // Seções expandidas - NOVO
     const [expandedSections, setExpandedSections] = useState<string[]>(['ativo']); // Ativos expandido por padrão
     const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
-
-    // Determine context based on route
-    const isDashboardRoute = location.pathname === '/properties';
 
     const searchParams = new URLSearchParams(location.search);
     const isMarketMode = searchParams.get('mode') === 'market';
@@ -466,7 +467,7 @@ export const PropertiesList: React.FC = () => {
             if (selectedProperties.length < 3) {
                 setSelectedProperties(prev => [...prev, id]);
             } else {
-                addToast('You can compare up to 3 properties.', 'warning');
+                addToast('Você pode comparar até 3 imóveis.', 'warning');
             }
         }
     };
@@ -526,57 +527,128 @@ export const PropertiesList: React.FC = () => {
 
     return (
         <div className="bg-slate-900 min-h-screen flex flex-col">
-            <div className="container mx-auto px-4 py-8 flex-1">
+            {/* Public Hero Section - Only for /search or /buscar */}
+            {!isDashboardRoute && (
+                <div className="relative py-16 md:py-24 bg-slate-900 overflow-hidden">
+                    {/* Background Elements */}
+                    <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
+                        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/20 rounded-full blur-[120px]" />
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-500/20 rounded-full blur-[120px]" />
+                    </div>
+
+                    <div className="container mx-auto px-4 relative z-10 text-center">
+                        <h1 className="text-4xl md:text-6xl font-heading font-bold text-white mb-6 animate-in slide-in-from-top duration-700">
+                            Encontre o Imóvel <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
+                                dos seus Sonhos
+                            </span>
+                        </h1>
+                        <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mb-8 animate-in fade-in duration-1000 delay-300">
+                            Milhares de oportunidades exclusivas para compra, locação ou temporada em um só lugar.
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            <div className={`container mx-auto px-4 ${!isDashboardRoute ? '-mt-12 md:-mt-16 relative z-30 pb-12' : 'py-8'} flex-1`}>
                 {/* Header Controls */}
-                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6">
+                <div className={`${!isDashboardRoute ? 'bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 p-6 md:p-8 rounded-[2.5rem] shadow-2xl mb-12' : 'flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6'}`}>
                     {/* Title moved to Layout Header */}
 
-                    {/* Filtros - Mobile First Layout */}
-                    <div className="w-full space-y-3 mb-6">
+                    {/* Filtros - Refined Layout */}
+                    <div className={`w-full ${!isDashboardRoute ? 'flex flex-col lg:flex-row lg:items-end xl:items-center gap-4 mb-6' : 'space-y-3 mb-6'}`}>
                         {/* Linha 1: Filtros Principais */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className={`grid ${!isDashboardRoute ? 'grid-cols-1 sm:grid-cols-3 lg:flex lg:flex-1' : 'grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-wrap xl:items-center'} gap-3 items-end`}>
                             {/* Operação */}
-                            <select
-                                value={selectedOperation}
-                                onChange={e => setSelectedOperation(e.target.value)}
-                                className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                            >
-                                <option value="" className="bg-slate-800">Operação</option>
-                                <option value="venda" className="bg-slate-800">Venda</option>
-                                <option value="locacao" className="bg-slate-800">Locação</option>
-                                <option value="temporada" className="bg-slate-800">Temporada</option>
-                            </select>
+                            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                                {!isDashboardRoute && <label className="text-[10px] font-bold text-slate-500 uppercase ml-2 tracking-wider">Operação</label>}
+                                <select
+                                    value={selectedOperation}
+                                    onChange={e => setSelectedOperation(e.target.value)}
+                                    className={`bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all w-full ${!isDashboardRoute ? 'lg:w-[140px]' : ''}`}
+                                >
+                                    <option value="" className="bg-slate-800">Operação</option>
+                                    <option value="venda" className="bg-slate-800">Venda</option>
+                                    <option value="locacao" className="bg-slate-800">Locação</option>
+                                    <option value="temporada" className="bg-slate-800">Temporada</option>
+                                </select>
+                            </div>
 
                             {/* Tipo */}
-                            <select
-                                value={selectedType}
-                                onChange={e => setSelectedType(e.target.value)}
-                                className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                            >
-                                <option value="" className="bg-slate-800">Tipo</option>
-                                {filteredPropertyTypes.map((type, idx) => (
-                                    <option key={idx} value={type.tipo} className="bg-slate-800">
-                                        {type.tipo.charAt(0).toUpperCase() + type.tipo.slice(1)}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                                {!isDashboardRoute && <label className="text-[10px] font-bold text-slate-500 uppercase ml-2 tracking-wider">Tipo</label>}
+                                <select
+                                    value={selectedType}
+                                    onChange={e => setSelectedType(e.target.value)}
+                                    className={`bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all w-full ${!isDashboardRoute ? 'lg:w-[160px]' : ''}`}
+                                >
+                                    <option value="" className="bg-slate-800">Tipo</option>
+                                    {filteredPropertyTypes.map((type, idx) => (
+                                        <option key={idx} value={type.tipo} className="bg-slate-800">
+                                            {type.tipo.charAt(0).toUpperCase() + type.tipo.slice(1)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
                             {/* Faixa de Preço */}
-                            <select
-                                value={selectedPriceRange}
-                                onChange={e => setSelectedPriceRange(e.target.value)}
-                                className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
-                            >
-                                <option value="" className="bg-slate-800">Preço</option>
-                                <option value="0-200000" className="bg-slate-800">Até R$200mil</option>
-                                <option value="200000-500000" className="bg-slate-800">R$200mil - R$500mil</option>
-                                <option value="500000-1000000" className="bg-slate-800">R$500mil - R$1M</option>
-                                <option value="1000000-2000000" className="bg-slate-800">R$1M - R$2M</option>
-                                <option value="2000000-999999999" className="bg-slate-800">Acima de R$2M</option>
+                            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                                {!isDashboardRoute && <label className="text-[10px] font-bold text-slate-500 uppercase ml-2 tracking-wider">Preço</label>}
+                                <select
+                                    value={selectedPriceRange}
+                                    onChange={e => setSelectedPriceRange(e.target.value)}
+                                    className={`bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all w-full ${!isDashboardRoute ? 'lg:w-[180px]' : ''}`}
+                                >
+                                    <option value="" className="bg-slate-800">Preço</option>
+                                    <option value="0-200000" className="bg-slate-800">Até R$200mil</option>
+                                    <option value="200000-500000" className="bg-slate-800">R$200mil - R$500mil</option>
+                                    <option value="500000-1000000" className="bg-slate-800">R$500mil - R$1M</option>
+                                    <option value="1000000-2000000" className="bg-slate-800">R$1M - R$2M</option>
+                                    <option value="2000000-999999999" className="bg-slate-800">Acima de R$2M</option>
+                                </select>
+                            </div>
 
-                            </select>
+                            {/* Dashboard buttons and view toggles inline for desktop */}
+                            {isDashboardRoute && !isMyProperties && (
+                                <div className="col-span-2 lg:col-span-3 xl:col-auto flex flex-col sm:flex-row items-center gap-3 xl:ml-auto w-full xl:w-auto">
+                                    <div className="flex gap-2 w-full sm:w-auto">
+                                        <button
+                                            onClick={() => fetchProperties()}
+                                            className="flex-1 sm:flex-none px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-all shadow-sm flex items-center justify-center gap-2"
+                                        >
+                                            <Search size={18} />
+                                            <span>Buscar</span>
+                                        </button>
+                                        <button
+                                            onClick={clearFilters}
+                                            className="flex-1 sm:flex-none px-6 py-3 bg-red-500/50 hover:bg-red-500/80 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <X size={18} />
+                                            <span>Limpar</span>
+                                        </button>
+                                    </div>
 
-                            {/* Status - NOVO (apenas para Meus Imóveis) - Custom Dropdown style like Admin */}
+                                    {/* View Toggles for Dashboard - Optimized for mobile */}
+                                    <div className="flex bg-slate-800 p-1 rounded-2xl border border-slate-700/50 shadow-lg shadow-black/20 w-full sm:w-auto overflow-hidden">
+                                        <button
+                                            onClick={() => setView('grid')}
+                                            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all font-bold text-xs sm:text-sm whitespace-nowrap ${view === 'grid' ? 'bg-slate-700 text-emerald-400 border border-slate-600/50' : 'text-slate-400 hover:text-white'}`}
+                                        >
+                                            <Grid size={16} />
+                                            <span>Grade</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setView('map')}
+                                            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all font-bold text-xs sm:text-sm whitespace-nowrap ${view === 'map' ? 'bg-slate-700 text-emerald-400 border border-slate-600/50' : 'text-slate-400 hover:text-white'}`}
+                                        >
+                                            <MapIcon size={16} />
+                                            <span>Mapa</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Status - NOVO (apenas para Meus Imóveis) */}
                             {isDashboardRoute && isMyProperties && (
                                 <div className="relative w-full md:w-64 z-30">
                                     <button
@@ -657,70 +729,68 @@ export const PropertiesList: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Linha 2: Botões de Ação */}
-                        <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-center gap-3">
-                            {/* Buscar */}
-                            <button
-                                onClick={() => fetchProperties()}
-                                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-all shadow-sm flex items-center justify-center gap-2"
-                            >
-                                <Search size={18} />
-                                <span>Buscar</span>
-                            </button>
+                        {/* Linha 2: Botões de Ação - Hidden in Dashboard Mode as they are inline above */}
+                        {!isDashboardRoute || (isDashboardRoute && isMyProperties) ? (
+                            <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-center gap-3">
+                                {/* Buscar */}
+                                <button
+                                    onClick={() => fetchProperties()}
+                                    className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-all shadow-sm flex items-center justify-center gap-2"
+                                >
+                                    <Search size={18} />
+                                    <span>Buscar</span>
+                                </button>
 
-                            {/* Limpar */}
-                            <button
-                                onClick={clearFilters}
-                                className="px-6 py-3 bg-red-500/50 hover:bg-red-500/80 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
-                            >
-                                <X size={18} />
-                                <span>Limpar</span>
-                            </button>
+                                {/* Limpar */}
+                                <button
+                                    onClick={clearFilters}
+                                    className="px-6 py-3 bg-red-500/50 hover:bg-red-500/80 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+                                >
+                                    <X size={18} />
+                                    <span>Limpar</span>
+                                </button>
 
-                            {/* Toggle Cards/Map/List */}
-                            <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700 col-span-2 md:col-span-1">
-                                <button
-                                    onClick={() => setView('list')}
-                                    className={`flex-1 px-3 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${view === 'list'
-                                        ? 'bg-emerald-600 text-white shadow-sm'
-                                        : 'text-gray-400 hover:text-white hover:bg-slate-700'
-                                        }`}
-                                >
-                                    <List size={18} />
-                                    <span className="sm:inline">Lista</span>
-                                </button>
-                                <button
-                                    onClick={() => setView('grid')}
-                                    className={`flex-1 px-3 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${view === 'grid'
-                                        ? 'bg-emerald-600 text-white shadow-sm'
-                                        : 'text-gray-400 hover:text-white hover:bg-slate-700'
-                                        }`}
-                                >
-                                    <Grid size={18} />
-                                    <span className="sm:inline">Cards</span>
-                                </button>
-                                <button
-                                    onClick={() => setView('map')}
-                                    className={`flex-1 px-3 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${view === 'map'
-                                        ? 'bg-emerald-600 text-white shadow-sm'
-                                        : 'text-gray-400 hover:text-white hover:bg-slate-700'
-                                        }`}
-                                >
-                                    <MapIcon size={18} />
-                                    <span className="sm:inline">Mapa</span>
-                                </button>
+                                {/* View Toggles */}
+                                <div className="flex bg-slate-800 p-1.5 rounded-2xl border border-slate-700/50 shadow-lg shadow-black/20">
+                                    <button
+                                        onClick={() => setView('grid')}
+                                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all font-bold text-sm ${view === 'grid' ? 'bg-slate-700 text-emerald-400 shadow-sm border border-slate-600/50' : 'text-slate-400 hover:text-white'}`}
+                                        title="Visualização em Grade"
+                                    >
+                                        <Grid size={18} />
+                                        <span className="hidden sm:inline">Grade</span>
+                                    </button>
+                                    {role !== 'Cliente' && (
+                                        <button
+                                            onClick={() => setView('list')}
+                                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all font-bold text-sm ${view === 'list' ? 'bg-slate-700 text-emerald-400 shadow-sm border border-slate-600/50' : 'text-slate-400 hover:text-white'}`}
+                                            title="Visualização em Lista"
+                                        >
+                                            <List size={18} />
+                                            <span className="hidden sm:inline">Lista</span>
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => setView('map')}
+                                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all font-bold text-sm ${view === 'map' ? 'bg-slate-700 text-emerald-400 shadow-sm border border-slate-600/50' : 'text-slate-400 hover:text-white'}`}
+                                        title="Visualização em Mapa"
+                                    >
+                                        <MapIcon size={18} />
+                                        <span className="hidden sm:inline">Mapa</span>
+                                    </button>
+                                </div>
                             </div>
+                        ) : null}
 
-                            {/* Botão Anunciar - DESTACADO - Only for brokers */}
-                            {user && isDashboardRoute && role === 'corretor' && (
-                                <button
-                                    onClick={() => navigate('/add-property')}
-                                    className="col-span-2 md:col-span-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 flex items-center justify-center gap-2 md:ml-auto"
-                                >
-                                    <span className="whitespace-nowrap">ANUNCIAR IMÓVEL</span>
-                                </button>
-                            )}
-                        </div>
+                        {/* Botão Anunciar - DESTACADO - Only for brokers */}
+                        {user && isDashboardRoute && role === 'corretor' && (
+                            <button
+                                onClick={() => navigate('/add-property')}
+                                className="col-span-2 md:col-span-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 flex items-center justify-center gap-2 md:ml-auto"
+                            >
+                                <span className="whitespace-nowrap">ANUNCIAR IMÓVEL</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 

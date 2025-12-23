@@ -3,7 +3,7 @@ import { X, Facebook, Globe, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-re
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../components/ToastContext';
-import { validateEmail, validateCPF, validatePhone, checkPasswordStrength, checkRateLimit, getRateLimitReset } from '../lib/validation';
+import { validateEmail, validateCPF, validatePhone, checkPasswordStrength, checkRateLimit, getRateLimitReset, translateAuthError } from '../lib/validation';
 import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicator';
 import { LegalDocumentModal } from '../components/LegalDocumentModal';
 
@@ -178,7 +178,8 @@ export const Login: React.FC = () => {
             }
         } catch (err: any) {
             console.error(err);
-            addToast(err.message || 'Ocorreu um erro ao tentar autenticar.', 'error');
+            const friendlyMessage = translateAuthError(err);
+            addToast(friendlyMessage, 'error');
         } finally {
             setLoading(false);
         }

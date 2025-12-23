@@ -44,6 +44,27 @@ export const validateEmail = (email: string): boolean => {
 };
 
 /**
+ * Traduz erros comuns do Supabase Auth para mensagens amigáveis em Português
+ * @param error - O erro original retornado pelo Supabase
+ * @returns Mensagem traduzida
+ */
+export const translateAuthError = (error: any): string => {
+    if (!error) return 'Ocorreu um erro desconhecido.';
+
+    const message = typeof error === 'string' ? error : (error.message || '');
+
+    if (message.includes('Invalid login credentials')) return 'Email ou senha inválidos. Verifique seus dados.';
+    if (message.includes('User already registered')) return 'Este email já está cadastrado. Tente fazer login.';
+    if (message.includes('Password should be at least')) return 'A senha deve ter pelo menos 6 caracteres.';
+    if (message.includes('Email not confirmed')) return 'Este email ainda não foi confirmado. Verifique sua caixa de entrada.';
+    if (message.includes('Too many requests')) return 'Muitas tentativas em pouco tempo. Tente novamente mais tarde.';
+    if (message.includes('Email address not found')) return 'Este endereço de email não foi encontrado.';
+    if (message.includes('Database error saving new user')) return 'Erro ao salvar perfil do usuário. Tente novamente.';
+
+    return message || 'Erro ao realizar autenticação. Tente novamente.';
+};
+
+/**
  * Validate Brazilian phone number
  * @param phone - Phone number to validate
  * @returns true if valid Brazilian phone format

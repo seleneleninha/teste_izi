@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 interface AuthContextType {
     session: Session | null;
     user: User | null;
+    userProfile: any | null;
     role: string | null;
     loading: boolean;
     signOut: () => Promise<void>;
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
+    const [userProfile, setUserProfile] = useState<any | null>(null);
     const [role, setRole] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -51,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setSession(session);
             setUser(session?.user ?? null);
             if (session?.user) {
-                fetchUserRole(session.user.id, session.user.email);
+                fetchUserData(session.user.id, session.user.email);
                 syncOneSignal(session.user.id);
             } else {
                 setLoading(false);
@@ -64,10 +66,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setSession(session);
             setUser(session?.user ?? null);
             if (session?.user) {
-                fetchUserRole(session.user.id, session.user.email);
+                fetchUserData(session.user.id, session.user.email);
                 syncOneSignal(session.user.id);
             } else {
                 setRole(null);
+                setUserProfile(null);
                 setLoading(false);
                 syncOneSignal(undefined);
             }
@@ -76,15 +79,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => subscription.unsubscribe();
     }, []);
 
-    const fetchUserRole = async (userId: string, email?: string) => {
+    const fetchUserData = async (userId: string, email?: string) => {
         try {
             const { data, error } = await supabase
                 .from('perfis')
-                .select('is_admin, tipo_usuario')
+                .select('*')
                 .eq('id', userId)
                 .single();
 
             if (data) {
+                setUserProfile(data);
                 // Use is_admin column to determine role
                 if (data.is_admin) {
                     setRole('Admin');
@@ -96,10 +100,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } else {
                 // Default to Corretor if profile not found
                 setRole('Corretor');
+                setUserProfile(null);
             }
         } catch (error) {
-            console.error('Error fetching user role:', error);
+            console.error('Error fetching user data:', error);
             setRole('Corretor'); // Safe default
+            setUserProfile(null);
         } finally {
             setLoading(false);
         }
@@ -111,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ session, user, role, loading, signOut }}>
+        <AuthContext.Provider value={{ session, user, userProfile, role, loading, signOut }}>
             {!loading && children}
         </AuthContext.Provider>
     );

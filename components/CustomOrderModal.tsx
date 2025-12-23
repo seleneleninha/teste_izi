@@ -262,7 +262,8 @@ export const CustomOrderModal: React.FC<CustomOrderModalProps> = ({
                                 required
                                 value={formData.nome_cliente}
                                 onChange={(e) => setFormData({ ...formData, nome_cliente: e.target.value })}
-                                className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm placeholder:text-gray-500"
+                                disabled={!!prefilledData?.nome_cliente}
+                                className={`w-full px-3 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm placeholder:text-gray-500 ${prefilledData?.nome_cliente ? 'opacity-70 cursor-not-allowed bg-slate-900' : ''}`}
                                 placeholder="João Silva"
                             />
                         </div>
@@ -276,7 +277,8 @@ export const CustomOrderModal: React.FC<CustomOrderModalProps> = ({
                                     type="tel"
                                     value={formatWhatsApp(formData.whatsapp)}
                                     onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value.replace(/\D/g, '') })}
-                                    className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm placeholder:text-gray-500"
+                                    disabled={!!prefilledData?.whatsapp}
+                                    className={`w-full px-3 py-2.5 bg-slate-800 border border-slate-700 text-white rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm placeholder:text-gray-500 ${prefilledData?.whatsapp ? 'opacity-70 cursor-not-allowed bg-slate-900' : ''}`}
                                     placeholder="(84) 99999-9999"
                                     maxLength={15}
                                 />

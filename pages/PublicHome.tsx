@@ -69,15 +69,15 @@ export const PublicHome: React.FC = () => {
             setPropertyMap(() => module.PropertyMap);
         });
 
-    }, []);
+    }, [location.loading, location.city]);
 
     const fetchCategoryCounts = async () => {
         try {
-            // Tipos de imóvel (buscados na tabela tipo_imovel)
             const propertyTypes = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno'];
             const counts: Record<string, number> = {};
 
-            for (const type of propertyTypes) {
+            // Parallelize counting tasks
+            const typePromises = propertyTypes.map(async (type) => {
                 const { data: typeData } = await supabase
                     .from('tipo_imovel')
                     .select('id')
@@ -90,79 +90,75 @@ export const PublicHome: React.FC = () => {
                         .select('*', { count: 'exact', head: true })
                         .eq('tipo_imovel', typeData.id)
                         .eq('status', 'ativo');
-
-                    counts[type.toLowerCase()] = count || 0;
-                } else {
-                    counts[type.toLowerCase()] = 0;
+                    return { type: type.toLowerCase(), count: count || 0 };
                 }
-            }
+                return { type: type.toLowerCase(), count: 0 };
+            });
 
-            // Temporada é uma OPERAÇÃO, não um tipo de imóvel
-            // Buscar pela tabela operação
-            const { data: temporadaOp } = await supabase
-                .from('operacao')
-                .select('id')
-                .ilike('tipo', 'temporada')
-                .single();
+            const temporadaPromise = (async () => {
+                const { data: temporadaOp } = await supabase
+                    .from('operacao')
+                    .select('id')
+                    .ilike('tipo', 'temporada')
+                    .single();
 
-            if (temporadaOp) {
-                const { count } = await supabase
-                    .from('anuncios')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('operacao', temporadaOp.id)
-                    .eq('status', 'ativo');
+                if (temporadaOp) {
+                    const { count } = await supabase
+                        .from('anuncios')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('operacao', temporadaOp.id)
+                        .eq('status', 'ativo');
+                    return { type: 'temporada', count: count || 0 };
+                }
+                return { type: 'temporada', count: 0 };
+            })();
 
-                counts['temporada'] = count || 0;
-            } else {
-                counts['temporada'] = 0;
-            }
-
-            setCategoryCounts(counts);
-
-            // Fetch City and Neighborhood Counts
-            // Fetch counts for all active locations to populate badges
-            const { data: locationData, error: locationError } = await supabase
+            const locationsPromise = supabase
                 .from('anuncios')
                 .select('cidade, bairro')
                 .eq('status', 'ativo');
 
-            if (!locationError && locationData) {
+            const [typeResults, temporadaResult, locationsResult] = await Promise.all([
+                Promise.all(typePromises),
+                temporadaPromise,
+                locationsPromise
+            ]);
+
+            // Fill counts record
+            typeResults.forEach(r => counts[r.type] = r.count);
+            counts[temporadaResult.type] = temporadaResult.count;
+
+            if (!locationsResult.error && locationsResult.data) {
                 const locationCountsMap: Record<string, number> = {};
 
-                locationData.forEach(item => {
-                    // City counts
+                locationsResult.data.forEach(item => {
                     if (item.cidade) {
                         const cityKey = `city_${item.cidade}`;
                         locationCountsMap[cityKey] = (locationCountsMap[cityKey] || 0) + 1;
                     }
-
-                    // Neighborhood counts
                     if (item.bairro) {
                         const neighborhoodKey = `bairro_${item.bairro}`;
                         locationCountsMap[neighborhoodKey] = (locationCountsMap[neighborhoodKey] || 0) + 1;
                     }
                 });
 
-                // Merge with existing counts
-                setCategoryCounts(prev => ({ ...prev, ...locationCountsMap }));
+                setCategoryCounts(prev => ({ ...prev, ...counts, ...locationCountsMap }));
 
-                // Derive Sorted Cities (Top 10 by count)
+                // Derive Sorted Cities
                 const cityCountsArray = Object.entries(locationCountsMap)
                     .filter(([key]) => key.startsWith('city_'))
                     .map(([key, count]) => ({ name: key.replace('city_', ''), count }));
 
                 cityCountsArray.sort((a, b) => b.count - a.count);
-                const topCities = cityCountsArray.slice(0, 10).map(c => c.name);
-                setCities(topCities);
+                setCities(cityCountsArray.slice(0, 10).map(c => c.name));
 
-                // Derive Sorted Neighborhoods (Top 20 by count)
+                // Derive Sorted Neighborhoods
                 const neighborhoodCountsArray = Object.entries(locationCountsMap)
                     .filter(([key]) => key.startsWith('bairro_'))
                     .map(([key, count]) => ({ name: key.replace('bairro_', ''), count }));
 
                 neighborhoodCountsArray.sort((a, b) => b.count - a.count);
-                const topNeighborhoods = neighborhoodCountsArray.slice(0, 20).map(c => c.name);
-                setNeighborhoods(topNeighborhoods);
+                setNeighborhoods(neighborhoodCountsArray.slice(0, 16).map(c => c.name));
             }
 
         } catch (error) {
@@ -173,166 +169,64 @@ export const PublicHome: React.FC = () => {
     const fetchData = async (cityFilter?: string | null) => {
         setLoading(true);
         try {
-            let query = supabase
+            // 1. Fetch 16 Recent Properties (Filtered by city if exists)
+            const recentQuery = supabase
                 .from('anuncios')
                 .select(`
-                    id, 
-                    cod_imovel, 
-                    titulo, 
-                    cidade, 
-                    bairro, 
-                    valor_venda, 
-                    valor_locacao,
-                    valor_diaria,
-                    valor_mensal, 
-                    fotos, 
-                    quartos, 
-                    banheiros, 
-                    vagas, 
-                    area_priv,
-                    latitude,
-                    longitude,
-                    operacao(tipo),
-                    tipo_imovel(tipo)
+                    id, cod_imovel, titulo, cidade, bairro, valor_venda, valor_locacao, valor_diaria, valor_mensal, 
+                    fotos, quartos, banheiros, vagas, area_priv, latitude, longitude, operacao(tipo), tipo_imovel(tipo)
                 `)
                 .eq('status', 'ativo')
                 .order('created_at', { ascending: false })
                 .limit(16);
 
-            // 1. Try to fetch by City if available
             if (cityFilter) {
-                // Clone the query or construct a specific one
-                const { data: cityProperties, error: cityError } = await supabase
-                    .from('anuncios')
-                    .select(`
-                        id, cod_imovel, titulo, cidade, bairro, valor_venda, valor_locacao, valor_diaria, valor_mensal, 
-                        fotos, quartos, banheiros, vagas, area_priv, latitude, longitude, operacao(tipo), tipo_imovel(tipo)
-                    `)
-                    .eq('status', 'ativo')
-                    .ilike('cidade', cityFilter)
-                    .order('created_at', { ascending: false })
-                    .limit(16);
-
-                if (!cityError && cityProperties && cityProperties.length > 0) {
-                    // Normalize nested objects
-                    const formattedCityProps = cityProperties.map(p => ({
-                        ...p,
-                        tipo_imovel: typeof p.tipo_imovel === 'object' ? p.tipo_imovel?.tipo : p.tipo_imovel,
-                        operacao: typeof p.operacao === 'object' ? p.operacao?.tipo : p.operacao
-                    }));
-
-                    setRecentProperties(formattedCityProps);
-                    // Set map markers
-                    setAllMapMarkers(formattedCityProps);
-                    setActiveCity(cityFilter);
-                    setLoading(false);
-
-                    // We also need cities/neighborhoods lists, which are fetched below based on 'properties'.
-                    // To keep it simple, we skip deriving lists from just city props and rely on fetchCategoryCounts or general fetch logic?
-                    // Let's just exit here for the properties part.
-                    return;
-                }
-                // If city fetch empty, fall through to default fetch (reset activeCity)
-                setActiveCity(null);
+                recentQuery.ilike('cidade', cityFilter);
             }
 
-            // 2. Default Fetch (No city or empty city results)
-            const { data: properties, error } = await query;
+            // 2. Fetch ALL Map Markers (Global - no limit, no city filter to show platform scale)
+            const markersQuery = supabase
+                .from('anuncios')
+                .select(`
+                    id, cod_imovel, titulo, cidade, bairro, valor_venda, valor_locacao, valor_diaria, valor_mensal, 
+                    fotos, quartos, banheiros, vagas, area_priv, latitude, longitude, operacao(tipo), tipo_imovel(tipo)
+                `)
+                .eq('status', 'ativo')
+                .not('latitude', 'is', null)
+                .not('longitude', 'is', null)
+                .order('created_at', { ascending: false });
 
-            if (error) {
-                console.error('Supabase error:', error);
-                throw error;
-            }
+            const [recentRes, markersRes] = await Promise.all([recentQuery, markersQuery]);
 
-            if (properties && properties.length > 0) {
-                const transformedProperties = properties.map(p => ({
-                    id: p.id,
-                    cod_imovel: p.cod_imovel,
-                    titulo: p.titulo,
-                    cidade: p.cidade,
-                    bairro: p.bairro,
-                    valor_venda: p.valor_venda,
-                    valor_locacao: p.valor_locacao,
-                    valor_diaria: p.valor_diaria,
-                    valor_mensal: p.valor_mensal,
+            if (recentRes.data) {
+                const transformed = recentRes.data.map(p => ({
+                    ...p,
                     fotos: p.fotos ? p.fotos.split(',').filter(Boolean) : [],
                     operacao: (p.operacao as any)?.tipo || '',
-                    tipo_imovel: (p.tipo_imovel as any)?.tipo || '',
-                    quartos: p.quartos || 0,
-                    banheiros: p.banheiros || 0,
-                    vagas: p.vagas || 0,
-                    area_priv: p.area_priv || 0,
-                    latitude: p.latitude,
-                    longitude: p.longitude
+                    tipo_imovel: (p.tipo_imovel as any)?.tipo || ''
                 }));
+                setRecentProperties(transformed as any);
+                setActiveCity(cityFilter || null);
 
-                setRecentProperties(transformedProperties);
-
-                // Query separada para TODOS os markers do mapa
-                const { data: allProperties } = await supabase
-                    .from('anuncios')
-                    .select(`
-                        id,
-                        cod_imovel,
-                        titulo,
-                        cidade,
-                        bairro,
-                        valor_venda,
-                        valor_locacao,
-                        valor_diaria,
-                        valor_mensal,
-                        fotos,
-                        quartos,
-                        banheiros,
-                        vagas,
-                        area_priv,
-                        latitude,
-                        longitude,
-                        operacao(tipo),
-                        tipo_imovel(tipo)
-                    `)
-                    .eq('status', 'ativo')
-                    .not('latitude', 'is', null)
-                    .not('longitude', 'is', null)
-                    .order('created_at', { ascending: false });
-
-                if (allProperties && allProperties.length > 0) {
-                    const allTransformed = allProperties.map(p => ({
-                        id: p.id,
-                        cod_imovel: p.cod_imovel,
-                        titulo: p.titulo,
-                        cidade: p.cidade,
-                        bairro: p.bairro,
-                        valor_venda: p.valor_venda,
-                        valor_locacao: p.valor_locacao,
-                        valor_diaria: p.valor_diaria,
-                        valor_mensal: p.valor_mensal,
-                        fotos: p.fotos ? p.fotos.split(',').filter(Boolean) : [],
-                        operacao: (p.operacao as any)?.tipo || '',
-                        tipo_imovel: (p.tipo_imovel as any)?.tipo || '',
-                        quartos: p.quartos || 0,
-                        banheiros: p.banheiros || 0,
-                        vagas: p.vagas || 0,
-                        area_priv: p.area_priv || 0,
-                        latitude: p.latitude,
-                        longitude: p.longitude
-                    }));
-                    setAllMapMarkers(allTransformed);
-                } else {
-                    setAllMapMarkers([]);
+                // If not in city mode, use these as fallback for city/neighborhood lists
+                if (!cityFilter) {
+                    const uniqueCities = Array.from(new Set(recentRes.data.map(p => p.cidade).filter(Boolean)));
+                    setCities(uniqueCities);
+                    const uniqueNeighborhoods = Array.from(new Set(recentRes.data.map(p => p.bairro).filter(Boolean))).slice(0, 16);
+                    setNeighborhoods(uniqueNeighborhoods);
                 }
-
-                const uniqueCities = Array.from(new Set(properties.map(p => p.cidade).filter(Boolean)));
-                setCities(uniqueCities);
-
-                const uniqueNeighborhoods = Array.from(new Set(properties.map(p => p.bairro).filter(Boolean))).slice(0, 16);
-                setNeighborhoods(uniqueNeighborhoods);
-            } else {
-                setRecentProperties([]);
-                setAllMapMarkers([]);
-                setCities([]);
-                setNeighborhoods([]);
             }
+
+            if (markersRes.data) {
+                const transformedMarkers = markersRes.data.map(p => ({
+                    ...p,
+                    fotos: p.fotos ? p.fotos.split(',').filter(Boolean) : [],
+                    operacao: (p.operacao as any)?.tipo || '',
+                    tipo_imovel: (p.tipo_imovel as any)?.tipo || ''
+                }));
+                setAllMapMarkers(transformedMarkers as any);
+            }
+
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {

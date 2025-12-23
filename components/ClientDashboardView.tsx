@@ -16,7 +16,7 @@ export const ClientDashboardView: React.FC = () => {
     useEffect(() => {
         if (user) {
             setUserName(user.user_metadata?.nome || 'Cliente');
-            setUserWhatsApp(user.user_metadata?.telefone || '');
+            setUserWhatsApp(user.user_metadata?.whatsapp || user.user_metadata?.telefone || '');
             fetchFavoritesCount();
         }
     }, [user]);
@@ -48,7 +48,7 @@ export const ClientDashboardView: React.FC = () => {
             </div>
 
             {/* Quick Actions Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
                 {/* Search Card */}
                 <div

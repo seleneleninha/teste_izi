@@ -204,7 +204,7 @@ export async function sendMultipleProperties(
 function formatPhoneNumber(phone: string): string {
     // Validate input
     if (!phone || typeof phone !== 'string') {
-        console.error('formatPhoneNumber: Invalid phone number:', phone);
+        console.error('formatPhoneNumber: Número Telefone Inválido:', phone);
         return '';
     }
 
@@ -292,22 +292,44 @@ export function formatPropertyMessage(options: {
 
     if (!property) return '';
 
+    // Handle field variations between different parts of the app (Portuguese vs English)
+    const titulo = property.titulo || property.title || 'Imóvel sem título';
     const operacaoRaw = (property.operacao?.tipo || property.operacao || '').toLowerCase();
     const isLocacao = operacaoRaw.includes('locação') || operacaoRaw.includes('aluguel');
-    const valor = property.valor_venda || property.valor_locacao || property.valor_diaria || property.valor_mensal || 0;
+    const valorvenda = property.valor_venda || property.price || 0;
+    const valorlocacao = property.valor_locacao || property.price || 0;
+    const valor = operacaoRaw.includes('venda') ? valorvenda : (isLocacao ? valorlocacao : (property.valor_diaria || property.valor_mensal || valorvenda));
+
     const valorFormatado = formatPrice(valor);
 
-    const endereco = `${property.bairro || 'Bairro não informado'}, ${property.cidade || 'Cidade não informada'}`;
-    const descBasica = `${property.quartos || 0} quartos | ${property.vagas || 0} vagas`;
+    const bairro = property.bairro || property.address?.neighborhood || '';
+    const cidade = property.cidade || property.address?.city || '';
+    const endereco = `${bairro || 'Bairro não informado'}, ${cidade || 'Cidade não informada'}`;
+
+    const quartos = property.quartos || property.beds || 0;
+    const vagas = property.vagas || property.garage || 0;
+    const descBasica = `${quartos} quartos | ${vagas} vagas`;
+
+    const urlString = propertyUrl || (property.slug ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://izibrokerz.com.br'}/${property.slug}` : '');
+    const urlMessage = urlString ? `\n🔗 Ver detalhes: ${urlString}` : '';
+
+    if (template === 'interest') {
+        return `Olá! Tenho interesse neste imóvel:${urlMessage}\n\n` +
+            `🏡 *${titulo}*\n` +
+            `📍 ${endereco}\n` +
+            `💰 ${valorFormatado}${isLocacao ? '/mês' : ''}\n` +
+            `🛏️ ${descBasica}\n\n` +
+            `Gostaria de mais informações!`;
+    }
 
     if (template === 'availability') {
         const signature = senderName ? `\n\nAguardo seu retorno.\n*${senderName}*\n${senderPhone || ''}` : '\n\nAguardo seu retorno!';
 
         return `Olá ${brokerName || 'Parceiro(a)'}! Tudo bem? Tenho um Cliente para esse imóvel e gostaria de checar a *disponibilidade*:\n\n` +
-            `🏡 *${property.titulo}*\n` +
+            `🏡 *${titulo}*\n` +
             `📍 ${endereco}\n` +
             `💰 ${valorFormatado}${isLocacao ? '/mês' : ''}\n` +
-            `🔗 Veja o anúncio: ${propertyUrl || 'Link não disponível'}\n\n` +
+            `🔗 Veja o anúncio: ${urlString || 'Link não disponível'}\n\n` +
             `*Resposta rápida:*\n` +
             `*Envie 1* = Sim, está disponível. Pode agendar a visita com seu Cliente\n\n` +
             `*Envie 2* = Vou checar com o(a) Proprietário(a) e lhe retorno.\n\n` +
@@ -316,12 +338,12 @@ export function formatPropertyMessage(options: {
     }
 
     // Default 'share' template
-    return `Olá! Tenho interesse neste imóvel:\n\n` +
-        `🏡 *${property.titulo}*\n` +
+    return `Olá! Veja este imóvel que encontrei na iziBrokerz:\n\n` +
+        `🏡 *${titulo}*\n` +
         `📍 ${endereco}\n` +
         `💰 ${valorFormatado}${isLocacao ? '/mês' : ''}\n` +
-        `🛏️ ${descBasica}\n\n` +
-        `Gostaria de mais informações!`;
+        `🛏️ ${descBasica}\n` +
+        `${urlMessage}`;
 }
 
 /**
