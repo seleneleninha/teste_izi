@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MOCK_PROPERTIES } from '../constants';
-import { MapPin, Bed, Bath, Square, Filter, Search, Grid, Map as MapIcon, CheckSquare, Loader2, Edit2, Trash2, X, TrendingUp, Key, Pause, AlertTriangle, Home, ChevronDown, List, UserCheck, UserX, BedDouble, Car, Ruler, ArrowUp, ArrowDown } from 'lucide-react';
+import { MapPin, Bed, Bath, Square, Filter, Search, Grid, Map as MapIcon, CheckSquare, Loader2, Edit2, Trash2, X, TrendingUp, Key, Pause, AlertTriangle, Home, ChevronDown, List, UserCheck, UserX, BedDouble, Car, Ruler, ArrowUp, ArrowDown, Eye, Globe } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { PropertyCard } from '../components/PropertyCard';
 import { NoPropertiesFound } from '../components/NoPropertiesFound';
@@ -12,6 +12,7 @@ import { HorizontalScroll } from '../components/HorizontalScroll';
 import { Footer } from '../components/Footer';
 import { DeactivatePropertyModal } from '../components/DeactivatePropertyModal';
 import { useHeader } from '../components/HeaderContext';
+import { generatePropertySlug } from '../lib/formatters';
 
 export const PropertiesList: React.FC = () => {
     const navigate = useNavigate();
@@ -552,114 +553,102 @@ export const PropertiesList: React.FC = () => {
 
             <div className={`container mx-auto px-4 ${!isDashboardRoute ? '-mt-12 md:-mt-16 relative z-30 pb-12' : 'py-8'} flex-1`}>
                 {/* Header Controls */}
-                <div className={`${!isDashboardRoute ? 'bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 p-6 md:p-8 rounded-[2.5rem] shadow-2xl mb-12' : 'flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6'}`}>
-                    {/* Title moved to Layout Header */}
+                <div className={`${(!isDashboardRoute || isMyProperties || isMarketMode) ? 'bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 p-6 md:p-8 rounded-[2.5rem] shadow-2xl mb-8' : 'flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6'}`}>
+                    {/* Header Card UI for Meus Imóveis - Matching PartnerProperties pattern */}
+                    {isMyProperties && (
+                        <div className="flex items-center justify-between mb-6 pb-6 border-b border-white/10">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-3">
+                                <div className="p-2 bg-emerald-500/20 rounded-xl border border-emerald-500/30">
+                                    <Filter size={20} className="text-emerald-400" />
+                                </div>
+                                Filtros de Gestão
+                            </h3>
+                            <span className="bg-slate-900/50 px-4 py-2 rounded-xl border border-white/5 font-black text-slate-300 text-[10px] uppercase tracking-widest">
+                                {properties.length} {properties.length === 1 ? 'imóvel' : 'imóveis'}
+                            </span>
+                        </div>
+                    )}
 
-                    {/* Filtros - Refined Layout */}
-                    <div className={`w-full ${!isDashboardRoute ? 'flex flex-col lg:flex-row lg:items-end xl:items-center gap-4 mb-6' : 'space-y-3 mb-6'}`}>
-                        {/* Linha 1: Filtros Principais */}
-                        <div className={`grid ${!isDashboardRoute ? 'grid-cols-1 sm:grid-cols-3 lg:flex lg:flex-1' : 'grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-wrap xl:items-center'} gap-3 items-end`}>
+                    {isMarketMode && (
+                        <div className="flex items-center justify-between mb-6 pb-6 border-b border-white/10">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-3">
+                                <div className="p-2 bg-blue-500/20 rounded-xl border border-blue-500/30">
+                                    <Globe size={20} className="text-blue-400" />
+                                </div>
+                                Filtros do Mercado
+                            </h3>
+                            <span className="bg-slate-900/50 px-4 py-2 rounded-xl border border-white/5 font-black text-slate-300 text-[10px] uppercase tracking-widest">
+                                {properties.length} {properties.length === 1 ? 'imóvel' : 'imóveis'}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Filtros Container */}
+                    <div className="w-full flex flex-col gap-6">
+                        {/* Linha 1: Filtros de Seleção */}
+                        <div className={`grid ${!isDashboardRoute
+                            ? 'grid-cols-1 sm:grid-cols-3 lg:flex lg:flex-1'
+                            : (isMyProperties || isMarketMode ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-wrap xl:items-center')
+                            } gap-4`}>
                             {/* Operação */}
-                            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                                {!isDashboardRoute && <label className="text-[10px] font-bold text-slate-500 uppercase ml-2 tracking-wider">Operação</label>}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest leading-none">Operação</label>
                                 <select
                                     value={selectedOperation}
                                     onChange={e => setSelectedOperation(e.target.value)}
-                                    className={`bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all w-full ${!isDashboardRoute ? 'lg:w-[140px]' : ''}`}
+                                    className="bg-slate-900/60 border border-white/5 rounded-xl px-4 py-3.5 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all w-full font-medium"
                                 >
-                                    <option value="" className="bg-slate-800">Operação</option>
-                                    <option value="venda" className="bg-slate-800">Venda</option>
-                                    <option value="locacao" className="bg-slate-800">Locação</option>
-                                    <option value="temporada" className="bg-slate-800">Temporada</option>
+                                    <option value="" className="bg-slate-900 text-slate-500 italic">Todas Operações</option>
+                                    <option value="venda" className="bg-slate-900 text-white">Venda</option>
+                                    <option value="locacao" className="bg-slate-900 text-white">Locação</option>
+                                    <option value="temporada" className="bg-slate-900 text-white">Temporada</option>
                                 </select>
                             </div>
 
                             {/* Tipo */}
-                            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                                {!isDashboardRoute && <label className="text-[10px] font-bold text-slate-500 uppercase ml-2 tracking-wider">Tipo</label>}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest leading-none">Tipo</label>
                                 <select
                                     value={selectedType}
                                     onChange={e => setSelectedType(e.target.value)}
-                                    className={`bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all w-full ${!isDashboardRoute ? 'lg:w-[160px]' : ''}`}
+                                    className="bg-slate-900/60 border border-white/5 rounded-xl px-4 py-3.5 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all w-full font-medium"
                                 >
-                                    <option value="" className="bg-slate-800">Tipo</option>
+                                    <option value="" className="bg-slate-900 text-slate-500 italic">Todos os Tipos</option>
                                     {filteredPropertyTypes.map((type, idx) => (
-                                        <option key={idx} value={type.tipo} className="bg-slate-800">
+                                        <option key={idx} value={type.tipo} className="bg-slate-900 text-white">
                                             {type.tipo.charAt(0).toUpperCase() + type.tipo.slice(1)}
                                         </option>
                                     ))}
                                 </select>
                             </div>
 
-                            {/* Faixa de Preço */}
-                            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                                {!isDashboardRoute && <label className="text-[10px] font-bold text-slate-500 uppercase ml-2 tracking-wider">Preço</label>}
+                            {/* Preço */}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest leading-none">Preço</label>
                                 <select
                                     value={selectedPriceRange}
                                     onChange={e => setSelectedPriceRange(e.target.value)}
-                                    className={`bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all w-full ${!isDashboardRoute ? 'lg:w-[180px]' : ''}`}
+                                    className="bg-slate-900/60 border border-white/5 rounded-xl px-4 py-3.5 text-gray-300 text-sm cursor-pointer focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all w-full font-medium"
                                 >
-                                    <option value="" className="bg-slate-800">Preço</option>
-                                    <option value="0-200000" className="bg-slate-800">Até R$200mil</option>
-                                    <option value="200000-500000" className="bg-slate-800">R$200mil - R$500mil</option>
-                                    <option value="500000-1000000" className="bg-slate-800">R$500mil - R$1M</option>
-                                    <option value="1000000-2000000" className="bg-slate-800">R$1M - R$2M</option>
-                                    <option value="2000000-999999999" className="bg-slate-800">Acima de R$2M</option>
+                                    <option value="" className="bg-slate-900 text-slate-500 italic">Faixa de Preço</option>
+                                    <option value="0-200000" className="bg-slate-900 text-white">Até R$200mil</option>
+                                    <option value="200000-500000" className="bg-slate-900 text-white">R$200mil - R$500mil</option>
+                                    <option value="500000-1000000" className="bg-slate-900 text-white">R$500mil - R$1M</option>
+                                    <option value="1000000-2000000" className="bg-slate-900 text-white">R$1M - R$2M</option>
+                                    <option value="2000000-999999999" className="bg-slate-900 text-white">Acima de R$2M</option>
                                 </select>
                             </div>
 
-                            {/* Dashboard buttons and view toggles inline for desktop */}
-                            {isDashboardRoute && !isMyProperties && (
-                                <div className="col-span-2 lg:col-span-3 xl:col-auto flex flex-col sm:flex-row items-center gap-3 xl:ml-auto w-full xl:w-auto">
-                                    <div className="flex gap-2 w-full sm:w-auto">
+                            {/* Status Filter for Meus Imóveis */}
+                            {isMyProperties && (
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest leading-none">Status</label>
+                                    <div className="relative w-full z-40">
                                         <button
-                                            onClick={() => fetchProperties()}
-                                            className="flex-1 sm:flex-none px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-all shadow-sm flex items-center justify-center gap-2"
+                                            onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                                            className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl border transition-all bg-slate-900/60 ${statusDropdownOpen ? 'border-emerald-500 ring-1 ring-emerald-500' : 'border-white/5'}`}
                                         >
-                                            <Search size={18} />
-                                            <span>Buscar</span>
-                                        </button>
-                                        <button
-                                            onClick={clearFilters}
-                                            className="flex-1 sm:flex-none px-6 py-3 bg-red-500/50 hover:bg-red-500/80 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <X size={18} />
-                                            <span>Limpar</span>
-                                        </button>
-                                    </div>
-
-                                    {/* View Toggles for Dashboard - Optimized for mobile */}
-                                    <div className="flex bg-slate-800 p-1 rounded-2xl border border-slate-700/50 shadow-lg shadow-black/20 w-full sm:w-auto overflow-hidden">
-                                        <button
-                                            onClick={() => setView('grid')}
-                                            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all font-bold text-xs sm:text-sm whitespace-nowrap ${view === 'grid' ? 'bg-slate-700 text-emerald-400 border border-slate-600/50' : 'text-slate-400 hover:text-white'}`}
-                                        >
-                                            <Grid size={16} />
-                                            <span>Grade</span>
-                                        </button>
-                                        <button
-                                            onClick={() => setView('map')}
-                                            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all font-bold text-xs sm:text-sm whitespace-nowrap ${view === 'map' ? 'bg-slate-700 text-emerald-400 border border-slate-600/50' : 'text-slate-400 hover:text-white'}`}
-                                        >
-                                            <MapIcon size={16} />
-                                            <span>Mapa</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Status - NOVO (apenas para Meus Imóveis) */}
-                            {isDashboardRoute && isMyProperties && (
-                                <div className="relative w-full md:w-64 z-30">
-                                    <button
-                                        onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${statusDropdownOpen
-                                            ? 'bg-slate-800 border-emerald-500 ring-1 ring-emerald-500'
-                                            : 'bg-slate-800 border-slate-700 hover:border-slate-600'
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className="font-bold text-white text-sm">
+                                            <span className="font-bold text-white text-sm truncate uppercase tracking-tighter">
                                                 {statusFilter === 'todos' ? 'Todos' :
                                                     statusFilter === 'pendente' ? 'Pendentes' :
                                                         statusFilter === 'reprovado' ? 'Reprovados' :
@@ -669,130 +658,115 @@ export const PropertiesList: React.FC = () => {
                                                                         statusFilter === 'imovel_espera' ? 'Standby' :
                                                                             statusFilter === 'imovel_perdido' ? 'Perdidos' : statusFilter
                                                 }
-                                                <span className="text-slate-500 ml-1">
-                                                    ({
-                                                        statusFilter === 'todos' ? stats.total :
-                                                            statusFilter === 'pendente' ? properties.filter(p => p.status === 'pendente').length :
-                                                                statusFilter === 'reprovado' ? properties.filter(p => p.status === 'reprovado').length :
-                                                                    statusFilter === 'ativo' ? stats.ativos :
-                                                                        statusFilter === 'venda_faturada' ? stats.vendas :
-                                                                            statusFilter === 'locacao_faturada' ? stats.locacoes :
-                                                                                statusFilter === 'imovel_espera' ? stats.standby :
-                                                                                    statusFilter === 'imovel_perdido' ? stats.perdidos : 0
-                                                    })
-                                                </span>
                                             </span>
-                                        </div>
-                                        <ChevronDown className={`transform transition-transform ${statusDropdownOpen ? 'rotate-180' : ''} text-slate-400`} size={16} />
-                                    </button>
+                                            <ChevronDown size={14} className={`transition-transform duration-300 ${statusDropdownOpen ? 'rotate-180' : ''}`} />
+                                        </button>
 
-                                    {statusDropdownOpen && (
-                                        <>
-                                            <div
-                                                className="fixed inset-0 z-20"
-                                                onClick={() => setStatusDropdownOpen(false)}
-                                            />
-                                            <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 rounded-xl border border-slate-700 shadow-xl z-40 overflow-hidden max-h-[400px] overflow-y-auto">
-                                                {[
-                                                    { value: 'todos', label: 'Todos', count: stats.total },
-                                                    { value: 'pendente', label: 'Pendentes', count: properties.filter(p => p.status === 'pendente').length },
-                                                    { value: 'reprovado', label: 'Reprovados', count: properties.filter(p => p.status === 'reprovado').length },
-                                                    { value: 'ativo', label: 'Ativos', count: stats.ativos },
-                                                    { value: 'venda_faturada', label: 'Vendidos', count: stats.vendas },
-                                                    { value: 'locacao_faturada', label: 'Alugados', count: stats.locacoes },
-                                                    { value: 'imovel_espera', label: 'Standby', count: stats.standby },
-                                                    { value: 'imovel_perdido', label: 'Perdidos', count: stats.perdidos }
-                                                ]
-                                                    .filter(option => option.count > 0 || option.value === 'todos') // Ocultar zerados (exceto Todos)
-                                                    .map((option) => (
+                                        {statusDropdownOpen && (
+                                            <>
+                                                <div className="fixed inset-0 z-30" onClick={() => setStatusDropdownOpen(false)} />
+                                                <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 rounded-xl border border-slate-700 shadow-2xl z-50 overflow-hidden max-h-[300px] overflow-y-auto">
+                                                    {[
+                                                        { value: 'todos', label: 'Todos', count: stats.total },
+                                                        { value: 'pendente', label: 'Pendentes', count: properties.filter(p => p.status === 'pendente').length },
+                                                        { value: 'reprovado', label: 'Reprovados', count: properties.filter(p => p.status === 'reprovado').length },
+                                                        { value: 'ativo', label: 'Ativos', count: stats.ativos },
+                                                        { value: 'venda_faturada', label: 'Vendidos', count: stats.vendas },
+                                                        { value: 'locacao_faturada', label: 'Alugados', count: stats.locacoes },
+                                                        { value: 'imovel_espera', label: 'Standby', count: stats.standby },
+                                                        { value: 'imovel_perdido', label: 'Perdidos', count: stats.perdidos }
+                                                    ].filter(opt => opt.count > 0 || opt.value === 'todos').map(opt => (
                                                         <button
-                                                            key={option.value}
-                                                            onClick={() => {
-                                                                setStatusFilter(option.value);
-                                                                setStatusDropdownOpen(false);
-                                                            }}
-                                                            className={`w-full flex items-center justify-between p-3 hover:bg-slate-700/50 transition-colors border-b border-slate-700/50 last:border-0 ${statusFilter === option.value ? 'bg-slate-700/50' : ''
-                                                                }`}
+                                                            key={opt.value}
+                                                            onClick={() => { setStatusFilter(opt.value); setStatusDropdownOpen(false); }}
+                                                            className={`w-full flex items-center justify-between p-4 hover:bg-slate-700 transition-colors border-b border-white/5 last:border-0 ${statusFilter === opt.value ? 'bg-slate-700/50' : ''}`}
                                                         >
-                                                            <span className={`text-sm font-medium ${statusFilter === option.value ? 'text-white' : 'text-slate-300'}`}>
-                                                                {option.label}
-                                                            </span>
-                                                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full bg-slate-900 border border-slate-700 ${statusFilter === option.value ? 'text-white' : 'text-slate-500'}`}>
-                                                                {option.count}
-                                                            </span>
+                                                            <span className={`text-sm font-bold ${statusFilter === opt.value ? 'text-emerald-400' : 'text-slate-300'}`}>{opt.label}</span>
+                                                            <span className="text-[10px] font-black px-2 py-0.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-500">{opt.count}</span>
                                                         </button>
                                                     ))}
-                                            </div>
-                                        </>
-                                    )}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* Linha 2: Botões de Ação - Hidden in Dashboard Mode as they are inline above */}
-                        {!isDashboardRoute || (isDashboardRoute && isMyProperties) ? (
-                            <div className="grid grid-cols-2 md:flex md:flex-wrap md:items-center gap-3">
-                                {/* Buscar */}
-                                <button
-                                    onClick={() => fetchProperties()}
-                                    className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-all shadow-sm flex items-center justify-center gap-2"
-                                >
-                                    <Search size={18} />
-                                    <span>Buscar</span>
-                                </button>
+                        {/* Linha 2: Botões de Ação */}
+                        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 pt-2 border-t border-white/5 mt-2">
+                            <div className="flex flex-wrap items-center gap-3">
+                                {/* Buscar / Limpar */}
+                                <div className="flex items-center gap-2 w-full md:w-auto">
+                                    <button
+                                        onClick={() => fetchProperties()}
+                                        className="flex-1 md:flex-none px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                                    >
+                                        <Search size={18} />
+                                        <span className="tracking-widest uppercase text-xs">BUSCAR</span>
+                                    </button>
+                                    <button
+                                        onClick={clearFilters}
+                                        className="flex-1 md:flex-none px-6 py-3.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-black transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <X size={18} />
+                                        <span className="tracking-widest uppercase text-xs">LIMPAR</span>
+                                    </button>
+                                </div>
 
-                                {/* Limpar */}
-                                <button
-                                    onClick={clearFilters}
-                                    className="px-6 py-3 bg-red-500/50 hover:bg-red-500/80 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
-                                >
-                                    <X size={18} />
-                                    <span>Limpar</span>
-                                </button>
-
-                                {/* View Toggles */}
-                                <div className="flex bg-slate-800 p-1.5 rounded-2xl border border-slate-700/50 shadow-lg shadow-black/20">
+                                {/* View Switcher */}
+                                <div className="flex bg-slate-900 border border-white/5 p-1 rounded-xl shadow-inner w-full md:w-auto">
                                     <button
                                         onClick={() => setView('grid')}
-                                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all font-bold text-sm ${view === 'grid' ? 'bg-slate-700 text-emerald-400 shadow-sm border border-slate-600/50' : 'text-slate-400 hover:text-white'}`}
-                                        title="Visualização em Grade"
+                                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-black text-[10px] uppercase tracking-tighter ${view === 'grid' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                                     >
-                                        <Grid size={18} />
-                                        <span className="hidden sm:inline">Grade</span>
+                                        <Grid size={16} />
+                                        <span>Grade</span>
                                     </button>
-                                    {role !== 'Cliente' && (
+                                    {(isMyProperties || role !== 'Cliente') && (
                                         <button
                                             onClick={() => setView('list')}
-                                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all font-bold text-sm ${view === 'list' ? 'bg-slate-700 text-emerald-400 shadow-sm border border-slate-600/50' : 'text-slate-400 hover:text-white'}`}
-                                            title="Visualização em Lista"
+                                            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-black text-[10px] uppercase tracking-tighter ${view === 'list' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                                         >
-                                            <List size={18} />
-                                            <span className="hidden sm:inline">Lista</span>
+                                            <List size={16} />
+                                            <span>Lista</span>
                                         </button>
                                     )}
                                     <button
                                         onClick={() => setView('map')}
-                                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl transition-all font-bold text-sm ${view === 'map' ? 'bg-slate-700 text-emerald-400 shadow-sm border border-slate-600/50' : 'text-slate-400 hover:text-white'}`}
-                                        title="Visualização em Mapa"
+                                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-black text-[10px] uppercase tracking-tighter ${view === 'map' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                                     >
-                                        <MapIcon size={18} />
-                                        <span className="hidden sm:inline">Mapa</span>
+                                        <MapIcon size={16} />
+                                        <span>Mapa</span>
                                     </button>
                                 </div>
                             </div>
-                        ) : null}
 
-                        {/* Botão Anunciar - DESTACADO - Only for brokers */}
-                        {user && isDashboardRoute && role === 'corretor' && (
-                            <button
-                                onClick={() => navigate('/add-property')}
-                                className="col-span-2 md:col-span-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 flex items-center justify-center gap-2 md:ml-auto"
-                            >
-                                <span className="whitespace-nowrap">ANUNCIAR IMÓVEL</span>
-                            </button>
-                        )}
+                            {/* Botão de Anunciar Premium para Dashboard */}
+                            {(isDashboardRoute && role !== 'Cliente') && (
+                                <button
+                                    onClick={() => navigate('/add-property')}
+                                    className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl font-black transition-all shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-[1.02] flex items-center justify-center gap-3 border border-white/10 uppercase tracking-tighter"
+                                >
+                                    <div className="p-1 bg-white/20 rounded-lg">
+                                        <Home size={18} />
+                                    </div>
+                                    <span className="text-base">ANUNCIAR IMÓVEL</span>
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
+
+                {/* Counter - Pattern from PartnerProperties.tsx */}
+                {isMyProperties && properties.length > 0 && (
+                    <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                            <div className="w-2 h-8 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/40"></div>
+                            {properties.length} {properties.length === 1 ? 'imóvel na sua gestão' : 'imóveis na sua gestão'}
+                        </h2>
+                    </div>
+                )}
 
                 {/* Content */}
                 <div className="flex-1 min-h-[400px]">
@@ -802,6 +776,7 @@ export const PropertiesList: React.FC = () => {
                         </div>
                     ) : properties.length === 0 ? (
                         <NoPropertiesFound
+                            isBrokerView={isMyProperties}
                             onShowMore={() => window.location.href = '/'}
                         />
                     ) : (
@@ -878,7 +853,14 @@ export const PropertiesList: React.FC = () => {
                                                             {/* Imóvel / Código */}
                                                             <td className="p-4">
                                                                 <div>
-                                                                    <div onClick={() => navigate(`/property/${prop.id}`)} className="font-bold text-white text-sm hover:text-emerald-400 cursor-pointer transition-colors max-w-[175px] truncate" title={prop.titulo}>
+                                                                    <div
+                                                                        onClick={() => {
+                                                                            const slug = generatePropertySlug(prop);
+                                                                            navigate(`/properties/${slug}`);
+                                                                        }}
+                                                                        className="font-bold text-white text-sm hover:text-emerald-400 cursor-pointer transition-colors max-w-[175px] truncate"
+                                                                        title={prop.titulo}
+                                                                    >
                                                                         {prop.titulo || 'Sem título'}
                                                                     </div>
                                                                     <div className="mt-1">
@@ -995,11 +977,14 @@ export const PropertiesList: React.FC = () => {
                                                                         </>
                                                                     )}
                                                                     <button
-                                                                        onClick={() => window.open(`/property/${prop.id}`, '_blank')}
+                                                                        onClick={() => {
+                                                                            const slug = generatePropertySlug(prop);
+                                                                            window.open(`/properties/${slug}`, '_blank');
+                                                                        }}
                                                                         className="p-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors border border-slate-600"
-                                                                        title="Ver no Site"
+                                                                        title="Visualizar"
                                                                     >
-                                                                        <Search size={16} />
+                                                                        <Eye size={16} />
                                                                     </button>
                                                                 </div>
                                                             </td>

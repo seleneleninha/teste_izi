@@ -15,20 +15,32 @@ interface NoPropertiesFoundProps {
     onShowMore?: () => void;
     conversationId?: string;
     brokerId?: string; // ID do corretor ou undefined para 'plataforma'
+    isBrokerView?: boolean;
+    onPrimaryAction?: () => void;
+    hideActions?: boolean;
 }
 
 export const NoPropertiesFound: React.FC<NoPropertiesFoundProps> = ({
-    message = "Até o momento, seu imóvel ideal ainda não chegou",
-    subtitle = "Que tal Encomendar seu Imóvel? Comunicaremos nossos Parceiros que existe uma procura pelo imóvel dos seus sonhos.",
+    message,
+    subtitle,
     filters,
     onShowMore,
     conversationId,
-    brokerId
+    brokerId,
+    isBrokerView = false,
+    onPrimaryAction,
+    hideActions = false
 }) => {
     const [showModal, setShowModal] = useState(false);
 
-    // Debug: verificar se brokerId est\u00e1 sendo recebido
-    console.log('NoPropertiesFound - brokerId recebido:', brokerId);
+    // Default values based on view mode
+    const displayMessage = message || (isBrokerView
+        ? "Você ainda não possui imóveis cadastrados"
+        : "Até o momento, seu imóvel ideal ainda não chegou");
+
+    const displaySubtitle = subtitle || (isBrokerView
+        ? "Que tal anunciar seu primeiro imóvel e começar a expandir sua visibilidade e novas parcerias? Seus anúncios poderão compor a carteira de outros corretores da plataforma!"
+        : "Que tal Encomendar seu Imóvel? Comunicaremos nossos Parceiros que existe uma procura pelo imóvel dos seus sonhos.");
 
     const handleShowMore = () => {
         if (onShowMore) {
@@ -49,41 +61,65 @@ export const NoPropertiesFound: React.FC<NoPropertiesFoundProps> = ({
                     </div>
 
                     {/* Heading */}
-                    <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
-                        {message}
+                    <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                        {displayMessage}
                     </h3>
 
                     {/* Subtitle */}
-                    <p className="text-gray-300 text-base md:text-lg mb-8 leading-relaxed">
-                        {subtitle}
+                    <p className="text-gray-300 text-base md:text-lg mb-8 leading-relaxed max-w-2xl mx-auto">
+                        {displaySubtitle}
                     </p>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    {/* Primary Action: Custom Order */}
-                    <button
-                        onClick={() => setShowModal(true)}
-                        className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-8 rounded-full transition-all shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105"
-                    >
-                        <Package size={20} />
-                        Encomendar Imóvel
-                    </button>
+                {/* Alinhamento de botões */}
+                {!hideActions && (
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        {/* Primary Action */}
+                        <button
+                            onClick={() => {
+                                if (onPrimaryAction) {
+                                    onPrimaryAction();
+                                } else if (!isBrokerView) {
+                                    setShowModal(true);
+                                } else {
+                                    window.location.href = '/add-property';
+                                }
+                            }}
+                            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-8 rounded-full transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-105"
+                        >
+                            {isBrokerView ? <Package size={20} /> : <Package size={20} />}
+                            {isBrokerView ? "Anunciar meu 1º Imóvel" : "Encomendar Imóvel"}
+                        </button>
 
-                    {/* Secondary Action: Show More */}
-                    <button
-                        onClick={handleShowMore}
-                        className="flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-gray-300 font-bold py-4 px-8 rounded-full transition-all border border-slate-600"
-                    >
-                        <Search size={20} />
-                        Ver + opções
-                    </button>
-                </div>
+                        {/* Secondary Action */}
+                        {!isBrokerView ? (
+                            <button
+                                onClick={handleShowMore}
+                                className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold py-4 px-8 rounded-full transition-all border border-slate-700"
+                            >
+                                <Search size={20} />
+                                Ver + opções
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => window.location.href = '/partner-properties'}
+                                className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold py-4 px-8 rounded-full transition-all border border-slate-700"
+                            >
+                                <Search size={20} />
+                                Explorar Parcerias
+                            </button>
+                        )}
+                    </div>
+                )}
 
                 {/* Optional: Quick Stats or Trust Indicators */}
                 <div className="mt-12 pt-8 border-t border-slate-800">
                     <p className="text-sm text-gray-400">
-                        ✨ Encomendas são <span className="text-emerald-400 font-semibold">totalmente gratuitas</span> e conectam você aos melhores corretores da região
+                        {isBrokerView ? (
+                            <>✨ Anunciar na <span className="text-emerald-400 font-semibold">iziBrokerz</span> aumenta suas chances de fechamento através da nossa rede de parcerias.</>
+                        ) : (
+                            <>✨ Encomendas são <span className="text-emerald-400 font-semibold">totalmente gratuitas</span> e conectam você aos melhores corretores da região</>
+                        )}
                     </p>
                 </div>
             </div>

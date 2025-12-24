@@ -451,8 +451,8 @@ export const PartnerProperties: React.FC = () => {
                             ))}
                         </div>
 
-                        <div className="flex items-center gap-2 mt-4 text-sm text-slate-400 bg-slate-900/40 p-3 rounded-2xl border border-slate-700/30">
-                            <span className="text-emerald-400">💡</span>
+                        <div className="flex items-center gap-2 mt-4 text-md text-yellow-400 bg-slate-900/40 p-3 rounded-2xl border border-slate-700/30">
+                            <span className="text-yellow-400">💡</span>
                             <p>Escolha um raio menor para focar em imóveis próximos à sua região de atuação</p>
                         </div>
                     </div>

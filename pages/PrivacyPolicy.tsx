@@ -223,7 +223,7 @@ export const PrivacyPolicy: React.FC = () => {
                             <div className="bg-midnight-900/50 p-6 rounded-xl space-y-2">
                                 <p><strong className="text-emerald-300">Controlador de Dados:</strong> iziBrokerz Ltda</p>
                                 <p><strong className="text-emerald-300">DPO (Encarregado):</strong> [NOME DO DPO]</p>
-                                <p><strong className="text-emerald-300">E-mail:</strong> <a href="mailto:privacidade@izibrokerz.com" className="text-emerald-400 hover:underline">privacidade@izibrokerz.com</a></p>
+                                <p><strong className="text-emerald-300">E-mail:</strong> <a href="mailto:falecom@izibrokerz.com" className="text-emerald-400 hover:underline">falecom@izibrokerz.com</a></p>
                                 <p><strong className="text-emerald-300">CNPJ:</strong> [CNPJ DA EMPRESA]</p>
                             </div>
                             <p className="text-sm text-gray-400 mt-4">

@@ -70,7 +70,8 @@ export const PropertyDetails: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
-    const { user } = useAuth();
+    const { user, role } = useAuth();
+    const isClient = role === 'Cliente';
     const { addToast } = useToast();
     const [property, setProperty] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -282,7 +283,7 @@ export const PropertyDetails: React.FC = () => {
                         agent: {
                             name: finalAgentData ? `${finalAgentData.nome} ${finalAgentData.sobrenome}` : 'Anunciante',
                             avatar: finalAgentData?.avatar || 'https://i.pravatar.cc/150?u=default',
-                            email: finalAgentData?.email || 'contato@izibrokerz.com',
+                            email: finalAgentData?.email || 'falecom@izibrokerz.com',
                             phone: finalAgentData?.whatsapp || '(11) 99999-9999',
                             creci: finalAgentData?.creci || '',
                             uf_creci: finalAgentData?.uf_creci || '',
@@ -304,7 +305,8 @@ export const PropertyDetails: React.FC = () => {
                         valor_mensal: data.valor_mensal,
                         latitude: data.latitude,
                         longitude: data.longitude,
-                        taxas_inclusas: data.taxas_inclusas
+                        taxas_inclusas: data.taxas_inclusas,
+                        code: data.cod_imovel
                     });
                 }
             } catch (error) {
@@ -450,7 +452,7 @@ export const PropertyDetails: React.FC = () => {
 
                 if (error) throw error;
                 setIsFavorite(false);
-                addToast('Removido dos favoritos', 'success');
+                addToast(isClient ? 'Removido dos favoritos' : 'Removido do comparativo', 'success');
             } else {
                 // Add to favorites
                 const { error } = await supabase
@@ -459,7 +461,7 @@ export const PropertyDetails: React.FC = () => {
 
                 if (error) throw error;
                 setIsFavorite(true);
-                addToast('Adicionado aos favoritos', 'success');
+                addToast(isClient ? 'Adicionado aos favoritos' : 'Adicionado ao comparativo', 'success');
             }
         } catch (error) {
             console.error('Error toggling favorite:', error);
@@ -538,7 +540,9 @@ export const PropertyDetails: React.FC = () => {
                                     ? 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100'
                                     : 'bg-slate-800 border-slate-100 text-slate-100 hover:text-red-500'
                                     }`}
-                                title={isFavorite ? "Remover dos Favoritos" : "Salvar Favorito"}
+                                title={isFavorite
+                                    ? (isClient ? "Remover dos Favoritos" : "Remover do Comparativo")
+                                    : (isClient ? "Salvar Favorito" : "Salvar no Comparativo")}
                             >
                                 <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
                             </button>
@@ -626,14 +630,22 @@ export const PropertyDetails: React.FC = () => {
                                     const isAmbos = op.includes('venda') && op.includes('locacao');
 
                                     return (
-                                        <span className={`text-md px-2 py-1 rounded-full font-medium ${isVenda ? 'bg-red-600 text-white'
-                                            : isLocacao ? 'bg-blue-600 text-white'
-                                                : isTemporada ? 'bg-orange-500 text-white'
-                                                    : isAmbos ? 'bg-green-600 text-white'
-                                                        : 'bg-gray-600 text-white'
-                                            }`}>
-                                            {property.operacao || 'N/A'}
-                                        </span>
+                                        <>
+                                            <span className={`text-md px-2 py-1 rounded-full font-medium ${isVenda ? 'bg-red-600 text-white'
+                                                : isLocacao ? 'bg-blue-600 text-white'
+                                                    : isTemporada ? 'bg-orange-500 text-white'
+                                                        : isAmbos ? 'bg-green-600 text-white'
+                                                            : 'bg-gray-600 text-white'
+                                                }`}>
+                                                {property.operacao || 'N/A'}
+                                            </span>
+
+                                            {property.code && (
+                                                <span className="text-md px-2 py-1 rounded-full font-black bg-slate-800/80 text-primary-400 border border-primary-500/30 backdrop-blur-sm">
+                                                    Cód: {property.code}
+                                                </span>
+                                            )}
+                                        </>
                                     );
                                 })()}
                             </div>

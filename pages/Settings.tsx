@@ -559,7 +559,7 @@ export const Settings: React.FC = () => {
               >
                 <div className="relative">
                   <MapPin size={16} />
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                 </div>
                 <span>Página & Conteúdo</span>
               </button>
@@ -641,28 +641,49 @@ export const Settings: React.FC = () => {
                   type="tel"
                   value={profile.phone}
                   onChange={e => setProfile({ ...profile, phone: e.target.value })}
-                  disabled={role === 'Cliente'}
-                  className={`w-full px-4 py-2.5 rounded-xl bg-slate-900 border ${role === 'Cliente' ? 'border-slate-700 text-slate-500 cursor-not-allowed' : 'border-slate-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white'} outline-none transition-all`}
+                  disabled={true}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed outline-none transition-all"
                   placeholder="(00) 00000-0000"
                 />
               </div>
             </div>
 
             {role !== 'Cliente' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">CPF</label>
-                  <input type="text" value={profile.cpf} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed" />
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">CPF</label>
+                    <input type="text" value={profile.cpf} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">CRECI</label>
+                    <input type="text" value={profile.creci} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">UF CRECI</label>
+                    <input type="text" value={profile.ufCreci} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed" />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">CRECI</label>
-                  <input type="text" value={profile.creci} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed" />
+
+                {/* Warning Message for Vital Data */}
+                <div className="mb-8 p-4 bg-red-900/10 border border-red-500/20 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-red-500/20 rounded-full text-red-500">
+                      <AlertTriangle size={20} />
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      Informações vitais não podem ser alteradas diretamente. Para alterar seu <span className="text-white font-bold">Nome, CPF, CRECI ou WhatsApp</span>, entre em contato com o suporte.
+                    </p>
+                  </div>
+                  <a
+                    href="mailto:falecom@izibrokerz.com"
+                    className="w-full md:w-auto px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-red-600/20 flex items-center justify-center gap-2"
+                  >
+                    <AtSign size={16} />
+                    Solicitar Alteração
+                  </a>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">UF CRECI</label>
-                  <input type="text" value={profile.ufCreci} disabled className="w-full px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 cursor-not-allowed" />
-                </div>
-              </div>
+              </>
             )}
 
             {/* 3. Address Section */}

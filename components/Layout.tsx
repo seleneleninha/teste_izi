@@ -175,7 +175,7 @@ export const DashboardLayout: React.FC = () => {
                 </header>
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-900 scroll-smooth">
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-900 scroll-smooth pb-24 md:pb-8">
                     <TrialBanner />
                     <div className="max-w-7xl mx-auto animate-in fade-in duration-500">
                         <Outlet />

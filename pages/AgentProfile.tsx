@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MapPin, Phone, Mail, Star, Linkedin, Instagram, Bed, Bath, Square, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import { generatePropertySlug } from '../lib/formatters';
 
 interface AgentProfile {
     id: string;
@@ -22,6 +23,7 @@ interface Property {
     area: number;
     image: string;
     type: string;
+    slug: string;
 }
 
 export const AgentProfile: React.FC = () => {
@@ -79,7 +81,12 @@ export const AgentProfile: React.FC = () => {
                         baths: p.banheiros || 0,
                         area: p.area_priv || 0,
                         image: p.fotos ? p.fotos.split(',')[0] : 'https://picsum.photos/seed/prop1/400/300',
-                        type: p.tipo_imovel || 'Imóvel'
+                        type: p.tipo_imovel || 'Imóvel',
+                        slug: generatePropertySlug({
+                            ...p,
+                            tipo_imovel: p.tipo_imovel?.tipo || p.tipo_imovel,
+                            operacao: p.operacao?.tipo || p.operacao
+                        })
                     }));
                     setProperties(mapped);
                 }
@@ -195,7 +202,7 @@ export const AgentProfile: React.FC = () => {
                         <div
                             key={prop.id}
                             className="bg-slate-800 rounded-full overflow-hidden shadow-sm border border-slate-700 group cursor-pointer hover:-translate-y-1 transition-transform duration-300"
-                            onClick={() => navigate(`/properties/${prop.id}`)}
+                            onClick={() => navigate(`/properties/${prop.slug}`)}
                         >
                             <div className="h-56 overflow-hidden relative">
                                 <img

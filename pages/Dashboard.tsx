@@ -341,7 +341,7 @@ export const Dashboard: React.FC = () => {
                 .eq('id', user?.id);
 
             setOnboardingCompleted(true);
-            addToast('Tour concluído! Bem-vindo(a) ao iziBrokerz! 🎉', 'success');
+            addToast('Tour concluído! Bem-vindo(a) à iziBrokerz! 🎉', 'success');
         } catch (error) {
             console.error('Error completing tour:', error);
         }
@@ -418,7 +418,7 @@ export const Dashboard: React.FC = () => {
                 </h2>
                 {role?.toLowerCase() === 'admin' ?
                     <p className="text-slate-400 text-xs font-medium leading-tight">Visão estratégica da plataforma iziBrokerz</p> :
-                    <p className="text-slate-400 text-xs font-medium leading-tight">Vamos bater as metas hoje? 🚀</p>
+                    <p className="text-slate-400 text-xs font-medium leading-tight">Vamos faturar muito hoje? 🚀</p>
                 }
             </div>
         );

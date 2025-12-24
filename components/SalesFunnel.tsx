@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, Users, DollarSign, Target, Eye, Search, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Target, Eye, Search, FileText, CheckCircle, XCircle, Archive } from 'lucide-react';
 
 interface FunnelMetrics {
     totalLeads: number;
@@ -8,7 +8,7 @@ interface FunnelMetrics {
         emContato: number;
         negociacao: number;
         fechado: number;
-        perdido: number;
+        arquivado: number;
     };
     totalValue: number;
     conversionRate: number;
@@ -59,7 +59,7 @@ export const SalesFunnel: React.FC<SalesFunnelProps> = ({ metrics }) => {
         return ((to / from) * 100).toFixed(1);
     };
 
-    const totalActive = metrics.totalLeads - metrics.byStage.perdido;
+    const totalActive = metrics.totalLeads; // totalLeads already excludes archived in the parent component
 
     return (
         <div className="bg-slate-800 rounded-3xl border border-slate-700 p-6 mb-6 shadow-sm h-full flex flex-col">
@@ -100,11 +100,11 @@ export const SalesFunnel: React.FC<SalesFunnelProps> = ({ metrics }) => {
                     </div>
                 </div>
                 <div className="text-center min-w-[80px]">
-                    <div className="flex items-center justify-center gap-1 text-slate-400 text-xs mb-1">
-                        <XCircle size={14} />
-                        <span>Perdidos</span>
+                    <div className="flex items-center justify-center gap-1 text-red-400 text-xs mb-1">
+                        <Archive size={14} />
+                        <span>Arquivados</span>
                     </div>
-                    <div className="text-2xl font-bold text-red-600 text-red-400">{metrics.byStage.perdido}</div>
+                    <div className="text-2xl font-bold text-red-400">{metrics.byStage.arquivado}</div>
                 </div>
             </div>
 

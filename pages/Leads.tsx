@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
     LayoutDashboard, Plus, Search, Filter, MoreVertical,
     Phone, Mail, Calendar, DollarSign, Clock,
-    ChevronLeft, ChevronRight, User, MapPin, Home,
+    ChevronLeft, ChevronRight, ChevronDown, User, MapPin, Home,
     ArrowRight, AlertCircle, CheckCircle2, XCircle,
     Eye, FileText, CheckCircle, Target, TrendingUp, Users, MessageSquare, Loader2, X, Pencil,
-    MessageCircle, Archive
+    MessageCircle, Archive, List, RotateCcw
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../components/ToastContext';
@@ -44,7 +44,7 @@ interface Lead {
     nome: string;
     email: string;
     telefone: string;
-    status: 'Novo' | 'Em Contato' | 'Negociação' | 'Fechado' | 'Perdido' | 'Inativo';
+    status: 'Novo' | 'Em Contato' | 'Negociação' | 'Fechado' | 'Arquivado';
     interesse: string;
     data_criacao: string;
     avatar?: string;
@@ -64,7 +64,19 @@ interface Lead {
 }
 
 // Draggable LeadCard Component
-const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number; onMatch?: (lead: Lead) => void; onEdit?: (lead: Lead) => void; onArchive?: (lead: Lead) => void; onStatusChange?: (leadId: string, newStatus: string) => void; locked?: boolean }> = ({ lead, isDragging = false, matchCount = 0, onMatch, onEdit, onArchive, onStatusChange, locked = false }) => {
+const LeadCard: React.FC<{
+    lead: Lead;
+    isDragging?: boolean;
+    matchCount?: number;
+    onMatch?: (lead: Lead) => void;
+    onEdit?: (lead: Lead) => void;
+    onArchive?: (lead: Lead) => void;
+    onStatusChange?: (leadId: string, newStatus: string) => void;
+    locked?: boolean;
+    operations?: { id: string; tipo: string }[];
+    propertyTypes?: { id: string; tipo: string }[];
+    columns?: any[];
+}> = ({ lead, isDragging = false, matchCount = 0, onMatch, onEdit, onArchive, onStatusChange, locked = false, operations = [], propertyTypes = [], columns = [] }) => {
     const {
         attributes,
         listeners,
@@ -82,12 +94,17 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
         opacity: isSortableDragging ? 0.5 : 1,
     };
 
+    const statusInfo = columns.find(c => c.status === lead.status);
+    const statusColor = statusInfo?.color.replace('bg-', 'text-') || 'text-slate-400';
+    const statusBg = statusInfo?.color.replace('bg-', 'bg-') + '/10' || 'bg-slate-500/10';
+    const statusBorder = statusInfo?.color.replace('bg-', 'border-') + '/20' || 'border-slate-500/20';
+
     const statusOptions = [
         { value: 'Novo', label: 'Novo', color: 'text-blue-600' },
         { value: 'Em Contato', label: 'Em Contato', color: 'text-yellow-600' },
         { value: 'Negociação', label: 'Negociação', color: 'text-purple-600' },
         { value: 'Fechado', label: 'Fechado', color: 'text-green-600' },
-        { value: 'Perdido', label: 'Perdido', color: 'text-red-600' },
+        { value: 'Arquivado', label: 'Arquivado', color: 'text-red-600' },
     ];
 
     return (
@@ -100,127 +117,170 @@ const LeadCard: React.FC<{ lead: Lead; isDragging?: boolean; matchCount?: number
                 } ${locked ? 'opacity-75 grayscale' : ''}`}
         >
             <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                    <div>
-                        <h4 className="font-bold text-sm text-white">
-                            {locked ? 'Lead Bloqueado' : lead.nome}
-                        </h4>
-                        <p className="text-xs text-slate-400">
-                            {locked ? '•••••••••••' : lead.telefone}
+                <div className="flex flex-col">
+                    <h4 className="font-black text-sm text-white uppercase tracking-tight">
+                        {locked ? 'Lead Bloqueado' : lead.nome}
+                    </h4>
+                    {!locked ? (
+                        <a
+                            href={`https://wa.me/55${lead.telefone.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs text-emerald-400 font-bold hover:text-emerald-300 transition-colors flex items-center gap-1 mt-0.5"
+                            title="Conversar no WhatsApp"
+                        >
+                            {lead.telefone}
+                        </a>
+                    ) : (
+                        <p className="text-[10px] text-slate-500 font-bold mt-0.5">
+                            •••••••••••
                         </p>
-                    </div>
+                    )}
                 </div>
+
                 {!locked && (
-                    <div className="flex space-x-1">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (onEdit) onEdit(lead);
-                            }}
-                            className="p-1.5 hover:bg-orange-100 hover:bg-orange-900/30 rounded text-orange-600"
-                            title="Editar Lead"
-                        >
-                            <Pencil size={14} />
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                window.open(`https://wa.me/55${lead.telefone.replace(/\D/g, '')}`, '_blank');
-                            }}
-                            className="p-1.5 hover:bg-green-100 hover:bg-green-900/30 rounded text-green-600"
-                            title="WhatsApp"
-                        >
-                            <MessageCircle size={14} />
-                        </button>
+                    <div className="flex items-center gap-1">
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 if (onMatch) onMatch(lead);
                             }}
-                            className="p-1.5 hover:bg-purple-100 hover:bg-purple-900/30 rounded text-purple-600 relative"
+                            className="p-1.5 hover:bg-purple-900/40 rounded-lg text-purple-400 relative transition-all"
                             title="Ver Imóveis Compatíveis"
                         >
                             <Target size={14} />
                             {matchCount > 0 && (
-                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-white border-slate-800"></span>
+                                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 rounded-full border border-slate-800 text-[9px] font-black flex items-center justify-center text-white">
+                                    {matchCount}
+                                </span>
                             )}
                         </button>
-                        {lead.status !== 'Inativo' && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (onEdit) onEdit(lead);
+                            }}
+                            className="p-1.5 hover:bg-orange-900/40 rounded-lg text-orange-400 transition-all"
+                            title="Editar Lead"
+                        >
+                            <Pencil size={14} />
+                        </button>
+                        {lead.status !== 'Arquivado' ? (
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     if (onArchive) onArchive(lead);
                                 }}
-                                className="p-1.5 hover:bg-slate-700/30 rounded text-slate-400"
+                                className="p-1.5 hover:bg-red-500/10 rounded-lg text-red-400 hover:text-red-400 transition-colors"
                                 title="Arquivar Lead"
                             >
                                 <Archive size={14} />
+                            </button>
+                        ) : (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onStatusChange) onStatusChange(lead.id, 'Novo');
+                                }}
+                                className="p-1.5 hover:bg-emerald-500/10 rounded-lg text-slate-400 hover:text-emerald-400 transition-colors"
+                                title="Desarquivar Lead"
+                            >
+                                <RotateCcw size={14} />
                             </button>
                         )}
                     </div>
                 )}
                 {locked && (
                     <div className="text-gray-400">
-                        <Archive size={14} /> {/* Placeholder icon */}
+                        <Archive size={14} />
                     </div>
                 )}
             </div>
 
-            <div className="space-y-2">
-                <div className="flex items-center text-xs text-slate-400 bg-slate-700/50 p-2 rounded">
-                    <span className="font-medium mr-1"></span> {lead.interesse}
-                </div>
-                <div className="flex justify-between items-center text-xs text-slate-400">
-                    {locked ? (
-                        <span className="text-primary-500 font-bold bg-primary-50 bg-primary-900/20 px-2 py-1 rounded">
-                            Faça upgrade para ver
-                        </span>
-                    ) : (
-                        <>
-                            <span className="flex items-center font-bold text-sm">
-                                de {lead.orcamento_min?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 })} até {lead.orcamento_max?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumSignificantDigits: 3 })}
+            <div className="space-y-3">
+                {/* Responsive Grid: 2 columns mobile, 3 columns desktop */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="bg-slate-900/40 p-3 rounded-2xl border border-white/5">
+                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.1em] mb-1">Interesse</p>
+                        <div className="flex flex-col">
+                            <span className="text-xs text-emerald-400 font-bold leading-tight">
+                                {operations.find(o => o.id === lead.operacao_interesse)?.tipo || 'N/A'}
                             </span>
-                            <span className="flex items-center">
-                                <Calendar size={12} className="mr-1" />
-                                {new Date(lead.data_criacao).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' })}
+                            <span className="text-[10px] text-slate-300 font-medium leading-tight">
+                                {propertyTypes.find(t => t.id === lead.tipo_imovel_interesse)?.tipo || lead.interesse}
                             </span>
-                        </>
-                    )}
-                </div>
+                        </div>
+                    </div>
 
-                {/* Mobile-Friendly Status Change */}
-                <div className="md:hidden pt-2 border-t border-slate-700">
-                    <div className="relative">
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowStatusMenu(!showStatusMenu);
-                            }}
-                            className="w-full px-3 py-2 text-xs font-medium bg-slate-700 hover:bg-slate-600 rounded-3xl flex items-center justify-between transition-colors"
-                        >
-                            <span>Mover para: {lead.status}</span>
-                            <ChevronRight size={14} className={`transition-transform ${showStatusMenu ? 'rotate-90' : ''}`} />
-                        </button>
-                        {showStatusMenu && (
-                            <div className="absolute z-50 mt-1 w-full bg-slate-800 border border-slate-700 rounded-3xl shadow-lg">
-                                {statusOptions.filter(opt => opt.value !== lead.status).map(option => (
-                                    <button
-                                        key={option.value}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (onStatusChange) {
-                                                onStatusChange(lead.id, option.value);
-                                            }
-                                            setShowStatusMenu(false);
-                                        }}
-                                        className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-slate-700 first:rounded-t-lg last:rounded-b-lg ${option.color}`}
-                                    >
-                                        {option.label}
-                                    </button>
-                                ))}
+                    <div className="bg-slate-900/40 p-3 rounded-2xl border border-white/5">
+                        <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.1em] mb-1">Localização</p>
+                        <div className="flex flex-col overflow-hidden">
+                            <span className="text-xs text-slate-200 font-bold truncate">{lead.bairro_interesse || lead.cidade_interesse || 'Não inf.'}</span>
+                            {(lead.bairro_interesse_2 || lead.bairro_interesse_3) && (
+                                <span className="text-[10px] text-slate-500 font-medium leading-tight">+ {
+                                    [lead.bairro_interesse_2, lead.bairro_interesse_3].filter(Boolean).length
+                                } bairros</span>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-900/40 p-3 rounded-2xl border border-white/5 col-span-2 md:col-span-1 flex items-center justify-between gap-3">
+                        <div className="flex-1">
+                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.1em] mb-1">Orçamento</p>
+                            <div className="flex flex-col">
+                                <span className="text-emerald-400 font-black text-sm leading-tight">
+                                    {locked ? '••••' : `R$ ${lead.orcamento_min?.toLocaleString('pt-BR')}`}
+                                </span>
+                                <span className="text-emerald-500/80 font-bold text-[11px] leading-tight mt-0.5">
+                                    {locked ? '••••' : `a R$ ${lead.orcamento_max?.toLocaleString('pt-BR')}`}
+                                </span>
+                            </div>
+                        </div>
+
+                        {!locked && (
+                            <div className="md:hidden relative flex-1 text-right">
+                                <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.1em] mb-1">Etapa:</p>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowStatusMenu(!showStatusMenu);
+                                    }}
+                                    className={`ml-auto px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all flex items-center gap-1 ${statusBg} ${statusColor} ${statusBorder} hover:brightness-125 cursor-pointer`}
+                                >
+                                    {lead.status}
+                                    <ChevronDown size={12} />
+                                </button>
+                                {showStatusMenu && (
+                                    <div className="absolute z-[100] top-full right-0 mt-2 w-48 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                        {statusOptions.filter(opt => opt.value !== lead.status).map(option => (
+                                            <button
+                                                key={option.value}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (onStatusChange) {
+                                                        onStatusChange(lead.id, option.value);
+                                                    }
+                                                    setShowStatusMenu(false);
+                                                }}
+                                                className={`w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 ${option.color}`}
+                                            >
+                                                {option.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
+                </div>
+
+                {/* Footer Info */}
+                <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold border-t border-white/5 pt-2">
+                    <span className="flex items-center">
+                        <Calendar size={12} className="mr-1 text-slate-600" />
+                        CRIADO EM {new Date(lead.data_criacao).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }).toUpperCase()}
+                    </span>
                 </div>
             </div>
         </div>
@@ -243,9 +303,9 @@ const DroppableColumn: React.FC<{
     });
 
     return (
-        <div ref={setNodeRef} className="bg-slate-900/40 rounded-3xl border border-slate-700/50 shadow-sm transition-all hover:shadow-md backdrop-blur-sm overflow-hidden">
+        <div ref={setNodeRef} className="bg-slate-900/40 rounded-3xl border border-slate-700/50 shadow-sm transition-all hover:shadow-md backdrop-blur-sm">
             {/* Column Header acting as Stage Card Header */}
-            <div className="p-4 border-b border-slate-700/50 flex items-center justify-between bg-slate-900/80">
+            <div className="p-4 border-b border-slate-700/50 flex items-center justify-between bg-slate-900/80 rounded-t-3xl">
                 <div className="flex items-center gap-4">
                     <div className={`p-2 rounded-xl shadow-sm bg-slate-800 border border-slate-700`}>
                         {Icon && <Icon size={20} className={color.replace('bg-', 'text-')} />}
@@ -261,11 +321,179 @@ const DroppableColumn: React.FC<{
             </div>
 
             {/* Leads List */}
-            <div className="p-4 min-h-[100px] space-y-3 bg-slate-950/20">
+            <div className="p-4 min-h-[100px] space-y-3 bg-slate-950/20 rounded-b-3xl">
                 {children}
                 {leads.length === 0 && (
                     <div className="border-2 border-dashed border-slate-800 rounded-2xl p-6 text-center">
                         <p className="text-sm text-slate-500 font-medium">Arraste leads para cá</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// Mobile List View Card Component
+const MobileLeadListViewCard: React.FC<{
+    lead: Lead;
+    isLocked: boolean;
+    onMatchClick: (lead: Lead) => void;
+    onEditLead: (lead: Lead) => void;
+    updateLeadStatus: (leadId: string, newStatus: string) => void;
+    operations: { id: string; tipo: string }[];
+    propertyTypes: { id: string; tipo: string }[];
+    matchCounts: Record<string, number>;
+    columns: any[];
+}> = ({ lead, isLocked, onMatchClick, onEditLead, updateLeadStatus, operations, propertyTypes, matchCounts, columns }) => {
+    const [showStatusMenu, setShowStatusMenu] = React.useState(false);
+
+    const opName = operations.find(op => op.id === lead.operacao_interesse)?.tipo;
+    const typeName = propertyTypes.find(t => t.id === lead.tipo_imovel_interesse)?.tipo;
+    const statusInfo = columns.find(c => c.status === lead.status);
+    const statusColor = statusInfo?.color.replace('bg-', 'text-') || 'text-slate-400';
+    const statusBg = statusInfo?.color.replace('bg-', 'bg-') + '/10' || 'bg-slate-500/10';
+    const statusBorder = statusInfo?.color.replace('bg-', 'border-') + '/20' || 'border-slate-500/20';
+
+    const statusOptions = [
+        { value: 'Novo', label: 'Novo', color: 'text-blue-600' },
+        { value: 'Em Contato', label: 'Em Contato', color: 'text-yellow-600' },
+        { value: 'Negociação', label: 'Negociação', color: 'text-purple-600' },
+        { value: 'Fechado', label: 'Fechado', color: 'text-green-600' },
+        { value: 'Arquivado', label: 'Arquivado', color: 'text-red-600' },
+    ];
+
+    return (
+        <div className="bg-slate-800 p-6 rounded-[2.5rem] border border-slate-700/50 shadow-xl space-y-6">
+            <div className="flex justify-between items-start">
+                <div className="flex flex-col">
+                    <h4 className="font-black text-white text-lg uppercase tracking-tight leading-tight">
+                        {isLocked ? 'Lead Bloqueado' : lead.nome}
+                    </h4>
+                    {!isLocked ? (
+                        <a
+                            href={`https://wa.me/55${lead.telefone.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-emerald-400 text-sm font-bold mt-1"
+                        >
+                            <Phone size={14} />
+                            {lead.telefone}
+                        </a>
+                    ) : (
+                        <div className="flex items-center gap-1.5 text-slate-500 text-sm font-bold mt-1">
+                            <Phone size={14} />
+                            •••••••••••
+                        </div>
+                    )}
+                </div>
+
+                {/* Interactive Status Badge */}
+                <div className="relative">
+                    <button
+                        onClick={() => !isLocked && setShowStatusMenu(!showStatusMenu)}
+                        className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all flex items-center gap-1 ${statusBg} ${statusColor} ${statusBorder} ${!isLocked ? 'hover:brightness-125 cursor-pointer' : ''}`}
+                    >
+                        {lead.status}
+                        {!isLocked && <ChevronDown size={12} />}
+                    </button>
+                    {showStatusMenu && (
+                        <div className="absolute z-50 top-full right-0 mt-2 w-48 bg-slate-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                            {statusOptions.filter(opt => opt.value !== lead.status).map(option => (
+                                <button
+                                    key={option.value}
+                                    onClick={() => {
+                                        updateLeadStatus(lead.id, option.value);
+                                        setShowStatusMenu(false);
+                                    }}
+                                    className={`w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 ${option.color}`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="bg-slate-900/60 p-5 rounded-[1.5rem] border border-white/5 grid grid-cols-2 gap-4">
+                <div className="col-span-1">
+                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Interesse</p>
+                    <div className="flex flex-col">
+                        <span className="text-white font-black uppercase text-sm tracking-tight">{typeName || 'Imóvel'}</span>
+                        <span className="text-xs text-slate-400 font-bold mt-1">{opName || 'Venda/Locação'}</span>
+                    </div>
+                </div>
+
+                <div className="col-span-1">
+                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Orçamento</p>
+                    <div className="flex flex-col">
+                        <span className="text-emerald-400 font-black text-sm leading-tight">
+                            {isLocked ? '••••' : `R$ ${lead.orcamento_min?.toLocaleString('pt-BR')}`}
+                        </span>
+                        <span className="text-emerald-500/80 font-bold text-[11px] leading-tight mt-1">
+                            {isLocked ? '••••' : `a R$ ${lead.orcamento_max?.toLocaleString('pt-BR')}`}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="col-span-2 pt-2 border-t border-white/5">
+                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Localização</p>
+                    <div className="text-slate-200 font-bold text-sm">
+                        {lead.bairro_interesse || lead.cidade_interesse || 'Não informado'}
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-3">
+                {!isLocked ? (
+                    <>
+                        <button
+                            onClick={() => window.open(`https://wa.me/55${lead.telefone.replace(/\D/g, '')}`, '_blank')}
+                            className="flex flex-col items-center justify-center p-3 bg-green-500/10 text-green-400 rounded-2xl border border-green-500/20 hover:bg-green-500 hover:text-white transition-all gap-1"
+                        >
+                            <MessageCircle size={18} />
+                            <span className="text-[8px] font-black uppercase">WhatsApp</span>
+                        </button>
+                        <button
+                            onClick={() => onMatchClick(lead)}
+                            className="flex flex-col items-center justify-center p-3 bg-purple-500/10 text-purple-400 rounded-2xl border border-purple-500/20 hover:bg-purple-500 hover:text-white transition-all gap-1 relative"
+                        >
+                            <Target size={18} />
+                            <span className="text-[8px] font-black uppercase">Imóveis</span>
+                            {(matchCounts[lead.id] || 0) > 0 && (
+                                <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border border-slate-800 text-[8px] font-black flex items-center justify-center text-white">
+                                    {matchCounts[lead.id]}
+                                </span>
+                            )}
+                        </button>
+                        <button
+                            onClick={() => onEditLead(lead)}
+                            className="flex flex-col items-center justify-center p-3 bg-orange-500/10 text-orange-400 rounded-2xl border border-orange-500/20 hover:bg-orange-500 hover:text-white transition-all gap-1"
+                        >
+                            <Pencil size={18} />
+                            <span className="text-[8px] font-black uppercase">Editar</span>
+                        </button>
+                        {lead.status !== 'Arquivado' ? (
+                            <button
+                                onClick={() => updateLeadStatus(lead.id, 'Arquivado')}
+                                className="flex flex-col items-center justify-center p-3 bg-red-700/30 text-red-400 rounded-2xl border border-white/5 hover:bg-red-500/20 hover:text-red-400 transition-all gap-1"
+                            >
+                                <Archive size={18} />
+                                <span className="text-[8px] font-black uppercase">Arquivar</span>
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => updateLeadStatus(lead.id, 'Novo')}
+                                className="flex flex-col items-center justify-center p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all gap-1"
+                            >
+                                <RotateCcw size={18} />
+                                <span className="text-[8px] font-black uppercase">Ativar</span>
+                            </button>
+                        )}
+                    </>
+                ) : (
+                    <div className="col-span-4 p-4 text-center bg-slate-900/40 rounded-2xl border border-white/5 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+                        Disponível na Versão Completa
                     </div>
                 )}
             </div>
@@ -283,6 +511,8 @@ export const Leads: React.FC = () => {
     const [editingLeadId, setEditingLeadId] = useState<string | null>(null);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [view, setView] = useState<'kanban' | 'list'>('kanban');
+    const [showArchived, setShowArchived] = useState(false);
 
     // Property Details Modal State
     const [viewingPropertyId, setViewingPropertyId] = useState<string | null>(null);
@@ -333,7 +563,7 @@ export const Leads: React.FC = () => {
         { status: 'Em Contato', label: 'Em Contato', color: 'bg-yellow-500', darkColor: 'bg-yellow-600', icon: Search, description: 'Primeiro contato realizado' },
         { status: 'Negociação', label: 'Negociação', color: 'bg-purple-500', darkColor: 'bg-purple-600', icon: FileText, description: 'Negociando proposta' },
         { status: 'Fechado', label: 'Fechados', color: 'bg-green-500', darkColor: 'bg-green-600', icon: CheckCircle, description: 'Negócio concluído' },
-        { status: 'Perdido', label: 'Perdidos', color: 'bg-red-500', darkColor: 'bg-red-600', icon: XCircle, description: 'Leads perdidos' },
+        { status: 'Arquivado', label: 'Arquivados', color: 'bg-red-500', darkColor: 'bg-red-600', icon: Archive, description: 'Leads arquivados' },
     ];
 
     useEffect(() => {
@@ -705,17 +935,16 @@ export const Leads: React.FC = () => {
 
     // Calculate funnel metrics
     const funnelMetrics = {
-        totalLeads: leads.filter(l => l.status !== 'Inativo').length, // Exclude inactive from total
+        totalLeads: leads.filter(l => l.status !== 'Arquivado').length, // Exclude archived from total
         byStage: {
             novo: leads.filter(l => l.status === 'Novo').length,
             emContato: leads.filter(l => l.status === 'Em Contato').length,
             negociacao: leads.filter(l => l.status === 'Negociação').length,
             fechado: leads.filter(l => l.status === 'Fechado').length,
-            perdido: leads.filter(l => l.status === 'Perdido').length,
-            inativo: leads.filter(l => l.status === 'Inativo').length,
+            arquivado: leads.filter(l => l.status === 'Arquivado').length,
         },
-        totalValue: leads.filter(l => l.status !== 'Inativo').reduce((sum, l) => sum + (l.orcamento_max || l.orcamento_min || 0), 0),
-        conversionRate: leads.filter(l => l.status !== 'Inativo').length > 0 ? (leads.filter(l => l.status === 'Fechado').length / leads.filter(l => l.status !== 'Inativo').length) * 100 : 0,
+        totalValue: leads.filter(l => l.status !== 'Arquivado').reduce((sum, l) => sum + (l.orcamento_max || l.orcamento_min || 0), 0),
+        conversionRate: leads.filter(l => l.status !== 'Arquivado').length > 0 ? (leads.filter(l => l.status === 'Fechado').length / leads.filter(l => l.status !== 'Arquivado').length) * 100 : 0,
     };
 
     // Calculate leads created today
@@ -768,41 +997,85 @@ export const Leads: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col">
-            {/* Controls */}
-            <div className="mt-8 flex flex-col md:flex-row justify-end items-start md:items-center mb-6 gap-4">
-                {/* Title moved to Header */}
-                <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800 space-x-2">
-                    <div className="relative group">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-emerald-500 transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Buscar leads..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 focus:outline-none w-48 md:w-64 text-white transition-all hover:bg-slate-750"
-                        />
+        <div className="flex flex-col pt-6">
+            {/* Unified Header & Filter Card */}
+            <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 p-6 md:p-8 rounded-[2.5rem] shadow-2xl mb-8">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-emerald-500/20 rounded-2xl border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+                            <Users size={24} className="text-emerald-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-black text-white uppercase tracking-tight">Gestão de Leads</h3>
+                            <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                                {leads.length} leads no total
+                            </div>
+                        </div>
                     </div>
-                    <button
-                        onClick={() => {
-                            setEditingLeadId(null);
-                            setNewLead({
-                                nome: '', email: '', telefone: '', interesse: '',
-                                operacao_interesse: '', tipo_imovel_interesse: '',
-                                cidade_interesse: '', bairro_interesse: '', orcamento_min: '', orcamento_max: ''
-                            });
-                            setIsModalOpen(true);
-                        }}
-                        className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition-all flex items-center shadow-lg shadow-emerald-900/20 active:scale-95 border border-emerald-500/20">
-                        Novo Lead
-                    </button>
+
+                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <div className="relative group flex-1 md:flex-initial">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-emerald-500 transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="BUSCAR LEADS..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-11 pr-4 py-4 rounded-2xl bg-slate-900/60 border border-white/5 text-sm focus:ring-2 focus:ring-emerald-500/50 focus:outline-none w-full md:w-64 text-white font-bold transition-all hover:bg-slate-900/80 uppercase tracking-wider"
+                            />
+                        </div>
+
+                        {/* View Toggle */}
+                        <div className="flex bg-slate-900/60 p-1.5 rounded-2xl border border-white/5">
+                            <button
+                                onClick={() => setView('kanban')}
+                                className={`p-2.5 rounded-xl transition-all ${view === 'kanban' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/40' : 'text-slate-500 hover:text-white'}`}
+                                title="Visualização em Quadro"
+                            >
+                                <LayoutDashboard size={18} />
+                            </button>
+                            <button
+                                onClick={() => setView('list')}
+                                className={`p-2.5 rounded-xl transition-all ${view === 'list' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/40' : 'text-slate-500 hover:text-white'}`}
+                                title="Visualização em Lista"
+                            >
+                                <List size={18} />
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={() => setShowArchived(!showArchived)}
+                            className={`p-2.5 rounded-xl transition-all border ${showArchived ? 'bg-red-700 text-white border-red-600 shadow-inner' : 'bg-red-900/60 text-red-500 border-white/5 hover:text-white'}`}
+                            title={showArchived ? "Ocultar Arquivados" : "Mostrar Arquivados"}
+                        >
+                            <Archive size={18} />
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setEditingLeadId(null);
+                                setNewLead({
+                                    nome: '', email: '', telefone: '', interesse: '',
+                                    operacao_interesse: '', tipo_imovel_interesse: '',
+                                    cidade_interesse: '', bairro_interesse: '', orcamento_min: '', orcamento_max: '',
+                                    bairro_interesse_2: '', bairro_interesse_3: ''
+                                });
+                                setIsModalOpen(true);
+                            }}
+                            className="flex-1 md:flex-initial px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-2xl text-sm font-black transition-all flex items-center justify-center gap-2 shadow-xl shadow-emerald-900/20 active:scale-95 border border-white/10 uppercase tracking-widest"
+                        >
+                            <Plus size={20} /> NOVO LEAD
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            {/* Kanban Board with Drag and Drop */}
+            {/* Content Section */}
             {loading ? (
-                <div className="flex justify-center items-center py-20"><Loader2 className="animate-spin text-primary-500" size={32} /></div>
-            ) : (
+                <div className="flex justify-center items-center py-20"><Loader2 className="animate-spin text-emerald-500" size={48} /></div>
+            ) : view === 'kanban' ? (
+                /* Kanban Board with Drag and Drop */
                 <DndContext
                     sensors={sensors}
                     collisionDetection={closestCorners}
@@ -811,54 +1084,243 @@ export const Leads: React.FC = () => {
                 >
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                         {/* Left Column: Funnel */}
-                        <div className="lg:sticky lg:top-4">
+                        <div className="lg:sticky lg:top-4 animate-in slide-in-from-left duration-700">
                             <SalesFunnel metrics={funnelMetrics} />
                         </div>
 
                         {/* Right Column: Vertical Kanban */}
-                        <div className="flex flex-col gap-4">
-                            {columns.map((column) => (
-                                <DroppableColumn
-                                    key={column.status}
-                                    id={column.status}
-                                    label={column.label}
-                                    color={column.color}
-                                    darkColor={column.darkColor}
-                                    leads={getLeadsByStatus(column.status)}
-                                    icon={column.icon}
-                                    description={column.description}
-                                >
-                                    <SortableContext
-                                        items={getLeadsByStatus(column.status).map(l => l.id)}
-                                        strategy={verticalListSortingStrategy}
+                        <div className="flex flex-col gap-8 animate-in slide-in-from-bottom duration-700">
+                            {columns
+                                .filter(col => showArchived || col.status !== 'Arquivado')
+                                .map((column) => (
+                                    <DroppableColumn
+                                        key={column.status}
+                                        id={column.status}
+                                        label={column.label}
+                                        color={column.color}
+                                        darkColor={column.darkColor}
+                                        leads={getLeadsByStatus(column.status)}
+                                        icon={column.icon}
+                                        description={column.description}
                                     >
-                                        {getLeadsByStatus(column.status)
-                                            .map((lead, index) => (
-                                                <LeadCard
-                                                    key={lead.id}
-                                                    lead={lead}
-                                                    matchCount={matchCounts[lead.id] || 0}
-                                                    onMatch={() => handleMatchClick(lead)}
-                                                    onEdit={() => handleEditLead(lead)}
-                                                    onArchive={() => updateLeadStatus(lead.id, 'Inativo')}
-                                                    onStatusChange={updateLeadStatus}
-                                                    locked={isTrialLimited && index >= trialMaxLeads}
-                                                />
-                                            ))}
-                                    </SortableContext>
-                                </DroppableColumn>
-                            ))}
+                                        <SortableContext
+                                            items={getLeadsByStatus(column.status).map(l => l.id)}
+                                            strategy={verticalListSortingStrategy}
+                                        >
+                                            <div className="space-y-4">
+                                                {getLeadsByStatus(column.status)
+                                                    .map((lead, index) => (
+                                                        <LeadCard
+                                                            key={lead.id}
+                                                            lead={lead}
+                                                            matchCount={matchCounts[lead.id] || 0}
+                                                            onMatch={() => handleMatchClick(lead)}
+                                                            onEdit={() => handleEditLead(lead)}
+                                                            onArchive={() => updateLeadStatus(lead.id, 'Arquivado')}
+                                                            onStatusChange={updateLeadStatus}
+                                                            locked={isTrialLimited && index >= trialMaxLeads}
+                                                            operations={operations}
+                                                            propertyTypes={propertyTypes}
+                                                            columns={columns}
+                                                        />
+                                                    ))}
+                                            </div>
+                                        </SortableContext>
+                                    </DroppableColumn>
+                                ))}
                         </div>
                     </div>
 
                     <DragOverlay>
                         {activeId && activeLead ? (
-                            <div className="opacity-80 rotate-3 scale-105 cursor-grabbing">
-                                <LeadCard lead={activeLead} />
+                            <div className="opacity-80 rotate-3 scale-105 cursor-grabbing z-[100]">
+                                <LeadCard
+                                    lead={activeLead}
+                                    operations={operations}
+                                    propertyTypes={propertyTypes}
+                                    columns={columns}
+                                />
                             </div>
                         ) : null}
                     </DragOverlay>
                 </DndContext>
+            ) : (
+                /* List View Content */
+                <div className="animate-in fade-in duration-700">
+                    {/* Desktop Table */}
+                    <div className="hidden md:block bg-slate-800/40 backdrop-blur-sm rounded-[2.5rem] border border-slate-700/50 overflow-hidden shadow-2xl">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-900/50 text-slate-400 text-[10px] uppercase font-black tracking-[0.2em] border-b border-white/5">
+                                    <th className="p-8">Lead / Contato</th>
+                                    <th className="p-8">Interesse</th>
+                                    <th className="p-8">Localização</th>
+                                    <th className="p-8">Orçamento</th>
+                                    <th className="p-8 text-center">Status</th>
+                                    <th className="p-8 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {leads
+                                    .filter(l => showArchived || l.status !== 'Arquivado')
+                                    .filter(l =>
+                                        l.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        l.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        l.telefone.includes(searchTerm)
+                                    )
+                                    .map((lead, index) => {
+                                        const isLocked = isTrialLimited && index >= trialMaxLeads;
+                                        const statusColor = columns.find(c => c.status === lead.status)?.color.replace('bg-', 'text-') || 'text-slate-400';
+                                        const statusBg = columns.find(c => c.status === lead.status)?.color.replace('bg-', 'bg-') + '/10' || 'bg-slate-500/10';
+                                        const statusBorder = columns.find(c => c.status === lead.status)?.color.replace('bg-', 'border-') + '/20' || 'border-slate-500/20';
+
+                                        const opName = operations.find(op => op.id === lead.operacao_interesse)?.tipo;
+                                        const typeName = propertyTypes.find(t => t.id === lead.tipo_imovel_interesse)?.tipo;
+
+                                        return (
+                                            <tr key={lead.id} className="hover:bg-slate-700/30 transition-colors group">
+                                                <td className="p-8">
+                                                    <div className="flex flex-col">
+                                                        <div className="font-bold text-white text-base tracking-tight leading-tight">{isLocked ? 'Lead Bloqueado' : lead.nome}</div>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            {!isLocked ? (
+                                                                <a
+                                                                    href={`https://wa.me/55${lead.telefone.replace(/\D/g, '')}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-sm text-emerald-400 font-bold hover:text-emerald-300 transition-colors"
+                                                                >
+                                                                    {lead.telefone}
+                                                                </a>
+                                                            ) : (
+                                                                <div className="text-sm text-slate-400 font-medium">
+                                                                    •••••••••••
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="p-8">
+                                                    <div className="flex flex-col">
+                                                        <div className="text-sm text-white font-black uppercase tracking-tight">{typeName || 'Imóvel'}</div>
+                                                        <div className="text-xs text-slate-400 font-bold mt-1">{opName || 'Venda/Locação'}</div>
+                                                    </div>
+                                                </td>
+                                                <td className="p-8">
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="text-sm text-slate-300 font-bold">{lead.bairro_interesse || lead.cidade_interesse}</div>
+                                                        {lead.bairro_interesse_2 && <div className="text-[12px] text-slate-500 font-medium">{lead.bairro_interesse_2}</div>}
+                                                        {lead.bairro_interesse_3 && <div className="text-[10px] text-slate-500 font-medium">{lead.bairro_interesse_3}</div>}
+                                                    </div>
+                                                </td>
+                                                <td className="p-8">
+                                                    <div className="flex flex-col group/budget">
+                                                        <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.1em] mb-0.5">de</div>
+                                                        <div className="text-sm text-emerald-400 font-black leading-none">
+                                                            {isLocked ? '••••' : `R$ ${lead.orcamento_min?.toLocaleString('pt-BR')}`}
+                                                        </div>
+                                                        <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.1em] mb-0.5 mt-2">até</div>
+                                                        <div className="text-sm text-emerald-500 font-black leading-none">
+                                                            {isLocked ? '••••' : `R$ ${lead.orcamento_max?.toLocaleString('pt-BR')}`}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="p-8 text-center">
+                                                    <div className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border inline-block ${statusBg} ${statusColor} ${statusBorder}`}>
+                                                        {lead.status}
+                                                    </div>
+                                                </td>
+                                                <td className="p-8 text-right">
+                                                    <div className="flex justify-end opacity-60 group-hover:opacity-100 transition-opacity">
+                                                        {!isLocked && (
+                                                            <div className="grid grid-cols-2 gap-1.5">
+                                                                <button
+                                                                    onClick={() => handleMatchClick(lead)}
+                                                                    className="p-2 bg-purple-500/10 text-purple-400 rounded-lg border border-purple-500/20 hover:bg-purple-500 hover:text-white transition-all shadow-lg shadow-purple-500/10 relative"
+                                                                    title="Ver Compatíveis"
+                                                                >
+                                                                    <Target size={14} />
+                                                                    {(matchCounts[lead.id] || 0) > 0 && (
+                                                                        <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full border border-slate-800 text-[12px] font-black flex items-center justify-center text-white">
+                                                                            {matchCounts[lead.id]}
+                                                                        </span>
+                                                                    )}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleEditLead(lead)}
+                                                                    className="p-2 bg-orange-500/10 text-orange-400 rounded-lg border border-orange-500/20 hover:bg-orange-500 hover:text-white transition-all shadow-lg shadow-orange-500/10"
+                                                                    title="Editar"
+                                                                >
+                                                                    <Pencil size={14} />
+                                                                </button>
+                                                                {lead.status !== 'Arquivado' ? (
+                                                                    <button
+                                                                        onClick={() => updateLeadStatus(lead.id, 'Arquivado')}
+                                                                        className="p-2 bg-red-500/10 text-red-400 rounded-lg border border-red-500/20 hover:bg-red-500 hover:text-white transition-all shadow-lg shadow-red-500/10"
+                                                                        title="Arquivar"
+                                                                    >
+                                                                        <Archive size={14} />
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() => updateLeadStatus(lead.id, 'Novo')}
+                                                                        className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all shadow-lg shadow-emerald-500/10"
+                                                                        title="Desarquivar"
+                                                                    >
+                                                                        <RotateCcw size={14} />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                {leads.length === 0 && (
+                                    <tr>
+                                        <td colSpan={6} className="p-20 text-center">
+                                            <div className="flex flex-col items-center gap-4">
+                                                <div className="p-6 bg-slate-700/20 rounded-[2rem] border border-white/5">
+                                                    <Users size={48} className="text-slate-600" />
+                                                </div>
+                                                <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">Nenhum lead encontrado</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Mobile List View (Mobile First Design) */}
+                    <div className="md:hidden space-y-4">
+                        {leads
+                            .filter(l => showArchived || l.status !== 'Arquivado')
+                            .filter(l =>
+                                l.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                l.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                l.telefone.includes(searchTerm)
+                            )
+                            .map((lead, index) => {
+                                const isLocked = isTrialLimited && index >= trialMaxLeads;
+                                return (
+                                    <MobileLeadListViewCard
+                                        key={lead.id}
+                                        lead={lead}
+                                        isLocked={isLocked}
+                                        onMatchClick={handleMatchClick}
+                                        onEditLead={handleEditLead}
+                                        updateLeadStatus={updateLeadStatus}
+                                        operations={operations}
+                                        propertyTypes={propertyTypes}
+                                        matchCounts={matchCounts}
+                                        columns={columns}
+                                    />
+                                );
+                            })}
+                    </div>
+                </div>
             )}
 
             {/* New Lead Modal */}

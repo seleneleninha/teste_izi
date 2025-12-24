@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Globe, Heart, Users, LogOut, ShoppingCart, User, CheckSquare, CreditCard, Clock, Percent, DollarSign, LayoutDashboard, Settings, Bell } from 'lucide-react';
+import { X, Globe, Heart, Users, LogOut, ShoppingCart, User, CheckSquare, CreditCard, Clock, Percent, DollarSign, LayoutDashboard, Settings, Bell, CheckCircle } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
 interface MoreMenuSheetProps {
@@ -62,9 +62,8 @@ export const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, i
     } else {
         // Broker (Default)
         menuItems = [
-            { icon: Globe, label: 'Mercado iziBrokerz', path: '/properties?mode=market', color: 'blue', onClick: null },
-            { icon: Users, label: 'Leads (CRM)', path: '/leads', color: 'purple', onClick: null },
-            { icon: Heart, label: 'Favoritos', path: '/favorites', color: 'red', onClick: null },
+            { icon: Globe, label: 'Mercado', path: '/properties?mode=market', color: 'blue', onClick: null },
+            { icon: CheckCircle, label: 'Comparativo', path: '/favorites', color: 'emerald', onClick: null },
             { icon: Bell, label: 'Notificações', path: null, color: 'emerald', onClick: handlePushToggle },
             { icon: Settings, label: 'Ajustes', path: '/settings', color: 'slate', onClick: null },
             { icon: LogOut, label: 'Sair', path: null, color: 'red', onClick: handleLogout },

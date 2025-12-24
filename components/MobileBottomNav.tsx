@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Building2, Settings, Handshake, MoreHorizontal, Heart, ShoppingCart, CheckSquare, DollarSign, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Building2, Settings, Handshake, MoreHorizontal, Heart, ShoppingCart, CheckSquare, DollarSign, CreditCard, Users } from 'lucide-react';
 import { MoreMenuSheet } from './MoreMenuSheet';
 import { CustomOrderModal } from './CustomOrderModal';
 import { useAuth } from './AuthContext';
@@ -66,7 +66,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ isAdmin = fals
             { icon: LayoutDashboard, label: 'Home', path: '/dashboard' },
             { icon: Building2, label: 'Imóveis', path: '/properties' },
             { icon: Handshake, label: 'Parceiros', path: '/partner-properties' },
-            { icon: Settings, label: 'Config', path: '/settings' },
+            { icon: Users, label: 'Leads', path: '/leads' },
         ];
     }
 

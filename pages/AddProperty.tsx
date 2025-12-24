@@ -405,8 +405,8 @@ export default function AddProperty() {
                 suites: formData.suites ? Number(formData.suites) : null,
                 banheiros: formData.bathrooms ? Number(formData.bathrooms) : null,
                 vagas: formData.garage ? Number(formData.garage) : null,
-                area_priv: Number(formData.privateArea),
-                area_total: formData.totalArea ? Number(formData.totalArea) : null,
+                area_priv: formData.privateArea ? parseFloat(formData.privateArea.replace(/\./g, '').replace(',', '.')) : 0,
+                area_total: formData.totalArea ? parseFloat(formData.totalArea.replace(/\./g, '').replace(',', '.')) : null,
                 descricao: formData.description,
                 caracteristicas: formData.features.join(', '),
                 fotos: images.join(','),
@@ -709,7 +709,7 @@ export default function AddProperty() {
                 suites: Number(formData.suites) || 0,
                 banheiros: Number(formData.bathrooms) || 0,
                 vagas: Number(formData.garage) || 0,
-                area: Number(formData.privateArea) || 0,
+                area: formData.privateArea ? parseFloat(formData.privateArea.replace(/\./g, '').replace(',', '.')) : 0,
                 caracteristicas: formData.features,
                 brokerName: brokerData ? `${brokerData.nome} ${brokerData.sobrenome}` : undefined,
                 brokerCreci: brokerData?.creci || undefined,
@@ -810,7 +810,7 @@ export default function AddProperty() {
                     initialQuality: 0.85
                 };
 
-                const compressedFile = await imageCompression(file, options);
+                const compressedFile = await imageCompression(fileToUpload as File, options);
                 finalFile = compressedFile;
 
                 const originalMB = (file.size / (1024 * 1024)).toFixed(2);

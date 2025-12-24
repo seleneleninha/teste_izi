@@ -72,7 +72,8 @@ const swipePower = (offset: number, velocity: number) => {
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, showStatus = false, compact = false, onClick, brokerSlug, isDashboard = false, isSelected = false, onSelect, onFavoriteRemove }) => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, role } = useAuth();
+    const isClient = role === 'Cliente';
     const { addToast } = useToast();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [[page, direction], setPage] = useState([0, 0]);
@@ -350,7 +351,9 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                             ? 'bg-red-50 border-red-200 text-red-500'
                             : 'bg-black/60 border-white/80 hover:bg-red-500/20 hover:border-red-400 text-white'
                             }`}
-                        title={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                        title={isFavorite
+                            ? (isClient ? "Remover dos favoritos" : "Remover do comparativo")
+                            : (isClient ? "Adicionar aos favoritos" : "Adicionar ao comparativo")}
                     >
                         <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
                     </button>

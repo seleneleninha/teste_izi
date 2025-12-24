@@ -248,9 +248,12 @@ export const PartnerPage: React.FC = () => {
             <section className="py-20 bg-slate-900">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Por que escolher a iziBrokerz?</h2>
-                        <p className="text-gray-400 max-w-2xl mx-auto">
-                            Nossa Plataforma foi desenvolvida por Corretores PARA CORRETORES! Focando no que realmente importa: FECHAR NEGÓCIOS E COLOCAR $$$ NO SEU BOLSO!!!.
+                        <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Por que escolher a <span className="text-red-500 font-bold">izi</span><span className="text-white font-bold">Brokerz.</span>?</h2>
+                        <p className="text-gray-400 text-xl max-w-2xl mx-auto">
+                            Nossa Plataforma foi desenvolvida de <span className="text-yellow-500 font-bold"> CORRETORES PARA CORRETORES!</span> Focando no que realmente importa:
+                            <p className="text-emerald-500 text-xl font-bold max-w-2xl mx-auto">
+                                FECHAR + NEGÓCIOS E COLOCAR + DINHEIRO NO SEU BOLSO!!!
+                            </p>
                         </p>
                     </div>
 
@@ -259,12 +262,12 @@ export const PartnerPage: React.FC = () => {
                             {
                                 icon: <Handshake className="w-10 h-10 text-emerald-500" />,
                                 title: "Sistema de Parcerias",
-                                description: "Conecte-se com corretores compatíveis. Encontre o cliente para seu imóvel ou o imóvel para seu cliente e multiplique suas chances de venda."
+                                description: "Conecte-se com corretores da sua região. Aumente seu portfólio e multiplique suas chances de venda."
                             },
                             {
                                 icon: <Zap className="w-10 h-10 text-emerald-500" />,
                                 title: "Intuitiva e Objetiva",
-                                description: "Interface limpa e eficiente. Cadastre imóveis rapidamente, gerencie leads e foque no que realmente importa: seus resultados."
+                                description: "Interface eficiente. Cadastre imóveis rapidamente, gerencie leads e foque no que realmente importa: seus resultados."
                             },
                             {
                                 icon: <Shield className="w-10 h-10 text-emerald-500" />,
@@ -274,17 +277,17 @@ export const PartnerPage: React.FC = () => {
                             {
                                 icon: <BarChart3 className="w-10 h-10 text-emerald-500" />,
                                 title: "Gestão de Leads Inteligente",
-                                description: "CRM integrado para acompanhar cada etapa do funil. Qualifique contatos e não perca oportunidades de venda."
+                                description: "CRM simples e eficiente para acompanhar seus Clientes. Qualifique contatos e não perca oportunidades de venda."
                             },
                             {
                                 icon: <Target className="w-10 h-10 text-emerald-500" />,
                                 title: "Match Inteligente",
-                                description: "Receba notificações automáticas quando um imóvel compatível com o perfil do seu lead for cadastrado na plataforma."
+                                description: "Cadastre seu Cliente e nossa Plataforma busca automaticamente em nossa base de dados, o imóvel ideal para ele."
                             },
                             {
                                 icon: <Building2 className="w-10 h-10 text-emerald-500" />,
                                 title: "Importação XML (Em Breve)",
-                                description: "Integração futura para importar seus imóveis de outros portais automaticamente, facilitando a gestão do seu portfólio."
+                                description: "Você poderá importar seus imóveis de outros portais com poucos cliques, facilitando a gestão do seu portfólio."
                             }
                         ].map((feature, idx) => (
                             <div key={idx} className="bg-slate-800 p-8 rounded-3xl hover:shadow-lg transition-all border border-slate-700 group">
@@ -326,14 +329,14 @@ export const PartnerPage: React.FC = () => {
 
                         {/* Billing Toggle */}
                         <div className="flex items-center justify-center gap-4 mb-8">
-                            <span className={`text-sm font-medium ${billingCycle === 'monthly' ? 'text-white' : 'text-gray-500'}`}>Mensal</span>
+                            <span className={`text-lg font-medium ${billingCycle === 'monthly' ? 'text-white' : 'text-gray-500'}`}>Mensal</span>
                             <button
                                 onClick={() => setBillingCycle(prev => prev === 'monthly' ? 'annual' : 'monthly')}
                                 className={`relative w-16 h-8 rounded-full transition-colors animate-pulse ${billingCycle === 'annual' ? 'bg-emerald-500' : 'bg-slate-600'}`}
                             >
                                 <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform animate-pulse ${billingCycle === 'annual' ? 'translate-x-8' : ''}`}></div>
                             </button>
-                            <span className={`text-lg font-medium ${billingCycle === 'annual' ? 'text-white' : 'text-gray-500 animate-pulse'}`}>
+                            <span className={`text-lg font-medium ${billingCycle === 'annual' ? 'text-white' : 'text-emerald-500 animate-pulse'}`}>
                                 Anual <span className="text-emerald-500 text-md font-bold ml-1 animate-pulse">(20% DESCONTO)</span>
                             </span>
                         </div>
@@ -443,11 +446,11 @@ export const PartnerPage: React.FC = () => {
                                 <Trophy className="text-red-500 w-8 h-8" />
                             </div>
 
-                            <h2 className="text-2xl md:text-5xl font-black text-white mb-4 italic tracking-tight">
+                            <h3 className="text-2xl md:text-3xl font-black text-white mb-4 italic tracking-tight">
                                 "AINDA ACHA QUE ESTÁ CARO???"
-                            </h2>
+                            </h3>
                             <p className="text-xl md:text-2xl text-gray-400 font-light mb-10">
-                                Por tudo isso que oferecemos... <span className="text-emerald-400 font-bold">TEM CERTEZA?</span>
+                                Pelo que oferecemos... <span className="text-emerald-400 font-bold">TEM CERTEZA?</span>
                             </p>
 
                             <div className="bg-slate-950/50 rounded-2xl p-8 mb-8 backdrop-blur-sm border border-slate-800">
@@ -478,7 +481,7 @@ export const PartnerPage: React.FC = () => {
                                         disabled={!!appliedCoupon}
                                         className={`w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500 transition-all ${appliedCoupon ? 'opacity-50 cursor-not-allowed' : 'hover:accent-emerald-400'}`}
                                     />
-                                    <p className="mt-4 text-gray-400 text-sm">
+                                    <p className="mt-4 text-gray-400 text-md">
                                         Arraste para simular o <span className="text-white font-bold">DESCONTO DE LANÇAMENTO</span>
                                     </p>
                                 </div>
@@ -486,7 +489,7 @@ export const PartnerPage: React.FC = () => {
                                 {!showCouponInput && !appliedCoupon ? (
                                     <button
                                         onClick={() => setShowCouponInput(true)}
-                                        className="px-10 py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white rounded-full font-black text-xl shadow-lg shadow-red-900/30 transform hover:scale-105 transition-all w-full md:w-auto"
+                                        className="px-10 py-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-900 hover:to-red-800 text-white rounded-3xl font-black text-md shadow-lg shadow-red-900/30 transform hover:scale-105 transition-all w-auto md:w-auto"
                                     >
                                         AGORA SIM! QUERO MEU CUPOM!
                                     </button>
@@ -530,11 +533,11 @@ export const PartnerPage: React.FC = () => {
             {showStickyBubble && (
                 <button
                     onClick={scrollToChallenge}
-                    className="fixed bottom-6 right-6 z-50 animate-bounce cursor-pointer hover:scale-110 transition-transform"
+                    className="fixed bottom-6 right-10 z-50 animate-bounce cursor-pointer hover:scale-0 transition-transform"
                 >
-                    <div className="relative bg-red-600 text-white px-6 py-4 rounded-tr-2xl rounded-tl-2xl rounded-bl-2xl shadow-2xl border-4 border-white flex items-center gap-3">
-                        <span className="text-lg font-black whitespace-nowrap uppercase italic">Acha que ainda está caro?! 👇</span>
-                        <div className="absolute -bottom-2 right-0 w-6 h-6 bg-red-600 border-r-4 border-b-4 border-white transform rotate-45"></div>
+                    <div className="relative bg-red-600 text-white px-6 py-4 rounded-tr-2xl rounded-2xl border-2 border-white flex items-center gap-3">
+                        <span className="text-sm font-black whitespace-nowrap uppercase italic">Acha que ainda está caro?! 👇</span>
+                        <div className="absolute -bottom-3 right-32 w-6 h-6 bg-red-600 border-r-2 border-b-2 border-white transform rotate-45"></div>
                     </div>
                 </button>
             )}
@@ -552,7 +555,7 @@ export const PartnerPage: React.FC = () => {
                 <div className="container mx-auto px-4 text-center relative z-10">
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Pronto para transformar seus resultados?</h2>
                     <p className="text-emerald-100 text-lg mb-10 max-w-2xl mx-auto">
-                        Junte-se a centenas de corretores que já estão fechando mais negócios com a iziBrokerz.
+                        Junte-se a centenas de corretores que já estão fechando mais negócios com a <span className="text-red-500 font-bold">izi</span><span className="text-white font-bold">Brokerz.</span>
                     </p>
                     <button
                         onClick={() => navigate('/login?register=true')}

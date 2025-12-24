@@ -10,6 +10,7 @@ import { useToast } from '../../components/ToastContext';
 import { sendPushNotification } from '../../lib/onesignalHelper';
 import { useNavigate } from 'react-router-dom';
 import { PropertyCard } from '../../components/PropertyCard';
+import { generatePropertySlug } from '../../lib/formatters';
 
 // ... (Property interface and other types remain the same) 
 
@@ -41,6 +42,7 @@ interface Property {
     operacao: string;
     banheiros: number;
     vagas: number;
+    slug?: string;
     historico_reprovacao?: RejectionHistoryItem[];
     motivo_reprovacao?: string;
 }
@@ -153,11 +155,16 @@ export const AdminApprovals: React.FC = () => {
             if (error) throw error;
 
             // Map the joined data to use labels instead of UUIDs
-            const mappedData = (data || []).map(p => ({
-                ...p,
-                tipo_imovel: p.tipo_imovel_rel?.tipo || p.tipo_imovel,
-                operacao: p.operacao_rel?.tipo || p.operacao
-            })) as Property[];
+            const mappedData = (data || []).map(p => {
+                const tipo = p.tipo_imovel_rel?.tipo || p.tipo_imovel;
+                const op = p.operacao_rel?.tipo || p.operacao;
+                return {
+                    ...p,
+                    tipo_imovel: tipo,
+                    operacao: op,
+                    slug: generatePropertySlug({ ...p, tipo_imovel: tipo, operacao: op })
+                };
+            }) as Property[];
 
             setAllProperties(mappedData);
 
@@ -208,7 +215,7 @@ export const AdminApprovals: React.FC = () => {
                 titulo: 'Anúncio ativo! 🎉',
                 mensagem: `Seu imóvel "${property.titulo}" foi ativo e já está publicado na plataforma e na sua página. Parabéns e vamos para o próximo!`,
                 tipo: 'aprovacao',
-                link: `/properties/${property.id}`
+                link: `/properties/${property.slug}`
             });
 
             // Push Notification
@@ -216,7 +223,7 @@ export const AdminApprovals: React.FC = () => {
                 'Anúncio Aprovado! 🎉',
                 `Seu imóvel "${property.titulo}" já está ativo no portal.`,
                 property.user_id,
-                `/properties?id=${property.id}`
+                `/properties/${property.slug}`
             );
 
             addToast('Anúncio ativo com sucesso!', 'success');
@@ -634,7 +641,7 @@ export const AdminApprovals: React.FC = () => {
                                                 <td className="p-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
-                                                            onClick={() => navigate(`/properties/${property.id}`)}
+                                                            onClick={() => navigate(`/properties/${property.slug}`)}
                                                             className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
                                                             title="Ver Detalhes"
                                                         >
@@ -725,7 +732,7 @@ export const AdminApprovals: React.FC = () => {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        navigate(`/properties/${property.id}`);
+                                                        navigate(`/properties/${property.slug}`);
                                                     }}
                                                     className="w-full py-2.5 bg-slate-700 text-gray-300 rounded-full text-sm font-medium hover:bg-slate-600 flex items-center justify-center transition-colors"
                                                 >

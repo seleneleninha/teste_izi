@@ -406,6 +406,7 @@ export const BrokerPage: React.FC = () => {
                                     subtitle="Que tal começar adicionando seu primeiro imóvel? Ou então, explore oportunidades de parceria com outros corretores."
                                     onShowMore={() => window.location.href = `/${broker.slug}`}
                                     brokerId={broker.id}
+                                    hideActions={true}
                                 />
                             </>
                         )}

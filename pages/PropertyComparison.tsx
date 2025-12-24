@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, X, Loader2, Heart, Video, Globe, Car } from 'lucide-react';
+import { ArrowLeft, Check, X, Loader2, Heart, Video, Globe, Car, Share2 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
+import { generatePropertySlug } from '../lib/formatters';
 
 interface ComparisonProperty {
     id: string;
@@ -36,6 +37,7 @@ interface ComparisonProperty {
 
     // Imagem
     fotos: string[];
+    slug: string;
 
     // Favorite status
     isFavorite?: boolean;
@@ -44,8 +46,9 @@ interface ComparisonProperty {
 export const PropertyComparison: React.FC = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, role } = useAuth();
     const { addToast } = useToast();
+    const isClient = role === 'Cliente';
     const [properties, setProperties] = useState<ComparisonProperty[]>([]);
     const [loading, setLoading] = useState(true);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -110,6 +113,11 @@ export const PropertyComparison: React.FC = () => {
                     video: p.video,
                     tour_virtual: p.tour_virtual,
                     fotos: p.fotos ? p.fotos.split(',').filter(Boolean) : [],
+                    slug: generatePropertySlug({
+                        ...p,
+                        tipo_imovel: p.tipo_imovel?.tipo || p.tipo_imovel,
+                        operacao: p.operacao?.tipo || p.operacao
+                    }),
                     isFavorite: favoriteIds.includes(p.id)
                 }));
 
@@ -120,6 +128,21 @@ export const PropertyComparison: React.FC = () => {
             addToast('Erro ao carregar imóveis para comparação', 'error');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleShare = () => {
+        const url = window.location.href;
+        navigator.clipboard.writeText(url);
+        addToast('Link de comparação copiado! Agora você pode enviar para seu cliente.', 'success');
+
+        // Optional: Use Web Share API if available
+        if (navigator.share) {
+            navigator.share({
+                title: 'Comparativo de Imóveis - iziBrokerz',
+                text: 'Confira estes imóveis que selecionei para você comparar:',
+                url: url
+            }).catch(() => { });
         }
     };
 
@@ -146,7 +169,7 @@ export const PropertyComparison: React.FC = () => {
                     newSet.delete(propertyId);
                     return newSet;
                 });
-                addToast('Removido dos favoritos', 'success');
+                addToast(isClient ? 'Removido dos favoritos' : 'Removido do comparativo', 'success');
             } else {
                 // Add to favorites
                 await supabase
@@ -154,7 +177,7 @@ export const PropertyComparison: React.FC = () => {
                     .insert([{ user_id: user.id, anuncio_id: propertyId }]);
 
                 setFavorites(prev => new Set(prev).add(propertyId));
-                addToast('Adicionado aos favoritos', 'success');
+                addToast(isClient ? 'Adicionado aos favoritos' : 'Adicionado ao comparativo', 'success');
             }
         } catch (error) {
             console.error('Error toggling favorite:', error);
@@ -196,7 +219,7 @@ export const PropertyComparison: React.FC = () => {
                     onClick={() => navigate('/favorites')}
                     className="px-6 py-2 bg-primary-500 text-white rounded-full hover:bg-primary-600"
                 >
-                    Voltar para Favoritos
+                    Voltar para {role === 'Cliente' ? 'Favoritos' : 'Comparativo'}
                 </button>
             </div>
         );
@@ -214,8 +237,19 @@ export const PropertyComparison: React.FC = () => {
                 <div>
                     <h2 className="text-2xl font-bold text-white">Comparativo de Imóveis</h2>
                     <p className="text-slate-400 text-sm">Comparando {properties.length} imóveis lado a lado.</p>
-                    <p className="text-yellow-500 text-sm">AVISO: Melhor experiência em computadores.</p>
+                    <p className="text-yellow-500 text-sm md:hidden">💡 Gire o celular para ver melhor.</p>
                 </div>
+
+                {!isClient && (
+                    <button
+                        onClick={handleShare}
+                        className="ml-auto flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-full transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                    >
+                        <Share2 size={18} />
+                        <span className="hidden sm:inline">Compartilhar com Cliente</span>
+                        <span className="sm:hidden">Enviar</span>
+                    </button>
+                )}
             </div>
 
             <div className="overflow-x-auto">
@@ -474,7 +508,7 @@ export const PropertyComparison: React.FC = () => {
                             {properties.map(prop => (
                                 <td key={prop.id} className="p-4">
                                     <button
-                                        onClick={() => navigate(`/properties/${prop.id}`)}
+                                        onClick={() => navigate(`/properties/${prop.slug}`)}
                                         className="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-full transition-colors shadow-md"
                                     >
                                         Ver Detalhes
