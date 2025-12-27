@@ -1,0 +1,252 @@
+{
+    "name": "Evolution AI Agent + Logging (API Version)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "evolution-webhook",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                220,
+                240
+            ],
+            "webhookId": "evolution-webhook"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://ufhctvcpkwpzgcfgmirx.supabase.co/rest/v1/leads_interactions",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmaGN0dmNwa3dwemdjZmdtaXJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0NzU3MDgsImV4cCI6MjA3OTA1MTcwOH0.qPkkj8Vr1ntmciIqGVbAH7ukeM9qi2mnGlWIDPGMGEQ"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmaGN0dmNwa3dwemdjZmdtaXJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0NzU3MDgsImV4cCI6MjA3OTA1MTcwOH0.qPkkj8Vr1ntmciIqGVbAH7ukeM9qi2mnGlWIDPGMGEQ"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "lead_phone",
+                            "value": "={{ $node[\"Webhook\"].json[\"data\"][\"key\"][\"remoteJid\"] }}"
+                        },
+                        {
+                            "name": "message_content",
+                            "value": "={{ $node[\"Webhook\"].json[\"data\"][\"message\"][\"conversation\"] || $node[\"Webhook\"].json[\"data\"][\"message\"][\"extendedTextMessage\"][\"text\"] }}"
+                        },
+                        {
+                            "name": "message_type",
+                            "value": "user"
+                        },
+                        {
+                            "name": "platform",
+                            "value": "whatsapp"
+                        },
+                        {
+                            "name": "metadata",
+                            "value": "={{ JSON.stringify($node[\"Webhook\"].json) }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Log User Message (API)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                460,
+                100
+            ]
+        },
+        {
+            "parameters": {
+                "options": {
+                    "systemMessage": "Você é IzA, a assistente inteligente da plataforma iziBrokerz. Você ajuda corretores a atender leads de forma rápida e amigável. Seu tom é profissional mas acolhedor. Ajude com informações de imóveis e dúvidas sobre a plataforma."
+                }
+            },
+            "name": "AI Agent",
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 1.0,
+            "position": [
+                460,
+                340
+            ]
+        },
+        {
+            "parameters": {
+                "model": "llama3-8b-8192",
+                "options": {}
+            },
+            "name": "Groq Chat Model",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+            "typeVersion": 1,
+            "position": [
+                460,
+                560
+            ],
+            "credentials": {
+                "groqApi": {
+                    "id": "Groq account",
+                    "name": "Groq account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://ufhctvcpkwpzgcfgmirx.supabase.co/rest/v1/leads_interactions",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmaGN0dmNwa3dwemdjZmdtaXJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0NzU3MDgsImV4cCI6MjA3OTA1MTcwOH0.qPkkj8Vr1ntmciIqGVbAH7ukeM9qi2mnGlWIDPGMGEQ"
+                        },
+                        {
+                            "name": "Authorization",
+                            "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmaGN0dmNwa3dwemdjZmdtaXJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0NzU3MDgsImV4cCI6MjA3OTA1MTcwOH0.qPkkj8Vr1ntmciIqGVbAH7ukeM9qi2mnGlWIDPGMGEQ"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "lead_phone",
+                            "value": "={{ $node[\"Webhook\"].json[\"data\"][\"key\"][\"remoteJid\"] }}"
+                        },
+                        {
+                            "name": "message_content",
+                            "value": "={{ $node[\"AI Agent\"].json[\"output\"] }}"
+                        },
+                        {
+                            "name": "message_type",
+                            "value": "ai"
+                        },
+                        {
+                            "name": "platform",
+                            "value": "whatsapp"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Log AI Reply (API)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                820,
+                340
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=http://152.67.40.239:8080/message/sendText/{{ $node[\"Webhook\"].json[\"instance\"] }}",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "izibrokerz_api_key_secure_2025"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "number",
+                            "value": "={{ $node[\"Webhook\"].json[\"data\"][\"key\"][\"remoteJid\"] }}"
+                        },
+                        {
+                            "name": "text",
+                            "value": "={{ $node[\"AI Agent\"].json[\"output\"] }}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Evolution API Reply",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                1040,
+                340
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Log User Message (API)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Agent": {
+            "main": [
+                [
+                    {
+                        "node": "Log AI Reply (API)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Log AI Reply (API)": {
+            "main": [
+                [
+                    {
+                        "node": "Evolution API Reply",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Groq Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

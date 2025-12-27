@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
 import { useHeader } from '../components/HeaderContext';
-import { User, Lock, Bell, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, AlertTriangle, ExternalLink, MapPin, Phone, Share2, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign, Download, Search, Copy } from 'lucide-react';
+import { User, Lock, Bell, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, AlertTriangle, ExternalLink, MapPin, Phone, Share2, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign, Download, Search, Copy, MessageSquare, Zap, Check, Info, ArrowRight, Bot, Sparkles, MessageCircle, QrCode, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { geocodeAddress } from '../lib/geocodingHelper';
 import { checkPasswordStrength, validateEmail, validatePhone, validateCRECI, sanitizeInput } from '../lib/validation';
@@ -15,7 +15,7 @@ export const Settings: React.FC = () => {
   const { addToast } = useToast();
   const { setHeaderContent } = useHeader();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'account' | 'page' | 'branding'>('account');
+  const [activeTab, setActiveTab] = useState<'account' | 'page' | 'branding' | 'whatsapp'>('account');
 
   // Loading States
   const [loading, setLoading] = useState(false);
@@ -100,6 +100,19 @@ export const Settings: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [exportingData, setExportingData] = useState(false);
 
+  // --- WhatsApp & IA Integration States ---
+  const [whatsappConfig, setWhatsappConfig] = useState<{
+    instanceName: string;
+    instanceToken: string;
+    status: string;
+  } | null>(null);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const pollInterval = useRef<NodeJS.Timeout | null>(null);
+
+  const EVOLUTION_API_URL = 'http://152.67.40.239:8080';
+  const EVOLUTION_API_KEY = 'izibrokerz_api_key_secure_2025';
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const states = [
@@ -122,8 +135,184 @@ export const Settings: React.FC = () => {
   useEffect(() => {
     if (user?.id) {
       fetchProfile();
+      fetchWhatsAppConfig();
     }
+    return () => {
+      if (pollInterval.current) clearInterval(pollInterval.current);
+    };
   }, [user?.id]);
+
+  const fetchWhatsAppConfig = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('whatsapp_config')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (data) {
+        setWhatsappConfig({
+          instanceName: data.instance_name,
+          instanceToken: data.instance_token,
+          status: data.status
+        });
+
+        // If status is not "connected", we might want to check Evolution directly
+        if (data.status === 'connected') {
+          checkEvolutionStatus(data.instance_name);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching whatsapp config:', error);
+    }
+  };
+
+  const checkEvolutionStatus = async (instanceName: string) => {
+    try {
+      const response = await fetch(`${EVOLUTION_API_URL}/instance/connectionStatus/${instanceName}`, {
+        headers: { 'apikey': EVOLUTION_API_KEY }
+      });
+      const data = await response.json();
+
+      if (data.instance?.state === 'open') {
+        updateWhatsAppStatus('connected');
+      } else {
+        updateWhatsAppStatus('disconnected');
+      }
+    } catch (error) {
+      console.error('Error checking Evolution status:', error);
+    }
+  };
+
+  const updateWhatsAppStatus = async (status: string) => {
+    if (!user || !whatsappConfig) return;
+    try {
+      await supabase
+        .from('whatsapp_config')
+        .update({ status })
+        .eq('user_id', user.id);
+
+      setWhatsappConfig(prev => prev ? { ...prev, status } : null);
+    } catch (error) {
+      console.error('Error updating status in Supabase:', error);
+    }
+  };
+
+  const handleConnectWhatsApp = async () => {
+    if (!user) return;
+    try {
+      setIsConnecting(true);
+      setQrCode(null);
+
+      const instanceName = whatsappConfig?.instanceName || 'izi_brokerz';
+
+      // 1. Create Instance
+      const createRes = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': EVOLUTION_API_KEY
+        },
+        body: JSON.stringify({
+          instanceName,
+          token: Math.floor(Math.random() * 900000 + 100000).toString(), // V2 prefers numeric strings or UUIDs
+          qrcode: true,
+          integration: 'WHATSAPP-BAILEYS' // Explicitly required for V2 sometimes
+        })
+      });
+
+      const createData = await createRes.json();
+
+      if (!createRes.ok && createData.error !== 'Instance already exists') {
+        throw new Error(createData.message || 'Erro ao criar instância');
+      }
+
+      const instanceToken = createData.hash || whatsappConfig?.instanceToken;
+
+      // 2. Save/Update in Supabase
+      const { error: dbError } = await supabase
+        .from('whatsapp_config')
+        .upsert({
+          user_id: user.id,
+          instance_name: instanceName,
+          instance_token: instanceToken,
+          status: 'connecting'
+        });
+
+      if (dbError) throw dbError;
+
+      setWhatsappConfig({ instanceName, instanceToken, status: 'connecting' });
+
+      // 3. Get QR Code
+      const qrRes = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
+        headers: { 'apikey': EVOLUTION_API_KEY }
+      });
+      const qrData = await qrRes.json();
+
+      if (qrData.base64) {
+        setQrCode(qrData.base64);
+        startPollingStatus(instanceName);
+      } else {
+        addToast('Erro ao gerar QR Code. Tente novamente.', 'error');
+      }
+
+    } catch (error: any) {
+      console.error('Error connecting WhatsApp:', error);
+      addToast(error.message || 'Erro ao conectar WhatsApp', 'error');
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const startPollingStatus = (instanceName: string) => {
+    if (pollInterval.current) clearInterval(pollInterval.current);
+
+    pollInterval.current = setInterval(async () => {
+      try {
+        const response = await fetch(`${EVOLUTION_API_URL}/instance/connectionStatus/${instanceName}`, {
+          headers: { 'apikey': EVOLUTION_API_KEY }
+        });
+        const data = await response.json();
+
+        if (data.instance?.state === 'open') {
+          if (pollInterval.current) clearInterval(pollInterval.current);
+          updateWhatsAppStatus('connected');
+          setQrCode(null);
+          addToast('WhatsApp conectado com sucesso!', 'success');
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    }, 5000);
+  };
+
+  const handleDisconnectWhatsApp = async () => {
+    if (!user || !whatsappConfig) return;
+    if (!confirm('Deseja realmente desconectar seu WhatsApp?')) return;
+
+    try {
+      setLoading(true);
+      await fetch(`${EVOLUTION_API_URL}/instance/logout/${whatsappConfig.instanceName}`, {
+        method: 'DELETE',
+        headers: { 'apikey': EVOLUTION_API_KEY }
+      });
+
+      await supabase
+        .from('whatsapp_config')
+        .delete()
+        .eq('user_id', user.id);
+
+      setWhatsappConfig(null);
+      setQrCode(null);
+      addToast('WhatsApp desconectado.', 'info');
+    } catch (error) {
+      console.error('Error disconnecting:', error);
+      addToast('Erro ao desconectar.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -574,6 +763,20 @@ export const Settings: React.FC = () => {
               >
                 <Share2 size={16} />
                 <span>Marca & Redes</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('whatsapp')}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap text-sm font-medium
+                  ${activeTab === 'whatsapp'
+                    ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-600/50'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                  }`}
+              >
+                <div className="relative">
+                  <MessageSquare size={16} />
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-pink-500 rounded-full animate-ping"></span>
+                </div>
+                <span>WhatsApp & IA</span>
               </button>
             </>
           )}
@@ -1123,6 +1326,189 @@ export const Settings: React.FC = () => {
               >
                 {saving ? <Loader2 size={20} className="mr-2 animate-spin" /> : <Save size={20} className="mr-2" />}
                 {saving ? 'Salvando...' : 'Salvar Alterações'}
+              </button>
+            </div>
+          </div>
+        )}
+        {activeTab === 'whatsapp' && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                  <MessageSquare className="text-emerald-400" /> WhatsApp & Inteligência IzA
+                </h3>
+                <p className="text-slate-400">Conecte seu WhatsApp e ative o poder da inteligência artificial para atender seus leads 24/7.</p>
+              </div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                <span className={`w-2 h-2 rounded-full ${whatsappConfig?.status === 'connected' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`}></span>
+                <span className={`text-xs font-bold uppercase tracking-wider ${whatsappConfig?.status === 'connected' ? 'text-emerald-400' : 'text-slate-400'}`}>
+                  Status: {whatsappConfig?.status === 'connected' ? 'Servidor Online' : 'Servidor Pronto'}
+                </span>
+              </div>
+            </div>
+
+            {/* Current Tier Status Card */}
+            <div className="p-6 bg-gradient-to-br from-slate-900 to-slate-950 rounded-3xl border border-slate-700/50 mb-10 overflow-hidden relative group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none group-hover:bg-emerald-500/10 transition-all duration-700"></div>
+              <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                {/* QR Code Placeholder / Live QR */}
+                <div className="w-48 h-48 bg-white/5 rounded-2xl border border-white/10 flex flex-col items-center justify-center gap-4 text-center p-4 relative">
+                  {qrCode ? (
+                    <div className="bg-white p-2 rounded-xl">
+                      <img src={qrCode} alt="WhatsApp QR Code" className="w-32 h-32" />
+                    </div>
+                  ) : whatsappConfig?.status === 'connected' ? (
+                    <div className="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/30 flex flex-col items-center gap-2">
+                      <Check size={48} className="text-emerald-500" />
+                      <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Conectado</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="p-4 bg-white/5 rounded-xl border border-white/20">
+                        <QrCode size={48} className="text-slate-500" />
+                      </div>
+                      <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest leading-tight">
+                        Aguardando Conexão
+                      </p>
+                    </>
+                  )}
+                  {isConnecting && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                      <Loader2 className="text-emerald-500 animate-spin" size={32} />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-3">
+                    <span className="px-3 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-lg uppercase tracking-wider">Seu Plano: Básico</span>
+                    {whatsappConfig && (
+                      <span className="px-3 py-1 bg-white/5 text-slate-400 text-[10px] font-bold rounded-lg border border-white/10 uppercase tracking-wider">Instância: {whatsappConfig.instanceName}</span>
+                    )}
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-2 uppercase tracking-wide">
+                    {whatsappConfig?.status === 'connected' ? 'WhatsApp Conectado!' : 'Configure sua Conexão'}
+                  </h4>
+                  <p className="text-slate-400 text-sm mb-6 leading-relaxed max-w-lg">
+                    {whatsappConfig?.status === 'connected'
+                      ? 'Seu WhatsApp está pronto para uso. O botão flutuante e os links diretos já estão utilizando esta conexão.'
+                      : 'No plano Básico, você possui o botão flutuante para conversas diretas. Para desbloquear o Assistente IA (IzA) e o ChatBot, faça o upgrade do seu plano.'
+                    }
+                  </p>
+
+                  <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                    {whatsappConfig?.status === 'connected' ? (
+                      <button
+                        onClick={handleDisconnectWhatsApp}
+                        className="px-6 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold rounded-xl border border-red-500/30 transition-all flex items-center gap-2"
+                      >
+                        <Trash2 size={18} />
+                        Desconectar WhatsApp
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleConnectWhatsApp}
+                        disabled={isConnecting}
+                        className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
+                      >
+                        {isConnecting ? <Loader2 size={18} className="animate-spin" /> : <Zap size={18} />}
+                        {qrCode ? 'Gerar novo QR Code' : 'Conectar WhatsApp'}
+                      </button>
+                    )}
+
+                    <button onClick={() => addToast('Em breve: escolha seu plano!', 'info')} className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 font-bold rounded-xl border border-white/10 active:scale-95 transition-all flex items-center gap-2">
+                      <Sparkles size={18} className="text-emerald-400" />
+                      Fazer Upgrade
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Plans Comparison Grid - Modern UI */}
+            <h4 className="text-sm font-bold text-slate-500 uppercase tracking-[0.2em] mb-6 px-1">Recursos por Plano</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-20">
+
+              {/* Plano Básico */}
+              <div className="p-5 rounded-3xl bg-slate-900/40 border-2 border-slate-800/50 flex flex-col hover:border-slate-700 transition-all">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Básico</span>
+                  <div className="p-2 bg-slate-800 rounded-xl text-slate-400"><MessageCircle size={18} /></div>
+                </div>
+                <h5 className="text-lg font-bold text-white mb-4">Botão Simples</h5>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center gap-2 text-xs text-slate-400"><Check size={14} className="text-emerald-500" /> Botão Flutuante WA</li>
+                  <li className="flex items-center gap-2 text-xs text-slate-400"><Check size={14} className="text-emerald-500" /> Link Direto no Perfil</li>
+                  <li className="flex items-center gap-2 text-xs text-slate-600"><X size={14} /> Atendimento IA (IzA)</li>
+                </ul>
+                <div className="mt-auto pt-4 border-t border-white/5">
+                  <p className="text-[10px] font-bold text-emerald-500/50 uppercase tracking-widest text-center">Plano Atual</p>
+                </div>
+              </div>
+
+              {/* Plano Intermediário */}
+              <div className="p-5 rounded-3xl bg-slate-900/60 border-2 border-slate-800/50 flex flex-col hover:border-slate-700 transition-all">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">Intermediário</span>
+                  <div className="p-2 bg-blue-500/10 rounded-xl text-blue-400"><Bot size={18} /></div>
+                </div>
+                <h5 className="text-lg font-bold text-white mb-4">ChatBot Padrão</h5>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center gap-2 text-xs text-slate-200"><Check size={14} className="text-emerald-500" /> Perguntas e Respostas</li>
+                  <li className="flex items-center gap-2 text-xs text-slate-200"><Check size={14} className="text-emerald-500" /> Triagem de Leads</li>
+                  <li className="flex items-center gap-2 text-xs text-slate-600"><X size={14} /> Inteligência Criativa</li>
+                </ul>
+                <button onClick={() => addToast('Planos em definição!', 'info')} className="mt-auto w-full py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-[10px] font-black uppercase tracking-widest rounded-xl border border-blue-500/30 transition-all">
+                  Migrar
+                </button>
+              </div>
+
+              {/* Plano Avançado */}
+              <div className="p-5 rounded-3xl bg-emerald-500/10 border-2 border-emerald-500/30 flex flex-col relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-1.5 bg-emerald-500 text-slate-950 text-[8px] font-black uppercase tracking-tighter -mr-4 mt-2 rotate-45 w-24 text-center">Popular</div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Avançado</span>
+                  <div className="p-2 bg-emerald-500/20 rounded-xl text-emerald-400"><Sparkles size={18} /></div>
+                </div>
+                <h5 className="text-lg font-bold text-white mb-4">Agente IzA (IA)</h5>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center gap-2 text-xs text-slate-200"><Check size={14} className="text-emerald-500" /> Conversa Fluida (LLM)</li>
+                  <li className="flex items-center gap-2 text-xs text-slate-200"><Check size={14} className="text-emerald-500" /> Consulta de Imóveis</li>
+                  <li className="flex items-center gap-2 text-xs text-slate-200"><Check size={14} className="text-emerald-500" /> Selo Verificado</li>
+                </ul>
+                <button onClick={() => addToast('Planos em definição!', 'info')} className="mt-auto w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-emerald-500/20 transition-all">
+                  Contratar
+                </button>
+              </div>
+
+              {/* Plano Profissional */}
+              <div className="p-5 rounded-3xl bg-pink-500/10 border-2 border-pink-500/30 flex flex-col hover:border-pink-500/50 transition-all">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold text-pink-400 uppercase tracking-widest">Profissional</span>
+                  <div className="p-2 bg-pink-500/20 rounded-xl text-pink-400"><Zap size={18} /></div>
+                </div>
+                <h5 className="text-lg font-bold text-white mb-4">Escala Total</h5>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-center gap-2 text-xs text-slate-200"><Check size={14} className="text-pink-500" /> Importação XML</li>
+                  <li className="flex items-center gap-2 text-xs text-slate-200"><Check size={14} className="text-pink-500" /> Atendimento Prioritário</li>
+                  <li className="flex items-center gap-2 text-xs text-slate-200"><Check size={14} className="text-pink-500" /> IzA Unlimited</li>
+                </ul>
+                <button onClick={() => addToast('Planos em definição!', 'info')} className="mt-auto w-full py-2 bg-pink-600/20 hover:bg-pink-600/30 text-pink-400 text-[10px] font-black uppercase tracking-widest rounded-xl border border-pink-500/30 transition-all">
+                  Migrar
+                </button>
+              </div>
+
+            </div>
+
+            {/* Bottom Tip */}
+            <div className="p-4 bg-slate-900/50 rounded-2xl border border-slate-700/50 flex items-center gap-4">
+              <div className="p-3 bg-slate-800 rounded-xl text-slate-400"><Info size={24} /></div>
+              <div className="flex-1">
+                <h6 className="text-sm font-bold text-white">Por que conectar o WhatsApp?</h6>
+                <p className="text-xs text-slate-400">95% das vendas imobiliárias no Brasil começam pelo WhatsApp. Ter uma IA respondendo na hora pode aumentar sua conversão em até 300%.</p>
+              </div>
+              <button className="hidden md:flex items-center gap-1 text-xs font-bold text-emerald-400 hover:underline">
+                Ver tutoriais <ArrowRight size={14} />
               </button>
             </div>
           </div>

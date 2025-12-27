@@ -1,10 +1,10 @@
 // Public AI Assistant for iziBrokerz
 // Helps buyers/renters find properties and brokers learn about the platform
+// NOW INTEGRATED WITH n8n IzA Web API
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Send, Sparkles, Loader2, ExternalLink } from 'lucide-react';
-import { callGemini } from '../lib/geminiHelper';
 import { supabase } from '../lib/supabaseClient';
 import {
     PLATFORM_KNOWLEDGE,
@@ -19,6 +19,49 @@ import { getOrCreateConversation, saveMessageToDb } from '../lib/izaStorage';
 import { generatePropertySlug } from '../lib/propertyHelpers';
 import { calculateLeadScore, shouldNotifyBroker, generateLeadSummary, getLeadEmoji, getLeadColor } from '../lib/leadScoring';
 import { CustomOrderModal } from './CustomOrderModal';
+
+// n8n IzA Web API Configuration
+const IZA_API_URL = 'http://44.202.213.255:5678/webhook/iza-web';
+
+// Call n8n IzA Web API
+const callIzAAPI = async (
+    message: string,
+    userType: 'cliente' | 'corretor',
+    sessionId: string
+): Promise<string | null> => {
+    try {
+        console.log('🤖 Calling IzA API:', { message, userType, sessionId });
+
+        const response = await fetch(IZA_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message,
+                userType,
+                sessionId
+            })
+        });
+
+        if (!response.ok) {
+            console.error('IzA API error:', response.status, response.statusText);
+            return null;
+        }
+
+        const data = await response.json();
+        console.log('🤖 IzA API response:', data);
+
+        if (data.success && data.response) {
+            return data.response;
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error calling IzA API:', error);
+        return null;
+    }
+};
 
 interface Message {
     role: 'user' | 'assistant';
@@ -83,11 +126,12 @@ export const PublicAIAssistant: React.FC<{ brokerSlug?: string }> = ({ brokerSlu
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Quick questions - Just 3 options
+    // Quick questions - 4 options including Temporada
     const quickQuestions = [
         "Quero ALUGAR um imóvel",
         "Quero COMPRAR um imóvel",
-        "Quais vantagens de ser Corretor Parceiro?"
+        "Quero imóvel para TEMPORADA",
+        "Sou CORRETOR e quero mais informações"
     ];
 
     const scrollToBottom = () => {
@@ -1126,7 +1170,12 @@ OFEREÇA ALTERNATIVAS:
 
 RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
 
-            const response = await callGemini(prompt);
+            // Determine user type for n8n API
+            const userType = newState.clientType === 'broker' ? 'corretor' : 'cliente';
+            const sessionId = conversationId || `web-${Date.now()}`;
+
+            // Call n8n IzA Web API instead of Gemini
+            const response = await callIzAAPI(textToSend, userType, sessionId);
 
             if (response) {
                 console.log('🤖 AI RESPONSE RECEIVED');
