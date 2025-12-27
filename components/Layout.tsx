@@ -8,6 +8,7 @@ import { MessagesDrawer } from './MessagesDrawer';
 import { TrialBanner } from './TrialBanner';
 import { AIAssistant } from './AIAssistant';
 import { PublicAIAssistant } from './PublicAIAssistant';
+import { ConditionalFloatingButton } from './ConditionalFloatingButton';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { MobileBottomNav } from './MobileBottomNav';
@@ -345,8 +346,8 @@ export const PublicLayout: React.FC = () => {
                 </div>
             )}
 
-            {/* Persistence for Public Chat */}
-            <PublicAIAssistant brokerSlug={brokerSlug || undefined} />
+            {/* Conditional Floating Button based on Broker's Plan */}
+            <ConditionalFloatingButton brokerSlug={brokerSlug || undefined} />
 
             <div className={!isBrokerPage ? "pt-[73px]" : ""}>
                 <Outlet />

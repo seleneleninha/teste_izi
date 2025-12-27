@@ -4,7 +4,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Send, Sparkles, Loader2, ExternalLink } from 'lucide-react';
+import { X, Send, Sparkles, Loader2, ExternalLink, MapPin } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import {
     PLATFORM_KNOWLEDGE,
@@ -67,7 +67,7 @@ interface Message {
     role: 'user' | 'assistant';
     content: string;
     timestamp: Date;
-    links?: { text: string; url: string }[];
+    links?: { text: string; url: string; image?: string; neighborhood?: string; price?: string }[];
     quickActions?: QuickAction[];
 }
 
@@ -96,6 +96,7 @@ interface PropertyMatch {
     quartos?: number;
     vagas?: number;
     area_priv?: number;
+    fotos?: Record<string, string> | string[];
 }
 
 import { useChat } from './ChatContext';
@@ -248,6 +249,7 @@ export const PublicAIAssistant: React.FC<{ brokerSlug?: string }> = ({ brokerSlu
                         vagas,
                         area_priv,
                         user_id,
+                        fotos,
                         operacao_rel:operacao(tipo),
                         tipo_imovel_rel:tipo_imovel(tipo)
                     `)
@@ -368,6 +370,7 @@ export const PublicAIAssistant: React.FC<{ brokerSlug?: string }> = ({ brokerSlu
                     quartos: p.quartos,
                     vagas: p.vagas,
                     area_priv: p.area_priv,
+                    fotos: p.fotos,
                     operacao: operacaoTipo,
                     tipo_imovel: tipoImovel,
                     slug: '' // Not in database, will generate from other fields
@@ -996,9 +999,44 @@ INSTRUÇÃO IMPORTANTE:
                         // Show properties directly if specific neighborhood or single option
                         console.log('✅ SHOWING PROPERTIES DIRECTLY');
                         propertyLinks = matchingProperties.map(p => {
+                            // Get first image from property - handle multiple formats
+                            let imageUrl = '';
+                            console.log('📷 Property fotos:', p.id, p.fotos, typeof p.fotos);
+
+                            if (p.fotos) {
+                                if (typeof p.fotos === 'string') {
+                                    // fotos is a JSON string
+                                    try {
+                                        const parsed = JSON.parse(p.fotos);
+                                        if (parsed.foto1) imageUrl = parsed.foto1;
+                                        else if (Array.isArray(parsed) && parsed[0]) imageUrl = parsed[0];
+                                    } catch {
+                                        // Not JSON, maybe direct URL
+                                        imageUrl = p.fotos;
+                                    }
+                                } else if (typeof p.fotos === 'object' && !Array.isArray(p.fotos)) {
+                                    // fotos is an object like {foto1: "url", foto2: "url"}
+                                    const fotosObj = p.fotos as Record<string, string>;
+                                    if (fotosObj.foto1) imageUrl = fotosObj.foto1;
+                                    else {
+                                        // Get first key value
+                                        const firstKey = Object.keys(fotosObj)[0];
+                                        if (firstKey) imageUrl = fotosObj[firstKey];
+                                    }
+                                } else if (Array.isArray(p.fotos) && p.fotos[0]) {
+                                    // fotos is an array
+                                    imageUrl = p.fotos[0];
+                                }
+                            }
+
+                            console.log('📷 Extracted imageUrl:', imageUrl);
+
                             const link = {
-                                text: `${p.tipo_imovel} em ${p.bairro} - ${formatCurrency(p.valor_venda || p.valor_locacao || 0)}`,
-                                url: generatePropertyLink(p)
+                                text: p.titulo || `${p.tipo_imovel} em ${p.bairro}`,
+                                url: generatePropertyLink(p),
+                                image: imageUrl,
+                                neighborhood: p.bairro,
+                                price: formatCurrency(p.valor_venda || p.valor_locacao || 0)
                             };
                             console.log('🔗 Generated link:', link);
                             return link;
@@ -1329,7 +1367,7 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-full p-4 shadow-2xl hover:shadow-emerald-500/50 hover:scale-110 transition-all duration-300 group"
+                    className="fixed bottom-6 right-6 z-[9999] bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-full p-4 shadow-2xl hover:shadow-emerald-500/50 hover:scale-110 transition-all duration-300 group"
                     aria-label="Abrir assistente IzA"
                 >
                     <div className="relative">
@@ -1340,12 +1378,12 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
             )}
 
             {isOpen && (
-                <div className="fixed bottom-0 right-0 left-0 top-0 sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 z-50 w-full h-full sm:w-[380px] sm:h-[520px] bg-slate-800 rounded-none sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-700">
+                <div className="fixed bottom-0 right-0 left-0 top-0 sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 z-[9999] w-full h-full sm:w-[380px] sm:h-[600px] bg-midnight-900 rounded-none sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-white/10 animate-in slide-in-from-bottom-4 duration-300">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-4 flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                                <Sparkles size={20} />
+                                <Sparkles size={24} />
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg">IzA</h3>
@@ -1354,96 +1392,100 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                         </div>
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="hover:bg-white/20 rounded-full p-2 transition-colors"
+                            className="text-white/70 hover:text-white p-1 transition-colors"
                         >
                             <X size={20} />
                         </button>
                     </div>
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-midnight-950">
                         {messages.map((message, index) => (
                             <div
                                 key={index}
                                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
                                 <div
-                                    className={`max-w-[85%] rounded-2xl px-4 py-2 ${message.role === 'user'
+                                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${message.role === 'user'
                                         ? 'bg-emerald-500 text-white rounded-br-none'
-                                        : 'bg-slate-800 text-white border border-slate-700 rounded-bl-none'
+                                        : 'bg-white/5 text-white border border-white/10 rounded-bl-none'
                                         }`}
                                 >
                                     <p className="text-sm whitespace-pre-wrap">{renderMessageContent(message.content)}</p>
 
-                                    {/* Property Links */}
+                                    {/* Property Links - Card Style like ChatBot */}
                                     {message.links && message.links.length > 0 && (
                                         <div className="mt-3 space-y-2">
-                                            <p className="text-xs opacity-70 font-medium">Clique para ver:</p>
+                                            <p className="text-xs opacity-70 font-medium">{message.links.length} opções encontradas:</p>
                                             {message.links.map((link, linkIndex) => (
-                                                <button
+                                                <a
                                                     key={linkIndex}
-                                                    onClick={() => handleLinkClick(link.url)}
-                                                    className="flex items-center gap-2 text-xs bg-green-600 text-white border border-green-400 px-3 py-2 rounded-full hover:bg-green-700 transition-colors w-full text-left shadow-md mt-1"
-                                                    style={{ display: 'flex', visibility: 'visible', opacity: 1 }}
+                                                    href={link.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="block w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/50 rounded-xl transition-all duration-200 overflow-hidden group"
                                                 >
-                                                    <ExternalLink size={14} className="shrink-0 text-white" />
-                                                    <span className="truncate font-medium">{link.text}</span>
-                                                </button>
+                                                    <div className="flex gap-3 p-3">
+                                                        {link.image && (
+                                                            <img
+                                                                src={link.image}
+                                                                alt={link.text}
+                                                                className="w-20 h-20 object-cover rounded-lg shrink-0"
+                                                            />
+                                                        )}
+                                                        <div className="flex-1 min-w-0">
+                                                            <h4 className="text-white font-medium truncate group-hover:text-emerald-400 transition-colors text-sm">
+                                                                {link.text}
+                                                            </h4>
+                                                            {link.neighborhood && (
+                                                                <p className="text-gray-400 text-xs flex items-center gap-1 mt-1">
+                                                                    <MapPin size={12} />
+                                                                    {link.neighborhood}
+                                                                </p>
+                                                            )}
+                                                            {link.price && (
+                                                                <p className="text-emerald-400 font-bold text-sm mt-1">
+                                                                    {link.price}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <ExternalLink className="text-gray-500 group-hover:text-emerald-400 shrink-0 self-center" size={16} />
+                                                    </div>
+                                                </a>
                                             ))}
                                         </div>
                                     )}
 
                                     {/* Quick Actions */}
                                     {message.quickActions && message.quickActions.length > 0 && (
-                                        <div className="mt-3 space-y-2">
-                                            <p className="text-xs opacity-70 font-bold rounded-full">Escolha uma opção:</p>
-                                            <div className="grid grid-cols-1 gap-2">
+                                        <div className="mt-3 space-y-1.5">
+                                            <p className="text-xs opacity-70 font-medium mb-2">Escolha uma opção:</p>
+                                            <div className="space-y-1.5">
                                                 {message.quickActions
-                                                    .sort((a, b) => a.text.localeCompare(b.text))  // Sort alphabetically
-                                                    .map((action) => {
-                                                        // Category-based colors
-                                                        const getCategoryStyles = (category: string) => {
-                                                            switch (category) {
-                                                                case 'operation':
-                                                                    return 'bg-blue-600 hover:bg-blue-700 border-blue-400';
-                                                                case 'type':
-                                                                    return 'bg-green-600 hover:bg-green-700 border-green-400';
-                                                                case 'neighborhood':
-                                                                    return 'bg-purple-600 hover:bg-purple-700 border-purple-400';
-                                                                case 'price':
-                                                                    return 'bg-orange-600 hover:bg-orange-700 border-orange-400';
-                                                                case 'broker':
-                                                                    return 'bg-gray-600 hover:bg-gray-700 border-gray-400';
-                                                                default:
-                                                                    return 'bg-slate-600 hover:bg-slate-700 border-slate-400';
-                                                            }
-                                                        };
-
-                                                        return (
-                                                            <button
-                                                                key={action.id}
-                                                                onClick={() => {
-                                                                    // Check if it's custom order badge
-                                                                    if (action.id === 'custom-order') {
-                                                                        // Open modal instead of sending message
-                                                                        setCustomOrderModalOpen(true);
-                                                                    } else {
-                                                                        // Normal badge behavior - send message directly
-                                                                        handleSend(action.actionText);
-                                                                    }
-                                                                }}
-                                                                className={`flex items-center justify-center gap-2 text-xs text-white border px-3 py-2.5 rounded-lg transition-all transform hover:scale-105 active:scale-95 font-medium shadow-md ${getCategoryStyles(action.category)}`}
-                                                            >
-                                                                {action.icon && <span className="text-base">{action.icon}</span>}
-                                                                <span className="truncate">{action.text}</span>
-                                                                {action.count !== undefined && (
-                                                                    <span className="ml-auto bg-white/20 px-1.5 py-0.5 rounded-full text-xs font-bold">
-                                                                        {action.count}
-                                                                    </span>
-                                                                )}
-                                                            </button>
-                                                        );
-                                                    })}
+                                                    .sort((a, b) => a.text.localeCompare(b.text))
+                                                    .map((action) => (
+                                                        <button
+                                                            key={action.id}
+                                                            onClick={() => {
+                                                                if (action.id === 'custom-order') {
+                                                                    setCustomOrderModalOpen(true);
+                                                                } else {
+                                                                    handleSend(action.actionText);
+                                                                }
+                                                            }}
+                                                            className="w-full flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/50 rounded-lg transition-all duration-200 text-left group"
+                                                        >
+                                                            {action.icon && <span className="text-base">{action.icon}</span>}
+                                                            <span className="text-white text-sm font-medium group-hover:text-emerald-400 transition-colors truncate flex-1">
+                                                                {action.text}
+                                                            </span>
+                                                            {action.count !== undefined && (
+                                                                <span className="bg-emerald-500/80 text-white px-2 py-0.5 rounded-full text-xs font-bold min-w-[24px] text-center">
+                                                                    {action.count}
+                                                                </span>
+                                                            )}
+                                                        </button>
+                                                    ))}
                                             </div>
                                         </div>
                                     )}
@@ -1455,13 +1497,8 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                             </div>
                         ))}
                         {loading && (
-                            <div className="flex justify-start">
-                                <div className="bg-slate-800 text-white border border-slate-700 rounded-full rounded-bl-none px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                        <Loader2 size={16} className="animate-spin" />
-                                        <span className="text-sm">Digitando...</span>
-                                    </div>
-                                </div>
+                            <div className="flex items-center justify-center py-4">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
                             </div>
                         )}
                         <div ref={messagesEndRef} />
@@ -1469,38 +1506,41 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
 
                     {/* Quick Questions - Only show at start */}
                     {messages.length === 1 && (
-                        <div className="p-3 bg-slate-800 border-t border-slate-700 shrink-0">
-                            <p className="text-xs text-gray-400 mb-2 font-medium">Como posso ajudar?</p>
-                            <div className="flex flex-col gap-2">
-                                {quickQuestions.map((question, index) => (
+                        <div className="p-3 bg-midnight-900 border-t border-white/10 shrink-0 space-y-1.5">
+                            {quickQuestions.map((question, index) => {
+                                const icons = ['🏠', '🔑', '🏖️', '👔'];
+                                return (
                                     <button
                                         key={index}
                                         onClick={() => handleSend(question)}
-                                        className="text-sm bg-gradient-to-r from-midnight-950 to-midnight-800 hover:from-midnight-800 hover:to-midnight-700 text-midnight-300 px-4 py-3 rounded-full transition-all font-medium text-left"
+                                        className="w-full flex items-center gap-2 px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/50 rounded-lg transition-all duration-200 text-left group"
                                     >
-                                        {question}
+                                        <span className="text-lg">{icons[index] || '💬'}</span>
+                                        <span className="text-white text-sm font-medium group-hover:text-emerald-400 transition-colors">
+                                            {question}
+                                        </span>
                                     </button>
-                                ))}
-                            </div>
+                                );
+                            })}
                         </div>
                     )}
 
                     {/* Input */}
-                    <div className="p-4 bg-slate-800 border-t border-slate-700">
-                        <div className="flex gap-2">
+                    <div className="p-4 bg-midnight-900 border-t border-white/10 shrink-0">
+                        <div className="flex gap-3">
                             <input
                                 type="text"
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyPress={handleKeyPress}
                                 placeholder="Digite sua mensagem..."
-                                className="flex-1 px-4 py-3 border border-slate-600 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-700 text-white text-sm"
+                                className="flex-1 px-4 py-3 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white/5 text-white text-sm placeholder-gray-400"
                                 disabled={loading}
                             />
                             <button
                                 onClick={() => handleSend()}
                                 disabled={!input.trim() || loading}
-                                className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-300 dark:disabled:bg-slate-600 text-white rounded-full p-3 transition-colors disabled:cursor-not-allowed"
+                                className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-white/10 disabled:text-gray-500 text-white rounded-xl p-3 transition-all duration-200 disabled:cursor-not-allowed"
                             >
                                 <Send size={20} />
                             </button>

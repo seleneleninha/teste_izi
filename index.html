@@ -21,8 +21,7 @@
         appId: "532585a7-f7f6-41d6-8b4e-87847b3564ef",
         safari_web_id: "web.onesignal.auto.08e72fe8-7d9e-49e9-8aad-204d649fdf9c",
         notifyButton: {
-          enable: true,
-          position: 'bottom-right',
+          enable: false, // Disabled to avoid conflict with our custom floating buttons
           displayPredicate: function () {
             // Em v16, verificamos a permissão através do namespace Notifications
             if (window.OneSignal && window.OneSignal.Notifications) {
