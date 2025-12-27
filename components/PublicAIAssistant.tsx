@@ -131,7 +131,7 @@ export const PublicAIAssistant: React.FC<{ brokerSlug?: string }> = ({ brokerSlu
         "Quero ALUGAR um imóvel",
         "Quero COMPRAR um imóvel",
         "Quero imóvel para TEMPORADA",
-        "Sou CORRETOR e quero mais informações"
+        "Sou CORRETOR e quero + informações"
     ];
 
     const scrollToBottom = () => {
