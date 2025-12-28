@@ -21,7 +21,7 @@ import { calculateLeadScore, shouldNotifyBroker, generateLeadSummary, getLeadEmo
 import { CustomOrderModal } from './CustomOrderModal';
 
 // n8n IzA Web API Configuration
-const IZA_API_URL = 'https://barcelona-much-stainless-injured.trycloudflare.com/webhook/iza-web';
+const IZA_API_URL = 'https://strand-liver-val-lake.trycloudflare.com/webhook/iza-web';
 
 // Call n8n IzA Web API
 const callIzAAPI = async (

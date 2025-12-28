@@ -1,0 +1,451 @@
+{
+  "name": "IzA WhatsApp Agent v2 Clientes",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "waha-webhook-clientes",
+        "options": {}
+      },
+      "id": "1152c2b8-11aa-4d34-b77e-3fa037e2b685",
+      "name": "Webhook WAHA",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        160,
+        0
+      ],
+      "webhookId": "waha-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "chatID",
+              "name": "chatID",
+              "value": "={{ $json.body.payload.from }}",
+              "type": "string"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "value": "={{ $json.body.payload.body }}",
+              "type": "string"
+            },
+            {
+              "id": "session",
+              "name": "session",
+              "value": "default",
+              "type": "string"
+            },
+            {
+              "id": "event",
+              "name": "event",
+              "value": "={{ $json.body.event }}",
+              "type": "string"
+            },
+            {
+              "id": "fromMe",
+              "name": "fromMe",
+              "value": "={{ $json.body.payload.fromMe }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3621c14f-44b4-45e3-bcd6-ac7185f8b94e",
+      "name": "Dados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "Você é a IzA, assistente virtual da iziBrokerz.\n\nPERSONALIDADE:\n- Simpática, educada, prestativa e natural (nunca robótica)\n- Valorize e elogie as escolhas do cliente\n\n⚠️ REGRA CRÍTICA:\n- NUNCA cite opções específicas (bairros, cidades, tipos) no texto\n- Os botões são gerados pelo sistema com dados reais\n- Você NÃO sabe quais opções existem - NÃO sugira nenhuma\n- Confie nos botões, eles mostram as opções corretas\n\nREGRAS DE RESPOSTA:\n- Respostas curtas (1-2 frases máximo)\n- NUNCA antecipe ou induza escolhas\n- NUNCA liste opções no texto\n- NUNCA diga \"Aqui vão aparecer...\"\n- NUNCA invente nomes de bairros/cidades/tipos\n- Não repita informações (\"já disse\", \"conforme mencionei\")\n\nFLUXO DE CONVERSA:\n\n1. Cliente escolhe OPERAÇÃO (alugar/comprar/temporada):\n   → \"Ótimo! Escolha o tipo de imóvel:\"\n\n2. Cliente escolhe TIPO:\n   → \"Perfeito! Selecione a cidade:\"\n\n3. Cliente escolhe CIDADE:\n   → \"Excelente! Selecione o bairro:\"\n\n4. Cliente escolhe BAIRRO:\n   → \"Ótima escolha! Veja as opções disponíveis:\"\n\nELOGIOS (use variações):\n- \"Excelente escolha!\"\n- \"Ótima região!\"\n- \"Bairro muito procurado!\"\n- \"Região valorizada!\"\n\nSOBRE LINKS:\n- NÃO gere links durante a conversa\n- Gere link APENAS se:\n  - Cliente pedir explicitamente\n  - Não houver imóveis disponíveis\n- Os cards dos imóveis já são clicáveis\n\nQUANDO NÃO ENCONTRAR IMÓVEIS:\n→ \"Não encontrei imóveis com esses critérios no momento.\"\n→ \"Explore outras opções: https://izi-theta.vercel.app/search\"\n\nSEGURANÇA (mencionar 1x por conversa, de forma sutil):\n→ \"Nossos corretores são verificados no CRECI 🔒\"\n\nLINKS (usar só quando necessário):\n- Plataforma: https://izi-theta.vercel.app\n- Buscar: https://izi-theta.vercel.app/search"
+        }
+      },
+      "id": "9c0758d7-47ad-4d70-954f-6fc5a9339aba",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        512,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "id": "8c27b4a0-564b-4fb1-81ec-29363109e7c6",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        416,
+        208
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "Z6VdOT1vbUMa3wAK",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://waha:3000/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "session",
+              "value": "default"
+            },
+            {
+              "name": "chatId",
+              "value": "={{ $node['Dados'].json.chatID }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0ea273fb-dd4f-43fe-9a75-99a4358f9e8e",
+      "name": "WAHA Enviar Resposta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.chatID }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        576,
+        208
+      ],
+      "id": "b1b6a10a-d3a2-4dab-bf7e-a72eaf2d90db",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "JQAEnAC8i9L82NRE",
+          "name": "Redis account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook WAHA": [
+      {
+        "json": {
+          "headers": {
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "user-agent": "WAHA/2025.12.2",
+            "x-webhook-request-id": "7biz16mjogsj6c",
+            "x-webhook-timestamp": "1766849867795",
+            "content-length": "3221",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "host": "44.202.213.255:5678",
+            "connection": "keep-alive"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "id": "evt_01kdg7aw0kg8cv6hq4gtwtb90y",
+            "timestamp": 1766849867795,
+            "event": "message",
+            "session": "default",
+            "me": {
+              "id": "558494430606@c.us",
+              "pushName": "Clicimob | Empreend. Imobiliários"
+            },
+            "payload": {
+              "id": "false_5584933001815@c.us_ACCA4E4C3575C6DF5B490CA2659B759E",
+              "timestamp": 1766849863,
+              "from": "5584933001815@c.us",
+              "fromMe": false,
+              "source": "app",
+              "to": "558494430606@c.us",
+              "body": "Olá quero alugar um apartamento em Natal",
+              "hasMedia": false,
+              "media": null,
+              "ack": 1,
+              "ackName": "SERVER",
+              "location": null,
+              "vCards": [],
+              "_data": {
+                "id": {
+                  "fromMe": false,
+                  "remote": "5584933001815@c.us",
+                  "id": "ACCA4E4C3575C6DF5B490CA2659B759E",
+                  "_serialized": "false_5584933001815@c.us_ACCA4E4C3575C6DF5B490CA2659B759E"
+                },
+                "viewed": false,
+                "body": "Olá quero alugar um apartamento em Natal",
+                "type": "chat",
+                "t": 1766849863,
+                "clientReceivedTsMillis": 1766849864301,
+                "notifyName": "Beluzzo",
+                "from": "5584933001815@c.us",
+                "to": "558494430606@c.us",
+                "ack": 1,
+                "invis": false,
+                "isNewMsg": true,
+                "star": false,
+                "kicNotified": false,
+                "recvFresh": true,
+                "isFromTemplate": false,
+                "isAdsMedia": false,
+                "pollInvalidated": false,
+                "isSentCagPollCreation": false,
+                "latestEditMsgKey": null,
+                "latestEditSenderTimestampMs": null,
+                "mentionedJidList": [],
+                "groupMentions": [],
+                "isEventCanceled": false,
+                "eventInvalidated": false,
+                "isVcardOverMmsDocument": false,
+                "isForwarded": false,
+                "isQuestion": false,
+                "questionReplyQuotedMessage": null,
+                "questionResponsesCount": 0,
+                "readQuestionResponsesCount": 0,
+                "forwardsCount": 0,
+                "labels": [],
+                "hasReaction": false,
+                "viewMode": "VISIBLE",
+                "messageSecret": {
+                  "0": 54,
+                  "1": 213,
+                  "2": 62,
+                  "3": 203,
+                  "4": 170,
+                  "5": 32,
+                  "6": 138,
+                  "7": 252,
+                  "8": 153,
+                  "9": 0,
+                  "10": 48,
+                  "11": 28,
+                  "12": 242,
+                  "13": 233,
+                  "14": 250,
+                  "15": 2,
+                  "16": 182,
+                  "17": 94,
+                  "18": 241,
+                  "19": 24,
+                  "20": 55,
+                  "21": 75,
+                  "22": 17,
+                  "23": 159,
+                  "24": 24,
+                  "25": 223,
+                  "26": 156,
+                  "27": 21,
+                  "28": 241,
+                  "29": 45,
+                  "30": 205,
+                  "31": 186
+                },
+                "productHeaderImageRejected": false,
+                "lastPlaybackProgress": 0,
+                "isDynamicReplyButtonsMsg": false,
+                "isCarouselCard": false,
+                "parentMsgId": null,
+                "callSilenceReason": null,
+                "isVideoCall": false,
+                "callDuration": null,
+                "callCreator": null,
+                "callParticipants": null,
+                "isCallLink": null,
+                "callLinkToken": null,
+                "isMdHistoryMsg": false,
+                "stickerSentTs": 0,
+                "isAvatar": false,
+                "lastUpdateFromServerTs": 0,
+                "invokedBotWid": null,
+                "bizBotType": null,
+                "botResponseTargetId": null,
+                "botPluginType": null,
+                "botPluginReferenceIndex": null,
+                "botPluginSearchProvider": null,
+                "botPluginSearchUrl": null,
+                "botPluginSearchQuery": null,
+                "botPluginMaybeParent": false,
+                "botReelPluginThumbnailCdnUrl": null,
+                "botMessageDisclaimerText": null,
+                "botMsgBodyType": null,
+                "reportingTokenInfo": {
+                  "reportingToken": {
+                    "0": 5,
+                    "1": 72,
+                    "2": 156,
+                    "3": 108,
+                    "4": 40,
+                    "5": 126,
+                    "6": 124,
+                    "7": 85,
+                    "8": 200,
+                    "9": 2,
+                    "10": 29,
+                    "11": 147,
+                    "12": 77,
+                    "13": 75,
+                    "14": 104,
+                    "15": 133
+                  },
+                  "version": 2,
+                  "reportingTag": {
+                    "0": 1,
+                    "1": 14,
+                    "2": 6,
+                    "3": 141,
+                    "4": 139,
+                    "5": 167,
+                    "6": 124,
+                    "7": 1,
+                    "8": 216,
+                    "9": 61,
+                    "10": 195,
+                    "11": 214,
+                    "12": 0,
+                    "13": 53,
+                    "14": 149,
+                    "15": 136,
+                    "16": 4,
+                    "17": 177,
+                    "18": 54,
+                    "19": 63
+                  }
+                },
+                "requiresDirectConnection": false,
+                "bizContentPlaceholderType": null,
+                "hostedBizEncStateMismatch": false,
+                "senderOrRecipientAccountTypeHosted": false,
+                "placeholderCreatedWhenAccountIsHosted": false,
+                "groupHistoryBundleMessageKey": null,
+                "groupHistoryBundleMetadata": null,
+                "groupHistoryIndividualMessageInfo": null,
+                "nonJidMentions": null,
+                "links": []
+              }
+            },
+            "engine": "WEBJS",
+            "environment": {
+              "version": "2025.12.2",
+              "engine": "WEBJS",
+              "tier": "CORE",
+              "browser": "/usr/bin/chromium"
+            }
+          },
+          "webhookUrl": "http://44.202.213.255:5678/webhook/waha-webhook",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook WAHA": {
+      "main": [
+        [
+          {
+            "node": "Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dados": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "WAHA Enviar Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "544bdae2-e156-45f6-bebd-1d714753a276",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "38e6312e7184f7bda7b7a92f26e482c0c0930077badc2cbaee44c9500950e988"
+  },
+  "id": "LY82slJZPyOUEWg4",
+  "tags": []
+}
