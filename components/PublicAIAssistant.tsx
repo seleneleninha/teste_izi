@@ -4,7 +4,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Send, Sparkles, Loader2, ExternalLink, MapPin } from 'lucide-react';
+import { X, Send, Sparkles, Loader2, ExternalLink, MapPin, Home, Building, Key, Briefcase, Store, LandPlot, DollarSign, Users, HelpCircle, ShoppingCart, Building2, Palmtree } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import {
     PLATFORM_KNOWLEDGE,
@@ -1329,28 +1329,38 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
     };
 
     const renderMessageContent = (content: string) => {
-        const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-        const parts = [];
+        // Handle plain URLs - detect https:// links in text
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+        const parts: (string | JSX.Element)[] = [];
         let lastIndex = 0;
         let match;
 
-        while ((match = linkRegex.exec(content)) !== null) {
+        // Process plain URLs
+        while ((match = urlRegex.exec(content)) !== null) {
             if (match.index > lastIndex) {
                 parts.push(content.substring(lastIndex, match.index));
             }
 
-            const [_, text, url] = match;
+            const url = match[0];
+            // Clean URL - remove trailing punctuation that might be part of sentence
+            const cleanUrl = url.replace(/[.,;:!?)]+$/, '');
+
             parts.push(
-                <button
-                    key={`link-${match.index}`}
-                    onClick={() => handleLinkClick(url)}
-                    className="text-emerald-400 font-bold hover:underline inline-flex items-center gap-1 mx-1"
+                <a
+                    key={`url-${match.index}`}
+                    href={cleanUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-400 hover:underline break-all inline-flex items-center gap-1"
+                    onClick={(e) => e.stopPropagation()}
                 >
-                    {text} <ExternalLink size={10} />
-                </button>
+                    {cleanUrl.length > 50 ? cleanUrl.substring(0, 50) + '...' : cleanUrl}
+                    <ExternalLink size={12} className="shrink-0" />
+                </a>
             );
 
-            lastIndex = linkRegex.lastIndex;
+            lastIndex = match.index + url.length;
         }
 
         if (lastIndex < content.length) {
@@ -1411,7 +1421,7 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                                         : 'bg-white/5 text-white border border-white/10 rounded-bl-none'
                                         }`}
                                 >
-                                    <p className="text-sm whitespace-pre-wrap">{renderMessageContent(message.content)}</p>
+                                    <p className="text-sm whitespace-pre-wrap break-words overflow-hidden">{renderMessageContent(message.content)}</p>
 
                                     {/* Property Links - Card Style like ChatBot */}
                                     {message.links && message.links.length > 0 && (
@@ -1463,29 +1473,58 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                                             <div className="space-y-1.5">
                                                 {message.quickActions
                                                     .sort((a, b) => a.text.localeCompare(b.text))
-                                                    .map((action) => (
-                                                        <button
-                                                            key={action.id}
-                                                            onClick={() => {
-                                                                if (action.id === 'custom-order') {
-                                                                    setCustomOrderModalOpen(true);
-                                                                } else {
-                                                                    handleSend(action.actionText);
-                                                                }
-                                                            }}
-                                                            className="w-full flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/50 rounded-lg transition-all duration-200 text-left group"
-                                                        >
-                                                            {action.icon && <span className="text-base">{action.icon}</span>}
-                                                            <span className="text-white text-sm font-medium group-hover:text-emerald-400 transition-colors truncate flex-1">
-                                                                {action.text}
-                                                            </span>
-                                                            {action.count !== undefined && (
-                                                                <span className="bg-emerald-500/80 text-white px-2 py-0.5 rounded-full text-xs font-bold min-w-[24px] text-center">
-                                                                    {action.count}
+                                                    .map((action) => {
+                                                        // Map emoji/text to Lucide icon
+                                                        const getIconForAction = () => {
+                                                            const iconText = action.icon?.toLowerCase() || action.text.toLowerCase();
+
+                                                            // Property types
+                                                            if (iconText.includes('apartamento') || iconText.includes('🏢')) return Building;
+                                                            if (iconText.includes('casa') || iconText.includes('🏠')) return Home;
+                                                            if (iconText.includes('terreno') || iconText.includes('🏗')) return LandPlot;
+                                                            if (iconText.includes('comercial') || iconText.includes('🏪') || iconText.includes('🏬')) return Store;
+
+                                                            // Operations
+                                                            if (iconText.includes('alugar') || iconText.includes('locação') || iconText.includes('🔑')) return Key;
+                                                            if (iconText.includes('comprar') || iconText.includes('venda') || iconText.includes('🛒')) return ShoppingCart;
+                                                            if (iconText.includes('temporada') || iconText.includes('🏖') || iconText.includes('🌴')) return Palmtree;
+
+                                                            // Locations/neighborhoods
+                                                            if (iconText.includes('natal') || iconText.includes('parnamirim') || iconText.includes('🏙') || iconText.includes('📍')) return MapPin;
+
+                                                            // Other
+                                                            if (iconText.includes('corretor') || iconText.includes('👔')) return Briefcase;
+                                                            if (iconText.includes('preço') || iconText.includes('💰')) return DollarSign;
+
+                                                            return MapPin; // Default icon
+                                                        };
+
+                                                        const IconComponent = getIconForAction();
+
+                                                        return (
+                                                            <button
+                                                                key={action.id}
+                                                                onClick={() => {
+                                                                    if (action.id === 'custom-order') {
+                                                                        setCustomOrderModalOpen(true);
+                                                                    } else {
+                                                                        handleSend(action.actionText);
+                                                                    }
+                                                                }}
+                                                                className="w-full flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/50 rounded-lg transition-all duration-200 text-left group"
+                                                            >
+                                                                <IconComponent size={16} className="text-emerald-400 shrink-0" />
+                                                                <span className="text-white text-sm font-medium group-hover:text-emerald-400 transition-colors truncate flex-1">
+                                                                    {action.text}
                                                                 </span>
-                                                            )}
-                                                        </button>
-                                                    ))}
+                                                                {action.count !== undefined && (
+                                                                    <span className="bg-emerald-500/80 text-white px-2 py-0.5 rounded-full text-xs font-bold min-w-[24px] text-center">
+                                                                        {action.count}
+                                                                    </span>
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
                                             </div>
                                         </div>
                                     )}
@@ -1508,14 +1547,15 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                     {messages.length === 1 && (
                         <div className="p-3 bg-midnight-900 border-t border-white/10 shrink-0 space-y-1.5">
                             {quickQuestions.map((question, index) => {
-                                const icons = ['🏠', '🔑', '🏖️', '👔'];
+                                // Professional Lucide icons instead of emojis
+                                const IconComponent = [Key, ShoppingCart, Palmtree, Briefcase][index] || HelpCircle;
                                 return (
                                     <button
                                         key={index}
                                         onClick={() => handleSend(question)}
                                         className="w-full flex items-center gap-2 px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/50 rounded-lg transition-all duration-200 text-left group"
                                     >
-                                        <span className="text-lg">{icons[index] || '💬'}</span>
+                                        <IconComponent size={18} className="text-emerald-400 shrink-0" />
                                         <span className="text-white text-sm font-medium group-hover:text-emerald-400 transition-colors">
                                             {question}
                                         </span>
