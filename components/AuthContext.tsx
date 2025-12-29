@@ -21,43 +21,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // --- OneSignal Sync Helper ---
-        const syncOneSignal = (userId: string | undefined) => {
-            const OneSignalDeferred = (window as any).OneSignalDeferred || [];
-            (window as any).OneSignalDeferred = OneSignalDeferred;
-
-            OneSignalDeferred.push(async (OneSignal: any) => {
-                try {
-                    if (userId) {
-                        console.log("OneSignal: syncing user...", userId);
-                        await OneSignal.login(userId);
-
-                        // Diagnostics para v16
-                        const permission = OneSignal.Notifications.permission;
-                        const subId = OneSignal.User.PushSubscription.id;
-                        console.log(`OneSignal v16 Diagnostics: Permission=${permission}, SubID=${subId || 'none'}`);
-
-                        console.log("OneSignal: External ID synced successfully");
-                    } else {
-                        console.log("OneSignal: logging out...");
-                        await OneSignal.logout();
-                    }
-                } catch (err) {
-                    console.warn("OneSignal sync error:", err);
-                }
-            });
-        };
-
         // Get initial session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
             if (session?.user) {
                 fetchUserData(session.user.id, session.user.email);
-                syncOneSignal(session.user.id);
             } else {
                 setLoading(false);
-                syncOneSignal(undefined);
             }
         });
 
@@ -67,12 +38,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(session?.user ?? null);
             if (session?.user) {
                 fetchUserData(session.user.id, session.user.email);
-                syncOneSignal(session.user.id);
             } else {
                 setRole(null);
                 setUserProfile(null);
                 setLoading(false);
-                syncOneSignal(undefined);
             }
         });
 

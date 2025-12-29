@@ -81,21 +81,6 @@ export const Settings: React.FC = () => {
     marketing: false
   });
 
-  const handlePushPrompt = () => {
-    const OneSignal = (window as any).OneSignal;
-    if (OneSignal) {
-      if (OneSignal.Notifications) {
-        OneSignal.Notifications.requestPermission();
-      } else if (typeof OneSignal.showNativePrompt === 'function') {
-        OneSignal.showNativePrompt();
-      } else {
-        addToast('Método OneSignal não encontrado', 'error');
-      }
-    } else {
-      addToast('OneSignal não inicializado', 'error');
-    }
-  };
-
   // LGPD States
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [exportingData, setExportingData] = useState(false);

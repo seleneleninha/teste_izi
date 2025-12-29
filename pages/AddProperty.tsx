@@ -4,7 +4,6 @@ import { UploadCloud, Check, Sparkles, Wand2, Loader2, Tag, MapPin, DollarSign, 
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { generatePropertyDescription } from '../lib/geminiHelper';
 import { useHeader } from '../components/HeaderContext';
-import { sendPushNotification } from '../lib/onesignalHelper';
 
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
@@ -466,17 +465,7 @@ export default function AddProperty() {
                     console.log('DEBUG: Inserting internal notifications for admins...');
                     const { error: insError } = await supabase.from('notificacoes').insert(adminNotifications);
                     if (insError) console.error('DEBUG: Internal notification insert error:', insError);
-
-                    // Send Push for each admin
-                    for (const adm of admins) {
-                        console.log('DEBUG: Attempting push for admin:', adm.id);
-                        await sendPushNotification(
-                            'Novo Anúncio Pendente 🏠',
-                            `O imóvel "${formData.title}" foi enviado e aguarda aprovação.`,
-                            adm.id,
-                            '/admin/approvals'
-                        );
-                    }
+                    // TODO: Future - send WhatsApp notification via WAHA
                 } else {
                     console.warn('DEBUG: No admins found to notify!');
                 }

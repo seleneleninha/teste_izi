@@ -7,7 +7,6 @@ import {
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../components/AuthContext';
 import { useToast } from '../../components/ToastContext';
-import { sendPushNotification } from '../../lib/onesignalHelper';
 import { useNavigate } from 'react-router-dom';
 import { PropertyCard } from '../../components/PropertyCard';
 import { generatePropertySlug } from '../../lib/formatters';
@@ -218,13 +217,7 @@ export const AdminApprovals: React.FC = () => {
                 link: `/properties/${property.slug}`
             });
 
-            // Push Notification
-            await sendPushNotification(
-                'Anúncio Aprovado! 🎉',
-                `Seu imóvel "${property.titulo}" já está ativo no portal.`,
-                property.user_id,
-                `/properties/${property.slug}`
-            );
+            // TODO: Future - send WhatsApp notification via WAHA
 
             addToast('Anúncio ativo com sucesso!', 'success');
             fetchProperties();
@@ -291,13 +284,7 @@ export const AdminApprovals: React.FC = () => {
                 link: `/properties?edit=${selectedProperty.id}` // Corrected link for editing
             });
 
-            // Push Notification
-            await sendPushNotification(
-                notifTitle,
-                notifMessage,
-                selectedProperty.user_id,
-                `/properties?edit=${selectedProperty.id}`
-            );
+            // TODO: Future - send WhatsApp notification via WAHA
 
             addToast('Anúncio reprovado e notificação enviada.', 'success');
             setShowRejectModal(false);
