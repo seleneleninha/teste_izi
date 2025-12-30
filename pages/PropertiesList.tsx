@@ -721,9 +721,9 @@ export const PropertiesList: React.FC = () => {
                                         className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-black text-[10px] uppercase tracking-tighter ${view === 'grid' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                                     >
                                         <Grid size={16} />
-                                        <span>Grade</span>
+                                        <span>Cards</span>
                                     </button>
-                                    {(isMyProperties || role !== 'Cliente') && (
+                                    {isDashboardRoute && (
                                         <button
                                             onClick={() => setView('list')}
                                             className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-black text-[10px] uppercase tracking-tighter ${view === 'list' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
@@ -977,9 +977,11 @@ export const PropertiesList: React.FC = () => {
                                                                         </>
                                                                     )}
                                                                     <button
-                                                                        onClick={() => {
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            e.stopPropagation();
                                                                             const slug = generatePropertySlug(prop);
-                                                                            window.open(`/properties/${slug}`, '_blank');
+                                                                            navigate(`/properties/${slug}`);
                                                                         }}
                                                                         className="p-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors border border-slate-600"
                                                                         title="Visualizar"

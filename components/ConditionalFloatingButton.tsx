@@ -4,7 +4,7 @@
 // - Avançado/Profissional: Full IzA Assistant
 
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Bot, X, ChevronLeft, MapPin, Home, DollarSign, ExternalLink, Building, Store, Trees } from 'lucide-react';
+import { MessageCircle, Bot, X, ChevronLeft, MapPin, Home, DollarSign, ExternalLink, Building, Store, Trees, Key, Umbrella } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { PublicAIAssistant } from './PublicAIAssistant';
 import { generatePropertySlug } from '../lib/propertyHelpers';
@@ -30,6 +30,7 @@ interface Property {
     valor_venda: number | null;
     valor_locacao: number | null;
     valor_diaria: number | null;
+    valor_mensal: number | null;
     fotos: string;
     quartos: number;
     area_priv: number;
@@ -74,14 +75,14 @@ const ChatBotModal: React.FC<{
                 // Fetch own properties
                 const { data: ownProps } = await supabase
                     .from('anuncios')
-                    .select('id, titulo, operacao(tipo), tipo_imovel(tipo), bairro, cidade, valor_venda, valor_locacao, valor_diaria, fotos, quartos, area_priv, vagas, cod_imovel')
+                    .select('id, titulo, operacao(tipo), tipo_imovel(tipo), bairro, cidade, valor_venda, valor_locacao, valor_diaria, valor_mensal, fotos, quartos, area_priv, vagas, cod_imovel')
                     .eq('user_id', brokerId)
                     .eq('status', 'ativo');
 
                 // Fetch partnership properties
                 const { data: partnerships } = await supabase
                     .from('parcerias')
-                    .select('anuncios(id, titulo, operacao(tipo), tipo_imovel(tipo), bairro, cidade, valor_venda, valor_locacao, valor_diaria, fotos, quartos, area_priv, vagas, cod_imovel)')
+                    .select('anuncios(id, titulo, operacao(tipo), tipo_imovel(tipo), bairro, cidade, valor_venda, valor_locacao, valor_diaria, valor_mensal, fotos, quartos, area_priv, vagas, cod_imovel)')
                     .eq('user_id', brokerId)
                     .eq('status', 'aceita');
 
@@ -179,32 +180,34 @@ const ChatBotModal: React.FC<{
     useEffect(() => {
         if (selectedOperacao && selectedTipo && selectedBairro) {
             const filtered = allProperties.filter(p => {
-                const op = typeof p.operacao === 'string' ? p.operacao.toLowerCase() : '';
+                const op = typeof p.operacao === 'string' ? p.operacao : '';
                 const tipo = typeof p.tipo_imovel === 'string' ? p.tipo_imovel : '';
 
-                // Match operacao based on grouped logic
-                let opMatch = false;
-                if (selectedOperacao === 'comprar') {
-                    opMatch = op === 'venda' || op === 'venda/locacao';
-                } else if (selectedOperacao === 'alugar') {
-                    opMatch = op === 'locacao' || op === 'venda/locacao';
-                } else if (selectedOperacao === 'temporada') {
-                    opMatch = op === 'temporada';
-                }
+                // Match operacao using normalized comparison (handles accents)
+                const opMatch = matchesGroupedOperacao(op, selectedOperacao);
 
                 return opMatch &&
-                    tipo.toLowerCase() === selectedTipo.toLowerCase() &&
-                    p.bairro.toLowerCase() === selectedBairro.toLowerCase();
+                    normalizeStr(tipo) === normalizeStr(selectedTipo) &&
+                    normalizeStr(p.bairro) === normalizeStr(selectedBairro);
             });
             setFilteredProperties(filtered);
         }
     }, [selectedOperacao, selectedTipo, selectedBairro, allProperties]);
 
-    // Grouped operacao options (not raw database values)
+    // Grouped operacao options (not raw database values) - using Lucide icons
+    const getOperacaoIcon = (id: string) => {
+        switch (id) {
+            case 'comprar': return <Home className="text-blue-400" size={24} />;
+            case 'alugar': return <Key className="text-blue-400" size={24} />;
+            case 'temporada': return <Umbrella className="text-blue-400" size={24} />;
+            default: return <Home className="text-blue-400" size={24} />;
+        }
+    };
+
     const operacaoOptions = [
-        { id: 'comprar', label: 'Quero COMPRAR um imóvel', icon: '🏠' },
-        { id: 'alugar', label: 'Quero ALUGAR um imóvel', icon: '🔑' },
-        { id: 'temporada', label: 'Quero TEMPORADA um imóvel', icon: '🏖️' },
+        { id: 'comprar', label: 'Quero COMPRAR um imóvel' },
+        { id: 'alugar', label: 'Quero ALUGAR um imóvel' },
+        { id: 'temporada', label: 'Quero TEMPORADA um imóvel' },
     ];
 
     // Check which grouped operacoes have properties
@@ -281,10 +284,60 @@ const ChatBotModal: React.FC<{
     };
 
     const getPropertyValue = (property: Property) => {
-        if (selectedOperacao === 'venda') return property.valor_venda;
-        if (selectedOperacao === 'locacao') return property.valor_locacao;
-        if (selectedOperacao === 'temporada') return property.valor_diaria;
+        if (selectedOperacao === 'comprar') return property.valor_venda;
+        if (selectedOperacao === 'alugar') return property.valor_locacao;
+        if (selectedOperacao === 'temporada') return property.valor_diaria || property.valor_mensal;
         return property.valor_venda || property.valor_locacao;
+    };
+
+    // Render prices based on operation type
+    const renderPrices = (property: Property) => {
+        const op = typeof property.operacao === 'string'
+            ? property.operacao.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            : '';
+        const isVendaLocacao = op.includes('venda') && op.includes('locacao');
+        const isTemporada = op.includes('temporada');
+
+        if (isVendaLocacao) {
+            return (
+                <div className="flex flex-col gap-0.5 mt-1">
+                    {property.valor_venda && property.valor_venda > 0 && (
+                        <p className="text-emerald-400 font-bold text-xs">
+                            Venda: {formatCurrency(property.valor_venda)}
+                        </p>
+                    )}
+                    {property.valor_locacao && property.valor_locacao > 0 && (
+                        <p className="text-blue-400 font-bold text-xs">
+                            Locação: {formatCurrency(property.valor_locacao)}/mês
+                        </p>
+                    )}
+                </div>
+            );
+        } else if (isTemporada) {
+            return (
+                <div className="flex flex-col gap-0.5 mt-1">
+                    {property.valor_diaria && property.valor_diaria > 0 && (
+                        <p className="text-orange-400 font-bold text-xs">
+                            Diária: {formatCurrency(property.valor_diaria)}
+                        </p>
+                    )}
+                    {property.valor_mensal && property.valor_mensal > 0 && (
+                        <p className="text-orange-400 font-bold text-xs">
+                            Mensal: {formatCurrency(property.valor_mensal)}
+                        </p>
+                    )}
+                </div>
+            );
+        } else {
+            // Single price (venda or locacao only)
+            const value = getPropertyValue(property);
+            const suffix = selectedOperacao === 'alugar' ? '/mês' : '';
+            return (
+                <p className="text-emerald-400 font-bold text-sm mt-1">
+                    {value && value > 0 ? formatCurrency(value) + suffix : 'Sob consulta'}
+                </p>
+            );
+        }
     };
 
     const getPropertyLink = (property: Property) => {
@@ -370,7 +423,7 @@ const ChatBotModal: React.FC<{
                                             }}
                                             className="w-full flex items-center gap-3 p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 rounded-xl transition-all duration-200 text-left group"
                                         >
-                                            <span className="text-2xl">{option.icon}</span>
+                                            {getOperacaoIcon(option.id)}
                                             <span className="text-white font-medium group-hover:text-blue-400 transition-colors">
                                                 {option.label}
                                             </span>
@@ -380,7 +433,7 @@ const ChatBotModal: React.FC<{
                                         onClick={handleWhatsApp}
                                         className="w-full flex items-center gap-3 p-4 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 hover:border-green-500/50 rounded-xl transition-all duration-200 text-left group"
                                     >
-                                        <span className="text-2xl">💬</span>
+                                        <MessageCircle className="text-green-400" size={24} />
                                         <span className="text-white font-medium group-hover:text-green-400 transition-colors animate-pulse">
                                             Falar com o(a) Corretor(a)
                                         </span>
@@ -464,9 +517,7 @@ const ChatBotModal: React.FC<{
                                                             <MapPin size={12} />
                                                             {property.bairro}
                                                         </p>
-                                                        <p className="text-emerald-400 font-bold text-sm mt-1">
-                                                            {formatCurrency(getPropertyValue(property) || 0)}
-                                                        </p>
+                                                        {renderPrices(property)}
                                                     </div>
                                                     <ExternalLink className="text-gray-500 group-hover:text-blue-400 shrink-0 self-center" size={16} />
                                                 </div>

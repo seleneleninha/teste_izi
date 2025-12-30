@@ -31,7 +31,6 @@ export const Login: React.FC = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [nome, setNome] = useState('');
     const [sobrenome, setSobrenome] = useState('');
-    const [apelido, setApelido] = useState('');
     const [cpf, setCpf] = useState('');
     const [whatsapp, setWhatsapp] = useState('');
     const [creci, setCreci] = useState('');
@@ -131,7 +130,6 @@ export const Login: React.FC = () => {
                         data: {
                             nome,
                             sobrenome,
-                            apelido: apelido || null,
                             cpf: userType === 'corretor' ? cpf : null,
                             whatsapp,
                             creci: userType === 'corretor' ? creci : null,

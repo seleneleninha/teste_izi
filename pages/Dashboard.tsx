@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
 import { OnboardingTour } from '../components/OnboardingTour';
+import { SpotlightTour, getOnboardingSteps } from '../components/SpotlightTour';
 import { TourPrompt } from '../components/TourPrompt';
 import { ONBOARDING_TOUR_STEPS } from '../config/tourSteps';
 import { ClientDashboardView } from '../components/ClientDashboardView';
@@ -56,12 +57,46 @@ export const Dashboard: React.FC = () => {
 
     const [recentProperties, setRecentProperties] = useState<any[]>([]);
     const [notifications, setNotifications] = useState<any[]>([]);
-
     // Onboarding Tour State
     const [showTour, setShowTour] = useState(false);
     const [showTourPrompt, setShowTourPrompt] = useState(false);
     const [tourDismissCount, setTourDismissCount] = useState(0);
     const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+    const [userPlanoId, setUserPlanoId] = useState<string | null>(null);
+
+    // Premium plan IDs for tour step 9
+    const PREMIUM_PLAN_IDS = [
+        '55de4ee5-c2f1-4f9d-b466-7e08138854f0', // Avançado
+        'edf90163-d554-4f8e-bfe9-7d9e98fc4450'  // Profissional
+    ];
+    const hasPremiumPlan = userPlanoId && PREMIUM_PLAN_IDS.includes(userPlanoId);
+
+    // Listen for tour trigger from header button
+    useEffect(() => {
+        const handleStartTour = () => {
+            setShowTour(true);
+            setShowTourPrompt(false);
+        };
+
+        window.addEventListener('startOnboardingTour', handleStartTour);
+        return () => window.removeEventListener('startOnboardingTour', handleStartTour);
+    }, []);
+
+    // Control header tour indicator visibility
+    useEffect(() => {
+        const indicator = document.querySelector('.tour-incomplete-indicator');
+        const dot = document.querySelector('.tour-incomplete-dot');
+
+        if (indicator && dot) {
+            if (!onboardingCompleted) {
+                indicator.classList.remove('hidden');
+                dot.classList.remove('hidden');
+            } else {
+                indicator.classList.add('hidden');
+                dot.classList.add('hidden');
+            }
+        }
+    }, [onboardingCompleted]);
 
     useEffect(() => {
         if (user) {
@@ -290,13 +325,14 @@ export const Dashboard: React.FC = () => {
             // Fetch user profile for name, slug, and onboarding status
             const { data: profile } = await supabase
                 .from('perfis')
-                .select('nome, apelido, slug, onboarding_completed, onboarding_dismissed_count, last_onboarding_prompt')
+                .select('nome, slug, plano_id, onboarding_completed, onboarding_dismissed_count, last_onboarding_prompt')
                 .eq('id', user.id)
                 .single();
 
             if (profile) {
-                setUserName(profile.apelido || profile.nome || user?.user_metadata?.name || 'Corretor');
+                setUserName(profile.nome || user?.user_metadata?.name || 'Corretor');
                 setUserSlug(profile.slug || '');
+                setUserPlanoId(profile.plano_id || null);
                 setOnboardingCompleted(profile.onboarding_completed || false);
                 setTourDismissCount(profile.onboarding_dismissed_count || 0);
 
@@ -592,7 +628,7 @@ export const Dashboard: React.FC = () => {
                                             {recentUsers.map((u: any, i) => (
                                                 <tr key={u.id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
                                                     <td className="p-4">
-                                                        <div className="font-bold text-white text-sm">{u.nome || u.apelido || 'Usuário'}</div>
+                                                        <div className="font-bold text-white text-sm">{u.nome || 'Usuário'}</div>
                                                         <div className="text-xs text-slate-400">{u.email || 'Sem email'}</div>
                                                     </td>
                                                     <td className="p-4 text-sm text-slate-300">
@@ -639,7 +675,7 @@ export const Dashboard: React.FC = () => {
                                                                 #{i + 1}
                                                             </div>
                                                             <div>
-                                                                <div className="font-bold text-white text-sm">{b.nome || b.apelido}</div>
+                                                                <div className="font-bold text-white text-sm">{b.nome}</div>
                                                                 <div className="text-xs text-slate-400">{b.creci || 'CRECI n/d'}</div>
                                                             </div>
                                                         </div>
@@ -1077,12 +1113,14 @@ export const Dashboard: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Onboarding Tour */}
-                        <OnboardingTour
-                            steps={ONBOARDING_TOUR_STEPS}
+                        {/* Onboarding Tour - Spotlight Style */}
+                        <SpotlightTour
+                            steps={getOnboardingSteps(hasPremiumPlan)}
                             isOpen={showTour}
                             onComplete={handleCompleteTour}
                             onSkip={handleSkipTour}
+                            brokerSlug={userSlug}
+                            hasPremiumPlan={hasPremiumPlan}
                         />
 
                         {/* Tour Prompt */}

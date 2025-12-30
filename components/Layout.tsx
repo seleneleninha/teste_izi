@@ -139,7 +139,7 @@ export const DashboardLayout: React.FC = () => {
             </div>
 
             {/* Main content area with margin to account for fixed sidebar */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden md:ml-64">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden md:ml-56">
                 {/* Topbar - Increased Z-Index */}
                 <header className="bg-slate-800 border-b border-slate-700 h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm z-[50]">
                     <div className="flex items-center w-full">
@@ -150,7 +150,26 @@ export const DashboardLayout: React.FC = () => {
 
                     <div className="flex items-center space-x-4 shrink-0 bg-slate-800 pl-4">
 
-
+                        {/* Tour Button */}
+                        <button
+                            onClick={() => {
+                                // Navigate to dashboard and trigger tour
+                                if (typeof window !== 'undefined') {
+                                    // Dispatch custom event to trigger tour
+                                    window.dispatchEvent(new CustomEvent('startOnboardingTour'));
+                                }
+                            }}
+                            className="p-2 rounded-full bg-slate-800 text-gray-300 hover:bg-slate-700 shadow-sm transition-colors relative group"
+                            title="Tour Guiado"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:text-emerald-400 transition-colors">
+                                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                                <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                            </svg>
+                            {/* Pulsing dot - Will be controlled by parent */}
+                            <span className="tour-incomplete-indicator absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping hidden"></span>
+                            <span className="tour-incomplete-dot absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full hidden"></span>
+                        </button>
 
                         <div className="relative" ref={notifRef}>
                             <button
@@ -272,10 +291,7 @@ export const PublicLayout: React.FC = () => {
                     ) : (
                         <>
                             <div className="hidden dark:block cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
-                                <img src="/logos/izibrokerz-escuro.png" alt="iziBrokerz" className="h-10 w-auto" />
-                            </div>
-                            <div className="block dark:hidden cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
-                                <img src="/logos/izibrokerz-claro.png" alt="iziBrokerz" className="h-10 w-auto" />
+                                <img src="/logos/izibrokerz-escuro2.png" alt="iziBrokerz" className="h-10 w-auto" />
                             </div>
                         </>
                     )}

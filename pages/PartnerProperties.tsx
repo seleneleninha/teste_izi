@@ -614,7 +614,7 @@ export const PartnerProperties: React.FC = () => {
                                                     {/* Imóvel / Código */}
                                                     <td className="p-4">
                                                         <div>
-                                                            <div onClick={() => navigateToProperty(navigate, property, true)} className="font-bold text-white text-sm hover:text-emerald-400 cursor-pointer transition-colors max-w-[175px] truncate" title={property.titulo}>
+                                                            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigateToProperty(navigate, property, true); }} className="font-bold text-white text-sm hover:text-emerald-400 cursor-pointer transition-colors max-w-[175px] truncate" title={property.titulo}>
                                                                 {property.titulo || 'Sem título'}
                                                             </div>
                                                             <div className="mt-1">
@@ -698,7 +698,7 @@ export const PartnerProperties: React.FC = () => {
                                                     <td className="p-4 text-right">
                                                         <div className="flex items-center justify-end gap-2">
                                                             <button
-                                                                onClick={() => navigateToProperty(navigate, property, true)}
+                                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigateToProperty(navigate, property, true); }}
                                                                 className="p-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors border border-slate-600"
                                                                 title="Ver Anúncio"
                                                             >

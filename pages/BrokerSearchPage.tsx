@@ -378,7 +378,7 @@ export const BrokerSearchPage: React.FC = () => {
                     </div>
                 ) : (
                     <div className="h-[400px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-0">
-                        <PropertyMap properties={properties} />
+                        <PropertyMap properties={properties} brokerSlug={broker.slug} />
                     </div>
                 )}
 

@@ -209,7 +209,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
         <>
             <motion.div
                 layout
-                className={`relative bg-midnight-950 rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 group cursor-pointer flex flex-col ${compact ? 'h-64' : 'h-[450px]'}`}
+                className={`relative bg-midnight-950 rounded-3xl overflow-hidden shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-black/30 transition-all duration-300 group cursor-pointer flex flex-col ${compact ? 'h-64' : 'h-[450px]'}`}
                 onClick={handleCardClick}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -266,7 +266,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
 
                 {/* Badges (Over Image) */}
                 <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 items-start pointer-events-none">
-                    <div className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-md backdrop-blur-md ${operationTagClass()}`}>
+                    <div className="px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-lg backdrop-blur-md transition-all duration-200 ${operationTagClass()}">
                         {operationLabel}
                     </div>
                     {/* Status Badge - Mostra status real quando ativo */}
@@ -364,14 +364,14 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                     <div className="hidden md:block opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <button
                             onClick={prevImage}
-                            className="absolute left-2 top-1/3 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/60 backdrop-blur-sm text-white p-2 rounded-full transition-colors hover:scale-110 active:scale-95"
+                            className="absolute left-2 top-1/3 -translate-y-1/2 z-20 bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
                             aria-label="Imagem anterior"
                         >
                             <ChevronLeft size={24} />
                         </button>
                         <button
                             onClick={nextImage}
-                            className="absolute right-2 top-1/3 -translate-y-1/2 z-20 bg-black/30 hover:bg-black/60 backdrop-blur-sm text-white p-2 rounded-full transition-colors hover:scale-110 active:scale-95"
+                            className="absolute right-2 top-1/3 -translate-y-1/2 z-20 bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white p-2 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
                             aria-label="Próxima imagem"
                         >
                             <ChevronRight size={24} />
@@ -505,7 +505,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                             </div>
                             {!actions && (
                                 <button
-                                    className="self-end bg-emerald-500 hover:bg-emerald-600 text-white p-2 rounded-full shadow-lg shadow-emerald-500/30 transition-all hover:scale-110 active:scale-100 group-hover:bg-emerald-400"
+                                    className="self-end bg-emerald-500 hover:bg-emerald-600 text-white p-2 rounded-full shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:scale-110 active:scale-100 group-hover:bg-emerald-400"
                                     aria-label={`Ver detalhes de ${property.titulo}`}
                                 >
                                     <Eye size={20} />

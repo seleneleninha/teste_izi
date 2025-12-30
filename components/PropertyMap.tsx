@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatCurrency, formatArea } from '../lib/formatters';
+import { navigateToProperty } from '../lib/propertyHelpers';
 
 // Fix Leaflet default marker icon issue
 const iconUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
@@ -24,6 +25,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 interface PropertyMapProps {
   properties: Property[];
+  brokerSlug?: string;
 }
 
 const defaultCenter: [number, number] = [-5.79448, -35.211]; // Natal, RN
@@ -92,7 +94,7 @@ const ImageCarousel: React.FC<{ images: string[]; title: string }> = ({ images, 
 };
 
 // Component to handle markers rendering and map interaction
-const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) => {
+const PropertyMarkers: React.FC<{ properties: Property[]; brokerSlug?: string }> = ({ properties, brokerSlug }) => {
   const map = useMap();
   const navigate = useNavigate();
 
@@ -151,8 +153,8 @@ const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) =
               },
             }}
           >
-            <Popup maxWidth={280} minWidth={250} maxHeight={420} minHeight={350}>
-              <div className="min-w-[240px] p-1 min-h-[280px]">
+            <Popup minWidth={200} maxWidth={250} minHeight={250} maxHeight={350}>
+              <div>
                 <ImageCarousel images={images} title={p.titulo} type={p.tipo_imovel} operation={p.operacao} />
 
                 <h3 className="font-bold text-gray-900 text-lg truncate">{p.titulo}</h3>
@@ -253,10 +255,10 @@ const PropertyMarkers: React.FC<{ properties: Property[] }> = ({ properties }) =
                 </div>
 
                 {/* Ver Detalhes Button */}
-                <div className="flex justify-end mt-3">
+                <div className="flex justify-start mt-3">
                   <button
-                    onClick={() => navigate(`/imovel/${generateSlug()}`)}
-                    className="text-sm bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 font-bold shadow-md shadow-black"
+                    onClick={() => navigateToProperty(navigate, p, true)}
+                    className="text-sm bg-emerald-600 text-white px-4 py-2 rounded-full hover:bg-emerald-700 font-bold shadow-md shadow-black"
                   >
                     VER DETALHES
                   </button>
@@ -284,7 +286,7 @@ const MapInvalidator = () => {
   return null;
 };
 
-export const PropertyMap: React.FC<PropertyMapProps> = ({ properties }) => {
+export const PropertyMap: React.FC<PropertyMapProps> = ({ properties, brokerSlug }) => {
   // Debug: Log properties to check coordinates
   const propertiesWithCoords = properties.filter(p => {
     const prop = p as any;
@@ -304,7 +306,7 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({ properties }) => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <PropertyMarkers properties={properties} />
+        <PropertyMarkers properties={properties} brokerSlug={brokerSlug} />
       </MapContainer>
 
       <div className="absolute bottom-4 left-4 bg-[#ab0505] border-white border-2 backdrop-blur px-4 py-2 rounded-3xl text-xs font-bold text-white shadow-[4px_4px_5px_rgba(0,0,0,0.9)] z-[1000]">

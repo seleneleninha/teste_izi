@@ -468,7 +468,7 @@ export const AdminApprovals: React.FC = () => {
                                 className={`p-2 rounded-xl transition-all ${viewMode === 'grid'
                                     ? 'bg-slate-700 text-primary-400 shadow-sm'
                                     : 'text-gray-500 hover:text-gray-300'}`}
-                                title="Grade"
+                                title="Cards"
                             >
                                 <LayoutGrid size={18} />
                             </button>

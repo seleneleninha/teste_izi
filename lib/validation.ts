@@ -59,7 +59,16 @@ export const translateAuthError = (error: any): string => {
     if (message.includes('Email not confirmed')) return 'Este email ainda não foi confirmado. Verifique sua caixa de entrada.';
     if (message.includes('Too many requests')) return 'Muitas tentativas em pouco tempo. Tente novamente mais tarde.';
     if (message.includes('Email address not found')) return 'Este endereço de email não foi encontrado.';
-    if (message.includes('Database error saving new user')) return 'Erro ao salvar perfil do usuário. Tente novamente.';
+
+    // Database errors with specific field information
+    if (message.includes('Database error saving new user')) {
+        // Check for specific field errors from Supabase function
+        if (message.includes('CPF já cadastrado')) return 'CPF já cadastrado por outro usuário.';
+        if (message.includes('Email já cadastrado')) return 'Email já cadastrado por outro usuário.';
+        if (message.includes('WhatsApp já cadastrado')) return 'WhatsApp já cadastrado por outro usuário.';
+        if (message.includes('Slug já cadastrado')) return 'Este nome de página já está em uso.';
+        return 'Erro ao salvar perfil. Verifique seus dados e tente novamente.';
+    }
 
     return message || 'Erro ao realizar autenticação. Tente novamente.';
 };

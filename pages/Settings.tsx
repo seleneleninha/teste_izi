@@ -28,7 +28,6 @@ export const Settings: React.FC = () => {
   const [profile, setProfile] = useState({
     name: '',
     sobrenome: '',
-    apelido: '',
     email: '',
     phone: '',
     cpf: '',
@@ -304,7 +303,7 @@ export const Settings: React.FC = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('perfis')
-        .select('*')
+        .select('nome, sobrenome, email, whatsapp, cpf, creci, uf_creci, avatar, role, slug, cep, logradouro, numero, complemento, bairro, cidade, uf, show_address, raio_atuacao, watermark_light, watermark_dark, marca_dagua, instagram, facebook, threads, youtube, linkedin, x, mensagem_boasvindas, boasvindas2, sobre_mim, imoveis_vendidos, clientes_atendidos, anos_experiencia, plano_id')
         .eq('id', user?.id)
         .single();
 
@@ -312,7 +311,6 @@ export const Settings: React.FC = () => {
         setProfile({
           name: data.nome || user?.user_metadata?.name || '',
           sobrenome: data.sobrenome || '',
-          apelido: data.apelido || '',
           email: data.email || user?.email || '',
           phone: data.whatsapp || '',
           cpf: data.cpf || '',
@@ -420,10 +418,9 @@ export const Settings: React.FC = () => {
       setSaving(true);
 
       const updates = {
-        nome: profile.name,
-        sobrenome: profile.sobrenome,
-        apelido: profile.apelido || null, // Use null for empty string to avoid unique constraint on ""
-        avatar: profile.avatar || null, // Use null instead of empty string
+        nome: profile.name || null,
+        sobrenome: profile.sobrenome || null,
+        email: profile.email || null,
         whatsapp: profile.phone,
         cep: profile.cep,
         logradouro: profile.logradouro,
@@ -467,8 +464,8 @@ export const Settings: React.FC = () => {
       fetchProfile(); // Refresh to get updated slug
     } catch (error: any) {
       console.error('Erro ao atualizar perfil:', error);
-      if (error.code === '23505' && error.message?.includes('perfis_apelido_key')) {
-        addToast('Este apelido já está em uso. Por favor, escolha outro.', 'error');
+      if (error.code === '23505' && error.message?.includes('perfis_slug_key')) {
+        addToast('Este slug já está em uso. Por favor, escolha outro.', 'error');
       } else {
         addToast('Erro ao atualizar perfil.', 'error');
       }

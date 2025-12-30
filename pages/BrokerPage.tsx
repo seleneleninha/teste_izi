@@ -388,7 +388,7 @@ export const BrokerPage: React.FC = () => {
                     {/* Map View */}
                     {showMap && PropertyMap && (
                         <div className="mb-12 h-[400px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-20">
-                            <PropertyMap properties={allProperties} />
+                            <PropertyMap properties={allProperties} brokerSlug={slug} />
                         </div>
                     )}
 

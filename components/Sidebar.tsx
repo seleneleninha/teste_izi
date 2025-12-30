@@ -101,17 +101,17 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
 
   return (
     <>
-      <div className={`h-screen w-64 bg-slate-900 text-white flex flex-col border-r border-slate-700 fixed left-0 top-0 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
-        <div className="h-20 px-6 flex items-center justify-between border-b border-slate-700">
+      <div className={`h-screen w-56 bg-slate-900 text-white flex flex-col fixed left-0 top-0 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+        <div className="h-16 px-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {profile.avatar ? (
               <img
                 src={profile.avatar}
                 alt="User"
-                className="w-10 h-10 rounded-full border-2 border-primary-500 object-cover"
+                className="w-9 h-9 rounded-full border-2 border-primary-500 object-cover"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full border-2 border-primary-500 bg-slate-800 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-full border-2 border-primary-500 bg-slate-800 flex items-center justify-center">
                 <span className="text-xs font-bold text-primary-500">
                   {profile.name.charAt(0).toUpperCase()}
                 </span>
@@ -119,7 +119,7 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
             )}
             <div className="overflow-hidden">
               <p className="font-semibold text-sm truncate">{profile.name}</p>
-              <p className="text-xs text-slate-400 truncate w-32">{profile.email}</p>
+              <p className="text-[11px] text-slate-400 truncate w-28">{profile.email}</p>
             </div>
           </div>
           <button onClick={onClose} className="md:hidden text-slate-400 hover:text-white">
@@ -127,13 +127,13 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
           </button>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar">
+        <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto no-scrollbar">
           {navItems.map((item) => (
             <button
               key={item.label}
               onClick={() => handleNavigation(item.path)}
               data-tour={item.path === '/partner-properties' ? 'partner-properties' : undefined}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-full transition-colors ${isActive(item.path)
+              className={`w-full flex items-center space-x-3 px-3 py-2.5 text-sm rounded-full transition-all duration-200 ${isActive(item.path)
                 ? 'bg-slate-800 text-primary-400 border-l-4 border-primary-500'
                 : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                 }`}
@@ -144,11 +144,10 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-2 border-t border-slate-800">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-full text-red-400 hover:bg-slate-800 transition-colors"
-          >
+            className="w-full flex items-center space-x-3 px-3 py-2.5 text-sm rounded-full text-red-400 hover:bg-slate-800 transition-all duration-200">
             <LogOut size={20} />
             <span className="font-medium">SAIR</span>
           </button>

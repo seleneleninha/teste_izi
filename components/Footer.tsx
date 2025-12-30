@@ -42,7 +42,7 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
     // Logo: Use broker's watermark_dark if on broker page, otherwise platform logo
     const logoSrc = isBrokerPage && partner?.logo
         ? partner.logo
-        : '/logos/izibrokerz-escuro.png';
+        : '/logos/izibrokerz-escuro2.png';
 
     return (
         <>

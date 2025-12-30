@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, Check, Sparkles, Wand2, Loader2, Tag, MapPin, DollarSign, Home, Info, Search, AlertCircle, AlertTriangle, History, ShieldCheck, Save, Calendar, Trash2, Play, Maximize2, Star, Percent } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -105,6 +105,7 @@ export default function AddProperty() {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<PropertyFormData>(INITIAL_DATA);
     const [loading, setLoading] = useState(false);
+    const isSubmittingRef = useRef(false); // 🔒 Sync Lock for double-click prevention
     const [editingId, setEditingId] = useState<string | null>(null);
     const [rejectionData, setRejectionData] = useState<{ reason: string; history: any[] } | null>(null);
     const [propertyStatus, setPropertyStatus] = useState<string>('');
@@ -299,92 +300,97 @@ export default function AddProperty() {
     };
 
     const handleSubmit = async () => {
+        // 🔒 PREVENT DOUBLE SUBMISSION: Strict Ref Lock (Sync)
+        if (isSubmittingRef.current) return;
+
         if (!user) {
             addToast('Você precisa estar logado para cadastrar um imóvel.', 'error');
             return;
         }
 
-        // ✅ Rate limiting: comentado temporariamente (função não importada)
-        // const rateLimitCheck = await checkRateLimit(propertyFormLimiter, user.id, 'submissão de anúncio');
-        // if (!rateLimitCheck.allowed) {
-        //     addToast(rateLimitCheck.error!, 'error');
-        //     return;
-        // }
+        isSubmittingRef.current = true; // 🔒 Lock immediately (sync)
+        setLoading(true); // UI Update
 
-        // --- Trial Enforcement Logic ---
         try {
-            const { data: profile } = await supabase
-                .from('perfis')
-                .select('is_trial, trial_fim')
-                .eq('id', user.id)
-                .single();
+            // ✅ Rate limiting: comentado temporariamente (função não importada)
+            // const rateLimitCheck = await checkRateLimit(propertyFormLimiter, user.id, 'submissão de anúncio');
+            // if (!rateLimitCheck.allowed) {
+            //     addToast(rateLimitCheck.error!, 'error');
+            //     return;
+            // }
 
-            if (profile?.is_trial) {
-                // Check Expiration
-                const trialEnd = new Date(profile.trial_fim);
-                if (new Date() > trialEnd) {
-                    addToast('Seu período de teste expirou. Faça upgrade para continuar anunciando.', 'error');
-                    // navigate('/partner'); // Optional: redirect to plans
-                    return;
-                }
+            // --- Trial Enforcement Logic ---
+            try {
+                const { data: profile } = await supabase
+                    .from('perfis')
+                    .select('is_trial, trial_fim')
+                    .eq('id', user.id)
+                    .single();
 
-                // Check Quantity Limit
-                // Only check if creating new property, not editing
-                if (!editingId) {
-                    // Fetch dynamic limit
-                    const { data: configData } = await supabase
-                        .from('admin_config')
-                        .select('value')
-                        .eq('key', 'trial_max_properties')
-                        .single();
-
-                    const trialLimit = configData ? parseInt(configData.value) : 5;
-
-                    const { count, error: countError } = await supabase
-                        .from('anuncios')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('user_id', user.id);
-
-                    if (!countError && count !== null && count >= trialLimit) {
-                        addToast(`Limite de ${trialLimit} imóveis atingido no período de testes. Faça upgrade para anunciar mais.`, 'error');
+                if (profile?.is_trial) {
+                    // Check Expiration
+                    const trialEnd = new Date(profile.trial_fim);
+                    if (new Date() > trialEnd) {
+                        addToast('Seu período de teste expirou. Faça upgrade para continuar anunciando.', 'error');
+                        // navigate('/partner'); // Optional: redirect to plans
                         return;
                     }
+
+                    // Check Quantity Limit
+                    // Only check if creating new property, not editing
+                    if (!editingId) {
+                        // Fetch dynamic limit
+                        const { data: configData } = await supabase
+                            .from('admin_config')
+                            .select('value')
+                            .eq('key', 'trial_max_properties')
+                            .single();
+
+                        const trialLimit = configData ? parseInt(configData.value) : 5;
+
+                        const { count, error: countError } = await supabase
+                            .from('anuncios')
+                            .select('*', { count: 'exact', head: true })
+                            .eq('user_id', user.id);
+
+                        if (!countError && count !== null && count >= trialLimit) {
+                            addToast(`Limite de ${trialLimit} imóveis atingido no período de testes. Faça upgrade para anunciar mais.`, 'error');
+                            return;
+                        }
+                    }
                 }
+            } catch (err) {
+                console.error('Error checking trial limits:', err);
+                // Fallback: allow to proceed if check fails, or block? Better block safely or warn.
+                // For now, simple console error and proceed, or maybe return?
+                // safest is to let it pass if DB check fails to avoid blocking users due to network glitches,
+                // but for enforcement strictness, we might want to return.
+                // Let's just log.
             }
-        } catch (err) {
-            console.error('Error checking trial limits:', err);
-            // Fallback: allow to proceed if check fails, or block? Better block safely or warn.
-            // For now, simple console error and proceed, or maybe return?
-            // safest is to let it pass if DB check fails to avoid blocking users due to network glitches,
-            // but for enforcement strictness, we might want to return.
-            // Let's just log.
-        }
-        // -------------------------------
+            // -------------------------------
 
-        // Validação de Campos Obrigatórios (Constraints do Banco)
-        if (!formData.operacaoId) {
-            addToast('Selecione a operação (Venda/Locação).', 'error');
-            return;
-        }
-        if (!formData.tipoImovelId) {
-            addToast('Selecione o tipo do imóvel.', 'error');
-            return;
-        }
-        if (!formData.subtipoImovelId && !isTemporada) {
-            addToast('Selecione o subtipo do imóvel.', 'error');
-            return;
-        }
-        if (!formData.privateArea) {
-            addToast('A área privativa é obrigatória.', 'error');
-            return;
-        }
-        if (!formData.title) {
-            addToast('O título do anúncio é obrigatório.', 'error');
-            return;
-        }
+            // Validação de Campos Obrigatórios (Constraints do Banco)
+            if (!formData.operacaoId) {
+                addToast('Selecione a operação (Venda/Locação).', 'error');
+                return;
+            }
+            if (!formData.tipoImovelId) {
+                addToast('Selecione o tipo do imóvel.', 'error');
+                return;
+            }
+            if (!formData.subtipoImovelId && !isTemporada) {
+                addToast('Selecione o subtipo do imóvel.', 'error');
+                return;
+            }
+            if (!formData.privateArea) {
+                addToast('A área privativa é obrigatória.', 'error');
+                return;
+            }
+            if (!formData.title) {
+                addToast('O título do anúncio é obrigatório.', 'error');
+                return;
+            }
 
-        setLoading(true);
-        try {
             const propertyData = {
                 user_id: user.id,
                 titulo: formData.title,
@@ -482,6 +488,7 @@ export default function AddProperty() {
             addToast('Erro ao cadastrar imóvel: ' + error.message, 'error');
         } finally {
             setLoading(false);
+            isSubmittingRef.current = false; // 🔓 Unlock Sync
         }
     };
 
@@ -1041,7 +1048,7 @@ export default function AddProperty() {
                                 <MapPin size={24} />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-black text-white uppercase tracking-tight">Identidade e Localização</h3>
+                                <h3 className="text-2xl font-black text-white uppercase tracking-tight">Dados Principais</h3>
                                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Dados fundamentais e endereço do seu imóvel</p>
                             </div>
                         </div>

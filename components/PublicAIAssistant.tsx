@@ -67,7 +67,17 @@ interface Message {
     role: 'user' | 'assistant';
     content: string;
     timestamp: Date;
-    links?: { text: string; url: string; image?: string; neighborhood?: string; price?: string }[];
+    links?: {
+        text: string;
+        url: string;
+        image?: string;
+        neighborhood?: string;
+        operacao?: string;
+        valor_venda?: number | null;
+        valor_locacao?: number | null;
+        valor_diaria?: number | null;
+        valor_mensal?: number | null;
+    }[];
     quickActions?: QuickAction[];
 }
 
@@ -1036,7 +1046,11 @@ INSTRUÇÃO IMPORTANTE:
                                 url: generatePropertyLink(p),
                                 image: imageUrl,
                                 neighborhood: p.bairro,
-                                price: formatCurrency(p.valor_venda || p.valor_locacao || 0)
+                                operacao: p.operacao,
+                                valor_venda: p.valor_venda,
+                                valor_locacao: p.valor_locacao,
+                                valor_diaria: p.valor_diaria,
+                                valor_mensal: p.valor_mensal
                             };
                             console.log('🔗 Generated link:', link);
                             return link;
@@ -1453,11 +1467,52 @@ RESPONDA de forma CLARA, OBJETIVA e CONVIDATIVA (máximo 4 linhas):`;
                                                                     {link.neighborhood}
                                                                 </p>
                                                             )}
-                                                            {link.price && (
-                                                                <p className="text-emerald-400 font-bold text-sm mt-1">
-                                                                    {link.price}
-                                                                </p>
-                                                            )}
+                                                            {(() => {
+                                                                const op = (link.operacao || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                                                                const isVendaLocacao = op.includes('venda') && op.includes('locacao');
+                                                                const isTemporada = op.includes('temporada');
+
+                                                                if (isVendaLocacao) {
+                                                                    return (
+                                                                        <div className="flex flex-col gap-0.5 mt-1">
+                                                                            {link.valor_venda && link.valor_venda > 0 && (
+                                                                                <p className="text-emerald-400 font-bold text-xs">
+                                                                                    Venda: {formatCurrency(link.valor_venda)}
+                                                                                </p>
+                                                                            )}
+                                                                            {link.valor_locacao && link.valor_locacao > 0 && (
+                                                                                <p className="text-blue-400 font-bold text-xs">
+                                                                                    Locação: {formatCurrency(link.valor_locacao)}/mês
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                } else if (isTemporada) {
+                                                                    return (
+                                                                        <div className="flex flex-col gap-0.5 mt-1">
+                                                                            {link.valor_diaria && link.valor_diaria > 0 && (
+                                                                                <p className="text-orange-400 font-bold text-xs">
+                                                                                    Diária: {formatCurrency(link.valor_diaria)}
+                                                                                </p>
+                                                                            )}
+                                                                            {link.valor_mensal && link.valor_mensal > 0 && (
+                                                                                <p className="text-orange-400 font-bold text-xs">
+                                                                                    Mensal: {formatCurrency(link.valor_mensal)}
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                } else {
+                                                                    // Single price (venda or locacao only)
+                                                                    const value = link.valor_venda || link.valor_locacao || 0;
+                                                                    const suffix = op.includes('locacao') ? '/mês' : '';
+                                                                    return value > 0 ? (
+                                                                        <p className="text-emerald-400 font-bold text-sm mt-1">
+                                                                            {formatCurrency(value)}{suffix}
+                                                                        </p>
+                                                                    ) : null;
+                                                                }
+                                                            })()}
                                                         </div>
                                                         <ExternalLink className="text-gray-500 group-hover:text-emerald-400 shrink-0 self-center" size={16} />
                                                     </div>
