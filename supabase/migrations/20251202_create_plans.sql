@@ -31,7 +31,7 @@ CREATE POLICY "Public read access for cupons_desconto" ON cupons_desconto FOR SE
 
 -- Insert default plans
 INSERT INTO planos (nome, limite_anuncios, limite_parcerias, preco_mensal, preco_anual, destaque, features) VALUES
-('Básico', 10, 10, 99.90, 959.04, false, ARRAY['Até 10 Anúncios', 'Até 10 Parcerias', 'Painel de Controle Básico', 'Suporte por Email']),
-('Intermediário', 25, 20, 199.90, 1919.04, false, ARRAY['Até 25 Anúncios', 'Até 20 Parcerias', 'Painel de Controle Completo', 'Suporte Prioritário', 'Estatísticas de Visualização']),
-('Avançado', 50, 30, 299.90, 2879.04, true, ARRAY['Até 50 Anúncios', 'Até 30 Parcerias', 'Destaque nos Resultados', 'Suporte via WhatsApp', 'Relatórios Avançados', 'Selo de Corretor Verificado']),
-('Profissional', 100, 50, 499.90, 4799.04, false, ARRAY['Até 100 Anúncios', 'Até 50 Parcerias', 'Prioridade Máxima em Buscas', 'Gerente de Conta Dedicado', 'API de Integração', 'Importação XML (Em breve)']);
+('Básico', 10, 10, 99, 95, false, ARRAY['Até 10 Anúncios', 'Até 10 Parcerias', 'Painel de Controle Básico', 'Suporte por Email']),
+('Intermediário', 25, 20, 199, 191, false, ARRAY['Até 25 Anúncios', 'Até 20 Parcerias', 'Painel de Controle Completo', 'Suporte Prioritário', 'Estatísticas de Visualização', 'Selo de Corretor Verificado BRONZE']),
+('Avançado', 50, 30, 299, 287, true, ARRAY['Até 50 Anúncios', 'Até 30 Parcerias', 'Destaque nos Resultados', 'Suporte via WhatsApp', 'Relatórios Avançados', 'Selo de Corretor Verificado PRATA']),
+('Profissional', 100, 50, 499, 479, false, ARRAY['Até 100 Anúncios', 'Até 50 Parcerias', 'Prioridade Máxima em Buscas', 'Gerente de Conta Dedicado', 'API de Integração', 'Selo de Corretor Verificado OURO', 'Importação XML (Em breve)']);

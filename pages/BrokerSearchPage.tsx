@@ -53,6 +53,15 @@ export const BrokerSearchPage: React.FC = () => {
     const [selectedOperation, setSelectedOperation] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
+    // Random background for header
+    const [background] = useState(() => getRandomBackground());
+
+    // Verification badge based on broker's plan
+    const verificationConfig = React.useMemo(
+        () => getVerificationConfig(broker?.plano_id),
+        [broker?.plano_id]
+    );
+
     const standardTypes = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno'];
 
     useEffect(() => {

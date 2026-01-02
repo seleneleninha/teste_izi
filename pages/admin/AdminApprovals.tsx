@@ -577,7 +577,7 @@ export const AdminApprovals: React.FC = () => {
                                                         <button
                                                             onClick={() => navigate(`/properties/${property.slug}`)}
                                                             className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-                                                            title="Ver Detalhes"
+                                                            title="Ver"
                                                         >
                                                             <Eye size={18} />
                                                         </button>
@@ -747,9 +747,9 @@ export const AdminApprovals: React.FC = () => {
                                                         e.stopPropagation();
                                                         navigate(`/properties/${property.slug}`);
                                                     }}
-                                                    className="w-full py-2.5 bg-slate-700 text-gray-300 rounded-full text-sm font-medium hover:bg-slate-600 flex items-center justify-center transition-colors"
+                                                    className="w-full py-2 px-2 bg-slate-700 text-gray-300 rounded-full text-sm font-medium hover:bg-slate-600 flex items-center justify-center transition-colors"
                                                 >
-                                                    <Eye size={18} className="mr-2" /> Ver Detalhes
+                                                    <Eye size={18} />
                                                 </button>
                                             )
                                         }

@@ -11,11 +11,26 @@ interface Plan {
     preco_mensal: number;
     preco_anual: number;
     destaque: boolean;
-    features: string[];
+}
+
+interface Beneficio {
+    id: string;
+    nome: string;
+    descricao?: string;
+    icone?: string;
+    ordem: number;
+    ativo: boolean;
+}
+
+interface PlanoBeneficio {
+    plano_id: string;
+    beneficio_id: string;
 }
 
 export const AdminPlans: React.FC = () => {
     const [plans, setPlans] = useState<Plan[]>([]);
+    const [beneficios, setBeneficios] = useState<Beneficio[]>([]);
+    const [planoBeneficios, setPlanoBeneficios] = useState<PlanoBeneficio[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,35 +43,67 @@ export const AdminPlans: React.FC = () => {
         limite_parcerias: 0,
         preco_mensal: 0,
         preco_anual: 0,
-        destaque: false,
-        features: []
+        destaque: false
     });
-    const [featureInput, setFeatureInput] = useState('');
+    const [selectedBeneficioIds, setSelectedBeneficioIds] = useState<string[]>([]);
 
     useEffect(() => {
-        fetchPlans();
+        fetchData();
     }, []);
 
-    const fetchPlans = async () => {
+    const fetchData = async () => {
         try {
-            const { data, error } = await supabase
+            // Fetch plans
+            const { data: plansData, error: plansError } = await supabase
                 .from('planos')
                 .select('*')
                 .order('preco_mensal', { ascending: true });
 
-            if (error) throw error;
-            if (data) setPlans(data);
+            if (plansError) throw plansError;
+            if (plansData) setPlans(plansData);
+
+            // Fetch all benefits from catalog
+            const { data: beneficiosData, error: beneficiosError } = await supabase
+                .from('beneficios')
+                .select('*')
+                .eq('ativo', true)
+                .order('ordem', { ascending: true });
+
+            if (beneficiosError) throw beneficiosError;
+            if (beneficiosData) setBeneficios(beneficiosData);
+
+            // Fetch all plan-benefit relationships
+            const { data: pbData, error: pbError } = await supabase
+                .from('plano_beneficios')
+                .select('*');
+
+            if (pbError) throw pbError;
+            if (pbData) setPlanoBeneficios(pbData);
+
         } catch (error) {
-            console.error('Error fetching plans:', error);
-            addToast('Erro ao carregar planos.', 'error');
+            console.error('Error fetching data:', error);
+            addToast('Erro ao carregar dados.', 'error');
         } finally {
             setLoading(false);
         }
     };
 
+    // Get benefits for a specific plan
+    const getPlanBeneficios = (planId: string): Beneficio[] => {
+        const beneficioIds = planoBeneficios
+            .filter(pb => pb.plano_id === planId)
+            .map(pb => pb.beneficio_id);
+        return beneficios.filter(b => beneficioIds.includes(b.id));
+    };
+
     const handleEdit = (plan: Plan) => {
         setEditingPlan(plan);
         setFormData(plan);
+        // Get current benefits for this plan
+        const currentBeneficioIds = planoBeneficios
+            .filter(pb => pb.plano_id === plan.id)
+            .map(pb => pb.beneficio_id);
+        setSelectedBeneficioIds(currentBeneficioIds);
         setIsModalOpen(true);
     };
 
@@ -68,9 +115,9 @@ export const AdminPlans: React.FC = () => {
             limite_parcerias: 5,
             preco_mensal: 0,
             preco_anual: 0,
-            destaque: false,
-            features: []
+            destaque: false
         });
+        setSelectedBeneficioIds([]);
         setIsModalOpen(true);
     };
 
@@ -85,7 +132,7 @@ export const AdminPlans: React.FC = () => {
 
             if (error) throw error;
             addToast('Plano excluído com sucesso!', 'success');
-            fetchPlans();
+            fetchData();
         } catch (error) {
             console.error('Error deleting plan:', error);
             addToast('Erro ao excluir plano.', 'error');
@@ -94,43 +141,78 @@ export const AdminPlans: React.FC = () => {
 
     const handleSave = async () => {
         try {
+            let planId = editingPlan?.id;
+
             if (editingPlan) {
+                // Update existing plan
                 const { error } = await supabase
                     .from('planos')
-                    .update(formData)
+                    .update({
+                        nome: formData.nome,
+                        limite_anuncios: formData.limite_anuncios,
+                        limite_parcerias: formData.limite_parcerias,
+                        preco_mensal: formData.preco_mensal,
+                        preco_anual: formData.preco_anual,
+                        destaque: formData.destaque
+                    })
                     .eq('id', editingPlan.id);
                 if (error) throw error;
-                addToast('Plano atualizado!', 'success');
             } else {
-                const { error } = await supabase
+                // Create new plan
+                const { data: newPlan, error } = await supabase
                     .from('planos')
-                    .insert([formData]);
+                    .insert([{
+                        nome: formData.nome,
+                        limite_anuncios: formData.limite_anuncios,
+                        limite_parcerias: formData.limite_parcerias,
+                        preco_mensal: formData.preco_mensal,
+                        preco_anual: formData.preco_anual,
+                        destaque: formData.destaque
+                    }])
+                    .select()
+                    .single();
                 if (error) throw error;
-                addToast('Plano criado!', 'success');
+                planId = newPlan.id;
             }
+
+            // Update plan_beneficios
+            if (planId) {
+                // Delete existing relationships
+                await supabase
+                    .from('plano_beneficios')
+                    .delete()
+                    .eq('plano_id', planId);
+
+                // Insert new relationships
+                if (selectedBeneficioIds.length > 0) {
+                    const newRelations = selectedBeneficioIds.map(beneficioId => ({
+                        plano_id: planId,
+                        beneficio_id: beneficioId
+                    }));
+
+                    const { error: insertError } = await supabase
+                        .from('plano_beneficios')
+                        .insert(newRelations);
+
+                    if (insertError) throw insertError;
+                }
+            }
+
+            addToast(editingPlan ? 'Plano atualizado!' : 'Plano criado!', 'success');
             setIsModalOpen(false);
-            fetchPlans();
+            fetchData();
         } catch (error) {
             console.error('Error saving plan:', error);
             addToast('Erro ao salvar plano.', 'error');
         }
     };
 
-    const addFeature = () => {
-        if (featureInput.trim()) {
-            setFormData(prev => ({
-                ...prev,
-                features: [...(prev.features || []), featureInput.trim()]
-            }));
-            setFeatureInput('');
-        }
-    };
-
-    const removeFeature = (index: number) => {
-        setFormData(prev => ({
-            ...prev,
-            features: prev.features?.filter((_, i) => i !== index)
-        }));
+    const toggleBeneficio = (beneficioId: string) => {
+        setSelectedBeneficioIds(prev =>
+            prev.includes(beneficioId)
+                ? prev.filter(id => id !== beneficioId)
+                : [...prev, beneficioId]
+        );
     };
 
     if (loading) return <div className="p-8 text-center">Carregando...</div>;
@@ -151,80 +233,84 @@ export const AdminPlans: React.FC = () => {
                         </div>
                         <p className="text-slate-400 font-medium ml-1">Defina as ofertas e funcionalidades para seus corretores.</p>
                     </div>
-                </div>
-            </div>
-
-            <div className="max-w-7xl mx-auto px-6">
-                <div className="flex justify-end mb-8">
                     <button
                         onClick={handleCreate}
                         className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105"
                     >
                         <Plus size={20} />
-                        Criar Novo Plano
+                        Novo Plano
                     </button>
                 </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-6">
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {plans.map(plan => (
-                        <div key={plan.id} className={`bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-700 relative group hover:border-emerald-500/50 transition-all ${plan.destaque ? 'ring-2 ring-emerald-500/20' : ''}`}>
-                            {plan.destaque && (
-                                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] uppercase tracking-wider font-black px-3 py-1 rounded-full shadow-lg">
-                                    Mais Popular
-                                </span>
-                            )}
-
-                            <div className="text-center mb-6 pt-2">
-                                <h3 className="text-xl font-bold text-white mb-2">{plan.nome}</h3>
-                                <div className="text-3xl font-black text-white">
-                                    R$ {plan.preco_mensal.toFixed(0)}<span className="text-emerald-400">,90</span>
-                                    <span className="text-sm text-slate-500 font-medium block mt-1">/mês</span>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4 mb-8 bg-slate-900/50 p-4 rounded-2xl">
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-400">Anúncios</span>
-                                    <span className="text-white font-bold">{plan.limite_anuncios === 9999 ? 'Ilimitado' : plan.limite_anuncios}</span>
-                                </div>
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-400">Parcerias</span>
-                                    <span className="text-white font-bold">{plan.limite_parcerias}</span>
-                                </div>
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="text-slate-400">Anual (Total)</span>
-                                    <span className="text-emerald-400 font-bold">R$ {plan.preco_anual.toFixed(0)}</span>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2 mb-6 text-xs text-slate-400">
-                                {plan.features && plan.features.slice(0, 3).map((feat, idx) => (
-                                    <div key={idx} className="flex items-center gap-2">
-                                        <Check size={12} className="text-emerald-500" />
-                                        <span className="truncate">{feat}</span>
-                                    </div>
-                                ))}
-                                {plan.features && plan.features.length > 3 && (
-                                    <p className="text-center text-slate-500 italic">+ {plan.features.length - 3} recursos</p>
+                    {plans.map(plan => {
+                        const planBeneficios = getPlanBeneficios(plan.id);
+                        return (
+                            <div key={plan.id} className={`bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-700 relative group hover:border-emerald-500/50 transition-all ${plan.destaque ? 'ring-2 ring-emerald-500/20' : ''}`}>
+                                {plan.destaque && (
+                                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] uppercase tracking-wider font-black px-3 py-1 rounded-full shadow-lg">
+                                        Mais Popular
+                                    </span>
                                 )}
-                            </div>
 
-                            <div className="flex gap-2 mt-auto">
-                                <button
-                                    onClick={() => handleEdit(plan)}
-                                    className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
-                                >
-                                    <Edit2 size={16} /> Editar
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(plan.id)}
-                                    className="px-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 py-2.5 rounded-xl transition-colors flex items-center justify-center"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
+                                <div className="text-center mb-6 pt-2">
+                                    <h3 className="text-xl font-bold text-white mb-2">{plan.nome}</h3>
+                                    <div className="text-3xl font-black text-white">
+                                        R$ {Math.floor(plan.preco_mensal).toLocaleString('pt-BR')}
+                                        <span className="text-sm text-slate-500 font-medium block mt-1">/mês</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4 mb-8 bg-slate-900/50 p-4 rounded-2xl">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-400">Anúncios</span>
+                                        <span className="text-white font-bold">até {plan.limite_anuncios === 9999 ? 'Ilimitado' : plan.limite_anuncios}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-400">Parcerias</span>
+                                        <span className="text-white font-bold">até {plan.limite_parcerias}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-slate-400">Anual</span>
+                                        <span className="text-emerald-400 font-bold">R$ {Math.floor(plan.preco_anual).toLocaleString('pt-BR')}</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2 mb-6 text-xs text-slate-400">
+                                    {planBeneficios.slice(0, 3).map((beneficio) => (
+                                        <div key={beneficio.id} className="flex items-center gap-2">
+                                            <Check size={12} className="text-emerald-500" />
+                                            <span className="truncate">{beneficio.nome}</span>
+                                        </div>
+                                    ))}
+                                    {planBeneficios.length > 3 && (
+                                        <p className="text-center text-slate-500 italic">+ {planBeneficios.length - 3} recursos</p>
+                                    )}
+                                    {planBeneficios.length === 0 && (
+                                        <p className="text-center text-slate-500 italic">Nenhum benefício</p>
+                                    )}
+                                </div>
+
+                                <div className="flex gap-2 mt-auto">
+                                    <button
+                                        onClick={() => handleEdit(plan)}
+                                        className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Edit2 size={16} /> Editar
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(plan.id)}
+                                        className="px-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 py-2.5 rounded-xl transition-colors flex items-center justify-center"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 
@@ -277,7 +363,7 @@ export const AdminPlans: React.FC = () => {
                                 <label className="block text-sm font-bold text-slate-300 mb-2">Preço Mensal (R$)</label>
                                 <input
                                     type="number"
-                                    step="0.01"
+                                    step="1"
                                     value={formData.preco_mensal}
                                     onChange={e => setFormData({ ...formData, preco_mensal: Number(e.target.value) })}
                                     className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 focus:ring-2 focus:ring-emerald-500 outline-none text-white font-medium"
@@ -287,7 +373,7 @@ export const AdminPlans: React.FC = () => {
                                 <label className="block text-sm font-bold text-slate-300 mb-2">Preço Anual (R$)</label>
                                 <input
                                     type="number"
-                                    step="0.01"
+                                    step="1"
                                     value={formData.preco_anual}
                                     onChange={e => setFormData({ ...formData, preco_anual: Number(e.target.value) })}
                                     className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 focus:ring-2 focus:ring-emerald-500 outline-none text-white font-medium"
@@ -307,34 +393,38 @@ export const AdminPlans: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* Benefits Checkboxes Section */}
                         <div className="mb-8">
-                            <label className="block text-sm font-bold text-slate-300 mb-2">Funcionalidades</label>
-                            <div className="flex gap-2 mb-3">
-                                <input
-                                    type="text"
-                                    value={featureInput}
-                                    onChange={e => setFeatureInput(e.target.value)}
-                                    className="flex-1 px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 focus:ring-2 focus:ring-emerald-500 outline-none text-white"
-                                    placeholder="Ex: Site Grátis, Suporte VIP..."
-                                    onKeyDown={e => e.key === 'Enter' && addFeature()}
-                                />
-                                <button onClick={addFeature} className="bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-xl transition-colors">
-                                    <Plus size={24} />
-                                </button>
-                            </div>
-                            <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-                                {formData.features?.map((feature, idx) => (
-                                    <div key={idx} className="flex justify-between items-center bg-slate-800 px-4 py-3 rounded-xl border border-slate-700 group">
-                                        <span className="text-sm text-slate-300">{feature}</span>
-                                        <button onClick={() => removeFeature(idx)} className="text-slate-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
-                                            <X size={16} />
-                                        </button>
+                            <label className="block text-sm font-bold text-slate-300 mb-4">
+                                Benefícios Inclusos ({selectedBeneficioIds.length} selecionados)
+                            </label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                {beneficios.map((beneficio) => (
+                                    <div
+                                        key={beneficio.id}
+                                        onClick={() => toggleBeneficio(beneficio.id)}
+                                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedBeneficioIds.includes(beneficio.id)
+                                            ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400'
+                                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
+                                            }`}
+                                    >
+                                        <div className={`w-5 h-5 rounded flex items-center justify-center border ${selectedBeneficioIds.includes(beneficio.id)
+                                            ? 'bg-emerald-500 border-emerald-500'
+                                            : 'border-slate-600 bg-slate-700'
+                                            }`}>
+                                            {selectedBeneficioIds.includes(beneficio.id) && (
+                                                <Check size={14} className="text-white" />
+                                            )}
+                                        </div>
+                                        <span className="text-sm font-medium">{beneficio.nome}</span>
                                     </div>
                                 ))}
-                                {(!formData.features || formData.features.length === 0) && (
-                                    <p className="text-slate-500 text-sm text-center py-4 italic">Nenhuma funcionalidade adicionada.</p>
-                                )}
                             </div>
+                            {beneficios.length === 0 && (
+                                <p className="text-slate-500 text-sm text-center py-4 italic">
+                                    Nenhum benefício cadastrado no catálogo.
+                                </p>
+                            )}
                         </div>
 
                         <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">

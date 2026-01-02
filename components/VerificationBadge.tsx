@@ -20,7 +20,7 @@ export const VerificationBadge: React.FC<VerificationBadgeProps> = ({
 
     return (
         <div
-            className={`inline-flex items-center gap-3 px-5 py-2 rounded-full border border-white/10 bg-black/85 backdrop-blur-xl transition-all duration-500 hover:scale-105 hover:bg-black/100 cursor-default shadow-2xl shadow-black/50 ${className}`}
+            className={`inline-flex items-center gap-3 px-5 py-2 rounded-full border border-white/10 bg-black/90 backdrop-blur-xl transition-all duration-500 hover:scale-105 hover:bg-black/100 cursor-default shadow-2xl shadow-black/50 ${className}`}
             title={`Corretor Verificado: Nível ${config.title}`}
         >
             {/* Badge Icon with Glow */}

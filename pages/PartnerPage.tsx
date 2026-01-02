@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Star, Users, Building2, Handshake, Zap, Shield, BarChart3, ArrowRight, CheckCircle2, Target, Ticket, Trophy, Lock } from 'lucide-react';
+import { Check, Star, Users, Building2, Handshake, Zap, Shield, BarChart3, ArrowRight, CheckCircle2, Target, Ticket, Trophy, Lock, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { Footer } from '../components/Footer';
@@ -15,7 +15,20 @@ interface Plan {
     preco_mensal: number;
     preco_anual: number;
     destaque: boolean;
-    features: string[];
+}
+
+interface Beneficio {
+    id: string;
+    nome: string;
+    descricao?: string;
+    icone?: string;
+    ordem: number;
+    ativo: boolean;
+}
+
+interface PlanoBeneficio {
+    plano_id: string;
+    beneficio_id: string;
 }
 
 const formatCurrency = (value: number) => {
@@ -30,6 +43,9 @@ export const PartnerPage: React.FC = () => {
     const { addToast } = useToast();
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
     const [plans, setPlans] = useState<Plan[]>([]);
+    const [beneficios, setBeneficios] = useState<Beneficio[]>([]);
+    const [planoBeneficios, setPlanoBeneficios] = useState<PlanoBeneficio[]>([]);
+    const [allExpanded, setAllExpanded] = useState(false);
     const [loading, setLoading] = useState(true);
 
     // Challenge & Coupon State
@@ -51,63 +67,46 @@ export const PartnerPage: React.FC = () => {
 
     const fetchPlans = async () => {
         try {
-            const { data, error } = await supabase
+            // Fetch plans
+            const { data: plansData, error: plansError } = await supabase
                 .from('planos')
                 .select('*')
                 .order('preco_mensal', { ascending: true });
 
-            if (data) {
-                setPlans(data);
-            } else {
-                // Fallback mock data if table is empty or not created yet
-                setPlans([
-                    {
-                        id: '1',
-                        nome: 'Básico',
-                        limite_anuncios: 10,
-                        limite_parcerias: 10,
-                        preco_mensal: 99.00,
-                        preco_anual: 950.40,
-                        destaque: false,
-                        features: ['Até 10 Anúncios', 'Até 10 Parcerias', 'Painel de Controle Básico', 'Suporte por Email']
-                    },
-                    {
-                        id: '2',
-                        nome: 'Intermediário',
-                        limite_anuncios: 25,
-                        limite_parcerias: 20,
-                        preco_mensal: 169.00,
-                        preco_anual: 1622.40,
-                        destaque: false,
-                        features: ['Até 25 Anúncios', 'Até 20 Parcerias', 'Painel de Controle Completo', 'Suporte Prioritário', 'Estatísticas de Visualização']
-                    },
-                    {
-                        id: '3',
-                        nome: 'Avançado',
-                        limite_anuncios: 50,
-                        limite_parcerias: 30,
-                        preco_mensal: 249.00,
-                        preco_anual: 2390.40,
-                        destaque: true,
-                        features: ['Até 50 Anúncios', 'Até 30 Parcerias', 'Destaque nos Resultados', 'Suporte via WhatsApp', 'Relatórios Avançados', 'Selo de Corretor Verificado']
-                    },
-                    {
-                        id: '4',
-                        nome: 'Profissional',
-                        limite_anuncios: 100,
-                        limite_parcerias: 50,
-                        preco_mensal: 319.00,
-                        preco_anual: 3062.40,
-                        destaque: false,
-                        features: ['Até 100 Anúncios', 'Até 50 Parcerias', 'Prioridade Máxima em Buscas', 'Gerente de Conta Dedicado', 'API de Integração', 'Importação XML (Em breve)']
-                    }
-                ]);
-            }
+            if (plansError) throw plansError;
+            if (plansData) setPlans(plansData);
+
+            // Fetch all benefits from catalog
+            const { data: beneficiosData, error: beneficiosError } = await supabase
+                .from('beneficios')
+                .select('*')
+                .eq('ativo', true)
+                .order('ordem', { ascending: true });
+
+            if (beneficiosError) throw beneficiosError;
+            if (beneficiosData) setBeneficios(beneficiosData);
+
+            // Fetch all plan-benefit relationships
+            const { data: pbData, error: pbError } = await supabase
+                .from('plano_beneficios')
+                .select('*');
+
+            if (pbError) throw pbError;
+            if (pbData) setPlanoBeneficios(pbData);
+
         } catch (error) {
             console.error('Error fetching plans:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    // Get benefits for a specific plan
+    const getPlanBeneficios = (planId: string): Beneficio[] => {
+        const beneficioIds = planoBeneficios
+            .filter(pb => pb.plano_id === planId)
+            .map(pb => pb.beneficio_id);
+        return beneficios.filter(b => beneficioIds.includes(b.id));
     };
 
     const fetchStats = async () => {
@@ -362,7 +361,7 @@ export const PartnerPage: React.FC = () => {
                             return (
                                 <div
                                     key={plan.id}
-                                    className={`relative bg-slate-800 rounded-3xl p-6 shadow-lg border transition-all hover:-translate-y-2 ${plan.destaque
+                                    className={`relative bg-slate-900 rounded-3xl p-6 shadow-lg border transition-all hover:-translate-y-2 ${plan.destaque
                                         ? 'border-emerald-500 ring-2 ring-emerald-500/20'
                                         : 'border-slate-700 hover:border-emerald-300'
                                         }`}
@@ -386,29 +385,29 @@ export const PartnerPage: React.FC = () => {
                                         {(billingCycle === 'annual' || activeDiscount > 0) && (
                                             <div className="text-gray-400 text-lg font-bold mb-1">
                                                 De <span className="line-through decoration-red-500 decoration-2">
-                                                    R$ {formatCurrency(plan.preco_mensal)}/mês
+                                                    R${formatCurrency(plan.preco_mensal)}/mês
                                                 </span>
                                             </div>
                                         )}
 
                                         <div className="flex items-baseline gap-1">
                                             <span className={`text-3xl font-bold ${activeDiscount > 0 ? 'text-emerald-400' : 'text-white'}`}>
-                                                R$ {formatCurrency(finalDisplayPrice)}
+                                                R${formatCurrency(finalDisplayPrice)}
                                             </span>
-                                            <span className="text-gray-500 text-sm">/mês</span>
+                                            <span className="text-gray-500 text-xs">por mês</span>
                                         </div>
 
                                         {billingCycle === 'annual' && (
                                             <div className="font-bold text-md text-emerald-500 mt-1">
-                                                Economize R$ {formatCurrency(totalSavings)} no ano
-                                                <p className="font-light text-md text-slate-300">
-                                                    Pagamento único de R$ {formatCurrency(annualPriceWithDiscount)}
+                                                Economize R${formatCurrency(totalSavings)} no ano
+                                                <p className="font-light text-sm text-slate-300">
+                                                    Pagamento único de R${formatCurrency(annualPriceWithDiscount)}
                                                 </p>
                                             </div>
                                         )}
                                         {/* Discount Note */}
                                         {activeDiscount > 0 && (
-                                            <p className="text-xs text-red-400 font-bold mt-2">
+                                            <p className="text-xs text-red-500 font-bold mt-2 animate-pulse">
                                                 *Cupom de {activeDiscount}% aplicado na simulação
                                             </p>
                                         )}
@@ -423,14 +422,167 @@ export const PartnerPage: React.FC = () => {
                                         Assinar Agora
                                     </button>
 
-                                    <ul className="space-y-3 text-sm">
-                                        {plan.features.map((feature, idx) => (
-                                            <li key={idx} className="flex items-start gap-2 text-gray-300">
-                                                <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
-                                                <span>{feature}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    {/* Quantified Limits */}
+                                    <div className="space-y-2 mb-4 pb-4 border-b border-slate-700">
+                                        <div className="flex items-center justify-center gap-2 text-gray-300">
+                                            <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                                            <span className="text-lg">Até <span className="font-bold text-white">{plan.limite_anuncios}</span> Anúncios</span>
+                                        </div>
+                                        <div className="flex items-center justify-center gap-2 text-gray-300">
+                                            <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                                            <span className="text-lg">Até <span className="font-bold text-white">{plan.limite_parcerias}</span> Parcerias</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Benefits List with Tiered Display */}
+                                    {(() => {
+                                        const planBeneficios = getPlanBeneficios(plan.id);
+                                        const planIndex = plans.findIndex(p => p.id === plan.id);
+
+                                        // Filter out "Limite de Anúncios" and "Limite de Parcerias" (already shown above)
+                                        const filteredBeneficios = planBeneficios.filter(b =>
+                                            !b.nome.toLowerCase().includes('limite de anúncios') &&
+                                            !b.nome.toLowerCase().includes('limite de parcerias')
+                                        );
+
+                                        // Get previous tier's benefits (if not first plan)
+                                        let previousTierBeneficioIds: string[] = [];
+                                        let previousTierName = '';
+                                        if (planIndex > 0) {
+                                            const previousPlan = plans[planIndex - 1];
+                                            const previousBeneficios = getPlanBeneficios(previousPlan.id);
+                                            previousTierBeneficioIds = previousBeneficios.map(b => b.id);
+                                            previousTierName = previousPlan.nome;
+                                        }
+
+                                        // Calculate incremental benefits (only new in this tier) - EXCLUDING special items
+                                        const incrementalBeneficios = filteredBeneficios.filter(b =>
+                                            !previousTierBeneficioIds.includes(b.id) &&
+                                            !b.nome.toLowerCase().includes('selo verificado') &&
+                                            !b.nome.toLowerCase().includes('botão fixo')
+                                        );
+
+                                        // Special items (Selo Verificado, Botão Fixo) - ALWAYS show if current plan has them
+                                        const specialItems = filteredBeneficios.filter(b =>
+                                            b.nome.toLowerCase().includes('selo verificado') ||
+                                            b.nome.toLowerCase().includes('botão fixo')
+                                        );
+
+                                        // Regular items are just incrementals (special items handled separately)
+                                        const regularItems = incrementalBeneficios;
+
+                                        // Combine: regular first, special last
+                                        const orderedBeneficios = [...regularItems, ...specialItems];
+
+                                        const isExpanded = allExpanded;
+                                        const visibleBeneficios = isExpanded ? orderedBeneficios : orderedBeneficios.slice(0, 3);
+                                        const hiddenCount = orderedBeneficios.length - 3;
+
+                                        // Get tier info based on plan name
+                                        const getTierInfo = (planName: string) => {
+                                            const name = planName.toLowerCase();
+                                            if (name.includes('profissional')) return { tier: 'Ouro', color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' };
+                                            if (name.includes('avançado')) return { tier: 'Prata', color: 'text-slate-300', bg: 'bg-slate-400/10', border: 'border-slate-400/30' };
+                                            if (name.includes('intermediário')) return { tier: 'Bronze', color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30' };
+                                            return null;
+                                        };
+
+                                        // Get Botão type based on plan name
+                                        const getBotaoType = (planName: string) => {
+                                            const name = planName.toLowerCase();
+                                            if (name.includes('profissional') || name.includes('avançado')) return 'Agente de IA';
+                                            if (name.includes('intermediário')) return 'ChatBot';
+                                            return 'WhatsApp';
+                                        };
+
+                                        const tierInfo = getTierInfo(plan.nome);
+                                        const botaoType = getBotaoType(plan.nome);
+
+                                        return (
+                                            <>
+                                                {/* Previous tier inheritance badge */}
+                                                {previousTierName && (
+                                                    <div className="flex items-center justify-center gap-2 mb-3 p-2 rounded-lg bg-slate-700/50 border border-slate-600">
+                                                        <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                                                        <span className="text-sm text-slate-300">
+                                                            Tudo do <span className="font-bold text-white">{previousTierName}</span> +
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                <ul className="space-y-2 text-sm">
+                                                    {visibleBeneficios.map((beneficio) => {
+                                                        const isSelo = beneficio.nome.toLowerCase().includes('selo verificado');
+                                                        const isBotao = beneficio.nome.toLowerCase().includes('botão fixo');
+
+                                                        // Selo Verificado - Special styled item with tier
+                                                        if (isSelo && tierInfo) {
+                                                            return (
+                                                                <li key={beneficio.id} className={`flex items-center justify-center gap-2 p-2 rounded-lg ${tierInfo.bg} border ${tierInfo.border}`}>
+                                                                    <Shield size={16} className={`${tierInfo.color} shrink-0`} />
+                                                                    <span className={`text-sm font-bold ${tierInfo.color}`}>
+                                                                        Selo Verificado: {tierInfo.tier}
+                                                                    </span>
+                                                                </li>
+                                                            );
+                                                        }
+
+                                                        // Botão Fixo - Show specific type
+                                                        if (isBotao) {
+                                                            return (
+                                                                <li key={beneficio.id} className="flex items-center justify-center gap-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                                                                    <Zap size={16} className="text-emerald-400 shrink-0" />
+                                                                    <span className="text-sm justify-center font-bold text-emerald-400">
+                                                                        Botão Fixo: {botaoType}
+                                                                    </span>
+                                                                </li>
+                                                            );
+                                                        }
+
+                                                        // Regular benefit item
+                                                        const isXML = beneficio.nome.toLowerCase().includes('importação xml');
+                                                        return (
+                                                            <li key={beneficio.id} className="flex items-center justify-center gap-2 text-gray-300">
+                                                                <CheckCircle2 size={14} className="text-emerald-500 shrink-0 mt-0.5" />
+                                                                <span className="text-sm">
+                                                                    {beneficio.nome}
+                                                                    {isXML && (
+                                                                        <span className="ml-1 text-xs font-semibold text-yellow-400">
+                                                                            EM BREVE
+                                                                        </span>
+                                                                    )}
+                                                                </span>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+
+                                                {/* Expand/Collapse Button - Expands ALL cards */}
+                                                {hiddenCount > 0 && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setAllExpanded(!allExpanded);
+                                                        }}
+                                                        className="mt-3 w-full flex items-center justify-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs font-medium transition-colors py-2 rounded-lg hover:bg-slate-700/50"
+                                                    >
+                                                        {isExpanded ? (
+                                                            <>
+                                                                <ChevronUp size={14} />
+                                                                Ver menos
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <ChevronDown size={14} />
+                                                                + {hiddenCount} benefícios
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
+
                                 </div>
                             )
                         })}

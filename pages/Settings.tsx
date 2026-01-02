@@ -22,8 +22,11 @@ export const Settings: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   // Verified Status Check (Avançado or Profissional)
-  // Verified Status Check (Tiered)
-  const verificationConfig = getVerificationConfig(userProfile?.plano_id);
+  // Verified Status Check (Tiered) - Memoized to prevent infinite re-render
+  const verificationConfig = React.useMemo(
+    () => getVerificationConfig(userProfile?.plano_id),
+    [userProfile?.plano_id]
+  );
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);

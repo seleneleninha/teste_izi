@@ -49,8 +49,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ isAdmin = fals
         navItems = [
             { icon: LayoutDashboard, label: 'Dash', path: '/dashboard' },
             { icon: CheckSquare, label: 'Aprov', path: '/admin/approvals' },
-            { icon: DollarSign, label: 'Finan', path: '/admin/financial' },
             { icon: CreditCard, label: 'Planos', path: '/admin/plans' },
+            { icon: Heart, label: 'Benef', path: '/admin/benefits' },
         ];
     } else if (isClient) {
         // Client Nav Items

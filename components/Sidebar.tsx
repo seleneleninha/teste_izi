@@ -76,12 +76,12 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: CheckCircle, label: 'Aprovar Anúncios', path: '/admin/approvals' },
     { icon: CreditCard, label: 'Planos', path: '/admin/plans' },
-    { icon: Settings, label: 'Config Trial', path: '/admin/trial-settings' },
+    { icon: Heart, label: 'Benefícios', path: '/admin/benefits' },
     { icon: Ticket, label: 'Cupons', path: '/admin/coupons' },
+    { icon: Settings, label: 'Config Trial', path: '/admin/trial-settings' },
     { icon: DollarSign, label: 'Financeiro', path: '/admin/financial' },
     { icon: Settings, label: 'Configurações', path: '/settings' },
-    { icon: Globe, label: 'Mercado', path: '/properties?mode=market' }, // New Link
-
+    // Mercado removed - causes freezing issues in admin context
   ] : isClient ? [
     { icon: Home, label: 'Início', path: '/dashboard' },
     { icon: Search, label: 'Buscar Imóveis', path: '/properties' },
@@ -99,8 +99,11 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
 
   ];
 
-  // Verification Logic
-  const verificationConfig = getVerificationConfig(userProfile?.plano_id);
+  // Verification Logic - Memoized to prevent re-render issues
+  const verificationConfig = React.useMemo(
+    () => getVerificationConfig(userProfile?.plano_id),
+    [userProfile?.plano_id]
+  );
 
   return (
     <>

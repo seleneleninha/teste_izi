@@ -112,11 +112,6 @@ export const AdminCoupons: React.FC = () => {
                         </div>
                         <p className="text-slate-400 font-medium ml-1">Crie códigos de desconto para campanhas de marketing.</p>
                     </div>
-                </div>
-            </div>
-
-            <div className="max-w-7xl mx-auto px-6">
-                <div className="flex justify-end mb-8">
                     <button
                         onClick={() => {
                             setFormData({ codigo: '', desconto_percentual: 10, valido_ate: '', ativo: true });
@@ -128,6 +123,9 @@ export const AdminCoupons: React.FC = () => {
                         Novo Cupom
                     </button>
                 </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-6">
 
                 <div className="bg-slate-800 rounded-3xl shadow-sm border border-slate-700 overflow-hidden">
                     <div className="overflow-x-auto">

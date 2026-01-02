@@ -507,20 +507,9 @@ export const PartnerProperties: React.FC = () => {
                             {/* View Mode Toggle */}
                             <div className="flex gap-1 bg-slate-900 border border-slate-700 p-1 justify-between rounded-xl">
                                 <button
-                                    onClick={() => setViewMode('list')}
-                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${viewMode === 'list'
-                                        ? 'bg-emerald-700 text-white shadow-md'
-                                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                                        }`}
-                                    title="Visualização em Lista"
-                                >
-                                    <List size={16} />
-                                    Lista
-                                </button>
-                                <button
                                     onClick={() => setViewMode('grid')}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${viewMode === 'grid'
-                                        ? 'bg-emerald-700 text-white shadow-md'
+                                        ? 'bg-emerald-600 text-white shadow-lg'
                                         : 'text-slate-400 hover:text-white hover:bg-slate-800'
                                         }`}
                                     title="Visualização em Cards"
@@ -529,9 +518,20 @@ export const PartnerProperties: React.FC = () => {
                                     Cards
                                 </button>
                                 <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${viewMode === 'list'
+                                        ? 'bg-emerald-600 text-white shadow-lg'
+                                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                                        }`}
+                                    title="Visualização em Lista"
+                                >
+                                    <List size={16} />
+                                    Lista
+                                </button>
+                                <button
                                     onClick={() => setViewMode('map')}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${viewMode === 'map'
-                                        ? 'bg-emerald-700 text-white shadow-md'
+                                        ? 'bg-emerald-600 text-white shadow-lg'
                                         : 'text-slate-400 hover:text-white hover:bg-slate-800'
                                         }`}
                                     title="Visualização em Mapa"

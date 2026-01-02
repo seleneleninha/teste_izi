@@ -20,7 +20,11 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
     const [loading, setLoading] = useState(true);
     const location = useLocation();
     const navigate = useNavigate();
-    const verificationConfig = getVerificationConfig(broker?.plano_id);
+    // Memoized to prevent re-render issues
+    const verificationConfig = React.useMemo(
+        () => getVerificationConfig(broker?.plano_id),
+        [broker?.plano_id]
+    );
 
 
     useEffect(() => {

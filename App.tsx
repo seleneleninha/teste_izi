@@ -16,6 +16,7 @@ const AddProperty = lazy(() => import('./pages/AddProperty'));
 const PublicHome = lazy(() => import('./pages/PublicHome').then(module => ({ default: module.PublicHome })));
 const PartnerPage = lazy(() => import('./pages/PartnerPage').then(module => ({ default: module.PartnerPage })));
 const AdminPlans = lazy(() => import('./pages/admin/AdminPlans').then(module => ({ default: module.AdminPlans })));
+const AdminBeneficios = lazy(() => import('./pages/admin/AdminBeneficios').then(module => ({ default: module.AdminBeneficios })));
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons').then(module => ({ default: module.AdminCoupons })));
 const AdminFinancial = lazy(() => import('./pages/admin/AdminFinancial').then(module => ({ default: module.AdminFinancial })));
 const AdminTrialSettings = lazy(() => import('./pages/admin/AdminTrialSettings').then(module => ({ default: module.AdminTrialSettings })));
@@ -118,6 +119,7 @@ const App: React.FC = () => {
                             <Route element={<DashboardLayout />}>
                               <Route path="/admin/approvals" element={<AdminApprovals />} />
                               <Route path="/admin/plans" element={<AdminPlans />} />
+                              <Route path="/admin/benefits" element={<AdminBeneficios />} />
                               <Route path="/admin/coupons" element={<AdminCoupons />} />
                               <Route path="/admin/financial" element={<AdminFinancial />} />
                               <Route path="/admin/trial-settings" element={<AdminTrialSettings />} />

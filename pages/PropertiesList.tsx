@@ -731,65 +731,65 @@ export const PropertiesList: React.FC = () => {
                                     </div>
                                 </div>
                             )}
+                        </div>
 
-                            {/* Linha 2: Botões de Ação - Tudo em uma linha no Desktop */}
-                            <div className="flex flex-col md:flex-row md:flex-nowrap items-stretch md:items-center gap-3 pt-2">
-                                {/* Buscar / Limpar */}
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => fetchProperties()}
-                                        className="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
-                                    >
-                                        <Search size={18} />
-                                        <span className="tracking-widest uppercase text-xs">BUSCAR</span>
-                                    </button>
-                                    <button
-                                        onClick={clearFilters}
-                                        className="px-5 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-black transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <X size={18} />
-                                        <span className="tracking-widest uppercase text-xs">LIMPAR</span>
-                                    </button>
-                                </div>
+                        {/* Linha 2: Botões de Ação - SEPARADA do grid de filtros */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4 border-t border-white/5">
+                            {/* Buscar / Limpar */}
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => fetchProperties()}
+                                    className="flex-1 sm:flex-none px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                                >
+                                    <Search size={16} />
+                                    <span className="uppercase text-xs tracking-wide">Buscar</span>
+                                </button>
+                                <button
+                                    onClick={clearFilters}
+                                    className="flex-1 sm:flex-none px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                                >
+                                    <X size={16} />
+                                    <span className="uppercase text-xs tracking-wide">Limpar</span>
+                                </button>
+                            </div>
 
-                                {/* View Switcher - Full width on mobile with equal thirds, inline on desktop */}
-                                <div className="flex w-full md:w-auto bg-slate-900 px-1.5 py-1.5 border border-white/5 rounded-xl shadow-inner">
+                            {/* View Switcher */}
+                            <div className="flex bg-slate-900 px-1 py-1 border border-slate-700 rounded-xl self-start sm:self-center">
+                                <button
+                                    onClick={() => setView('grid')}
+                                    className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all font-bold text-xs ${view === 'grid' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    <Grid size={16} />
+                                    <span className="hidden sm:inline">Cards</span>
+                                </button>
+                                {isDashboardRoute && (
                                     <button
-                                        onClick={() => setView('grid')}
-                                        className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all font-black text-xs uppercase tracking-widest ${view === 'grid' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                                        onClick={() => setView('list')}
+                                        className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all font-bold text-xs ${view === 'list' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
                                     >
-                                        <Grid size={18} />
-                                        <span className="hidden md:inline">CARDS</span>
-                                    </button>
-                                    {isDashboardRoute && (
-                                        <button
-                                            onClick={() => setView('list')}
-                                            className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all font-black text-xs uppercase tracking-widest ${view === 'list' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
-                                        >
-                                            <List size={18} />
-                                            <span className="hidden md:inline">LISTA</span>
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={() => setView('map')}
-                                        className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all font-black text-xs uppercase tracking-widest ${view === 'map' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
-                                    >
-                                        <MapIcon size={18} />
-                                        <span className="hidden md:inline">MAPA</span>
-                                    </button>
-                                </div>
-
-                                {/* Botão de Anunciar Premium para Dashboard */}
-                                {(isDashboardRoute && role !== 'Cliente') && (
-                                    <button
-                                        onClick={() => navigate('/add-property')}
-                                        className="w-full md:w-auto md:ml-auto px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-black transition-all shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-[1.02] flex items-center justify-center gap-2 border border-white/10 uppercase tracking-tight"
-                                    >
-                                        <Home size={18} />
-                                        <span className="text-sm">ANUNCIAR IMÓVEL</span>
+                                        <List size={16} />
+                                        <span className="hidden sm:inline">Lista</span>
                                     </button>
                                 )}
+                                <button
+                                    onClick={() => setView('map')}
+                                    className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-all font-bold text-xs ${view === 'map' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    <MapIcon size={16} />
+                                    <span className="hidden sm:inline">Mapa</span>
+                                </button>
                             </div>
+
+                            {/* Botão de Anunciar */}
+                            {(isDashboardRoute && role !== 'Cliente') && (
+                                <button
+                                    onClick={() => navigate('/add-property')}
+                                    className="sm:ml-auto px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 border border-white/10"
+                                >
+                                    <Home size={16} />
+                                    <span className="text-xs uppercase tracking-wide whitespace-nowrap">Anunciar Imóvel</span>
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
