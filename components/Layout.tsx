@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { useTheme } from './ThemeContext';
-import { Bell, Send } from 'lucide-react';
-import { NotificationDropdown } from './NotificationDropdown';
+import { Send } from 'lucide-react';
 import { MessagesDrawer } from './MessagesDrawer';
 import { TrialBanner } from './TrialBanner';
 import { AIAssistant } from './AIAssistant';
@@ -19,7 +18,6 @@ export const DashboardLayout: React.FC = () => {
     const location = useLocation();
     const { user, role } = useAuth();
     const [searchParams] = useSearchParams();
-    const [showNotifications, setShowNotifications] = useState(false);
     const [showMessages, setShowMessages] = useState(false);
 
     // Open chat from URL
@@ -30,83 +28,20 @@ export const DashboardLayout: React.FC = () => {
         }
     }, [searchParams]);
 
-    const notifRef = useRef<HTMLDivElement>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [notifications, setNotifications] = useState<any[]>([]);
 
     useEffect(() => {
         if (user) {
-            fetchNotifications();
-
-            // Subscribe to new notifications
-            const subscription = supabase
-                .channel('notificacoes')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificacoes', filter: `user_id=eq.${user.id}` }, payload => {
-                    setNotifications(prev => [payload.new, ...prev]);
-                })
-                .subscribe();
-
-            return () => {
-                subscription.unsubscribe();
-            };
+            // Subscription for other things can go here if needed
         }
     }, [user]);
 
-    const fetchNotifications = async () => {
-        try {
-            const { data } = await supabase
-                .from('notificacoes')
-                .select('*')
-                .eq('user_id', user?.id)
-                .order('created_at', { ascending: false })
-                .limit(10);
+    // Close messages when clicking outside if needed (currently not handled by ref in this snippet)
 
-            if (data) setNotifications(data);
-        } catch (error) {
-            console.error('Error fetching notifications:', error);
-        }
-    };
-
-    const markAllAsRead = async () => {
-        try {
-            const { error } = await supabase
-                .from('notificacoes')
-                .update({ lida: true })
-                .eq('user_id', user?.id)
-                .eq('lida', false);
-
-            if (!error) {
-                setNotifications(prev => prev.map(n => ({ ...n, lida: true })));
-            }
-        } catch (error) {
-            console.error('Error marking notifications as read:', error);
-        }
-    };
-
-    const deleteReadNotifications = async () => {
-        try {
-            const { error } = await supabase
-                .from('notificacoes')
-                .delete()
-                .eq('user_id', user?.id)
-                .eq('lida', true);
-
-            if (!error) {
-                setNotifications(prev => prev.filter(n => !n.lida));
-            }
-        } catch (error) {
-            console.error('Error deleting read notifications:', error);
-        }
-    };
-
-    const unreadCount = notifications.filter(n => !n.lida).length;
-
-    // Close notifications when clicking outside
+    // Close drawers when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
-                setShowNotifications(false);
-            }
+            // Add message drawer outside click if needed
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -171,26 +106,7 @@ export const DashboardLayout: React.FC = () => {
                             <span className="tour-incomplete-dot absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full hidden"></span>
                         </button>
 
-                        <div className="relative" ref={notifRef}>
-                            <button
-                                onClick={() => setShowNotifications(!showNotifications)}
-                                className={`p-2 rounded-full bg-slate-800 text-gray-300 hover:bg-slate-700 shadow-sm transition-colors relative ${showNotifications ? 'ring-2 ring-primary-500' : ''}`}
-                            >
-                                <Bell size={20} />
-                                {notifications.some(n => !n.lida) && (
-                                    <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white border-slate-800"></span>
-                                )}
-                            </button>
-
-                            {showNotifications && (
-                                <NotificationDropdown
-                                    notifications={notifications}
-                                    onMarkAsRead={markAllAsRead}
-                                    onDeleteRead={deleteReadNotifications}
-                                    onClose={() => setShowNotifications(false)}
-                                />
-                            )}
-                        </div>
+                        {/* Notifications removed as requested */}
                     </div>
                 </header>
 
@@ -250,21 +166,15 @@ export const PublicLayout: React.FC = () => {
             try {
                 const { data, error } = await supabase
                     .from('perfis')
-                    .select('watermark_light, watermark_dark, marca_dagua')
+                    .select('watermark_dark, marca_dagua')
                     .eq('slug', brokerSlug)
                     .single();
 
                 if (!error && data) {
                     // Start with specific theme logo
-                    let logo = theme === 'light' ? data.watermark_light : data.watermark_dark;
+                    let logo = data.watermark_dark;
 
-                    // Fallback 1: Try marca_dagua (often white/transparent, good for dark mode, risky for light)
-                    if (!logo && theme === 'dark') logo = data.marca_dagua;
-
-                    // Fallback 2: Try the other theme's logo
-                    if (!logo) logo = theme === 'light' ? data.watermark_dark : data.watermark_light;
-
-                    // Fallback 3: Try marca_dagua for light mode as last resort
+                    // Fallback: Try marca_dagua
                     if (!logo) logo = data.marca_dagua;
 
                     setBrokerLogo(logo || null);

@@ -5,7 +5,7 @@ export const PLATFORM_KNOWLEDGE = {
     // Informações da Plataforma
     platform: {
         name: "iziBrokerz",
-        tagline: "A Plataforma inteligente que conecta você às melhores oportunidades do mercado",
+        tagline: "A Plataforma inteligente que conecta você às MELHORES OPORTUNIDADES do mercado",
         mission: "Revolucionar o mercado imobiliário com tecnologia, parcerias e inteligência artificial",
 
         diferenciais: [

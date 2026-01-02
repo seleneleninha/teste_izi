@@ -64,17 +64,8 @@ export const MagicVerification: React.FC = () => {
                     lida: false
                 });
 
-            // 3. Notify Broker
-            await supabase
-                .from('notificacoes')
-                .insert({
-                    user_id: message.remetente_id,
-                    titulo: 'Resposta de Disponibilidade 🏠',
-                    mensagem: `O proprietário respondeu via Link: ${replyText}`,
-                    tipo: 'message',
-                    link: `/dashboard?openChat=${message.conversa_id}`,
-                    lida: false
-                });
+            // 3. Notify Broker REMOVED
+            // Broker will be notified via other channels in the future.
 
             // If checking -> Reload context to show "In Analysis" state on next visit? 
             // Actually just showing Success or "Checking" state now is fine.

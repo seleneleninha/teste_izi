@@ -10,9 +10,9 @@ export const Privacy: React.FC = () => {
             <div className="max-w-3xl mx-auto bg-slate-800 rounded-3xl shadow-xl p-8 md:p-12">
                 <button
                     onClick={() => navigate(-1)}
-                    className="flex items-center text-gray-500 hover:text-primary-600 mb-8 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-sm font-medium backdrop-blur-md transition-all hover:scale-105 active:scale-95"
                 >
-                    <ArrowLeft size={20} className="mr-2" /> Voltar
+                    <ArrowLeft size={20} /> Voltar
                 </button>
 
                 <h1 className="text-3xl font-bold text-white mb-6">Política de Privacidade</h1>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { ArrowLeft, Bed, Bath, Car, MapPin, Home, Share2, Heart, Phone, Mail, Calendar, ChevronLeft, ChevronRight, Check, Compass, Coffee, GraduationCap, ShieldCheck, Square, User, Search, LayoutGrid, List, Map, HomeIcon, SearchCode, SearchIcon, MessageCircle, X, PlayCircle, Video, CheckCircle, Handshake, Sparkles, AreaChart } from 'lucide-react';
 import { generateWhatsAppLink, formatPropertyMessage, trackWhatsAppClick } from '../lib/whatsAppHelper';
+import { getVerificationConfig } from '../lib/verificationHelper';
 import { HorizontalScroll } from '../components/HorizontalScroll';
 import { ScheduleVisitModal } from '../components/ScheduleVisitModal';
 import { LoginPromptModal } from '../components/LoginPromptModal';
@@ -202,7 +203,8 @@ export const PropertyDetails: React.FC = () => {
                             whatsapp,
                             creci,
                             uf_creci,
-                            slug
+                            slug,
+                            plano_id
                         )
                     `);
 
@@ -239,7 +241,7 @@ export const PropertyDetails: React.FC = () => {
                         // Buscar dados do corretor da URL (contexto de BrokerPage)
                         const { data: brokerData } = await supabase
                             .from('perfis')
-                            .select('id, nome, sobrenome, avatar, email, whatsapp, creci, uf_creci, slug')
+                            .select('id, nome, sobrenome, avatar, email, whatsapp, creci, uf_creci, slug, plano_id')
                             .eq('slug', brokerSlugParam)
                             .single();
 
@@ -287,7 +289,8 @@ export const PropertyDetails: React.FC = () => {
                             phone: finalAgentData?.whatsapp || '(11) 99999-9999',
                             creci: finalAgentData?.creci || '',
                             uf_creci: finalAgentData?.uf_creci || '',
-                            slug: finalAgentData?.slug || ''
+                            slug: finalAgentData?.slug || '',
+                            plano_id: finalAgentData?.plano_id
                         },
                         // Campos adicionais - extrair texto dos joins
                         tipo_imovel: data.tipo_imovel?.tipo || data.tipo_imovel,
@@ -493,7 +496,7 @@ export const PropertyDetails: React.FC = () => {
                                     navigate('/');
                                 }
                             }}
-                            className="px-6 py-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors flex items-center gap-2"
+                            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-sm font-medium backdrop-blur-md transition-all hover:scale-105 active:scale-95"
                         >
                             <ArrowLeft size={20} />
                             <span>Voltar</span>
@@ -677,7 +680,7 @@ export const PropertyDetails: React.FC = () => {
                                                 {property.valor_mensal > 0 && (
                                                     <p className="text-xl font-bold text-orange-400 mt-1">
                                                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 }).format(property.valor_mensal)}
-                                                        <span className="text-sm font-normal text-gray-400 ml-1">(Mensal)</span>
+                                                        <span className="text-xs font-normal text-gray-400 ml-1">/mês</span>
                                                     </p>
                                                 )}
                                                 {(!property.valor_diaria && !property.valor_mensal) && (
@@ -983,16 +986,30 @@ export const PropertyDetails: React.FC = () => {
                         <div className="space-y-6">
                             <div className="bg-slate-800 p-6 rounded-3xl shadow-lg border border-slate-700 sticky top-24">
                                 <div className="flex items-center space-x-4 mb-6">
-                                    <img src={property.agent.avatar} alt="Agent" className="w-16 h-16 rounded-full object-cover border-2 border-primary-500 p-1" />
+                                    <div className={`relative rounded-full ${getVerificationConfig(property.agent.plano_id) ? `p-[2px] ${getVerificationConfig(property.agent.plano_id)?.gradientClass} ${getVerificationConfig(property.agent.plano_id)?.pulseClass}` : ''}`}>
+                                        <img src={property.agent.avatar} alt="Agent" className={`w-16 h-16 rounded-full object-cover p-1 ${getVerificationConfig(property.agent.plano_id)
+                                            ? 'bg-slate-900 border-2 border-slate-900'
+                                            : 'border-2 border-primary-500'
+                                            }`} />
+                                    </div>
                                     <div>
                                         <p className="text-sm text-slate-400">Anunciante</p>
                                         <Link
                                             to={property.agent.slug ? `/${property.agent.slug}` : '#'}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-lg font-bold text-white cursor-pointer hover:text-primary-500 transition-colors"
+                                            className="text-lg font-bold text-white cursor-pointer hover:text-primary-500 transition-colors flex items-center gap-1"
                                         >
                                             {property.agent.name}
+                                            {property.agent.name}
+                                            {getVerificationConfig(property.agent.plano_id) && (
+                                                <img
+                                                    src={getVerificationConfig(property.agent.plano_id)?.badgeUrl}
+                                                    alt="Verified"
+                                                    className="w-5 h-5 object-contain drop-shadow-sm"
+                                                    title={getVerificationConfig(property.agent.plano_id)?.title}
+                                                />
+                                            )}
                                         </Link>
                                         <p className="text-md text-primary-600 text-primary-400 font-medium">WhatsApp {property.agent.phone}</p>
                                         {property.agent.creci && (

@@ -7,9 +7,11 @@ import { NoPropertiesFound } from '../components/NoPropertiesFound';
 import { BrokerFooter } from '../components/BrokerFooter';
 import { BrokerNavbar } from '../components/BrokerNavbar';
 // ... (imports)
-import { Loader2, Search, X, MessageCircle, ArrowLeft, Map as MapIcon, Grid } from 'lucide-react';
+import { MapPin, Phone, Mail, Building2, Home, MessageCircle, CheckCircle2, Search, Heart, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign, Map as MapIcon, Building, MapPinHouse, MapPinned, Tractor, Trees, TreePalm, ArrowRight, Heading2Icon, ArrowLeft, Loader2, X, Grid } from 'lucide-react';
 import { PropertyMap } from '../components/PropertyMap';
 import { formatCurrency } from '../lib/formatters';
+import { getRandomBackground } from '../lib/backgrounds';
+import { getVerificationConfig } from '../lib/verificationHelper';
 
 interface BrokerProfile {
     id: string;
@@ -28,6 +30,7 @@ interface BrokerProfile {
     youtube?: string;
     x?: string;
     slug: string;
+    plano_id?: string;
 }
 
 export const BrokerSearchPage: React.FC = () => {
@@ -260,18 +263,23 @@ export const BrokerSearchPage: React.FC = () => {
             <BrokerNavbar brokerSlug={broker.slug} />
 
             {/* Broker Header (Simplified Hero) */}
-            <div className="relative py-12 md:py-20 bg-midnight-950 overflow-hidden mt-20">
-                {/* Background Elements */}
-                <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
-                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/20 rounded-full blur-[120px]" />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-500/20 rounded-full blur-[120px]" />
+            <div className="relative py-12 md:py-20 overflow-hidden mt-20">
+                {/* Background Image - Random */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src={background}
+                        alt="Background"
+                        className="w-full h-full object-cover"
+                    />
+                    {/* Dark Overlay Mask */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-midnight-950/95"></div>
                 </div>
 
                 <div className="container mx-auto px-4 relative z-10 text-center mb-12">
                     <div className="absolute top-0 left-4 md:left-8">
                         <button
                             onClick={() => navigate(-1)}
-                            className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-full font-medium shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-sm font-medium backdrop-blur-md transition-all hover:scale-105 active:scale-95"
                         >
                             <ArrowLeft size={18} />
                             Voltar
@@ -279,9 +287,29 @@ export const BrokerSearchPage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="container mx-auto px-4 relative z-10 text-center">
-                    <h1 className="text-3xl md:text-5xl font-heading font-bold text-white mb-4 mt-8 md:mt-0">
-                        Buscar Imóveis
+                <div className="container mx-auto px-4 relative z-10 text-center mt-20">
+                    {/* AVATAR + VERIFIED BADGE */}
+                    <div className="flex justify-center mb-6">
+                        <div className={`relative w-28 h-28 md:w-32 md:h-32 rounded-full p-[3px] ${verificationConfig ? `${verificationConfig.gradientClass} ${verificationConfig.pulseClass}` : 'bg-white/20'}`}>
+                            <div className="absolute inset-[3px] bg-slate-900 rounded-full z-0"></div>
+                            <img
+                                src={broker.avatar || `https://ui-avatars.com/api/?name=${broker.nome}`}
+                                alt={broker.nome}
+                                className="w-full h-full rounded-full object-cover border-4 border-slate-900 relative z-10"
+                            />
+                            {verificationConfig && (
+                                <div className="absolute -bottom-1 -right-1 z-20" title={verificationConfig.title}>
+                                    <img src={verificationConfig.badgeUrl} alt={verificationConfig.title} className={`w-10 h-10 drop-shadow-xl ${verificationConfig.pulseClass}`} />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <h1 className="text-3xl md:text-5xl font-heading font-bold text-white mb-4 mt-2 flex items-center justify-center gap-3">
+                        {broker.nome} {broker.sobrenome}
+                        {verificationConfig && (
+                            <img src={verificationConfig.badgeUrl} alt={verificationConfig.title} className="w-8 h-8 object-contain drop-shadow-md" />
+                        )}
                     </h1>
                     <p className="text-gray-400 text-lg max-w-2xl mx-auto">
                         Encontre o imóvel ideal para sua Família. Estou à disposição para realizarmos seu sonho juntos!
@@ -290,7 +318,7 @@ export const BrokerSearchPage: React.FC = () => {
             </div>
 
             {/* Advanced Filters */}
-            <div className="container mx-auto px-4 -mt-8 relative z-20 mb-12">
+            <div className="container mx-auto px-4 -mt-2 relative z-20 mb-12">
                 <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl shadow-xl">
                     <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
                         {/* Filter Controls */}

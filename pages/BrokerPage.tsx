@@ -11,6 +11,7 @@ import { BrokerFooter } from '../components/BrokerFooter';
 import { BrokerNavbar } from '../components/BrokerNavbar';
 import { getRandomBackground } from '../lib/backgrounds';
 import { SearchFilter } from '../components/SearchFilter';
+import { VerificationBadge } from '../components/VerificationBadge';
 
 interface BrokerProfile {
     id: string;  // UUID do usuário (chave primária)
@@ -30,7 +31,6 @@ interface BrokerProfile {
     cidade: string;
     uf: string;
     show_address: boolean;
-    watermark_light: string;
     watermark_dark: string;
     instagram?: string;
     facebook?: string;
@@ -279,6 +279,7 @@ export const BrokerPage: React.FC = () => {
                 </div>
 
                 <div className="container mx-auto px-4 z-10 text-center relative mt-[-60px]">
+
                     <h2 className="text-4xl md:text-7xl font-heading font-bold text-white mb-2 leading-tight animate-float">
                         {/* First Message - Emerald */}
                         {broker.mensagem_boasvindas && (
@@ -302,6 +303,12 @@ export const BrokerPage: React.FC = () => {
                             </div>
                         </div>
                     </div>
+
+                    {/* Verification Badge */}
+                    <div className="flex justify-center mt-5 mb-6 animate-fadeIn">
+                        <VerificationBadge plano_id={broker.plano_id} className="bg-black/30 backdrop-blur-md border-white/20 transform hover:scale-110" />
+                    </div>
+
                 </div>
             </section>
 

@@ -4,6 +4,7 @@ import { Menu, X, Home, Search, MessageCircle, Share2, ArrowLeft, History, Perso
 import { useTheme } from './ThemeContext';
 import { supabase } from '../lib/supabaseClient';
 import { generateWhatsAppLink, trackWhatsAppClick } from '../lib/whatsAppHelper';
+import { getVerificationConfig } from '../lib/verificationHelper';
 import { LoginModal } from './LoginModal';
 
 interface BrokerNavbarProps {
@@ -16,8 +17,11 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [broker, setBroker] = useState<any>(null);
     const [showLoginModal, setShowLoginModal] = useState(false);
+    const [loading, setLoading] = useState(true);
     const location = useLocation();
     const navigate = useNavigate();
+    const verificationConfig = getVerificationConfig(broker?.plano_id);
+
 
     useEffect(() => {
         const handleScroll = () => {
@@ -29,12 +33,14 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
 
     useEffect(() => {
         const fetchBroker = async () => {
+            setLoading(true);
             const { data } = await supabase
                 .from('perfis')
-                .select('nome, sobrenome, whatsapp, avatar, creci, uf_creci')
+                .select('nome, sobrenome, whatsapp, avatar, creci, uf_creci, plano_id')
                 .eq('slug', brokerSlug)
                 .single();
             if (data) setBroker(data);
+            setLoading(false);
         };
         if (brokerSlug) fetchBroker();
     }, [brokerSlug]);
@@ -72,17 +78,25 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
                     <Link to={`/${brokerSlug}`} className="text-2xl font-heading font-bold text-white flex items-center gap-3">
                         {/* If they had a logo it would go here, else generic or avatar */}
                         {broker.avatar ? (
-                            <img src={broker.avatar} alt="Avatar" className="w-10 h-10 rounded-full border-2 border-emerald-500 object-cover" />
+                            <div className={`relative rounded-full ${verificationConfig ? `p-[2px] ${verificationConfig.gradientClass} ${verificationConfig.pulseClass}` : ''}`}>
+                                <img src={broker.avatar} alt="Avatar" className={`w-10 h-10 rounded-full object-cover ${verificationConfig
+                                    ? 'border-2 border-slate-900'
+                                    : 'border-2 border-emerald-500'
+                                    }`} />
+                            </div>
                         ) : (
                             <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">
                                 {broker.nome.charAt(0)}
                             </div>
                         )}
-                        <span>
+                        <span className="flex items-center gap-1">
                             {broker.nome} <span className="text-emerald-400">{broker.sobrenome}</span>
+                            {verificationConfig && (
+                                <img src={verificationConfig.badgeUrl} alt={verificationConfig.title} className="w-5 h-5 object-contain drop-shadow-sm" title={verificationConfig.title} />
+                            )}
                         </span>
                         {broker.creci && broker.uf_creci && (
-                            <p className="text-sm font-bold text-white mt-1">CRECI: {broker.creci}/{broker.uf_creci}</p>
+                            <p className="hidden md:block text-sm font-bold text-white mt-1 ml-2 opacity-80">CRECI: {broker.creci}/{broker.uf_creci}</p>
                         )}
                     </Link>
 

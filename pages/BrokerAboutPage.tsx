@@ -4,6 +4,9 @@ import { supabase } from '../lib/supabaseClient';
 import { BrokerNavbar } from '../components/BrokerNavbar';
 import { BrokerFooter } from '../components/BrokerFooter';
 import { Loader2, MapPin, Phone, Mail, Award, Calendar, Building2, Instagram, Facebook, Linkedin, Youtube, Twitter, TrendingUp, Users, Home, ArrowRight, MessageCircle } from 'lucide-react';
+import { getRandomBackground } from '../lib/backgrounds';
+import { getVerificationConfig } from '../lib/verificationHelper';
+import { VerificationBadge } from '../components/VerificationBadge';
 
 interface BrokerProfile {
     id: string;
@@ -32,9 +35,9 @@ interface BrokerProfile {
     anos_experiencia?: number;
     imoveis_vendidos?: number;
     clientes_atendidos?: number;
-    watermark_light?: string;
     watermark_dark?: string;
     marca_dagua?: string;
+    plano_id?: string;
 }
 
 export const BrokerAboutPage: React.FC = () => {
@@ -103,10 +106,16 @@ export const BrokerAboutPage: React.FC = () => {
             <BrokerNavbar brokerSlug={broker.slug} />
 
             {/* Hero Section with Profile */}
-            <section className="relative overflow-hidden bg-gradient-to-b from-midnight-900 to-midnight-950 text-white py-24 lg:py-32 mt-20">
+            <section className="relative overflow-hidden text-white py-24 lg:py-32 mt-20">
+                {/* Background Image - Random */}
                 <div className="absolute inset-0 z-0">
-                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[120px]" />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-500/10 rounded-full blur-[120px]" />
+                    <img
+                        src={getRandomBackground()}
+                        alt="Background"
+                        className="w-full h-full object-cover"
+                    />
+                    {/* Dark Overlay Mask */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-midnight-950/95"></div>
                 </div>
 
                 <div className="container mx-auto px-6 relative z-10 text-center">
@@ -117,15 +126,36 @@ export const BrokerAboutPage: React.FC = () => {
                     {/* Avatar */}
                     <div className="mb-6 flex justify-center">
                         <div className="relative group">
-                            <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full opacity-30 group-hover:opacity-50 blur-lg transition duration-500"></div>
+                            {/* Verification Badge Overlay */}
+                            {broker.plano_id && (
+                                <>
+                                    {/* Pulse/Glow Ring based on Tier */}
+                                    <div className={`absolute -inset-1 rounded-full ${getVerificationConfig(broker.plano_id)?.gradientClass} blur opacity-40 group-hover:opacity-75 transition duration-500`} />
+
+                                    {/* Floating Badge Icon */}
+                                    <div className="absolute -top-1 -right-1 z-20 rounded-full p-1 shadow-lg">
+                                        <img
+                                            src={getVerificationConfig(broker.plano_id)?.badgeUrl}
+                                            alt={getVerificationConfig(broker.plano_id)?.title}
+                                            className="w-10 h-10 object-contain drop-shadow-sm"
+                                            title={getVerificationConfig(broker.plano_id)?.title}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {!broker.plano_id && (
+                                <div className="absolute -inset-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full opacity-30 group-hover:opacity-50 blur-lg transition duration-500"></div>
+                            )}
+
                             {broker.avatar ? (
                                 <img
                                     src={broker.avatar}
                                     alt={`${broker.nome} ${broker.sobrenome}`}
-                                    className="relative w-40 h-40 rounded-full border-4 border-emerald-500 object-cover shadow-2xl transform transition hover:-translate-y-1 duration-500"
+                                    className={`relative w-40 h-40 rounded-full border-4 object-cover shadow-2xl transform transition hover:-translate-y-1 duration-500 ${broker.plano_id ? getVerificationConfig(broker.plano_id)?.borderClass : 'border-emerald-500'}`}
                                 />
                             ) : (
-                                <div className="relative w-40 h-40 rounded-full bg-emerald-500 flex items-center justify-center text-white text-6xl font-bold border-4 border-emerald-400 shadow-2xl">
+                                <div className={`relative w-40 h-40 rounded-full bg-emerald-500 flex items-center justify-center text-white text-6xl font-bold border-4 shadow-2xl ${broker.plano_id ? getVerificationConfig(broker.plano_id)?.borderClass : 'border-emerald-400'}`}>
                                     {broker.nome.charAt(0)}
                                 </div>
                             )}
@@ -136,6 +166,11 @@ export const BrokerAboutPage: React.FC = () => {
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 tracking-tight">
                         {broker.nome} <span className="text-emerald-400">{broker.sobrenome}</span>
                     </h1>
+
+                    {/* Verification Badge */}
+                    <div className="flex justify-center mb-8">
+                        <VerificationBadge plano_id={broker.plano_id} className="bg-white/5 border-white/10" />
+                    </div>
 
                     {/* Quick Contact */}
 

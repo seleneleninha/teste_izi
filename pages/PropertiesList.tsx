@@ -6,6 +6,7 @@ import { PropertyCard } from '../components/PropertyCard';
 import { NoPropertiesFound } from '../components/NoPropertiesFound';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { PropertyMap } from '../components/PropertyMap';
+import { getRandomBackground } from '../lib/backgrounds';
 import { useToast } from '../components/ToastContext';
 import { useAuth } from '../components/AuthContext';
 import { HorizontalScroll } from '../components/HorizontalScroll';
@@ -13,6 +14,7 @@ import { Footer } from '../components/Footer';
 import { DeactivatePropertyModal } from '../components/DeactivatePropertyModal';
 import { useHeader } from '../components/HeaderContext';
 import { generatePropertySlug } from '../lib/formatters';
+import { div } from 'framer-motion/client';
 
 export const PropertiesList: React.FC = () => {
     const navigate = useNavigate();
@@ -507,7 +509,17 @@ export const PropertiesList: React.FC = () => {
         }
 
         let sortableProperties = [...filtered];
-        if (sortConfig !== null) {
+
+        // Auto-sort by price (ascending) when price filter is active
+        if (selectedPriceRange) {
+            sortableProperties.sort((a, b) => {
+                const priceA = a.valor_venda || a.valor_locacao || a.valor_diaria || a.valor_mensal || 0;
+                const priceB = b.valor_venda || b.valor_locacao || b.valor_diaria || b.valor_mensal || 0;
+                return priceA - priceB; // Ascending order (cheapest first)
+            });
+        }
+        // Apply manual sorting if configured (and price filter is NOT active)
+        else if (sortConfig !== null) {
             sortableProperties.sort((a, b) => {
                 // Handle nested properties or specific keys
                 let aValue = a[sortConfig.key];
@@ -524,28 +536,56 @@ export const PropertiesList: React.FC = () => {
             });
         }
         return sortableProperties;
-    }, [properties, sortConfig, statusFilter]);
+    }, [properties, sortConfig, statusFilter, selectedPriceRange]);
+
+    const [backgroundImage] = useState(() => {
+        return getRandomBackground();
+    });
 
     return (
         <div className="bg-slate-900 min-h-screen flex flex-col">
             {/* Public Hero Section - Only for /search or /buscar */}
             {!isDashboardRoute && (
-                <div className="relative py-16 md:py-24 bg-slate-900 overflow-hidden">
-                    {/* Background Elements */}
-                    <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
-                        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/20 rounded-full blur-[120px]" />
-                        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-teal-500/20 rounded-full blur-[120px]" />
-                    </div>
+                <div className="relative py-16 md:py-24 overflow-hidden">
+                    {/* Background Image */}
+                    <div
+                        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+                        style={{ backgroundImage: `url(${backgroundImage})` }}
+                    />
 
-                    <div className="container mx-auto px-4 relative z-10 text-center">
-                        <h1 className="text-4xl md:text-6xl font-heading font-bold text-white mb-6 animate-in slide-in-from-top duration-700">
+                    {/* Dark Overlay Mask */}
+                    <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/80 via-black/40 to-midnight-950/95" />
+
+                    {/* Back Button */}
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="absolute top-6 left-6 z-30 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-sm font-medium backdrop-blur-md transition-all hover:scale-105 active:scale-95"
+                    >
+                        <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 19l-7-7 7-7"
+                            />
+                        </svg>
+                        Voltar
+                    </button>
+
+                    <div className="container mx-auto px-4 relative z-20 text-center">
+                        <h1 className="text-4xl md:text-6xl font-heading font-bold text-white mb-6 animate-in slide-in-from-top duration-700 drop-shadow-2xl mt-10">
                             Encontre o Imóvel <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
                                 dos seus Sonhos
                             </span>
                         </h1>
-                        <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mb-8 animate-in fade-in duration-1000 delay-300">
-                            Milhares de oportunidades exclusivas para compra, locação ou temporada em um só lugar.
+                        <p className="text-slate-200 text-lg md:text-xl max-w-2xl mx-auto mb-8 animate-in fade-in duration-1000 delay-300 drop-shadow-lg">
+                            Várias oportunidades exclusivas para compra, locação ou temporada em um só lugar.
                         </p>
                     </div>
                 </div>
@@ -691,360 +731,276 @@ export const PropertiesList: React.FC = () => {
                                     </div>
                                 </div>
                             )}
-                        </div>
 
-                        {/* Linha 2: Botões de Ação */}
-                        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 pt-2 border-t border-white/5 mt-2">
-                            <div className="flex flex-wrap items-center gap-3">
+                            {/* Linha 2: Botões de Ação - Tudo em uma linha no Desktop */}
+                            <div className="flex flex-col md:flex-row md:flex-nowrap items-stretch md:items-center gap-3 pt-2">
                                 {/* Buscar / Limpar */}
-                                <div className="flex items-center gap-2 w-full md:w-auto">
+                                <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => fetchProperties()}
-                                        className="flex-1 md:flex-none px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                                        className="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
                                     >
                                         <Search size={18} />
                                         <span className="tracking-widest uppercase text-xs">BUSCAR</span>
                                     </button>
                                     <button
                                         onClick={clearFilters}
-                                        className="flex-1 md:flex-none px-6 py-3.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-black transition-all flex items-center justify-center gap-2"
+                                        className="px-5 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-black transition-all flex items-center justify-center gap-2"
                                     >
                                         <X size={18} />
                                         <span className="tracking-widest uppercase text-xs">LIMPAR</span>
                                     </button>
                                 </div>
 
-                                {/* View Switcher */}
-                                <div className="flex bg-slate-900 border border-white/5 p-1 rounded-xl shadow-inner w-full md:w-auto">
+                                {/* View Switcher - Full width on mobile with equal thirds, inline on desktop */}
+                                <div className="flex w-full md:w-auto bg-slate-900 px-1.5 py-1.5 border border-white/5 rounded-xl shadow-inner">
                                     <button
                                         onClick={() => setView('grid')}
-                                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-black text-[10px] uppercase tracking-tighter ${view === 'grid' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                                        className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all font-black text-xs uppercase tracking-widest ${view === 'grid' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                                     >
-                                        <Grid size={16} />
-                                        <span>Cards</span>
+                                        <Grid size={18} />
+                                        <span className="hidden md:inline">CARDS</span>
                                     </button>
                                     {isDashboardRoute && (
                                         <button
                                             onClick={() => setView('list')}
-                                            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-black text-[10px] uppercase tracking-tighter ${view === 'list' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                                            className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all font-black text-xs uppercase tracking-widest ${view === 'list' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                                         >
-                                            <List size={16} />
-                                            <span>Lista</span>
+                                            <List size={18} />
+                                            <span className="hidden md:inline">LISTA</span>
                                         </button>
                                     )}
                                     <button
                                         onClick={() => setView('map')}
-                                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all font-black text-[10px] uppercase tracking-tighter ${view === 'map' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
+                                        className={`flex-1 md:flex-initial flex items-center justify-center gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all font-black text-xs uppercase tracking-widest ${view === 'map' ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                                     >
-                                        <MapIcon size={16} />
-                                        <span>Mapa</span>
+                                        <MapIcon size={18} />
+                                        <span className="hidden md:inline">MAPA</span>
                                     </button>
                                 </div>
-                            </div>
 
-                            {/* Botão de Anunciar Premium para Dashboard */}
-                            {(isDashboardRoute && role !== 'Cliente') && (
-                                <button
-                                    onClick={() => navigate('/add-property')}
-                                    className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl font-black transition-all shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-[1.02] flex items-center justify-center gap-3 border border-white/10 uppercase tracking-tighter"
-                                >
-                                    <div className="p-1 bg-white/20 rounded-lg">
+                                {/* Botão de Anunciar Premium para Dashboard */}
+                                {(isDashboardRoute && role !== 'Cliente') && (
+                                    <button
+                                        onClick={() => navigate('/add-property')}
+                                        className="w-full md:w-auto md:ml-auto px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-black transition-all shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-[1.02] flex items-center justify-center gap-2 border border-white/10 uppercase tracking-tight"
+                                    >
                                         <Home size={18} />
-                                    </div>
-                                    <span className="text-base">ANUNCIAR IMÓVEL</span>
-                                </button>
-                            )}
+                                        <span className="text-sm">ANUNCIAR IMÓVEL</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Counter - Pattern from PartnerProperties.tsx */}
-                {isMyProperties && properties.length > 0 && (
-                    <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Universal Counter - Shows property count for ALL contexts */}
+            {!loading && properties.length > 0 && (
+                <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="flex items-center justify-between">
                         <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
                             <div className="w-2 h-8 bg-emerald-500 rounded-full shadow-lg shadow-emerald-500/40"></div>
-                            {properties.length} {properties.length === 1 ? 'imóvel na sua gestão' : 'imóveis na sua gestão'}
+                            {properties.length} {properties.length === 1 ? 'imóvel encontrado' : 'imóveis encontrados'}
                         </h2>
+                        <span className="bg-slate-900/50 px-4 py-2 rounded-xl border border-white/5 font-black text-slate-300 text-[10px] uppercase tracking-widest">
+                            {isMyProperties ? 'Na sua gestão' : isMarketMode ? 'Mercado local' : 'Disponíveis'}
+                        </span>
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* Content */}
-                <div className="flex-1 min-h-[400px]">
-                    {loading ? (
-                        <div className="flex justify-center items-center h-64">
-                            <Loader2 className="animate-spin text-emerald-500" size={48} />
-                        </div>
-                    ) : properties.length === 0 ? (
-                        <NoPropertiesFound
-                            isBrokerView={isMyProperties}
-                            onShowMore={() => window.location.href = '/'}
-                        />
-                    ) : (
-                        <>
-                            {view === 'list' ? (
-                                <div className="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden animate-in fade-in duration-500 shadow-xl">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left border-collapse">
-                                            <thead>
-                                                <tr className="bg-slate-900/50 text-slate-400 text-xs uppercase border-b border-slate-700/50">
-                                                    <th onClick={() => handleSort('titulo')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
-                                                        Imóvel / Código {sortConfig?.key === 'titulo' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
-                                                    </th>
-                                                    <th onClick={() => handleSort('tipo_imovel')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
-                                                        Tipo {sortConfig?.key === 'tipo_imovel' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
-                                                    </th>
-                                                    <th onClick={() => handleSort('operacao')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
-                                                        Operação {sortConfig?.key === 'operacao' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
-                                                    </th>
-                                                    <th onClick={() => handleSort('cidade')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
-                                                        Cidade {sortConfig?.key === 'cidade' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
-                                                    </th>
-                                                    <th onClick={() => handleSort('bairro')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
-                                                        Bairro {sortConfig?.key === 'bairro' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
-                                                    </th>
-                                                    <th className="p-4 font-semibold text-center" title="Detalhes">
-                                                        Características <div className="flex justify-center items-center gap-1"></div>
-                                                    </th>
-                                                    <th onClick={() => handleSort('valor_venda')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group text-right">
-                                                        Valores
-                                                    </th>
-                                                    <th className="p-4 font-semibold text-center">Status</th>
-                                                    <th className="p-4 font-semibold text-right">Ação</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-700/30">
-                                                {sortedProperties.map((prop) => {
-                                                    // Helper to format currency
-                                                    const formatCurrency = (val?: number) => val ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val) : '-';
+            {/* Content */}
+            <div className="flex-1 min-h-[400px]">
+                {loading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <Loader2 className="animate-spin text-emerald-500" size={48} />
+                    </div>
+                ) : properties.length === 0 ? (
+                    <NoPropertiesFound
+                        isBrokerView={isMyProperties}
+                        onShowMore={() => window.location.href = '/'}
+                    />
+                ) : (
+                    <>
+                        {view === 'list' ? (
+                            <div className="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden animate-in fade-in duration-500 shadow-xl">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-900/50 text-slate-400 text-xs uppercase border-b border-slate-700/50">
+                                                <th onClick={() => handleSort('titulo')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
+                                                    Imóvel / Código {sortConfig?.key === 'titulo' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                </th>
+                                                <th onClick={() => handleSort('tipo_imovel')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
+                                                    Tipo {sortConfig?.key === 'tipo_imovel' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                </th>
+                                                <th onClick={() => handleSort('operacao')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
+                                                    Operação {sortConfig?.key === 'operacao' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                </th>
+                                                <th onClick={() => handleSort('cidade')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
+                                                    Cidade {sortConfig?.key === 'cidade' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                </th>
+                                                <th onClick={() => handleSort('bairro')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group">
+                                                    Bairro {sortConfig?.key === 'bairro' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} className="inline ml-1" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                </th>
+                                                <th className="p-4 font-semibold text-center" title="Detalhes">
+                                                    Características <div className="flex justify-center items-center gap-1"></div>
+                                                </th>
+                                                <th onClick={() => handleSort('valor_venda')} className="p-4 font-semibold cursor-pointer hover:text-white transition-colors group text-right">
+                                                    Valores
+                                                </th>
+                                                <th className="p-4 font-semibold text-center">Status</th>
+                                                <th className="p-4 font-semibold text-right">Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-700/30">
+                                            {sortedProperties.map((prop) => {
+                                                // Helper to format currency
+                                                const formatCurrency = (val?: number) => val ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val) : '-';
 
-                                                    // Status styling
-                                                    const getStatusStyle = (status: string) => {
-                                                        const styles: any = {
-                                                            'ativo': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-                                                            'pendente': 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-                                                            'reprovado': 'bg-red-500/10 text-red-400 border-red-500/20',
-                                                            'venda_faturada': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-                                                            'locacao_faturada': 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-                                                            'imovel_espera': 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-                                                            'imovel_perdido': 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-                                                        };
-                                                        return styles[status] || styles['ativo'];
+                                                // Status styling
+                                                const getStatusStyle = (status: string) => {
+                                                    const styles: any = {
+                                                        'ativo': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+                                                        'pendente': 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+                                                        'reprovado': 'bg-red-500/10 text-red-400 border-red-500/20',
+                                                        'venda_faturada': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+                                                        'locacao_faturada': 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+                                                        'imovel_espera': 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+                                                        'imovel_perdido': 'bg-slate-500/10 text-slate-400 border-slate-500/20',
                                                     };
+                                                    return styles[status] || styles['ativo'];
+                                                };
 
-                                                    // Operation Badge Color (Updated Round 2)
-                                                    const getOperationBadge = (op: string) => {
-                                                        const normalizedOp = op?.toLowerCase() || '';
-                                                        if (normalizedOp.includes('venda')) return 'bg-red-500/10 text-red-500 border-red-500/20';
-                                                        if (normalizedOp.includes('loca')) return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-                                                        if (normalizedOp.includes('temporada')) return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
-                                                        return 'bg-slate-700 text-slate-400 border-slate-600';
-                                                    }
+                                                // Operation Badge Color (Updated Round 2)
+                                                const getOperationBadge = (op: string) => {
+                                                    const normalizedOp = op?.toLowerCase() || '';
+                                                    if (normalizedOp.includes('venda')) return 'bg-red-500/10 text-red-500 border-red-500/20';
+                                                    if (normalizedOp.includes('loca')) return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+                                                    if (normalizedOp.includes('temporada')) return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+                                                    return 'bg-slate-700 text-slate-400 border-slate-600';
+                                                }
 
-                                                    // Venda/Locação override if specific
-                                                    if (prop.operacao === 'Venda/Locação' || prop.operacao === 'Venda/Locacao') {
-                                                        // Fallback is tricky with above helper, handled by if check above but maybe specific green needed?
-                                                        // User requested Green for Venda/Locação. 
-                                                        // My helper check .includes('venda') first so returns red.
-                                                    }
+                                                // Venda/Locação override if specific
+                                                if (prop.operacao === 'Venda/Locação' || prop.operacao === 'Venda/Locacao') {
+                                                    // Fallback is tricky with above helper, handled by if check above but maybe specific green needed?
+                                                    // User requested Green for Venda/Locação. 
+                                                    // My helper check .includes('venda') first so returns red.
+                                                }
 
-                                                    return (
-                                                        <tr key={prop.id} className="hover:bg-slate-800/50 transition-colors group">
+                                                return (
+                                                    <tr key={prop.id} className="hover:bg-slate-800/50 transition-colors group">
 
-                                                            {/* Imóvel / Código */}
-                                                            <td className="p-4">
-                                                                <div>
-                                                                    <div
-                                                                        onClick={() => {
-                                                                            const slug = generatePropertySlug(prop);
-                                                                            navigate(`/properties/${slug}`);
-                                                                        }}
-                                                                        className="font-bold text-white text-sm hover:text-emerald-400 cursor-pointer transition-colors max-w-[175px] truncate"
-                                                                        title={prop.titulo}
-                                                                    >
-                                                                        {prop.titulo || 'Sem título'}
+                                                        {/* Imóvel / Código */}
+                                                        <td className="p-4">
+                                                            <div>
+                                                                <div
+                                                                    onClick={() => {
+                                                                        const slug = generatePropertySlug(prop);
+                                                                        navigate(`/properties/${slug}`);
+                                                                    }}
+                                                                    className="font-bold text-white text-sm hover:text-emerald-400 cursor-pointer transition-colors max-w-[175px] truncate"
+                                                                    title={prop.titulo}
+                                                                >
+                                                                    {prop.titulo || 'Sem título'}
+                                                                </div>
+                                                                <div className="mt-1">
+                                                                    <span className="text-sm font-mono font-black text-emerald-400 tracking-wider">
+                                                                        CÓD: {prop.cod_imovel || 'N/A'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Tipo */}
+                                                        <td className="p-4 text-sm text-slate-300">
+                                                            {prop.tipo_imovel}
+                                                        </td>
+
+                                                        {/* Operação */}
+                                                        <td className="p-4">
+                                                            <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${(prop.operacao === 'Venda/Locação' || prop.operacao === 'Venda/Locacao')
+                                                                ? 'bg-green-500/10 text-green-500 border-green-500/20'
+                                                                : getOperationBadge(prop.operacao)
+                                                                }`}>
+                                                                {prop.operacao}
+                                                            </span>
+                                                        </td>
+
+                                                        {/* Cidade */}
+                                                        <td className="p-4 text-sm text-slate-300">
+                                                            {prop.cidade || ''}
+                                                        </td>
+
+                                                        {/* Bairro */}
+                                                        <td className="p-4 text-sm text-slate-300">
+                                                            {prop.bairro || ''}
+                                                        </td>
+
+                                                        {/* Metrics Compacted */}
+                                                        <td className="p-4">
+                                                            <div className="flex justify-center items-center gap-2 text-slate-400 text-xs">
+                                                                <div className="flex items-center gap-1" title="Quartos"><BedDouble size={14} /> {prop.quartos || '-'}</div>
+                                                                <div className="flex items-center gap-1" title="Banheiros"><Bath size={14} /> {prop.banheiros || '-'}</div>
+                                                                <div className="flex items-center gap-1" title="Vagas"><Car size={14} /> {prop.vagas || '-'}</div>
+                                                                <div className="flex items-center gap-1" title="Área"><Ruler size={14} /> {prop.area_priv ? `${prop.area_priv}m²` : '-'}</div>
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Valores Stacked */}
+                                                        <td className="p-4 text-right">
+                                                            <div className="flex flex-col items-end gap-1">
+                                                                {(prop.valor_venda > 0) && (
+                                                                    <div className="text-red-500 font-bold text-sm tracking-tight flex items-center gap-1">
+                                                                        {formatCurrency(prop.valor_venda)}
+                                                                        <span className="text-[10px] text-red-500/50 font-mono">V</span>
                                                                     </div>
-                                                                    <div className="mt-1">
-                                                                        <span className="text-sm font-mono font-black text-emerald-400 tracking-wider">
-                                                                            CÓD: {prop.cod_imovel || 'N/A'}
-                                                                        </span>
+                                                                )}
+                                                                {(prop.valor_locacao > 0) && (
+                                                                    <div className="text-blue-500 font-bold text-sm tracking-tight flex items-center gap-1">
+                                                                        {formatCurrency(prop.valor_locacao)}
+                                                                        <span className="text-[10px] text-blue-500/50 font-mono">L</span>
                                                                     </div>
-                                                                </div>
-                                                            </td>
+                                                                )}
+                                                                {/* Temporada Logic */}
+                                                                {(prop.operacao?.toLowerCase().includes('temporada')) && (
+                                                                    <>
+                                                                        {prop.valor_diaria > 0 && (
+                                                                            <div className="text-orange-500 font-bold text-sm tracking-tight flex items-center gap-1">
+                                                                                {formatCurrency(prop.valor_diaria)}
+                                                                                <span className="text-[10px] text-orange-500/50 font-mono">/dia</span>
+                                                                            </div>
+                                                                        )}
+                                                                        {prop.valor_mensal > 0 && (
+                                                                            <div className="text-orange-500 font-bold text-sm tracking-tight flex items-center gap-1">
+                                                                                {formatCurrency(prop.valor_mensal)}
+                                                                                <span className="text-[10px] text-orange-500/50 font-mono">/mês</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </td>
 
-                                                            {/* Tipo */}
-                                                            <td className="p-4 text-sm text-slate-300">
-                                                                {prop.tipo_imovel}
-                                                            </td>
+                                                        <td className="p-4 text-center">
+                                                            <span className={`px-2 py-1 rounded-full text-[10px] uppercase font-bold border ${getStatusStyle(prop.status)}`}>
+                                                                {prop.status === 'venda_faturada' ? 'VENDIDO' :
+                                                                    prop.status === 'locacao_faturada' ? 'ALUGADO' :
+                                                                        prop.status || 'ATIVO'}
+                                                            </span>
+                                                        </td>
 
-                                                            {/* Operação */}
-                                                            <td className="p-4">
-                                                                <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${(prop.operacao === 'Venda/Locação' || prop.operacao === 'Venda/Locacao')
-                                                                    ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                                                                    : getOperationBadge(prop.operacao)
-                                                                    }`}>
-                                                                    {prop.operacao}
-                                                                </span>
-                                                            </td>
-
-                                                            {/* Cidade */}
-                                                            <td className="p-4 text-sm text-slate-300">
-                                                                {prop.cidade || ''}
-                                                            </td>
-
-                                                            {/* Bairro */}
-                                                            <td className="p-4 text-sm text-slate-300">
-                                                                {prop.bairro || ''}
-                                                            </td>
-
-                                                            {/* Metrics Compacted */}
-                                                            <td className="p-4">
-                                                                <div className="flex justify-center items-center gap-2 text-slate-400 text-xs">
-                                                                    <div className="flex items-center gap-1" title="Quartos"><BedDouble size={14} /> {prop.quartos || '-'}</div>
-                                                                    <div className="flex items-center gap-1" title="Banheiros"><Bath size={14} /> {prop.banheiros || '-'}</div>
-                                                                    <div className="flex items-center gap-1" title="Vagas"><Car size={14} /> {prop.vagas || '-'}</div>
-                                                                    <div className="flex items-center gap-1" title="Área"><Ruler size={14} /> {prop.area_priv ? `${prop.area_priv}m²` : '-'}</div>
-                                                                </div>
-                                                            </td>
-
-                                                            {/* Valores Stacked */}
-                                                            <td className="p-4 text-right">
-                                                                <div className="flex flex-col items-end gap-1">
-                                                                    {(prop.valor_venda > 0) && (
-                                                                        <div className="text-red-500 font-bold text-sm tracking-tight flex items-center gap-1">
-                                                                            {formatCurrency(prop.valor_venda)}
-                                                                            <span className="text-[10px] text-red-500/50 font-mono">V</span>
-                                                                        </div>
-                                                                    )}
-                                                                    {(prop.valor_locacao > 0) && (
-                                                                        <div className="text-blue-500 font-bold text-sm tracking-tight flex items-center gap-1">
-                                                                            {formatCurrency(prop.valor_locacao)}
-                                                                            <span className="text-[10px] text-blue-500/50 font-mono">L</span>
-                                                                        </div>
-                                                                    )}
-                                                                    {/* Temporada Logic */}
-                                                                    {(prop.operacao?.toLowerCase().includes('temporada')) && (
-                                                                        <>
-                                                                            {prop.valor_diaria > 0 && (
-                                                                                <div className="text-orange-500 font-bold text-sm tracking-tight flex items-center gap-1">
-                                                                                    {formatCurrency(prop.valor_diaria)}
-                                                                                    <span className="text-[10px] text-orange-500/50 font-mono">/dia</span>
-                                                                                </div>
-                                                                            )}
-                                                                            {prop.valor_mensal > 0 && (
-                                                                                <div className="text-orange-500 font-bold text-sm tracking-tight flex items-center gap-1">
-                                                                                    {formatCurrency(prop.valor_mensal)}
-                                                                                    <span className="text-[10px] text-orange-500/50 font-mono">/mês</span>
-                                                                                </div>
-                                                                            )}
-                                                                        </>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-
-                                                            <td className="p-4 text-center">
-                                                                <span className={`px-2 py-1 rounded-full text-[10px] uppercase font-bold border ${getStatusStyle(prop.status)}`}>
-                                                                    {prop.status === 'venda_faturada' ? 'VENDIDO' :
-                                                                        prop.status === 'locacao_faturada' ? 'ALUGADO' :
-                                                                            prop.status || 'ATIVO'}
-                                                                </span>
-                                                            </td>
-
-                                                            <td className="p-4 text-right">
-                                                                <div className="flex items-center justify-end gap-2">
-                                                                    {(isDashboardRoute && user && prop.user_id === user.id) && (
-                                                                        <>
-                                                                            <button
-                                                                                onClick={(e) => { e.stopPropagation(); navigate(`/add-property?id=${prop.id}`); }}
-                                                                                className="p-1.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 rounded-lg transition-colors border border-yellow-500/20"
-                                                                                title="Editar"
-                                                                            >
-                                                                                <Edit2 size={16} />
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    setDeactivateModal({
-                                                                                        isOpen: true,
-                                                                                        propertyId: prop.id,
-                                                                                        propertyTitle: prop.titulo
-                                                                                    });
-                                                                                }}
-                                                                                className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors border border-red-500/20"
-                                                                                title="Inativar"
-                                                                            >
-                                                                                <Trash2 size={16} />
-                                                                            </button>
-                                                                        </>
-                                                                    )}
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.preventDefault();
-                                                                            e.stopPropagation();
-                                                                            const slug = generatePropertySlug(prop);
-                                                                            navigate(`/properties/${slug}`);
-                                                                        }}
-                                                                        className="p-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors border border-slate-600"
-                                                                        title="Visualizar"
-                                                                    >
-                                                                        <Eye size={16} />
-                                                                    </button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    {sortedProperties.length === 0 && (
-                                        <div className="p-8 text-center text-slate-500">
-                                            Nenhum imóvel encontrado nesta lista.
-                                        </div>
-                                    )}
-                                </div>
-                            ) : view === 'map' ? (
-                                <div className="h-[400px] rounded-3xl overflow-hidden border border-slate-700 shadow-lg">
-                                    <PropertyMap properties={properties} />
-                                </div>
-                            ) : view === 'grid' ? (
-                                <div className="w-full">
-                                    {/* Horizontal Scroll Layout */}
-                                    {(() => {
-                                        const filteredProps = isMyProperties
-                                            ? statusFilter === 'todos'
-                                                ? properties
-                                                : properties.filter(p => p.status === statusFilter || (statusFilter === 'ativo' && !p.status))
-                                            : properties;
-
-                                        if (filteredProps.length === 0) {
-                                            return (
-                                                <NoPropertiesFound
-                                                    message="Nenhum imóvel nesta categoria no momento"
-                                                    onShowMore={() => setStatusFilter('todos')}
-                                                />
-                                            );
-                                        }
-
-                                        return (
-                                            <HorizontalScroll itemsPerPage={undefined} itemWidth={320}>
-                                                {filteredProps.map(prop => (
-                                                    <div key={prop.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
-                                                        <PropertyCard
-                                                            property={prop}
-                                                            showStatus={isMyProperties}
-                                                            isDashboard={isDashboardRoute}
-                                                            actions={
-                                                                (isDashboardRoute && user && prop.user_id === user.id) ? (
+                                                        <td className="p-4 text-right">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                {(isDashboardRoute && user && prop.user_id === user.id) && (
                                                                     <>
                                                                         <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                navigate(`/add-property?id=${prop.id}`);
-                                                                            }}
-                                                                            className="p-1.5 bg-yellow-500 hover:bg-yellow-500 text-white rounded-full transition-colors border border-yellow-500/20"
+                                                                            onClick={(e) => { e.stopPropagation(); navigate(`/add-property?id=${prop.id}`); }}
+                                                                            className="p-1.5 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 rounded-lg transition-colors border border-yellow-500/20"
                                                                             title="Editar"
                                                                         >
-                                                                            <Edit2 size={16} className="mr-1.5" />
+                                                                            <Edit2 size={16} />
                                                                         </button>
                                                                         <button
                                                                             onClick={(e) => {
@@ -1055,162 +1011,247 @@ export const PropertiesList: React.FC = () => {
                                                                                     propertyTitle: prop.titulo
                                                                                 });
                                                                             }}
-                                                                            className="p-1.5 bg-red-500 hover:bg-red-500 text-white rounded-full transition-colors border border-red-500/20"
-                                                                            title="Inativar Imóvel"
+                                                                            className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors border border-red-500/20"
+                                                                            title="Inativar"
                                                                         >
-                                                                            <Trash2 size={16} className="mr-1.5 align-items-center" />
+                                                                            <Trash2 size={16} />
                                                                         </button>
                                                                     </>
-                                                                ) : undefined
-                                                            }
-                                                        />
-                                                    </div>
-                                                ))}
-                                            </HorizontalScroll>
+                                                                )}
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        e.stopPropagation();
+                                                                        const slug = generatePropertySlug(prop);
+                                                                        navigate(`/properties/${slug}`);
+                                                                    }}
+                                                                    className="p-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors border border-slate-600"
+                                                                    title="Visualizar"
+                                                                >
+                                                                    <Eye size={16} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {sortedProperties.length === 0 && (
+                                    <div className="p-8 text-center text-slate-500">
+                                        Nenhum imóvel encontrado nesta lista.
+                                    </div>
+                                )}
+                            </div>
+                        ) : view === 'map' ? (
+                            <div className="h-[400px] rounded-3xl overflow-hidden border border-slate-700 shadow-lg">
+                                <PropertyMap properties={properties} />
+                            </div>
+                        ) : view === 'grid' ? (
+                            <div className="w-full">
+                                {/* Horizontal Scroll Layout */}
+                                {(() => {
+                                    const filteredProps = isMyProperties
+                                        ? statusFilter === 'todos'
+                                            ? properties
+                                            : properties.filter(p => p.status === statusFilter || (statusFilter === 'ativo' && !p.status))
+                                        : properties;
+
+                                    if (filteredProps.length === 0) {
+                                        return (
+                                            <NoPropertiesFound
+                                                message="Nenhum imóvel nesta categoria no momento"
+                                                onShowMore={() => setStatusFilter('todos')}
+                                            />
                                         );
-                                    })()}
-                                </div>
-                            ) : isMyProperties ? (
-                                <div className="space-y-6">
-                                    {/* Definição das seções */}
-                                    {[
-                                        { key: 'pendente', label: 'Pendentes', icon: <Home size={20} />, color: 'yellow', emoji: '⏳' },
-                                        { key: 'reprovado', label: 'Reprovados', icon: <AlertTriangle size={20} />, color: 'red', emoji: '❌' },
-                                        { key: 'ativo', label: 'Ativos', icon: <Home size={20} />, color: 'emerald', emoji: '✅' },
-                                        { key: 'venda_faturada', label: 'Vendidos', icon: <TrendingUp size={20} />, color: 'emerald', emoji: '🎉' },
-                                        { key: 'locacao_faturada', label: 'Alugados', icon: <Key size={20} />, color: 'blue', emoji: '💰' },
-                                        { key: 'imovel_espera', label: 'Em Standby', icon: <Pause size={20} />, color: 'yellow', emoji: '⏸️' },
-                                        { key: 'imovel_perdido', label: 'Perdidos', icon: <AlertTriangle size={20} />, color: 'red', emoji: '⚠️' },
-                                    ]
-                                        .filter(section => {
-                                            // Mostrar apenas se tiver properties nessa categoria OU se statusFilter for 'todos'
-                                            const count = properties.filter(p =>
-                                                p.status === section.key || (section.key === 'ativo' && !p.status)
-                                            ).length;
-                                            // Se está filtrando por status específico, só mostra essa seção
-                                            if (statusFilter !== 'todos') {
-                                                return section.key === statusFilter;
-                                            }
-                                            return count > 0;
-                                        })
-                                        .map(section => {
-                                            const sectionProperties = properties.filter(p =>
-                                                p.status === section.key || (section.key === 'ativo' && !p.status)
-                                            );
-                                            const isExpanded = expandedSections.includes(section.key);
-                                            const colorClasses = {
-                                                emerald: 'border-emerald-700/50 bg-emerald-900/20 text-emerald-400',
-                                                blue: 'border-blue-700/50 bg-blue-900/20 text-blue-400',
-                                                yellow: 'border-yellow-700/50 bg-yellow-900/20 text-yellow-400',
-                                                red: 'border-red-700/50 bg-red-900/20 text-red-400',
-                                            };
+                                    }
 
-                                            return (
-                                                <div key={section.key} className="rounded-2xl border border-slate-700/50 overflow-hidden">
-                                                    {/* Header Clicável */}
-                                                    <button
-                                                        onClick={() => toggleSection(section.key)}
-                                                        className={`w-full flex items-center justify-between px-5 py-4 transition-all ${isExpanded ? colorClasses[section.color as keyof typeof colorClasses] : 'bg-slate-800/50 hover:bg-slate-800'
-                                                            }`}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isExpanded ? `bg-${section.color}-500/30` : 'bg-slate-700'
-                                                                }`}>
-                                                                {section.icon}
-                                                            </div>
-                                                            <span className="font-bold text-white text-lg">
-                                                                {section.emoji} {section.label}
-                                                            </span>
-                                                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${isExpanded
-                                                                ? `bg-${section.color}-500/30 text-${section.color}-300`
-                                                                : 'bg-slate-700 text-slate-300'
-                                                                }`}>
-                                                                {sectionProperties.length}
-                                                            </span>
-                                                        </div>
-                                                        <ChevronDown
-                                                            size={24}
-                                                            className={`text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''
-                                                                }`}
-                                                        />
-                                                    </button>
-
-                                                    {/* Conteúdo Colapsável */}
-                                                    {isExpanded && sectionProperties.length > 0 && (
-                                                        <div className="p-5 bg-slate-900/50">
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                                                {sectionProperties.map(prop => (
-                                                                    <PropertyCard
-                                                                        key={prop.id}
-                                                                        property={prop}
-                                                                        showStatus={isMyProperties}
-                                                                        isDashboard={isDashboardRoute}
-                                                                        actions={
-                                                                            (isDashboardRoute && user && prop.user_id === user.id) ? (
-                                                                                <>
-                                                                                    <button
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            navigate(`/add-property?id=${prop.id}`);
-                                                                                        }}
-                                                                                        className="flex-1 px-3 py-2 bg-yellow-600/20 text-yellow-400 rounded-full text-sm font-medium hover:bg-yellow-600/30 flex items-center justify-center transition-colors"
-                                                                                    >
-                                                                                        <Edit2 size={16} className="mr-1.5" /> Editar
-                                                                                    </button>
-                                                                                    <button
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            setDeactivateModal({
-                                                                                                isOpen: true,
-                                                                                                propertyId: prop.id,
-                                                                                                propertyTitle: prop.titulo
-                                                                                            });
-                                                                                        }}
-                                                                                        className="flex-1 px-3 py-2 bg-red-600/20 text-red-400 rounded-full text-sm font-medium hover:bg-red-600/30 flex items-center justify-center transition-colors"
-                                                                                    >
-                                                                                        <Trash2 size={16} className="mr-1.5" /> Inativar
-                                                                                    </button>
-                                                                                </>
-                                                                            ) : undefined
-                                                                        }
-                                                                    />
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    )}
+                                    return (
+                                        <HorizontalScroll itemsPerPage={undefined} itemWidth={320}>
+                                            {filteredProps.map(prop => (
+                                                <div key={prop.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
+                                                    <PropertyCard
+                                                        property={prop}
+                                                        showStatus={isMyProperties}
+                                                        isDashboard={isDashboardRoute}
+                                                        actions={
+                                                            (isDashboardRoute && user && prop.user_id === user.id) ? (
+                                                                <>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            navigate(`/add-property?id=${prop.id}`);
+                                                                        }}
+                                                                        className="p-1.5 bg-yellow-500 hover:bg-yellow-500 text-white rounded-full transition-colors border border-yellow-500/20"
+                                                                        title="Editar"
+                                                                    >
+                                                                        <Edit2 size={16} className="mr-1.5" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setDeactivateModal({
+                                                                                isOpen: true,
+                                                                                propertyId: prop.id,
+                                                                                propertyTitle: prop.titulo
+                                                                            });
+                                                                        }}
+                                                                        className="p-1.5 bg-red-500 hover:bg-red-500 text-white rounded-full transition-colors border border-red-500/20"
+                                                                        title="Inativar Imóvel"
+                                                                    >
+                                                                        <Trash2 size={16} className="mr-1.5 align-items-center" />
+                                                                    </button>
+                                                                </>
+                                                            ) : undefined
+                                                        }
+                                                    />
                                                 </div>
-                                            );
-                                        })}
-                                </div>
-                            ) : (
-                                /* Grid Normal para visitantes */
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                    {properties.map(prop => (
-                                        <PropertyCard
-                                            key={prop.id}
-                                            property={prop}
-                                            showStatus={false}
-                                            isDashboard={false}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                                            ))}
+                                        </HorizontalScroll>
+                                    );
+                                })()}
+                            </div>
+                        ) : isMyProperties ? (
+                            <div className="space-y-6">
+                                {/* Definição das seções */}
+                                {[
+                                    { key: 'pendente', label: 'Pendentes', icon: <Home size={20} />, color: 'yellow', emoji: '⏳' },
+                                    { key: 'reprovado', label: 'Reprovados', icon: <AlertTriangle size={20} />, color: 'red', emoji: '❌' },
+                                    { key: 'ativo', label: 'Ativos', icon: <Home size={20} />, color: 'emerald', emoji: '✅' },
+                                    { key: 'venda_faturada', label: 'Vendidos', icon: <TrendingUp size={20} />, color: 'emerald', emoji: '🎉' },
+                                    { key: 'locacao_faturada', label: 'Alugados', icon: <Key size={20} />, color: 'blue', emoji: '💰' },
+                                    { key: 'imovel_espera', label: 'Em Standby', icon: <Pause size={20} />, color: 'yellow', emoji: '⏸️' },
+                                    { key: 'imovel_perdido', label: 'Perdidos', icon: <AlertTriangle size={20} />, color: 'red', emoji: '⚠️' },
+                                ]
+                                    .filter(section => {
+                                        // Mostrar apenas se tiver properties nessa categoria OU se statusFilter for 'todos'
+                                        const count = properties.filter(p =>
+                                            p.status === section.key || (section.key === 'ativo' && !p.status)
+                                        ).length;
+                                        // Se está filtrando por status específico, só mostra essa seção
+                                        if (statusFilter !== 'todos') {
+                                            return section.key === statusFilter;
+                                        }
+                                        return count > 0;
+                                    })
+                                    .map(section => {
+                                        const sectionProperties = properties.filter(p =>
+                                            p.status === section.key || (section.key === 'ativo' && !p.status)
+                                        );
+                                        const isExpanded = expandedSections.includes(section.key);
+                                        const colorClasses = {
+                                            emerald: 'border-emerald-700/50 bg-emerald-900/20 text-emerald-400',
+                                            blue: 'border-blue-700/50 bg-blue-900/20 text-blue-400',
+                                            yellow: 'border-yellow-700/50 bg-yellow-900/20 text-yellow-400',
+                                            red: 'border-red-700/50 bg-red-900/20 text-red-400',
+                                        };
 
-                { /* Modal de Inativação */}
-                <DeactivatePropertyModal
-                    isOpen={deactivateModal.isOpen}
-                    onClose={() => setDeactivateModal({ isOpen: false, propertyId: '', propertyTitle: '' })}
-                    propertyId={deactivateModal.propertyId}
-                    propertyTitle={deactivateModal.propertyTitle}
-                    onSuccess={() => {
-                        fetchProperties();
-                        setDeactivateModal({ isOpen: false, propertyId: '', propertyTitle: '' });
-                    }}
-                />
+                                        return (
+                                            <div key={section.key} className="rounded-2xl border border-slate-700/50 overflow-hidden">
+                                                {/* Header Clicável */}
+                                                <button
+                                                    onClick={() => toggleSection(section.key)}
+                                                    className={`w-full flex items-center justify-between px-5 py-4 transition-all ${isExpanded ? colorClasses[section.color as keyof typeof colorClasses] : 'bg-slate-800/50 hover:bg-slate-800'
+                                                        }`}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isExpanded ? `bg-${section.color}-500/30` : 'bg-slate-700'
+                                                            }`}>
+                                                            {section.icon}
+                                                        </div>
+                                                        <span className="font-bold text-white text-lg">
+                                                            {section.emoji} {section.label}
+                                                        </span>
+                                                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${isExpanded
+                                                            ? `bg-${section.color}-500/30 text-${section.color}-300`
+                                                            : 'bg-slate-700 text-slate-300'
+                                                            }`}>
+                                                            {sectionProperties.length}
+                                                        </span>
+                                                    </div>
+                                                    <ChevronDown
+                                                        size={24}
+                                                        className={`text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''
+                                                            }`}
+                                                    />
+                                                </button>
+
+                                                {/* Conteúdo Colapsável */}
+                                                {isExpanded && sectionProperties.length > 0 && (
+                                                    <div className="p-5 bg-slate-900/50">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                                            {sectionProperties.map(prop => (
+                                                                <PropertyCard
+                                                                    key={prop.id}
+                                                                    property={prop}
+                                                                    showStatus={isMyProperties}
+                                                                    isDashboard={isDashboardRoute}
+                                                                    actions={
+                                                                        (isDashboardRoute && user && prop.user_id === user.id) ? (
+                                                                            <>
+                                                                                <button
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        navigate(`/add-property?id=${prop.id}`);
+                                                                                    }}
+                                                                                    className="flex-1 px-3 py-2 bg-yellow-600/20 text-yellow-400 rounded-full text-sm font-medium hover:bg-yellow-600/30 flex items-center justify-center transition-colors"
+                                                                                >
+                                                                                    <Edit2 size={16} className="mr-1.5" /> Editar
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setDeactivateModal({
+                                                                                            isOpen: true,
+                                                                                            propertyId: prop.id,
+                                                                                            propertyTitle: prop.titulo
+                                                                                        });
+                                                                                    }}
+                                                                                    className="flex-1 px-3 py-2 bg-red-600/20 text-red-400 rounded-full text-sm font-medium hover:bg-red-600/30 flex items-center justify-center transition-colors"
+                                                                                >
+                                                                                    <Trash2 size={16} className="mr-1.5" /> Inativar
+                                                                                </button>
+                                                                            </>
+                                                                        ) : undefined
+                                                                    }
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                            </div>
+                        ) : (
+                            /* Grid Normal para visitantes */
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {properties.map(prop => (
+                                    <PropertyCard
+                                        key={prop.id}
+                                        property={prop}
+                                        showStatus={false}
+                                        isDashboard={false}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
+
+            { /* Modal de Inativação */}
+            <DeactivatePropertyModal
+                isOpen={deactivateModal.isOpen}
+                onClose={() => setDeactivateModal({ isOpen: false, propertyId: '', propertyTitle: '' })}
+                propertyId={deactivateModal.propertyId}
+                propertyTitle={deactivateModal.propertyTitle}
+                onSuccess={() => {
+                    fetchProperties();
+                    setDeactivateModal({ isOpen: false, propertyId: '', propertyTitle: '' });
+                }}
+            />
         </div>
     );
 };

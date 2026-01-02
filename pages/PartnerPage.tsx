@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import { Footer } from '../components/Footer';
 import { PartnersCarousel } from '../components/PartnersCarousel';
 import { useToast } from '../components/ToastContext';
+import { getRandomBackground } from '../lib/backgrounds';
 
 interface Plan {
     id: string;
@@ -185,11 +186,11 @@ export const PartnerPage: React.FC = () => {
             <section className="relative py-20 lg:py-32 overflow-hidden">
                 <div className="absolute inset-0 z-0">
                     <img
-                        src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1920"
+                        src={getRandomBackground()}
                         alt="Office Background"
                         className="w-full h-full object-cover opacity-50 dark:opacity-70"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/50 to-white dark:from-slate-900/80 dark:via-slate-900/50 dark:to-slate-900"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-midnight-950/95"></div>
                 </div>
 
                 <div className="container mx-auto px-4 relative z-10 text-center">

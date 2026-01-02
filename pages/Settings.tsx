@@ -3,15 +3,16 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
 import { useHeader } from '../components/HeaderContext';
-import { User, Lock, Bell, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, AlertTriangle, ExternalLink, MapPin, Phone, Share2, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign, Download, Search, Copy, MessageSquare, Zap, Check, Info, ArrowRight, Bot, Sparkles, MessageCircle, QrCode, X } from 'lucide-react';
+import { User, Lock, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, AlertTriangle, ExternalLink, MapPin, Phone, Share2, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign, Download, Search, Copy, MessageSquare, Zap, Check, Info, ArrowRight, Bot, Sparkles, MessageCircle, QrCode, X, BadgeCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { geocodeAddress } from '../lib/geocodingHelper';
 import { checkPasswordStrength, validateEmail, validatePhone, validateCRECI, sanitizeInput } from '../lib/validation';
 import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicator';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
+import { getVerificationConfig } from '../lib/verificationHelper';
 
 export const Settings: React.FC = () => {
-  const { user, signOut, role } = useAuth();
+  const { user, userProfile, signOut, role } = useAuth();
   const { addToast } = useToast();
   const { setHeaderContent } = useHeader();
   const navigate = useNavigate();
@@ -19,6 +20,10 @@ export const Settings: React.FC = () => {
 
   // Loading States
   const [loading, setLoading] = useState(false);
+
+  // Verified Status Check (Avançado or Profissional)
+  // Verified Status Check (Tiered)
+  const verificationConfig = getVerificationConfig(userProfile?.plano_id);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -47,7 +52,6 @@ export const Settings: React.FC = () => {
     showAddress: false,
     raioAtuacao: 10,
     // Watermarks
-    watermarkLight: '',
     watermarkDark: '',
     marcaDagua: '',
     // Social Media
@@ -63,7 +67,8 @@ export const Settings: React.FC = () => {
     // About Page Fields
     sobreMim: '',
     imoveisVendidos: 0,
-    clientesAtendidos: 0
+    clientesAtendidos: 0,
+    anosExperiencia: 0
   });
 
   // Password State
@@ -83,6 +88,12 @@ export const Settings: React.FC = () => {
   // LGPD States
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [exportingData, setExportingData] = useState(false);
+
+  // Slug availability check
+  const [slugAvailable, setSlugAvailable] = useState<boolean | null>(null);
+  const [checkingSlug, setCheckingSlug] = useState(false);
+  const [slugSaved, setSlugSaved] = useState(false);
+  const slugCheckTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // --- WhatsApp & IA Integration States ---
   const [whatsappConfig, setWhatsappConfig] = useState<{
@@ -107,24 +118,72 @@ export const Settings: React.FC = () => {
   useEffect(() => {
     setHeaderContent(
       <div className="flex flex-col justify-center">
-        <h2 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
+        <h2 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight flex items-center gap-2">
           Configurações da Conta
+          {verificationConfig && (
+            <img src={verificationConfig.badgeUrl} alt={verificationConfig.title} className="w-6 h-6 object-contain drop-shadow-sm" title={verificationConfig.title} />
+          )}
         </h2>
         <p className="text-slate-400 text-xs font-medium leading-tight">Gerencie seu perfil, segurança e preferências</p>
       </div>
     );
     return () => setHeaderContent(null);
-  }, [setHeaderContent]);
+  }, [setHeaderContent, verificationConfig]);
 
   useEffect(() => {
     if (user?.id) {
+      // Pre-fill profile with userProfile from AuthContext (already loaded from perfis table)
+      if (userProfile) {
+        setProfile(prev => ({
+          ...prev,
+          // Personal Data
+          name: userProfile.nome || prev.name || '',
+          sobrenome: userProfile.sobrenome || prev.sobrenome || '',
+          email: userProfile.email || prev.email || user.email || '',
+          phone: userProfile.whatsapp || prev.phone || '',
+          cpf: userProfile.cpf || prev.cpf || '',
+          creci: userProfile.creci || prev.creci || '',
+          ufCreci: userProfile.uf_creci || prev.ufCreci || '',
+          avatar: userProfile.avatar || prev.avatar || '',
+          role: userProfile.role || prev.role || '',
+          slug: userProfile.slug || prev.slug || '',
+          // Address
+          cep: userProfile.cep || prev.cep || '',
+          logradouro: userProfile.logradouro || prev.logradouro || '',
+          numero: userProfile.numero || prev.numero || '',
+          complemento: userProfile.complemento || prev.complemento || '',
+          bairro: userProfile.bairro || prev.bairro || '',
+          cidade: userProfile.cidade || prev.cidade || '',
+          uf: userProfile.uf || prev.uf || '',
+          showAddress: userProfile.show_address || prev.showAddress || false,
+          raioAtuacao: userProfile.raio_atuacao || prev.raioAtuacao || 10,
+          // Brands & Watermarks
+          watermarkDark: userProfile.watermark_dark || prev.watermarkDark || '',
+          marcaDagua: userProfile.marca_dagua || prev.marcaDagua || '',
+          // Social Media
+          instagram: userProfile.instagram || prev.instagram || '',
+          facebook: userProfile.facebook || prev.facebook || '',
+          threads: userProfile.threads || prev.threads || '',
+          youtube: userProfile.youtube || prev.youtube || '',
+          linkedin: userProfile.linkedin || prev.linkedin || '',
+          x: userProfile.x || prev.x || '',
+          // Page & Content
+          boasVindas1: userProfile.mensagem_boasvindas || prev.boasVindas1 || '',
+          boasVindas2: userProfile.boasvindas2 || prev.boasVindas2 || '',
+          sobreMim: userProfile.sobre_mim || prev.sobreMim || '',
+          imoveisVendidos: userProfile.imoveis_vendidos || prev.imoveisVendidos || 0,
+          clientesAtendidos: userProfile.clientes_atendidos || prev.clientesAtendidos || 0,
+          anosExperiencia: userProfile.anos_experiencia || prev.anosExperiencia || 0
+        }));
+      }
+
       fetchProfile();
       fetchWhatsAppConfig();
     }
     return () => {
       if (pollInterval.current) clearInterval(pollInterval.current);
     };
-  }, [user?.id]);
+  }, [user?.id, userProfile]);
 
   const fetchWhatsAppConfig = async () => {
     if (!user) return;
@@ -303,7 +362,7 @@ export const Settings: React.FC = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('perfis')
-        .select('nome, sobrenome, email, whatsapp, cpf, creci, uf_creci, avatar, role, slug, cep, logradouro, numero, complemento, bairro, cidade, uf, show_address, raio_atuacao, watermark_light, watermark_dark, marca_dagua, instagram, facebook, threads, youtube, linkedin, x, mensagem_boasvindas, boasvindas2, sobre_mim, imoveis_vendidos, clientes_atendidos, anos_experiencia, plano_id')
+        .select('nome, sobrenome, email, whatsapp, cpf, creci, uf_creci, avatar, role, slug, cep, logradouro, numero, complemento, bairro, cidade, uf, show_address, raio_atuacao, watermark_dark, marca_dagua, instagram, facebook, threads, youtube, linkedin, x, mensagem_boasvindas, boasvindas2, sobre_mim, imoveis_vendidos, clientes_atendidos, anos_experiencia, plano_id')
         .eq('id', user?.id)
         .single();
 
@@ -327,7 +386,7 @@ export const Settings: React.FC = () => {
           uf: data.uf || '',
           showAddress: data.show_address || false,
           raioAtuacao: data.raio_atuacao || 10,
-          watermarkLight: data.watermark_light || '',
+          raioAtuacao: data.raio_atuacao || 10,
           watermarkDark: data.watermark_dark || '',
           marcaDagua: data.marca_dagua || '',
           instagram: data.instagram || '',
@@ -340,7 +399,8 @@ export const Settings: React.FC = () => {
           boasVindas2: data.boasvindas2 || '',
           sobreMim: data.sobre_mim || '',
           imoveisVendidos: data.imoveis_vendidos || 0,
-          clientesAtendidos: data.clientes_atendidos || 0
+          clientesAtendidos: data.clientes_atendidos || 0,
+          anosExperiencia: data.anos_experiencia || 0
         });
 
         if (data.preferencias_notificacao) {
@@ -431,7 +491,8 @@ export const Settings: React.FC = () => {
         uf: profile.uf,
         show_address: profile.showAddress,
         raio_atuacao: profile.raioAtuacao || null,
-        watermark_light: profile.watermarkLight || null,
+        show_address: profile.showAddress,
+        raio_atuacao: profile.raioAtuacao || null,
         watermark_dark: profile.watermarkDark || null,
         marca_dagua: profile.marcaDagua || null,
         instagram: profile.instagram || null,
@@ -445,6 +506,7 @@ export const Settings: React.FC = () => {
         sobre_mim: profile.sobreMim || null,
         imoveis_vendidos: profile.imoveisVendidos || null,
         clientes_atendidos: profile.clientesAtendidos || null,
+        anos_experiencia: profile.anosExperiencia || null,
         preferencias_notificacao: notifications,
         updated_at: new Date().toISOString()
       };
@@ -518,7 +580,7 @@ export const Settings: React.FC = () => {
     }
   };
 
-  const handleWatermarkUpload = async (file: File, type: 'light' | 'dark' | 'marca') => {
+  const handleWatermarkUpload = async (file: File, type: 'dark' | 'marca') => {
     if (!file || !user) return;
 
     try {
@@ -542,9 +604,7 @@ export const Settings: React.FC = () => {
         .getPublicUrl(filePath);
 
       // Update profile state based on type
-      if (type === 'light') {
-        setProfile(prev => ({ ...prev, watermarkLight: publicUrl }));
-      } else if (type === 'dark') {
+      if (type === 'dark') {
         setProfile(prev => ({ ...prev, watermarkDark: publicUrl }));
       } else {
         setProfile(prev => ({ ...prev, marcaDagua: publicUrl }));
@@ -696,6 +756,7 @@ export const Settings: React.FC = () => {
   };
 
 
+
   return (
     <div className="max-w-5xl mx-auto pb-12">
       {/* Title moved to Header */}
@@ -730,7 +791,6 @@ export const Settings: React.FC = () => {
               >
                 <div className="relative">
                   <MapPin size={16} />
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
                 </div>
                 <span>Página & Conteúdo</span>
               </button>
@@ -746,20 +806,24 @@ export const Settings: React.FC = () => {
                 <Share2 size={16} />
                 <span>Marca & Redes</span>
               </button>
-              <button
-                onClick={() => setActiveTab('whatsapp')}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap text-sm font-medium
+              {/* WhatsApp & IA - Only for Avançado and Profissional plans */}
+              {(userProfile?.plano_id === '55de4ee5-c2f1-4f9d-b466-7e08138854f0' ||
+                userProfile?.plano_id === 'edf90163-d554-4f8e-bfe9-7d9e98fc4450') && (
+                  <button
+                    onClick={() => setActiveTab('whatsapp')}
+                    className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap text-sm font-medium
                   ${activeTab === 'whatsapp'
-                    ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-600/50'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-                  }`}
-              >
-                <div className="relative">
-                  <MessageSquare size={16} />
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-pink-500 rounded-full animate-ping"></span>
-                </div>
-                <span>WhatsApp & IA</span>
-              </button>
+                        ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-600/50'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                      }`}
+                  >
+                    <div className="relative">
+                      <MessageSquare size={16} />
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-pink-500 rounded-full animate-ping"></span>
+                    </div>
+                    <span>WhatsApp & IA</span>
+                  </button>
+                )}
             </>
           )}
 
@@ -773,14 +837,24 @@ export const Settings: React.FC = () => {
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300" data-tour="profile-settings">
 
             {/* 1. Header & Avatar */}
+            <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+              <Camera size={20} className="mr-2 text-emerald-500" /> Foto do Perfil
+            </h4>
             <div className="flex flex-col md:flex-row items-center gap-6 mb-8 p-6 bg-slate-800/50 rounded-3xl border border-slate-700">
               <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                <img
-                  src={profile.avatar || `https://ui-avatars.com/api/?name=${profile.name}`}
-                  alt="Profile"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-slate-600 shadow-lg group-hover:border-emerald-500 transition-colors"
-                />
-                <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className={`relative rounded-full ${verificationConfig ? `p-1 ${verificationConfig.gradientClass} ${verificationConfig.pulseClass}` : ''}`}>
+                  <img
+                    src={profile.avatar || `https://ui-avatars.com/api/?name=${profile.name}`}
+                    alt="Profile"
+                    className={`w-24 h-24 rounded-full object-cover border-4 shadow-lg transition-colors bg-slate-900 ${verificationConfig ? 'border-slate-900' : 'border-slate-600 group-hover:border-emerald-500'}`}
+                  />
+                </div>
+                {verificationConfig && (
+                  <div className="absolute -top-1 -right-1 z-30" title={verificationConfig.title}>
+                    <img src={verificationConfig.badgeUrl} alt={verificationConfig.title} className={`w-10 h-10 drop-shadow-xl ${verificationConfig.pulseClass}`} />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
                   {uploading ? <Loader2 className="text-white animate-spin" size={24} /> : <Camera className="text-white" size={24} />}
                 </div>
               </div>
@@ -794,13 +868,18 @@ export const Settings: React.FC = () => {
               <div className="text-center md:text-left flex-1">
                 <h3 className="text-2xl font-bold text-white">{profile.name} {profile.sobrenome}</h3>
                 <p className="text-slate-400 text-sm mb-3">{profile.email}</p>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-xl text-sm font-medium text-gray-200 transition-colors"
-                >
-                  {uploading ? 'Enviando...' : 'Alterar Foto'}
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-fit px-4 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-xl text-sm font-medium text-gray-200 transition-colors"
+                  >
+                    {uploading ? 'Enviando...' : 'Alterar Foto'}
+                  </button>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Recomendado: Imagem quadrada (1:1), PNG/JPG, até 2MB.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -905,7 +984,13 @@ export const Settings: React.FC = () => {
                 </div>
                 <div className="col-span-1">
                   <label className="block text-xs font-medium text-slate-400 mb-1">Complemento</label>
-                  <input type="text" value={profile.complemento} onChange={e => setProfile({ ...profile, complemento: e.target.value })} className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white" />
+                  <input
+                    type="text"
+                    value={profile.complemento}
+                    onChange={e => setProfile({ ...profile, complemento: e.target.value })}
+                    autoComplete="off"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-white"
+                  />
                 </div>
                 <div className="col-span-1">
                   <label className="block text-xs font-medium text-slate-400 mb-1">Bairro</label>
@@ -948,6 +1033,7 @@ export const Settings: React.FC = () => {
                       placeholder="Nova Senha"
                       value={passwords.newPassword}
                       onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
+                      autoComplete="new-password"
                       className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-600 focus:border-emerald-500 outline-none text-white text-sm"
                     />
                     {passwords.newPassword && <div className="mt-2"><PasswordStrengthIndicator password={passwords.newPassword} /></div>}
@@ -958,6 +1044,7 @@ export const Settings: React.FC = () => {
                       placeholder="Confirmar Senha"
                       value={passwords.confirmPassword}
                       onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                      autoComplete="new-password"
                       className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-600 focus:border-emerald-500 outline-none text-white text-sm"
                     />
                   </div>
@@ -990,50 +1077,6 @@ export const Settings: React.FC = () => {
               </div>
             </div>
 
-            {/* 5. Notification Preferences */}
-            {role !== 'Cliente' && (
-              <div className="mb-8 pt-6 border-t border-slate-700/50">
-                <h4 className="text-lg font-bold text-white mb-4 flex items-center">
-                  <Bell size={20} className="mr-2 text-emerald-500" /> Preferências de Notificação
-                </h4>
-
-                <div className="bg-slate-900/30 rounded-2xl p-6 border border-slate-700/50">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                    <div>
-                      <h5 className="font-bold text-white mb-1">Notificações Push</h5>
-                      <p className="text-slate-400 text-sm">Receba alertas em tempo real sobre novos leads, mensagens e aprovações no seu navegador ou celular.</p>
-                    </div>
-                    <button
-                      onClick={handlePushPrompt}
-                      className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95"
-                    >
-                      <Bell size={18} />
-                      Ativar no Navegador
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                      { key: 'leads', label: 'Novos Leads & Encomendas' },
-                      { key: 'messages', label: 'Mensagens do Chat' },
-                      { key: 'properties', label: 'Aprovações de Imóveis' },
-                      { key: 'marketing', label: 'Novidades e Parcerias' }
-                    ].map((item) => (
-                      <div key={item.key} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700">
-                        <span className="text-sm font-medium text-gray-200">{item.label}</span>
-                        <button
-                          onClick={() => toggleNotification(item.key as any)}
-                          className={`w-12 h-6 rounded-full transition-colors relative ${notifications[item.key as keyof typeof notifications] ? 'bg-emerald-500' : 'bg-slate-700'}`}
-                        >
-                          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notifications[item.key as keyof typeof notifications] ? 'left-7' : 'left-1'}`} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
             <DeleteAccountModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} />
 
             {/* Sticky Save Button (at the bottom of tab content) */}
@@ -1056,46 +1099,171 @@ export const Settings: React.FC = () => {
             <p className="text-slate-400 mb-8">Personalize como os clientes veem sua página profissional.</p>
 
             {/* 1. SLUG / URL */}
-            {profile.slug && (
-              <div className="mb-8 flex flex-col md:flex-row md:items-center gap-4 bg-gradient-to-r from-slate-800 to-slate-900 p-6 rounded-3xl border border-slate-700 shadow-sm relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                <div className="flex-1 min-w-0 z-10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="p-2 bg-emerald-500/10 rounded-xl text-emerald-400"><Share2 size={18} /></span>
-                    <p className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Link da Sua Página</p>
-                  </div>
-                  <div className="bg-black/30 rounded-xl p-3 border border-slate-700/50 backdrop-blur-sm flex items-center justify-between gap-3">
-                    <p className="text-sm md:text-base font-mono font-bold text-white truncate select-all">
-                      {window.location.origin}/{profile.slug || 'configurar-slug'}
-                    </p>
+            <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700 mb-8">
+              <h4 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
+                <Share2 size={20} className="text-emerald-500" /> Endereço da Sua Página
+              </h4>
+
+              {(userProfile?.slug || slugSaved) ? (
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-2">
+                    Endereço da sua página (bloqueado)
+                  </label>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-slate-500 text-sm font-medium whitespace-nowrap">
+                      {window.location.origin}/
+                    </span>
+                    <input
+                      type="text"
+                      value={profile.slug}
+                      disabled
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900/50 border border-slate-700 text-slate-500 font-mono cursor-not-allowed"
+                    />
                     <button
                       onClick={() => {
-                        const url = `${window.location.origin}/${profile.slug || 'configurar-slug'}`;
+                        const url = `${window.location.origin}/${profile.slug}`;
                         navigator.clipboard.writeText(url);
                         addToast('Copiado!', 'success');
                       }}
-                      className="text-slate-400 hover:text-white"
-                      title="Copiar"
+                      className="px-3 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-slate-400 hover:text-white transition-colors"
+                      title="Copiar link"
                     >
                       <Copy size={16} />
                     </button>
+                    <button
+                      onClick={() => window.open(`/${profile.slug}`, '_blank')}
+                      className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-2"
+                    >
+                      <Eye size={16} /> Acessar
+                    </button>
                   </div>
+                  <p className="text-xs text-slate-500">
+                    Para alterar o endereço da sua página, entre em contato com o suporte.
+                  </p>
                 </div>
-                <div className="flex items-center gap-3 z-10 w-full md:w-auto mt-2 md:mt-0">
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-2">
+                    Crie o endereço exclusivo da sua página profissional:
+                  </label>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-slate-200 text-lg font-medium whitespace-nowrap">
+                      {window.location.origin}/
+                    </span>
+                    <div className="flex-1 relative">
+                      <input
+                        type="text"
+                        value={profile.slug}
+                        onChange={e => {
+                          // Only allow lowercase letters and numbers
+                          const value = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+                          setProfile({ ...profile, slug: value });
+                          setSlugAvailable(null);
+
+                          // Debounced availability check
+                          if (slugCheckTimeout.current) {
+                            clearTimeout(slugCheckTimeout.current);
+                          }
+
+                          if (value.length >= 5) {
+                            setCheckingSlug(true);
+                            slugCheckTimeout.current = setTimeout(async () => {
+                              try {
+                                const { data, error } = await supabase
+                                  .from('perfis')
+                                  .select('slug')
+                                  .eq('slug', value)
+                                  .maybeSingle();
+
+                                if (!error) {
+                                  setSlugAvailable(!data);
+                                }
+                              } catch (err) {
+                                console.error('Erro ao verificar slug:', err);
+                              } finally {
+                                setCheckingSlug(false);
+                              }
+                            }, 500);
+                          } else {
+                            setCheckingSlug(false);
+                          }
+                        }}
+                        placeholder="seu-nome-aqui"
+                        className={`w-full px-4 py-2.5 pr-10 rounded-xl bg-slate-900 border outline-none text-white font-mono transition-colors ${slugAvailable === true ? 'border-emerald-500 focus:border-emerald-500' :
+                          slugAvailable === false ? 'border-red-500 focus:border-red-500' :
+                            'border-slate-600 focus:border-emerald-500'
+                          }`}
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        {checkingSlug && <Loader2 size={16} className="animate-spin text-slate-400" />}
+                        {!checkingSlug && slugAvailable === true && <Check size={16} className="text-emerald-500" />}
+                        {!checkingSlug && slugAvailable === false && <X size={16} className="text-red-500" />}
+                      </div>
+                    </div>
+                  </div>
+                  {slugAvailable === false && (
+                    <p className="text-red-400 text-sm mb-3 flex items-center gap-1">
+                      <X size={12} /> Este endereço já está em uso. Escolha outro.
+                    </p>
+                  )}
+                  {slugAvailable === true && profile.slug.length >= 5 && (
+                    <p className="text-emerald-400 text-sm mb-3 flex items-center gap-1">
+                      <Check size={12} /> Endereço disponível!
+                    </p>
+                  )}
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-4">
+                    <p className="text-slate-200 text-sm font-medium flex items-start gap-2">
+                      <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                      <span>
+                        Atenção: O endereço da sua página pode ser criado <strong>apenas uma vez</strong>.
+                        Caso precise alterá-lo posteriormente, entre em contato com o suporte explicando o motivo.
+                      </span>
+                    </p>
+                  </div>
                   <button
-                    onClick={() => window.open(`/${profile.slug || 'configurar-slug'}`, '_blank')}
-                    className="w-full md:w-auto px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                    onClick={async () => {
+                      if (!profile.slug || profile.slug.length < 5) {
+                        addToast('O endereço deve ter pelo menos 5 caracteres', 'error');
+                        return;
+                      }
+                      try {
+                        setSaving(true);
+                        const { error } = await supabase
+                          .from('perfis')
+                          .update({ slug: profile.slug })
+                          .eq('id', user?.id);
+
+                        if (error) {
+                          if (error.code === '23505') {
+                            addToast('Este endereço já está em uso. Escolha outro.', 'error');
+                          } else {
+                            throw error;
+                          }
+                        } else {
+                          setSlugSaved(true);
+                          addToast('PARABÉNS! Endereço da página criado com sucesso!', 'success');
+                        }
+                      } catch (error) {
+                        console.error('Erro ao salvar slug:', error);
+                        addToast('Erro ao salvar o endereço', 'error');
+                      } finally {
+                        setSaving(false);
+                      }
+                    }}
+                    disabled={saving || !profile.slug || profile.slug.length < 5 || slugAvailable !== true}
+                    className="w-full px-5 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                   >
-                    <Eye size={18} /> Acessar Página
+                    {saving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
+                    Criar Meu Endereço
                   </button>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* 2. WELCOME MESSAGES */}
             <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700 mb-8">
               <h4 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
-                <span className="text-xl">👋</span> Mensagens de Boas-Vindas
+                <MessageCircle size={20} className="text-emerald-500" /> Mensagens de Boas-Vindas
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -1132,7 +1300,7 @@ export const Settings: React.FC = () => {
             {/* 3. ABOUT & STATS */}
             <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700 mb-8">
               <h4 className="font-bold text-lg text-white mb-4 flex items-center gap-2">
-                <span className="text-xl">📝</span> Sobre & Estatísticas
+                <Info size={20} className="text-emerald-500" /> Sobre & Estatísticas
               </h4>
 
               <div className="mb-6">
@@ -1147,7 +1315,7 @@ export const Settings: React.FC = () => {
                 <div className="flex justify-end mt-1"><span className="text-xs text-slate-500">{profile.sobreMim.length}/800</span></div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">Imóveis Vendidos</label>
                   <input
@@ -1164,6 +1332,16 @@ export const Settings: React.FC = () => {
                     type="number"
                     value={profile.clientesAtendidos || ''}
                     onChange={e => setProfile({ ...profile, clientesAtendidos: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 outline-none text-white text-center font-bold"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Anos de Experiência</label>
+                  <input
+                    type="number"
+                    value={profile.anosExperiencia || ''}
+                    onChange={e => setProfile({ ...profile, anosExperiencia: parseInt(e.target.value) || 0 })}
                     className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-600 focus:border-emerald-500 outline-none text-white text-center font-bold"
                     placeholder="0"
                   />

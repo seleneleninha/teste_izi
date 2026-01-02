@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StatCard } from '../components/StatCard';
 import { PropertyCard } from '../components/PropertyCard';
 import { CHART_DATA } from '../constants';
-import { Plus, Edit2, Trash2, CheckCircle, ArrowUp, Loader2, Bed, Bath, Square, MapPin, Share2, ExternalLink, Home, Handshake, Building2, Users, Eye, TrendingUp, Key, Clock, XCircle, DollarSign, Activity, UserPlus, FileText } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle, ArrowUp, Loader2, Bed, Bath, DollarSign, Square, MapPin, Share2, ExternalLink, Home, Handshake, Building2, Users, Eye, TrendingUp, Key, Clock, XCircle, Activity, UserPlus, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useHeader } from '../components/HeaderContext';
 import { supabase } from '../lib/supabaseClient';
@@ -56,7 +56,6 @@ export const Dashboard: React.FC = () => {
     const [topBrokers, setTopBrokers] = useState<any[]>([]);
 
     const [recentProperties, setRecentProperties] = useState<any[]>([]);
-    const [notifications, setNotifications] = useState<any[]>([]);
     // Onboarding Tour State
     const [showTour, setShowTour] = useState(false);
     const [showTourPrompt, setShowTourPrompt] = useState(false);
@@ -311,16 +310,6 @@ export const Dashboard: React.FC = () => {
                 }));
                 setRecentProperties(formattedProps);
             }
-
-            // Fetch notifications - ONLY for current user
-            const { data: notifs } = await supabase
-                .from('notificacoes')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false })
-                .limit(3);
-
-            if (notifs) setNotifications(notifs);
 
             // Fetch user profile for name, slug, and onboarding status
             const { data: profile } = await supabase
@@ -944,50 +933,6 @@ export const Dashboard: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Vendas Fechadas */}
-                                <div
-                                    onClick={() => navigate('/properties?status=venda_faturada')}
-                                    className="relative overflow-hidden bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 group hover:border-green-500/50 transition-colors cursor-pointer"
-                                >
-                                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                        <TrendingUp size={80} className="text-green-500" />
-                                    </div>
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div className="p-3 bg-green-500/20 rounded-2xl">
-                                            <TrendingUp className="text-green-400" size={24} />
-                                        </div>
-                                        <span className="text-slate-400 font-medium text-sm">Vendas</span>
-                                    </div>
-                                    <div className="text-3xl font-black text-white group-hover:text-green-400 transition-colors">
-                                        {stats.vendasFechadas}
-                                    </div>
-                                    <div className="mt-2 text-xs text-slate-500">
-                                        Negócios realizados
-                                    </div>
-                                </div>
-
-                                {/* Locações Fechadas */}
-                                <div
-                                    onClick={() => navigate('/properties?status=locacao_faturada')}
-                                    className="relative overflow-hidden bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 group hover:border-cyan-500/50 transition-colors cursor-pointer"
-                                >
-                                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                        <Key size={80} className="text-cyan-500" />
-                                    </div>
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div className="p-3 bg-cyan-500/20 rounded-2xl">
-                                            <Key className="text-cyan-400" size={24} />
-                                        </div>
-                                        <span className="text-slate-400 font-medium text-sm">Locações</span>
-                                    </div>
-                                    <div className="text-3xl font-black text-white group-hover:text-cyan-400 transition-colors">
-                                        {stats.locacoesFechadas}
-                                    </div>
-                                    <div className="mt-2 text-xs text-slate-500">
-                                        Contratos fechados
-                                    </div>
-                                </div>
-
                                 {/* Parcerias Aceitas */}
                                 <div
                                     onClick={() => navigate('/partner-properties')}
@@ -1053,6 +998,51 @@ export const Dashboard: React.FC = () => {
                                         Ver todos os leads
                                     </div>
                                 </div>
+
+                                {/* Vendas Realizadas */}
+                                <div
+                                    onClick={() => navigate('/properties?status=venda_faturada')}
+                                    className="relative overflow-hidden bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 group hover:border-green-500/50 transition-colors cursor-pointer"
+                                >
+                                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                        <DollarSign size={80} className="text-green-500" />
+                                    </div>
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="p-3 bg-green-500/20 rounded-2xl">
+                                            <DollarSign className="text-green-400" size={24} />
+                                        </div>
+                                        <span className="text-slate-400 font-medium text-sm">Vendas</span>
+                                    </div>
+                                    <div className="text-3xl font-black text-white group-hover:text-green-400 transition-colors">
+                                        {stats.vendasFechadas}
+                                    </div>
+                                    <div className="mt-2 text-sm font-bold text-white">
+                                        VENDAS REALIZADAS
+                                    </div>
+                                </div>
+
+                                {/* Locações Fechadas */}
+                                <div
+                                    onClick={() => navigate('/properties?status=locacao_faturada')}
+                                    className="relative overflow-hidden bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 group hover:border-cyan-500/50 transition-colors cursor-pointer"
+                                >
+                                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                        <Key size={80} className="text-cyan-500" />
+                                    </div>
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="p-3 bg-cyan-500/20 rounded-2xl">
+                                            <Key className="text-cyan-400" size={24} />
+                                        </div>
+                                        <span className="text-slate-400 font-medium text-sm">Locações</span>
+                                    </div>
+                                    <div className="text-3xl font-black text-white group-hover:text-cyan-400 transition-colors">
+                                        {stats.locacoesFechadas}
+                                    </div>
+                                    <div className="mt-2 text-sm font-bold text-white">
+                                        LOCAÇÕES FINALIZADAS
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 

@@ -239,7 +239,7 @@ export const PublicHome: React.FC = () => {
             {/* SEO Meta Tags */}
             <SEOHead
                 title="iziBrokerz - Encontre seu Imóvel Ideal | Compra, Venda e Locação"
-                description="Plataforma imobiliária digital que conecta você aos melhores corretores. Milhares de imóveis para compra, venda, locação e temporada em todo Brasil."
+                description="Plataforma imobiliária digital que conecta você aos melhores corretores. Várias oportunidades exclusivas para compra, venda, locação e temporada em todo Brasil."
                 type="website"
                 tags={['imóveis', 'corretores', 'compra', 'venda', 'locação', 'brasil']}
             />
@@ -269,7 +269,7 @@ export const PublicHome: React.FC = () => {
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 drop-shadow-sm">a Um Clique de Distância</span>
                     </h1>
                     <p className="text-xl md:text-2xl text-gray-200 mb-12 max-w-3xl mx-auto font-medium tracking-wide">
-                        A Plataforma que conecta você às melhores oportunidades do mercado imobiliário.
+                        A Plataforma que conecta você às MELHORES OPORTUNIDADES do mercado imobiliário.
                     </p>
                 </div>
             </section>
@@ -350,8 +350,8 @@ export const PublicHome: React.FC = () => {
                             </h2>
                             <p className="text-xl text-gray-400 font-bold max-w-lg">
                                 {activeCity
-                                    ? `Selecionamos as melhores oportunidades em ${activeCity} para você.`
-                                    : "Confira os imóveis mais novos cadastrados em nossa plataforma."}
+                                    ? `Confira os melhores imóveis em ${activeCity}.`
+                                    : "Confira os imóveis mais recentes na plataforma."}
                             </p>
                         </div>
 

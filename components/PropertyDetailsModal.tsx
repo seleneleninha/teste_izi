@@ -320,7 +320,7 @@ Vamos agendar uma visita?`;
                                         <div className="space-y-2">
                                             {property.valor_diaria > 0 && (
                                                 <div className="text-2xl font-black text-emerald-400 tracking-tighter">
-                                                    {formatCurrency(property.valor_diaria)} <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">/dia</span>
+                                                    {formatCurrency(property.valor_diaria)} <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">/dia</span>
                                                 </div>
                                             )}
                                             {property.valor_mensal > 0 && (

@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../components/ThemeContext';
 import { UserCheck } from 'lucide-react';
+import { getVerificationConfig } from '../lib/verificationHelper';
 
 interface Partner {
     id: string;
@@ -10,9 +11,10 @@ interface Partner {
     sobrenome: string;
     slug: string;
     watermark_dark: string | null;
-    watermark_light: string | null;
+    avatar: string | null;
     avatar: string | null;
     marca_dagua: string | null;
+    plano_id?: string;
 }
 
 interface PartnersCarouselProps {
@@ -33,7 +35,7 @@ export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) =
         try {
             const { data, error } = await supabase
                 .from('perfis')
-                .select('id, nome, sobrenome, slug, watermark_dark, watermark_light, avatar, marca_dagua, is_admin')
+                .select('id, nome, sobrenome, slug, watermark_dark, avatar, marca_dagua, is_admin, plano_id')
                 .eq('is_trial', false) // Only paying users
                 .eq('is_admin', false) // Exclude admins
                 .order('created_at', { ascending: false })
@@ -43,7 +45,7 @@ export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) =
             if (data) {
                 // Filter: Must have a logo (watermark or marca_dagua)
                 const validPartners = data.filter(p =>
-                    p.watermark_light || p.watermark_dark || p.marca_dagua
+                    p.watermark_dark || p.marca_dagua
                 );
                 setPartners(validPartners);
             }
@@ -59,8 +61,7 @@ export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) =
     // Helper to get the best logo
     const getLogo = (p: Partner) => {
         // Priority: Watermark (Theme based) -> Generic Watermark -> Avatar -> Placeholder
-        if (theme === 'light' && p.watermark_light) return p.watermark_light;
-        if (theme === 'dark' && p.watermark_dark) return p.watermark_dark;
+        if (p.watermark_dark) return p.watermark_dark;
         if (p.marca_dagua) return p.marca_dagua;
         if (p.avatar) return p.avatar;
         return null;
@@ -90,12 +91,6 @@ export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) =
 
                 <div className="flex animate-scroll group-hover:pause" style={{ width: `${displayPartners.length * 200}px` }}>
                     {displayPartners.map((partner, index) => {
-                        // Force logic for Dark Background: Prevails watermark_dark (which usually means Logo for Dark Mode? or Logo that is Dark?)
-                        // Testing assumption: watermark_light is for light theme (dark logo). watermark_dark is for dark theme (light logo).
-                        // Let's use the naming convention usually adopted: 
-                        // If Layout.tsx used theme==='light' ? watermark_light : watermark_dark 
-                        // PROBABLY watermark_light = logo for light theme. watermark_dark = logo for dark theme.
-                        // Since background is Midnight (Dark), we need watermark_dark.
                         const logoSrc = partner.watermark_dark || partner.avatar || partner.marca_dagua;
 
                         return (
@@ -105,8 +100,18 @@ export const PartnersCarousel: React.FC<PartnersCarouselProps> = ({ bgColor }) =
                             >
                                 <div
                                     onClick={() => window.open(`/${partner.slug}`, '_blank')}
-                                    className="cursor-pointer flex flex-col items-center justify-center p-4 rounded-3xl hover:bg-white/5 transition-all duration-300 w-full h-32 opacity-50 hover:opacity-100 hover:scale-105"
+                                    className="cursor-pointer flex flex-col items-center justify-center p-4 rounded-3xl hover:bg-white/5 transition-all duration-300 w-full h-32 opacity-50 hover:opacity-100 hover:scale-105 relative"
                                 >
+                                    {getVerificationConfig(partner.plano_id) && (
+                                        <div className="absolute top-2 right-2 z-20">
+                                            <img
+                                                src={getVerificationConfig(partner.plano_id)?.badgeUrl}
+                                                alt="Verified"
+                                                className="w-6 h-6 object-contain drop-shadow-md"
+                                                title={getVerificationConfig(partner.plano_id)?.title}
+                                            />
+                                        </div>
+                                    )}
                                     {logoSrc ? (
                                         <img
                                             src={logoSrc}

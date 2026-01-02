@@ -257,7 +257,7 @@ const PropertyMarkers: React.FC<{ properties: Property[]; brokerSlug?: string }>
                 {/* Ver Detalhes Button */}
                 <div className="flex justify-start mt-3">
                   <button
-                    onClick={() => navigateToProperty(navigate, p, true)}
+                    onClick={() => navigateToProperty(navigate, p, false, brokerSlug)}
                     className="text-sm bg-emerald-600 text-white px-4 py-2 rounded-full hover:bg-emerald-700 font-bold shadow-md shadow-black"
                   >
                     VER DETALHES

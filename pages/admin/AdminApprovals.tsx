@@ -44,6 +44,7 @@ interface Property {
     slug?: string;
     historico_reprovacao?: RejectionHistoryItem[];
     motivo_reprovacao?: string;
+    cod_imovel?: number;
 }
 
 interface UserProfile {
@@ -208,15 +209,6 @@ export const AdminApprovals: React.FC = () => {
 
             if (error) throw error;
 
-            // Send Notification
-            await supabase.from('notificacoes').insert({
-                user_id: property.user_id,
-                titulo: 'Anúncio ativo! 🎉',
-                mensagem: `Seu imóvel "${property.titulo}" foi ativo e já está publicado na plataforma e na sua página. Parabéns e vamos para o próximo!`,
-                tipo: 'aprovacao',
-                link: `/properties/${property.slug}`
-            });
-
             // TODO: Future - send WhatsApp notification via WAHA
 
             addToast('Anúncio ativo com sucesso!', 'success');
@@ -275,15 +267,6 @@ export const AdminApprovals: React.FC = () => {
                 notifMessage = `Seu imóvel foi reprovado novamente. Por favor, entre em contato com o suporte para alinhar os ajustes necessários.`;
             }
 
-            // Send Notification
-            await supabase.from('notificacoes').insert({
-                user_id: selectedProperty.user_id,
-                titulo: notifTitle,
-                mensagem: notifMessage,
-                tipo: 'reprovacao',
-                link: `/properties?edit=${selectedProperty.id}` // Corrected link for editing
-            });
-
             // TODO: Future - send WhatsApp notification via WAHA
 
             addToast('Anúncio reprovado e notificação enviada.', 'success');
@@ -337,6 +320,27 @@ export const AdminApprovals: React.FC = () => {
     // Apply Sorting
     if (sortConfig.key) {
         filteredProperties.sort((a, b) => {
+            // Custom Sort for Owner Name
+            if (sortConfig.key === 'user_id') {
+                const ownerA = userProfiles[a.user_id];
+                const nameA = ownerA ? `${ownerA.nome} ${ownerA.sobrenome}`.toLowerCase() : '';
+                const ownerB = userProfiles[b.user_id];
+                const nameB = ownerB ? `${ownerB.nome} ${ownerB.sobrenome}`.toLowerCase() : '';
+
+                if (nameA < nameB) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (nameA > nameB) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            }
+
+            // Custom Sort for Code (handles mixed numbers/strings if necessary)
+            if (sortConfig.key === 'cod_imovel') {
+                const codeA = a.cod_imovel || a.id;
+                const codeB = b.cod_imovel || b.id;
+                if (codeA < codeB) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (codeA > codeB) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            }
+
             // Handle potentially undefined values safely
             const aValue = a[sortConfig.key as keyof Property];
             const bValue = b[sortConfig.key as keyof Property];
@@ -506,6 +510,14 @@ export const AdminApprovals: React.FC = () => {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="border-b border-slate-700 bg-slate-900/50">
+                                        {/* Ações (First) */}
+                                        <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-center w-[120px]">Ações</th>
+
+                                        {/* Código (Sortable) */}
+                                        <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-center w-[120px] cursor-pointer hover:text-white" onClick={() => handleSort('cod_imovel')}>
+                                            <div className="flex items-center justify-center gap-1">Cód. {sortConfig.key === 'cod_imovel' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}</div>
+                                        </th>
+
                                         <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => handleSort('titulo')}>
                                             <div className="flex items-center gap-1">Imóvel {sortConfig.key === 'titulo' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}</div>
                                         </th>
@@ -513,105 +525,164 @@ export const AdminApprovals: React.FC = () => {
                                             <div className="flex items-center gap-1">Localização {sortConfig.key === 'cidade' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}</div>
                                         </th>
 
-                                        {/* New Metric Columns (Icons Only) */}
-                                        <th className="p-4 text-center cursor-pointer hover:text-white" title="Quartos" onClick={() => handleSort('quartos')}>
-                                            <div className="flex justify-center items-center gap-1 text-slate-400"><BedDouble size={16} />{sortConfig.key === 'quartos' && (sortConfig.direction === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />)}</div>
+                                        {/* Metric Columns (Icons Only) */}
+                                        <th className="p-4 text-center cursor-pointer hover:text-white px-2" title="Quartos" onClick={() => handleSort('quartos')}>
+                                            <div className="flex justify-center items-center gap-1 text-slate-400"><BedDouble size={16} /></div>
                                         </th>
-                                        <th className="p-4 text-center cursor-pointer hover:text-white" title="Banheiros" onClick={() => handleSort('banheiros')}>
-                                            <div className="flex justify-center items-center gap-1 text-slate-400"><Bath size={16} />{sortConfig.key === 'banheiros' && (sortConfig.direction === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />)}</div>
+                                        <th className="p-4 text-center cursor-pointer hover:text-white px-2" title="Banheiros" onClick={() => handleSort('banheiros')}>
+                                            <div className="flex justify-center items-center gap-1 text-slate-400"><Bath size={16} /></div>
                                         </th>
-                                        <th className="p-4 text-center cursor-pointer hover:text-white" title="Vagas" onClick={() => handleSort('vagas')}>
-                                            <div className="flex justify-center items-center gap-1 text-slate-400"><Car size={16} />{sortConfig.key === 'vagas' && (sortConfig.direction === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />)}</div>
+                                        <th className="p-4 text-center cursor-pointer hover:text-white px-2" title="Vagas" onClick={() => handleSort('vagas')}>
+                                            <div className="flex justify-center items-center gap-1 text-slate-400"><Car size={16} /></div>
                                         </th>
-                                        <th className="p-4 text-center cursor-pointer hover:text-white" title="Área Privativa" onClick={() => handleSort('area_priv')}>
-                                            <div className="flex justify-center items-center gap-1 text-slate-400"><Ruler size={16} />{sortConfig.key === 'area_priv' && (sortConfig.direction === 'asc' ? <ArrowUp size={10} /> : <ArrowDown size={10} />)}</div>
+                                        <th className="p-4 text-center cursor-pointer hover:text-white px-2" title="Área Privativa" onClick={() => handleSort('area_priv')}>
+                                            <div className="flex justify-center items-center gap-1 text-slate-400"><Ruler size={16} /></div>
                                         </th>
 
                                         <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => handleSort('valor_venda')}>
                                             <div className="flex items-center gap-1">Valores {sortConfig.key === 'valor_venda' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}</div>
                                         </th>
-                                        <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Proprietário</th>
+                                        <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => handleSort('user_id')}>
+                                            <div className="flex items-center gap-1">Proprietário {sortConfig.key === 'user_id' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}</div>
+                                        </th>
                                         <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white" onClick={() => handleSort('status')}>
                                             <div className="flex items-center gap-1">Status {sortConfig.key === 'status' && (sortConfig.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />)}</div>
                                         </th>
-                                        <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-700">
                                     {filteredProperties.map(property => {
                                         const owner = userProfiles[property.user_id];
-                                        let thumb = null;
-                                        try {
-                                            const photos = JSON.parse(property.fotos);
-                                            thumb = photos.length > 0 ? photos[0] : null;
-                                        } catch (e) { }
+                                        const propertyCode = property.cod_imovel || property.id.slice(0, 8).toUpperCase();
+                                        const isSeason = property.operacao === 'Temporada' || property.operacao === 'Diária' || property.operacao === 'Mensal';
+
+                                        // Badge Color Logic
+                                        let badgeColor = 'bg-slate-800 text-slate-400 border-slate-700';
+                                        if (property.operacao === 'Venda') badgeColor = 'bg-red-500/10 text-red-400 border-red-500/20';
+                                        else if (property.operacao === 'Locação' || property.operacao === 'Aluguel') badgeColor = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+                                        else if (property.operacao.includes('Venda') && property.operacao.includes('Locação')) badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                                        else if (isSeason) badgeColor = 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+
+                                        // Value Formatting Helper
+                                        const formatValue = (val: number) => {
+                                            if (!val) return '';
+                                            return val.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                                        };
 
                                         return (
                                             <tr key={property.id} className="hover:bg-slate-700/30 transition-colors group">
+                                                {/* 1. Ações (First) */}
+                                                <td className="p-4 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            onClick={() => navigate(`/properties/${property.slug}`)}
+                                                            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                                                            title="Ver Detalhes"
+                                                        >
+                                                            <Eye size={18} />
+                                                        </button>
+
+                                                        {(property.status === 'pendente' || property.status === 'reprovado') && (
+                                                            <button
+                                                                onClick={() => handleApprove(property)}
+                                                                className="p-1.5 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 rounded-lg transition-colors"
+                                                                title="Aprovar"
+                                                            >
+                                                                <Check size={18} />
+                                                            </button>
+                                                        )}
+                                                        {(property.status === 'pendente' || property.status === 'ativo') && (
+                                                            <button
+                                                                onClick={() => openRejectModal(property)}
+                                                                className="p-1.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-lg transition-colors"
+                                                                title={property.status === 'ativo' ? "Suspender/Reprovar" : "Reprovar"}
+                                                            >
+                                                                <X size={18} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+
+                                                {/* 2. Código */}
+                                                <td className="p-4 text-center">
+                                                    <span className="font-mono text-xs text-slate-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+                                                        {propertyCode}
+                                                    </span>
+                                                </td>
+
+                                                {/* Imóvel (No Thumbnail) */}
                                                 <td className="p-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-12 h-12 rounded-lg bg-slate-900 flex-shrink-0 overflow-hidden border border-slate-600">
-                                                            {thumb ? (
-                                                                <img src={thumb} alt="" className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center text-slate-500"><Eye size={16} /></div>
-                                                            )}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-bold text-white text-sm line-clamp-1 max-w-[180px]" title={property.titulo}>
-                                                                {property.titulo}
-                                                            </p>
-                                                            <div className="flex gap-2 text-xs text-slate-400 mt-0.5">
-                                                                <span className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700">{property.tipo_imovel}</span>
-                                                                <span className={`px-1.5 py-0.5 rounded border font-semibold ${property.operacao === 'Venda'
-                                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                                    : property.operacao === 'Locação' || property.operacao === 'Aluguel'
-                                                                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                                                        : 'bg-slate-900 border-slate-700'
-                                                                    }`}>{property.operacao}</span>
-                                                            </div>
+                                                    <div>
+                                                        <p className="font-bold text-white text-sm line-clamp-1 max-w-[200px]" title={property.titulo}>
+                                                            {property.titulo}
+                                                        </p>
+                                                        <div className="flex gap-2 text-xs text-slate-400 mt-1">
+                                                            <span className="bg-slate-900 px-1.5 py-0.5 rounded border border-slate-700">{property.tipo_imovel}</span>
+                                                            <span className={`px-1.5 py-0.5 rounded border font-semibold ${badgeColor}`}>
+                                                                {property.operacao}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </td>
+
                                                 <td className="p-4">
                                                     <p className="text-sm text-slate-300 font-medium">{property.cidade}</p>
                                                     <p className="text-xs text-slate-500">{property.bairro}</p>
                                                 </td>
 
                                                 {/* Metric Columns Data */}
-                                                <td className="p-4 text-center">
+                                                <td className="p-4 text-center px-2">
                                                     <span className="text-sm font-medium text-slate-300">{property.quartos || '-'}</span>
                                                 </td>
-                                                <td className="p-4 text-center">
+                                                <td className="p-4 text-center px-2">
                                                     <span className="text-sm font-medium text-slate-300">{property.banheiros || '-'}</span>
                                                 </td>
-                                                <td className="p-4 text-center">
+                                                <td className="p-4 text-center px-2">
                                                     <span className="text-sm font-medium text-slate-300">{property.vagas || '-'}</span>
                                                 </td>
-                                                <td className="p-4 text-center">
+                                                <td className="p-4 text-center px-2">
                                                     <span className="text-sm font-medium text-slate-300">{property.area_priv ? `${property.area_priv}m²` : '-'}</span>
                                                 </td>
 
-
                                                 <td className="p-4">
-                                                    <div className="text-sm font-bold text-emerald-400">
-                                                        {property.valor_venda > 0 ? `R$ ${property.valor_venda.toLocaleString()}` : '-'}
+                                                    <div className="flex flex-col gap-0.5">
+                                                        {property.valor_venda > 0 && (
+                                                            <div className="text-sm font-bold text-red-400">
+                                                                {formatValue(property.valor_venda)}V
+                                                            </div>
+                                                        )}
+                                                        {property.valor_locacao > 0 && (
+                                                            <div className="text-sm font-bold text-blue-400">
+                                                                {formatValue(property.valor_locacao)}L
+                                                            </div>
+                                                        )}
+                                                        {/* Temporada Values */}
+                                                        {isSeason && (
+                                                            <>
+                                                                {property.valor_diaria && property.valor_diaria > 0 && (
+                                                                    <div className="text-sm font-bold text-orange-400">
+                                                                        {formatValue(property.valor_diaria)}D
+                                                                    </div>
+                                                                )}
+                                                                {property.valor_mensal && property.valor_mensal > 0 && (
+                                                                    <div className="text-sm font-bold text-orange-400">
+                                                                        {formatValue(property.valor_mensal)}M
+                                                                    </div>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                        {!property.valor_venda && !property.valor_locacao && !property.valor_diaria && !property.valor_mensal && (
+                                                            <span className="text-xs text-slate-600">-</span>
+                                                        )}
                                                     </div>
-                                                    {property.valor_locacao > 0 && (
-                                                        <div className="text-xs font-medium text-blue-400">
-                                                            Aluguel: R$ {property.valor_locacao.toLocaleString()}
-                                                        </div>
-                                                    )}
                                                 </td>
                                                 <td className="p-4">
                                                     {owner ? (
                                                         <div className="flex items-center gap-2">
-                                                            <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-bold border border-indigo-500/30">
-                                                                {owner.nome.charAt(0)}{owner.sobrenome.charAt(0)}
-                                                            </div>
+                                                            {/* (Hidden Avatar) */}
                                                             <div className="text-xs">
                                                                 <p className="text-white hover:underline cursor-pointer" onClick={() => window.open(`https://wa.me/55${owner.whatsapp.replace(/\D/g, '')}`, '_blank')}>
-                                                                    {owner.nome}
+                                                                    {owner.nome} {owner.sobrenome}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -623,36 +694,6 @@ export const AdminApprovals: React.FC = () => {
                                                     <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_CONFIG[property.status]?.bg || 'bg-slate-800'} ${STATUS_CONFIG[property.status]?.color || 'text-slate-400'} ${STATUS_CONFIG[property.status]?.border || 'border-slate-700'}`}>
                                                         {STATUS_CONFIG[property.status] && React.createElement(STATUS_CONFIG[property.status].icon, { size: 12 })}
                                                         {STATUS_CONFIG[property.status]?.label || property.status}
-                                                    </div>
-                                                </td>
-                                                <td className="p-4 text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <button
-                                                            onClick={() => navigate(`/properties/${property.slug}`)}
-                                                            className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-                                                            title="Ver Detalhes"
-                                                        >
-                                                            <Eye size={18} />
-                                                        </button>
-
-                                                        {property.status === 'pendente' && (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => handleApprove(property)}
-                                                                    className="p-2 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 rounded-lg transition-colors"
-                                                                    title="Aprovar"
-                                                                >
-                                                                    <Check size={18} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => openRejectModal(property)}
-                                                                    className="p-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-lg transition-colors"
-                                                                    title="Reprovar"
-                                                                >
-                                                                    <X size={18} />
-                                                                </button>
-                                                            </>
-                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -669,22 +710,7 @@ export const AdminApprovals: React.FC = () => {
                             const owner = userProfiles[property.user_id];
                             const historyCount = property.historico_reprovacao?.length || 0;
 
-                            // Smart Flags Logic
-                            let flags = [];
-                            try {
-                                const photoCount = property.fotos ? JSON.parse(property.fotos).length : 0;
-                                if (photoCount < 5) flags.push({ label: 'Poucas Fotos', color: 'bg-yellow-500', icon: AlertCircle });
-                            } catch (e) {
-                                flags.push({ label: 'Erro Fotos', color: 'bg-red-500', icon: AlertCircle });
-                            }
 
-                            if ((property.valor_venda || 0) === 0 && (property.valor_locacao || 0) === 0) {
-                                flags.push({ label: 'Sem Preço', color: 'bg-red-500', icon: AlertCircle });
-                            }
-
-                            if (property.titulo.length < 10) {
-                                flags.push({ label: 'Título Curto', color: 'bg-orange-500', icon: AlertCircle });
-                            }
 
                             return (
                                 <div key={property.id} className={`relative group ${viewMode === 'scroll' ? 'min-w-[320px] max-w-[340px] snap-center flex-shrink-0' : ''}`}>
@@ -729,15 +755,7 @@ export const AdminApprovals: React.FC = () => {
                                         }
                                     />
 
-                                    {/* Smart Flags Badges */}
-                                    <div className="absolute top-3 left-3 z-10 flex flex-col gap-1">
-                                        {flags.map((flag, idx) => (
-                                            <div key={idx} className={`${flag.color} text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1`}>
-                                                <flag.icon size={12} />
-                                                {flag.label}
-                                            </div>
-                                        ))}
-                                    </div>
+
 
                                     {/* History Badge if previously rejected */}
                                     {historyCount > 0 && property.status === 'pendente' && (

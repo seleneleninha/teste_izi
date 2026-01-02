@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Footer } from '../components/Footer';
 import { Building2, Users, TrendingUp, Award, CheckCircle, Linkedin, ArrowRight, Trophy, Star, Rocket } from 'lucide-react';
+import { getRandomBackground } from '../lib/backgrounds';
 
 export const About: React.FC = () => {
     const navigate = useNavigate();
@@ -78,11 +79,11 @@ export const About: React.FC = () => {
             <section className="relative overflow-hidden bg-slate-900 text-white py-24 lg:py-32">
                 <div className="absolute inset-0 z-0">
                     <img
-                        src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2070"
+                        src={getRandomBackground()}
                         alt="Background"
-                        className="w-full h-full object-cover opacity-20"
+                        className="w-full h-full object-cover opacity-80"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-midnight-950/95"></div>
                 </div>
 
                 <div className="container mx-auto px-6 relative z-10 text-center">

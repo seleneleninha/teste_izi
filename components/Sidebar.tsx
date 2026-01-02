@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Building2, Settings, LogOut, Users, X, Handshake, CreditCard, Ticket, DollarSign, CheckCircle, Search, Heart, User as UserIcon, Home, Globe } from 'lucide-react';
-import { IconWrapper } from './IconWrapper';
+import { LayoutDashboard, Building2, Settings, LogOut, Users, X, Handshake, CreditCard, Ticket, DollarSign, CheckCircle, Search, Heart, UserCircle, Home, Globe } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
+import { getVerificationConfig } from '../lib/verificationHelper';
 
 export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, role, signOut } = useAuth();
+  const { user, role, signOut, userProfile } = useAuth();
   const [profile, setProfile] = useState<{ name: string; email: string; avatar: string }>({
     name: '',
     email: '',
@@ -86,7 +86,7 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
     { icon: Home, label: 'Início', path: '/dashboard' },
     { icon: Search, label: 'Buscar Imóveis', path: '/properties' },
     { icon: Heart, label: 'Favoritos', path: '/favorites' },
-    { icon: UserIcon, label: 'Meu Perfil', path: '/settings' },
+    { icon: UserCircle, label: 'Meu Perfil', path: '/settings' },
   ] : [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Building2, label: 'Meus Imóveis', path: '/properties' },
@@ -99,26 +99,26 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
 
   ];
 
+  // Verification Logic
+  const verificationConfig = getVerificationConfig(userProfile?.plano_id);
+
   return (
     <>
-      <div className={`h-screen w-56 bg-slate-900 text-white flex flex-col fixed left-0 top-0 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+      <div className={`h-screen w-56 bg-slate-950 text-white flex flex-col fixed left-0 top-0 z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
         <div className="h-16 px-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            {profile.avatar ? (
+          <div className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl border border-slate-700/50">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold overflow-hidden ${verificationConfig ? `p-[2px] ${verificationConfig.gradientClass} ${verificationConfig.pulseClass}` : ''}`}>
               <img
-                src={profile.avatar}
-                alt="User"
-                className="w-9 h-9 rounded-full border-2 border-primary-500 object-cover"
+                src={profile.avatar || `https://ui-avatars.com/api/?name=${profile.name}`}
+                alt="Profile"
+                className={`w-full h-full rounded-full object-cover bg-slate-800 ${verificationConfig ? 'border-2 border-slate-900' : ''}`}
               />
-            ) : (
-              <div className="w-9 h-9 rounded-full border-2 border-primary-500 bg-slate-800 flex items-center justify-center">
-                <span className="text-xs font-bold text-primary-500">
-                  {profile.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
+            </div>
             <div className="overflow-hidden">
-              <p className="font-semibold text-sm truncate">{profile.name}</p>
+              <p className="font-semibold text-sm truncate flex items-center gap-1">
+                {profile.name}
+                {verificationConfig && <img src={verificationConfig.badgeUrl} alt={verificationConfig.title} className="w-4 h-4 object-contain shrink-0 drop-shadow-sm" />}
+              </p>
               <p className="text-[11px] text-slate-400 truncate w-28">{profile.email}</p>
             </div>
           </div>
@@ -133,7 +133,7 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
               key={item.label}
               onClick={() => handleNavigation(item.path)}
               data-tour={item.path === '/partner-properties' ? 'partner-properties' : undefined}
-              className={`w-full flex items-center space-x-3 px-3 py-2.5 text-sm rounded-full transition-all duration-200 ${isActive(item.path)
+              className={`w-full flex items-center space-x-3 px-3 py-2.5 text-sm rounded-2xl transition-all duration-200 ${isActive(item.path)
                 ? 'bg-slate-800 text-primary-400 border-l-4 border-primary-500'
                 : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                 }`}
@@ -147,7 +147,7 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
         <div className="p-2 border-t border-slate-800">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-3 py-2.5 text-sm rounded-full text-red-400 hover:bg-slate-800 transition-all duration-200">
+            className="w-full flex items-center space-x-3 px-3 py-2.5 text-sm rounded-2xl text-red-500 hover:bg-slate-900 transition-all duration-200">
             <LogOut size={20} />
             <span className="font-medium">SAIR</span>
           </button>

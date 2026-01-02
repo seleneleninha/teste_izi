@@ -189,17 +189,8 @@ export const MessagesDrawer: React.FC<MessagesDrawerProps> = ({ isOpen, onClose,
                 .select(`*, remetente:remetente_id(id, nome, sobrenome, avatar)`)
                 .single();
 
-            // 3. Notify the requester (who is now the recipient of this reply)
-            await supabase
-                .from('notificacoes')
-                .insert({
-                    user_id: selectedChat.partner.id,
-                    titulo: 'Resposta de Disponibilidade 🏠',
-                    mensagem: `O proprietário respondeu: ${replyText}`,
-                    tipo: 'message',
-                    link: `/dashboard?openChat=${replyMsg.id}`, // Link back to this chat
-                    lida: false
-                });
+            // 3. Notify the requester REMOVED
+            // Broker will be notified via other channels in the future.
 
             // Update local state
             // Update the status of the request message in the list

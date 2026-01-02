@@ -213,7 +213,7 @@ export const PartnerProperties: React.FC = () => {
 
             // Check if user has city/UF configured
             if (!userProfile?.cidade || !userProfile?.uf) {
-                addToast('Configure sua cidade e estado nas Configurações para ver imóveis parceiros', 'warning');
+                addToast('Configure seu endereço para ver imóveis parceiros', 'warning');
                 setProperties([]);
                 setMissingCity(true);
                 setLoading(false);

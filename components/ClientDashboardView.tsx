@@ -59,7 +59,7 @@ export const ClientDashboardView: React.FC = () => {
                         <Search size={32} className="text-midnight-400" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-1">Buscar Imóveis</h3>
-                    <p className="text-sm text-slate-400">Explore milhares de opções</p>
+                    <p className="text-sm text-slate-400">Veja qual imóvel se adequa às suas necessídades</p>
                 </div>
 
                 {/* Favorites Card */}

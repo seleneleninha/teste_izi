@@ -79,38 +79,8 @@ export const AvailabilityCheck: React.FC = () => {
 
             if (updateError) throw updateError;
 
-            // Notify Broker
-            let notifTitle = '';
-            let notifMsg = '';
-            let type = '';
-
-            switch (status) {
-                case 'disponivel':
-                    notifTitle = 'Imóvel Disponível! ✅';
-                    notifMsg = `O proprietário confirmou a disponibilidade de "${property.titulo}". Agora você pode enviar para seu lead!`;
-                    type = 'success';
-                    break;
-                case 'analise':
-                    notifTitle = 'Verificando Disponibilidade ⏳';
-                    notifMsg = `O proprietário de "${property.titulo}" está verificando os valores e disponibilidade. Aguarde confirmação.`;
-                    type = 'alert'; // visual logic uses alert/info
-                    break;
-                case 'indisponivel':
-                    notifTitle = 'Imóvel Indisponível ❌';
-                    notifMsg = `O proprietário informou que o imóvel "${property.titulo}" não está mais disponível.`;
-                    type = 'alert';
-                    break;
-            }
-
-            await supabase
-                .from('notificacoes')
-                .insert({
-                    user_id: message.remetente_id,
-                    titulo: notifTitle,
-                    mensagem: notifMsg,
-                    tipo: type, // map to existing types: 'success', 'alert', 'message'
-                    lida: false
-                });
+            // Notify Broker REMOVED
+            // Broker will be notified via other channels in the future.
 
             addToast('Resposta enviada com sucesso!', 'success');
             navigate('/dashboard'); // Or back to notifications

@@ -112,7 +112,7 @@ export const AgentProfile: React.FC = () => {
                 <p className="text-gray-500">Corretor não encontrado.</p>
                 <button
                     onClick={() => navigate('/')}
-                    className="mt-4 px-6 py-2 bg-primary-500 text-white rounded-full hover:bg-primary-600"
+                    className="mt-4 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-sm font-medium backdrop-blur-md transition-all hover:scale-105 active:scale-95"
                 >
                     Voltar
                 </button>
@@ -170,7 +170,7 @@ export const AgentProfile: React.FC = () => {
                             <h3 className="text-xl font-bold text-white mb-4">Sobre</h3>
                             <div className="bg-slate-900/50 p-6 rounded-full border border-slate-700">
                                 <p className="text-slate-300 leading-relaxed">
-                                    Corretor de imóveis profissional dedicado a encontrar as melhores oportunidades para meus Clientes.
+                                    Corretor de imóveis profissional dedicado a encontrar as MELHORES OPORTUNIDADES para meus Clientes.
                                     Com experiência no mercado imobiliário, ofereço um atendimento personalizado e transparente.
                                 </p>
                             </div>

@@ -1,11 +1,26 @@
-// Curated list of high-quality Unsplash images for Real Estate / Architecture backgrounds
+// Curated list of high-quality local backgrounds for Real Estate (14 JPG + 6 AVIF = 20 total)
+// Priority: AVIF files for better compression, fallback to JPG
 export const HERO_BACKGROUNDS = [
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1920', // Modern living room
-    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&q=80&w=1920', // Modern kitchen
-    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&q=80&w=1920', // Modern exterior
-    'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=1920', // White house blue sky
-    'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&q=80&w=1920', // Modern interior
-    'https://images.unsplash.com/photo-1613545325278-f24b0cae1224?auto=format&fit=crop&q=80&w=1920', // Luxury bathroom
+    '/backgrounds/bg9.jpg',
+    '/backgrounds/bg10.jpg',
+    '/backgrounds/bg11.jpg',
+    '/backgrounds/bg12.jpg',
+    '/backgrounds/bg13.jpg',
+    '/backgrounds/bg14.jpg',
+    '/backgrounds/bg1.jpg',
+    '/backgrounds/bg2.jpg',
+    '/backgrounds/bg3.jpg',
+    '/backgrounds/bg4.jpg',
+    '/backgrounds/bg5.jpg',
+    '/backgrounds/bg6.jpg',
+    '/backgrounds/bg7.jpg',
+    '/backgrounds/bg8.jpg',
+    '/backgrounds/bg15.jpg',
+    '/backgrounds/bg16.jpg',
+    '/backgrounds/bg17.jpg',
+    '/backgrounds/bg18.jpg',
+    '/backgrounds/bg19.jpg',
+    '/backgrounds/bg20.jpg',
 ];
 
 export const getRandomBackground = (): string => {

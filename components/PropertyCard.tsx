@@ -228,12 +228,13 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                                 animate="center"
                                 exit="exit"
                                 transition={{
-                                    x: { type: "spring", stiffness: 300, damping: 30 },
-                                    opacity: { duration: 0.2 }
+                                    x: { type: "spring", stiffness: 400, damping: 40 },
+                                    opacity: { duration: 0.15 }
                                 }}
                                 drag={!isMobile ? "x" : false}
                                 dragConstraints={{ left: 0, right: 0 }}
-                                dragElastic={1}
+                                dragElastic={0.2}
+                                dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
                                 onDragStart={() => setIsDragging(true)}
                                 onDragEnd={(e, { offset, velocity }) => {
                                     setTimeout(() => setIsDragging(false), 100);
@@ -266,7 +267,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
 
                 {/* Badges (Over Image) */}
                 <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 items-start pointer-events-none">
-                    <div className="px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-lg backdrop-blur-md transition-all duration-200 ${operationTagClass()}">
+                    <div className={`px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-full shadow-lg backdrop-blur-md transition-all duration-200 ${operationTagClass()}`}>
                         {operationLabel}
                     </div>
                     {/* Status Badge - Mostra status real quando ativo */}
@@ -460,15 +461,16 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                                                 <p className="text-xl font-bold text-white tracking-tight drop-shadow-lg leading-none">
                                                     {formatCurrency(property.valor_diaria || 0)}
                                                 </p>
+                                                <span className="text-xs font-normal text-gray-300">/dia</span>
                                             </div>
                                         ) : null}
 
                                         {property.valor_mensal ? (
                                             <div className="flex items-baseline gap-1 mt-1">
                                                 <p className={`${property.valor_diaria ? 'text-xl font-bold text-white/90' : 'text-xl font-bold text-white'} tracking-tight drop-shadow-lg`}>
-                                                    ou {formatCurrency(property.valor_mensal || 0)}
+                                                    {formatCurrency(property.valor_mensal || 0)}
                                                 </p>
-                                                <span className="text-md font-normal text-gray-300"></span>
+                                                <span className="text-xs font-normal text-gray-300">/mês</span>
                                             </div>
                                         ) : null}
 
@@ -484,7 +486,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                                                     {formatCurrency(property.valor_venda || 0)}
                                                 </p>
                                                 <p className="text-xl font-bold text-white mt-1">
-                                                    ou {formatCurrency(property.valor_locacao || 0)} <span className="text-sm font-normal text-gray-300"></span>
+                                                    {formatCurrency(property.valor_locacao || 0)} <span className="text-xs font-normal text-gray-300">/mês</span>
                                                 </p>
                                             </>
                                         ) : property.valor_locacao ? (
@@ -492,6 +494,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                                                 <p className="text-xl font-bold text-white tracking-tight drop-shadow-lg">
                                                     {formatCurrency(property.valor_locacao || 0)}
                                                 </p>
+                                                <span className="text-xs font-normal text-gray-300">/mês</span>
                                             </div>
                                         ) : property.valor_venda ? (
                                             <p className="text-xl font-bold text-white tracking-tight drop-shadow-lg">

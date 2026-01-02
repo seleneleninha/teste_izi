@@ -448,38 +448,8 @@ export default function AddProperty() {
 
             if (error) throw error;
 
-            // --- ADMIN NOTIFICATION ---
-            try {
-                // Fetch all admins
-                const { data: admins, error: adminQueryError } = await supabase
-                    .from('perfis')
-                    .select('id, email')
-                    .eq('is_admin', true);
-
-                console.log('DEBUG: Admins found for notification:', admins);
-                if (adminQueryError) console.error('DEBUG: Admin query error:', adminQueryError);
-
-                if (admins && admins.length > 0) {
-                    const adminNotifications = admins.map(adm => ({
-                        user_id: adm.id,
-                        titulo: 'Novo Anúncio Pendente 🏠',
-                        mensagem: `O imóvel "${formData.title}" foi enviado por ${user.email} e aguarda aprovação.`,
-                        link: '/admin/approvals',
-                        tipo: 'alert'
-                    }));
-
-                    console.log('DEBUG: Inserting internal notifications for admins...');
-                    const { error: insError } = await supabase.from('notificacoes').insert(adminNotifications);
-                    if (insError) console.error('DEBUG: Internal notification insert error:', insError);
-                    // TODO: Future - send WhatsApp notification via WAHA
-                } else {
-                    console.warn('DEBUG: No admins found to notify!');
-                }
-            } catch (adminNotifError) {
-                console.error('Error notifying admins:', adminNotifError);
-                // Don't block property creation if admin notification fails
-            }
-            // ---------------------------
+            // --- ADMIN NOTIFICATION REMOVED ---
+            // Notifications for admins will be handled via WAHA in the future.
 
             addToast(editingId ? 'Imóvel atualizado com sucesso! Aguardando nova aprovação.' : 'Imóvel cadastrado com sucesso! Aguardando aprovação.', 'success');
             navigate('/properties');
@@ -514,7 +484,7 @@ export default function AddProperty() {
     const [touchStartY, setTouchStartY] = useState<number>(0);
 
     const steps = [
-        { num: 1, label: 'Localização', icon: MapPin },
+        { num: 1, label: 'Endereço', icon: MapPin },
         { num: 2, label: 'Financeiro', icon: DollarSign },
         { num: 3, label: 'Detalhes', icon: Home },
         { num: 4, label: 'Fotos', icon: UploadCloud },
@@ -1052,8 +1022,8 @@ export default function AddProperty() {
                                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Dados fundamentais e endereço do seu imóvel</p>
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="md:col-span-2">
+                        <div className="grid gap-8">
+                            <div>
                                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Título do Anúncio <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
@@ -1065,71 +1035,74 @@ export default function AddProperty() {
                                 />
                             </div>
 
-                            <div className="group">
-                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Operação <span className="text-red-500">*</span></label>
-                                <div className="relative">
-                                    <select
-                                        name="operacaoId"
-                                        value={formData.operacaoId}
-                                        onChange={handleInputChange}
-                                        className="w-full px-6 py-4 pr-12 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all appearance-none font-medium"
-                                    >
-                                        <option value="" className="bg-slate-900">Selecione...</option>
-                                        {operacoes.map(op => (
-                                            <option key={op.id} value={op.id} className="bg-slate-900">{op.tipo}</option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
-                                        <Tag size={18} />
-                                    </div>
-                                </div>
-                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-                            <div className="group">
-                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Tipo de Imóvel <span className="text-red-500">*</span></label>
-                                <div className="relative">
-                                    <select
-                                        name="tipoImovelId"
-                                        value={formData.tipoImovelId}
-                                        onChange={handleInputChange}
-                                        className="w-full px-6 py-4 pr-12 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all appearance-none font-medium"
-                                    >
-                                        <option value="" className="bg-slate-900">Selecione...</option>
-                                        {tiposDisponiveis.map(tipo => (
-                                            <option key={tipo.id} value={tipo.id} className="bg-slate-900">{tipo.tipo}</option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
-                                        <Home size={18} />
-                                    </div>
-                                </div>
-                                {isTemporada && <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mt-2 ml-1 flex items-center gap-1.5"><Sparkles size={12} /> Sugerido para Temporada</p>}
-                            </div>
-
-                            {/* Subtipo - Hidden for Temporada */}
-                            {!isTemporada && (
                                 <div className="group">
-                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Subtipo <span className="text-red-500">*</span></label>
+                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Operação <span className="text-red-500">*</span></label>
                                     <div className="relative">
                                         <select
-                                            name="subtipoImovelId"
-                                            value={formData.subtipoImovelId}
+                                            name="operacaoId"
+                                            value={formData.operacaoId}
                                             onChange={handleInputChange}
                                             className="w-full px-6 py-4 pr-12 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all appearance-none font-medium"
                                         >
                                             <option value="" className="bg-slate-900">Selecione...</option>
-                                            {subtiposImovel
-                                                .filter(sub => !formData.tipoImovelId || sub.tipo_imovel === formData.tipoImovelId)
-                                                .map(sub => (
-                                                    <option key={sub.id} value={sub.id} className="bg-slate-900">{sub.subtipo}</option>
-                                                ))}
+                                            {operacoes.map(op => (
+                                                <option key={op.id} value={op.id} className="bg-slate-900">{op.tipo}</option>
+                                            ))}
                                         </select>
                                         <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
-                                            <Wand2 size={18} />
+                                            <Tag size={18} />
                                         </div>
                                     </div>
                                 </div>
-                            )}
+
+                                <div className="group">
+                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Tipo de Imóvel <span className="text-red-500">*</span></label>
+                                    <div className="relative">
+                                        <select
+                                            name="tipoImovelId"
+                                            value={formData.tipoImovelId}
+                                            onChange={handleInputChange}
+                                            className="w-full px-6 py-4 pr-12 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all appearance-none font-medium"
+                                        >
+                                            <option value="" className="bg-slate-900">Selecione...</option>
+                                            {tiposDisponiveis.map(tipo => (
+                                                <option key={tipo.id} value={tipo.id} className="bg-slate-900">{tipo.tipo}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
+                                            <Home size={18} />
+                                        </div>
+                                    </div>
+                                    {isTemporada && <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mt-2 ml-1 flex items-center gap-1.5"><Sparkles size={12} /> Sugerido para Temporada</p>}
+                                </div>
+
+                                {/* Subtipo - Hidden for Temporada */}
+                                {!isTemporada && (
+                                    <div className="group">
+                                        <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Subtipo <span className="text-red-500">*</span></label>
+                                        <div className="relative">
+                                            <select
+                                                name="subtipoImovelId"
+                                                value={formData.subtipoImovelId}
+                                                onChange={handleInputChange}
+                                                className="w-full px-6 py-4 pr-12 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/10 outline-none text-white transition-all appearance-none font-medium"
+                                            >
+                                                <option value="" className="bg-slate-900">Selecione...</option>
+                                                {subtiposImovel
+                                                    .filter(sub => !formData.tipoImovelId || sub.tipo_imovel === formData.tipoImovelId)
+                                                    .map(sub => (
+                                                        <option key={sub.id} value={sub.id} className="bg-slate-900">{sub.subtipo}</option>
+                                                    ))}
+                                            </select>
+                                            <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
+                                                <Wand2 size={18} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-4 mb-8 pt-10 border-t border-white/5">
@@ -1633,7 +1606,7 @@ export default function AddProperty() {
                                         name={field.name}
                                         value={formData[field.name as keyof PropertyFormData] as string}
                                         onChange={handleInputChange}
-                                        className="w-full px-6 py-4 rounded-full bg-slate-950/40 border border-white/5 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 outline-none text-white transition-all font-black text-center"
+                                        className="w-full px-6 py-4 rounded-2xl bg-slate-950/40 border border-white/5 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 outline-none text-white transition-all font-black text-center"
                                     />
                                 </div>
                             ))}

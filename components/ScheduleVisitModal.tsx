@@ -141,17 +141,8 @@ export const ScheduleVisitModal: React.FC<ScheduleVisitModalProps> = ({
                 });
             }
 
-            // Always insert a notification for the broker
-            await supabase
-                .from('notificacoes')
-                .insert({
-                    user_id: ownerId,
-                    titulo: 'Nova Solicitação de Visita 📅',
-                    mensagem: `${formData.nome} quer visitar "${propertyTitle}" em ${new Date(visitDate).toLocaleDateString()}.`,
-                    tipo: 'message', // or 'calendar'
-                    link: `/dashboard/agendamentos`, // Assuming this page will exist or similar
-                    lida: false
-                });
+            // Always insert a notification for the broker REMOVED
+            // Broker will be notified via other channels in the future.
 
             setSuccess(true);
             addToast('Solicitação enviada com sucesso!', 'success');
