@@ -307,7 +307,7 @@ export const BrokerSearchPage: React.FC = () => {
                                 className="w-full h-full rounded-full object-cover border-4 border-slate-900 relative z-10"
                             />
                             {verificationConfig && (
-                                <div className="absolute -bottom-1 -right-1 z-20" title={verificationConfig.title}>
+                                <div className="absolute -top-1 -right-1 z-20" title={verificationConfig.title}>
                                     <img src={verificationConfig.badgeUrl} alt={verificationConfig.title} className={`w-10 h-10 drop-shadow-xl ${verificationConfig.pulseClass}`} />
                                 </div>
                             )}

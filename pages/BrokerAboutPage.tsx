@@ -163,7 +163,7 @@ export const BrokerAboutPage: React.FC = () => {
                     </div>
 
                     {/* Name & Title */}
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 tracking-tight">
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 tracking-tight">
                         {broker.nome} <span className="text-emerald-400">{broker.sobrenome}</span>
                     </h1>
 
@@ -205,7 +205,7 @@ export const BrokerAboutPage: React.FC = () => {
             {stats.length > 0 && (
                 <section className="py-16 bg-midnight-900 border-y border-white/5">
                     <div className="container mx-auto px-6">
-                        <div className={`grid grid-cols-${Math.min(stats.length, 3)} gap-8 max-w-4xl mx-auto`}>
+                        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-4xl mx-auto`}>
                             {stats.map((stat, idx) => (
                                 <div key={idx} className="text-center p-6 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-emerald-500/50 transition-colors group">
                                     <div className="flex justify-center mb-3">

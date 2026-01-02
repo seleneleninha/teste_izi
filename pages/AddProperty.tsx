@@ -1439,7 +1439,7 @@ export default function AddProperty() {
 
                                             {!isTemporada && (
                                                 <div className="group">
-                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">IPTU (Ano)</label>
+                                                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">IPTU (mês)</label>
                                                     <div className="relative">
                                                         <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 font-black">R$</div>
                                                         <input
@@ -1453,8 +1453,10 @@ export default function AddProperty() {
                                                     </div>
                                                 </div>
                                             )}
+                                        </div>
 
-                                            <div className="pt-2 space-y-4">
+                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                                            <div className="pt-2 flex flex-col md:flex-row md:items-center gap-6 w-full">
                                                 {!isTemporada && isLocacao && (
                                                     <label className="flex items-center group cursor-pointer select-none">
                                                         <div className="relative">

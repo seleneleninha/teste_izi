@@ -79,7 +79,8 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
             <div className="container mx-auto px-4">
                 <div className="flex justify-between items-center">
                     {/* Brand / Name */}
-                    <Link to={`/${brokerSlug}`} className="text-2xl font-heading font-bold text-white flex items-center gap-3">
+                    {/* Brand / Name */}
+                    <Link to={`/${brokerSlug}`} className="flex items-center gap-3 group">
                         {/* If they had a logo it would go here, else generic or avatar */}
                         {broker.avatar ? (
                             <div className={`relative rounded-full ${verificationConfig ? `p-[2px] ${verificationConfig.gradientClass} ${verificationConfig.pulseClass}` : ''}`}>
@@ -93,19 +94,22 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
                                 {broker.nome.charAt(0)}
                             </div>
                         )}
-                        <span className="flex items-center gap-1">
-                            {broker.nome} <span className="text-emerald-400">{broker.sobrenome}</span>
-                            {verificationConfig && (
-                                <img src={verificationConfig.badgeUrl} alt={verificationConfig.title} className="w-5 h-5 object-contain drop-shadow-sm" title={verificationConfig.title} />
+
+                        <div className="flex flex-col justify-center">
+                            <span className="text-xl md:text-2xl font-heading font-bold text-white flex items-center gap-1 group-hover:text-emerald-50 transition-colors leading-none tracking-tight">
+                                {broker.nome} <span className="text-emerald-400">{broker.sobrenome}</span>
+                                {verificationConfig && (
+                                    <img src={verificationConfig.badgeUrl} alt={verificationConfig.title} className="w-5 h-5 object-contain drop-shadow-sm ml-1" title={verificationConfig.title} />
+                                )}
+                            </span>
+                            {broker.creci && broker.uf_creci && (
+                                <p className="text-[12px] font-bold text-emerald-100/70 uppercase tracking-widest mt-0.5 ml-0.5">CRECI: {broker.creci}/{broker.uf_creci}</p>
                             )}
-                        </span>
-                        {broker.creci && broker.uf_creci && (
-                            <p className="hidden md:block text-sm font-bold text-white mt-1 ml-2 opacity-80">CRECI: {broker.creci}/{broker.uf_creci}</p>
-                        )}
+                        </div>
                     </Link>
 
                     {/* Desktop Menu */}
-                    <div className="hidden md:flex items-center gap-8">
+                    <div className="hidden lg:flex items-center gap-8">
                         <Link
                             to={`/${brokerSlug}`}
                             className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-emerald-400 ${location.pathname === `/${brokerSlug}` ? 'text-emerald-400' : 'text-gray-300'}`}
@@ -175,7 +179,7 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
 
                         {/* Hamburger */}
                         <button
-                            className="md:hidden text-white animate-pulse"
+                            className="lg:hidden text-white animate-pulse"
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                         >
                             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -186,7 +190,7 @@ export const BrokerNavbar: React.FC<BrokerNavbarProps> = ({ brokerSlug }) => {
                 {/* Mobile Menu */}
 
                 {isMenuOpen && (
-                    <div className="md:hidden fixed top-full w-auto right-0 bg-midnight-950/90 border-b border-midnight-700 z-40 shadow-lg rounded-bl-3xl">
+                    <div className="lg:hidden fixed top-full w-auto right-0 bg-midnight-950/90 border-b border-midnight-700 z-40 shadow-lg rounded-bl-3xl">
                         <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
                             <Link
                                 to={`/${brokerSlug}`}

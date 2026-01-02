@@ -624,10 +624,10 @@ export const PropertiesList: React.FC = () => {
                     )}
 
                     {/* Filtros Container */}
-                    <div className="w-full flex flex-col gap-6">
+                    <div className={`w-full ${!isDashboardRoute ? 'flex flex-col xl:flex-row xl:items-center gap-4' : 'flex flex-col gap-6'}`}>
                         {/* Linha 1: Filtros de Seleção */}
                         <div className={`grid ${!isDashboardRoute
-                            ? 'grid-cols-1 sm:grid-cols-3 lg:flex lg:flex-1'
+                            ? 'grid-cols-1 md:grid-cols-3 w-full xl:flex-1'
                             : (isMyProperties || isMarketMode ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-2 lg:grid-cols-3 xl:flex xl:flex-wrap xl:items-center')
                             } gap-4`}>
                             {/* Operação */}
@@ -734,19 +734,22 @@ export const PropertiesList: React.FC = () => {
                         </div>
 
                         {/* Linha 2: Botões de Ação - SEPARADA do grid de filtros */}
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4 border-t border-white/5">
+                        <div className={`${!isDashboardRoute
+                            ? 'flex flex-col sm:flex-row items-center gap-2 w-full xl:w-auto shrink-0 mt-3 xl:mt-5'
+                            : 'flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-4 border-t border-white/5'
+                            }`}>
                             {/* Buscar / Limpar */}
-                            <div className="flex items-center gap-2">
+                            <div className={`flex items-center gap-2 ${!isDashboardRoute ? 'w-full sm:w-auto' : ''}`}>
                                 <button
                                     onClick={() => fetchProperties()}
-                                    className="flex-1 sm:flex-none px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                                    className={`px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 ${!isDashboardRoute ? 'flex-1 sm:flex-none' : 'flex-1 sm:flex-none'}`}
                                 >
                                     <Search size={16} />
                                     <span className="uppercase text-xs tracking-wide">Buscar</span>
                                 </button>
                                 <button
                                     onClick={clearFilters}
-                                    className="flex-1 sm:flex-none px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                                    className={`px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${!isDashboardRoute ? 'flex-1 sm:flex-none' : 'flex-1 sm:flex-none'}`}
                                 >
                                     <X size={16} />
                                     <span className="uppercase text-xs tracking-wide">Limpar</span>

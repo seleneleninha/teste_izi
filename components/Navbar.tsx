@@ -60,7 +60,7 @@ export const Navbar = () => {
                     </Link>
 
                     {/* Desktop Navigation */}
-                    <div className="hidden md:flex items-center gap-8">
+                    <div className="hidden lg:flex items-center gap-8">
                         <Link
                             to="/"
                             className={`font-medium transition-colors ${scrolled
@@ -91,7 +91,7 @@ export const Navbar = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="hidden md:flex items-center gap-4">
+                    <div className="hidden lg:flex items-center gap-4">
                         {/* User Actions */}
                         {user ? (
                             <div className="flex items-center gap-4">
@@ -132,7 +132,7 @@ export const Navbar = () => {
 
                     {/* Mobile Menu Button */}
                     <button
-                        className="md:hidden p-2 text-gray-200 hover:text-emerald-400"
+                        className="lg:hidden p-2 text-gray-200 hover:text-emerald-400"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                         aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
                     >
@@ -143,7 +143,7 @@ export const Navbar = () => {
 
             {/* Mobile Menu */}
             {mobileMenuOpen && (
-                <div className="md:hidden absolute top-full left-0 w-full bg-midnight-950 shadow-xl border-t border-white/10 p-4 flex flex-col gap-4">
+                <div className="lg:hidden absolute top-full left-0 w-full bg-midnight-950 shadow-xl border-t border-white/10 p-4 flex flex-col gap-4">
                     <Link to="/" onClick={() => setMobileMenuOpen(false)} className="text-right text-gray-200 font-medium py-2">Início</Link>
                     <Link to="/search" onClick={() => setMobileMenuOpen(false)} className="text-right text-gray-200 font-medium py-2">Buscar Imóveis</Link>
                     <Link to="/about" onClick={() => setMobileMenuOpen(false)} className="text-right text-gray-200 font-medium py-2">Sobre</Link>
