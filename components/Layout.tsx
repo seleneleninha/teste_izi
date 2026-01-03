@@ -5,7 +5,6 @@ import { useTheme } from './ThemeContext';
 import { Send } from 'lucide-react';
 import { MessagesDrawer } from './MessagesDrawer';
 import { TrialBanner } from './TrialBanner';
-import { AIAssistant } from './AIAssistant';
 import { PublicAIAssistant } from './PublicAIAssistant';
 import { ConditionalFloatingButton } from './ConditionalFloatingButton';
 import { useAuth } from './AuthContext';

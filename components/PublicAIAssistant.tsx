@@ -498,8 +498,8 @@ export const PublicAIAssistant: React.FC<{ brokerSlug?: string }> = ({ brokerSlu
             if (gratitudeKeywords.some(kw => lowerMsg.includes(kw))) {
                 console.log('🎯 CLOSING DETECTED: Showing conversion actions');
                 return [
-                    { id: 'contact-whatsapp', text: '💬 Falar no WhatsApp', actionText: 'Quero falar no WhatsApp', category: 'broker', icon: '📱' },
-                    { id: 'schedule-visit', text: '📅 Agendar Visita', actionText: 'Quero agendar uma visita', category: 'broker', icon: '📅' },
+                    { id: 'contact-whatsapp', text: '💬 Falar no WhatsApp', actionText: 'Quero falar no WhatsApp', category: 'contact', icon: '📱' },
+                    { id: 'schedule-visit', text: '📅 Agendar Visita', actionText: 'Quero agendar uma visita', category: 'contact', icon: '📅' },
                     { id: 'restart-search', text: '🔄 Nova Busca', actionText: 'Quero fazer uma nova busca', category: 'operation', icon: '🔄' }
                 ];
             }

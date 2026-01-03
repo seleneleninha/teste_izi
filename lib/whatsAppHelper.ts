@@ -23,9 +23,9 @@ interface Property {
     cod_imovel: number;
 }
 
-const EVOLUTION_API_URL = process.env.EVOLUTION_API_URL || 'http://localhost:8080';
-const INSTANCE_NAME = process.env.WHATSAPP_INSTANCE_NAME || 'iziBrokerz';
-const API_KEY = process.env.EVOLUTION_API_KEY || '';
+// WAHA API Configuration
+const WAHA_API_URL = process.env.WAHA_API_URL || 'http://18.205.1.162:3000';
+const SESSION_NAME = process.env.WHATSAPP_SESSION_NAME || 'default';
 
 /**
  * Envia mensagem de texto via WhatsApp
@@ -35,16 +35,17 @@ export async function sendWhatsAppMessage(
     message: string
 ): Promise<boolean> {
     try {
+        // WAHA sendText endpoint
         const response = await fetch(
-            `${EVOLUTION_API_URL}/message/sendText/${INSTANCE_NAME}`,
+            `${WAHA_API_URL}/api/sendText`,
             {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': API_KEY
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    number: formatPhoneNumber(phone),
+                    session: SESSION_NAME,
+                    chatId: formatPhoneNumber(phone) + '@c.us',
                     text: message
                 })
             }
@@ -71,17 +72,18 @@ export async function sendWhatsAppImage(
     caption?: string
 ): Promise<boolean> {
     try {
+        // WAHA sendMedia endpoint
         const response = await fetch(
-            `${EVOLUTION_API_URL}/message/sendMedia/${INSTANCE_NAME}`,
+            `${WAHA_API_URL}/api/sendImage`,
             {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': API_KEY
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    number: formatPhoneNumber(phone),
-                    mediaUrl: imageUrl,
+                    session: SESSION_NAME,
+                    chatId: formatPhoneNumber(phone) + '@c.us',
+                    file: { url: imageUrl },
                     caption: caption || ''
                 })
             }
@@ -237,21 +239,16 @@ function formatPrice(value: number): string {
  * Verifica se a API do WhatsApp está configurada
  */
 export function isWhatsAppConfigured(): boolean {
-    return !!(EVOLUTION_API_URL && INSTANCE_NAME && API_KEY);
+    return !!(WAHA_API_URL && SESSION_NAME);
 }
 
 /**
- * Testa conexão com Evolution API
+ * Testa conexão com WAHA API
  */
 export async function testWhatsAppConnection(): Promise<boolean> {
     try {
         const response = await fetch(
-            `${EVOLUTION_API_URL}/instance/connectionState/${INSTANCE_NAME}`,
-            {
-                headers: {
-                    'apikey': API_KEY
-                }
-            }
+            `${WAHA_API_URL}/api/sessions/${SESSION_NAME}`
         );
 
         return response.ok;

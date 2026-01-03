@@ -137,7 +137,7 @@ export const BrokerAboutPage: React.FC = () => {
                                         <img
                                             src={getVerificationConfig(broker.plano_id)?.badgeUrl}
                                             alt={getVerificationConfig(broker.plano_id)?.title}
-                                            className="w-10 h-10 object-contain drop-shadow-sm"
+                                            className="md:w-8 md:h-8 w-6 h-6 object-contain drop-shadow-sm"
                                             title={getVerificationConfig(broker.plano_id)?.title}
                                         />
                                     </div>
@@ -152,10 +152,10 @@ export const BrokerAboutPage: React.FC = () => {
                                 <img
                                     src={broker.avatar}
                                     alt={`${broker.nome} ${broker.sobrenome}`}
-                                    className={`relative w-40 h-40 rounded-full border-4 object-cover shadow-2xl transform transition hover:-translate-y-1 duration-500 ${broker.plano_id ? getVerificationConfig(broker.plano_id)?.borderClass : 'border-emerald-500'}`}
+                                    className={`relative md:w-28 md:h-28 w-20 h-20 rounded-full border-4 object-cover shadow-2xl transform transition hover:-translate-y-1 duration-500 ${broker.plano_id ? getVerificationConfig(broker.plano_id)?.borderClass : 'border-emerald-500'}`}
                                 />
                             ) : (
-                                <div className={`relative w-40 h-40 rounded-full bg-emerald-500 flex items-center justify-center text-white text-6xl font-bold border-4 shadow-2xl ${broker.plano_id ? getVerificationConfig(broker.plano_id)?.borderClass : 'border-emerald-400'}`}>
+                                <div className={`relative md:w-28 md:h-28 w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center text-white text-6xl font-bold border-4 shadow-2xl ${broker.plano_id ? getVerificationConfig(broker.plano_id)?.borderClass : 'border-emerald-400'}`}>
                                     {broker.nome.charAt(0)}
                                 </div>
                             )}
@@ -163,20 +163,20 @@ export const BrokerAboutPage: React.FC = () => {
                     </div>
 
                     {/* Name & Title */}
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 tracking-tight">
+                    <h1 className="text-2xl lg:text-3xl font-bold mb-4 tracking-tight">
                         {broker.nome} <span className="text-emerald-400">{broker.sobrenome}</span>
                     </h1>
 
                     {/* Verification Badge */}
                     <div className="flex justify-center mb-8">
-                        <VerificationBadge plano_id={broker.plano_id} className="bg-white/5 border-white/10" />
+                        <VerificationBadge plano_id={broker.plano_id} className="bg-slate/10 border border-white/20" />
                     </div>
 
                     {/* Quick Contact */}
 
                     <div className="flex flex-wrap justify-center gap-4">
                         <a>
-                            <div className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-3 rounded-full transition-all border border-white/20">
+                            <div className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-3 py-1 rounded-full transition-all border border-white/20">
                                 <Award className="text-emerald-400" size={20} />
                                 <span className="text-white font-bold">CRECI {broker.creci}/{broker.uf_creci}</span>
                             </div>
@@ -185,14 +185,14 @@ export const BrokerAboutPage: React.FC = () => {
                             href={`https://wa.me/55${broker.whatsapp.replace(/\D/g, '')}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-3 rounded-full transition-all shadow-lg shadow-emerald-500/30 hover:scale-105"
+                            className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-1 rounded-full transition-all shadow-lg shadow-emerald-500/30 hover:scale-105"
                         >
                             <Phone size={20} />
                             WhatsApp
                         </a>
                         <a
                             href={`mailto:${broker.email}`}
-                            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-3 rounded-full transition-all border border-white/20"
+                            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-4 py-1 rounded-full transition-all border border-white/20"
                         >
                             <Mail size={20} />
                             E-mail

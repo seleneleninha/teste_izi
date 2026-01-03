@@ -299,7 +299,7 @@ export const BrokerSearchPage: React.FC = () => {
                 <div className="container mx-auto px-4 relative z-10 text-center mt-20">
                     {/* AVATAR + VERIFIED BADGE */}
                     <div className="flex justify-center mb-6">
-                        <div className={`relative w-28 h-28 md:w-32 md:h-32 rounded-full p-[3px] ${verificationConfig ? `${verificationConfig.gradientClass} ${verificationConfig.pulseClass}` : 'bg-white/20'}`}>
+                        <div className={`relative w-20 h-20 md:w-28 md:h-28 rounded-full p-[3px] ${verificationConfig ? `${verificationConfig.gradientClass} ${verificationConfig.pulseClass}` : 'bg-white/20'}`}>
                             <div className="absolute inset-[3px] bg-slate-900 rounded-full z-0"></div>
                             <img
                                 src={broker.avatar || `https://ui-avatars.com/api/?name=${broker.nome}`}
@@ -308,20 +308,14 @@ export const BrokerSearchPage: React.FC = () => {
                             />
                             {verificationConfig && (
                                 <div className="absolute -top-1 -right-1 z-20" title={verificationConfig.title}>
-                                    <img src={verificationConfig.badgeUrl} alt={verificationConfig.title} className={`w-10 h-10 drop-shadow-xl ${verificationConfig.pulseClass}`} />
+                                    <img src={verificationConfig.badgeUrl} alt={verificationConfig.title} className={`md:w-8 md:h-8 w-6 h-6 drop-shadow-xl ${verificationConfig.pulseClass}`} />
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <h1 className="text-3xl md:text-5xl font-heading font-bold text-white mb-4 mt-2 flex items-center justify-center gap-3">
-                        {broker.nome} {broker.sobrenome}
-                        {verificationConfig && (
-                            <img src={verificationConfig.badgeUrl} alt={verificationConfig.title} className="w-8 h-8 object-contain drop-shadow-md" />
-                        )}
-                    </h1>
-                    <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                        Encontre o imóvel ideal para sua Família. Estou à disposição para realizarmos seu sonho juntos!
+                    <p className="text-emerald-400 font-bold text-xl md:text-2xl lg:text-3xl max-w-2xl mx-auto">
+                        Encontre o imóvel ideal para sua Família. <span className="text-white">Estou à disposição para realizarmos seu sonho juntos!</span>
                     </p>
                 </div>
             </div>
