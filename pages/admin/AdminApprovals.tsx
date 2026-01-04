@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Check, X, Eye, AlertCircle, Clock, CheckCircle, XCircle, Search, ShieldCheck, History,
     DollarSign, Key, AlertTriangle, PauseCircle, Trophy, ChevronDown, List, LayoutGrid, UserCheck, UserX,
-    BedDouble, Bath, Car, Ruler, ArrowUp, ArrowDown
+    BedDouble, Bath, Car, Ruler, ArrowUp, ArrowDown, FileText
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../components/AuthContext';
@@ -68,6 +68,7 @@ const STATUS_CONFIG = {
     todos: { label: 'Todos', icon: ShieldCheck, color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-700' },
     pendente: { label: 'Pendentes', icon: Clock, color: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
     ativo: { label: 'Ativos', icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+    rascunho: { label: 'Rascunhos (XML)', icon: FileText, color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/20' },
     reprovado: { label: 'Reprovados', icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20' },
     venda_faturada: { label: 'Vendas', icon: DollarSign, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' },
     locacao_faturada: { label: 'Locações', icon: Key, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
@@ -306,6 +307,34 @@ export const AdminApprovals: React.FC = () => {
         locacao_faturada: allProperties.filter(p => p.status === 'locacao_faturada').length,
         imovel_perdido: allProperties.filter(p => p.status === 'imovel_perdido').length,
         imovel_espera: allProperties.filter(p => p.status === 'imovel_espera').length,
+        rascunho: allProperties.filter(p => p.status === 'rascunho').length,
+    };
+
+    // Bulk Approve Function
+    const handleBulkApprove = async () => {
+        const targetIds = filteredProperties.map(p => p.id);
+        if (targetIds.length === 0) return;
+
+        if (!confirm(`Tem certeza que deseja APROVAR todos os ${targetIds.length} imóveis listados?`)) return;
+
+        try {
+            const { error } = await supabase
+                .from('anuncios')
+                .update({
+                    status: 'ativo',
+                    aprovado_por: user?.id,
+                    data_aprovacao: new Date().toISOString()
+                })
+                .in('id', targetIds);
+
+            if (error) throw error;
+
+            addToast(`${targetIds.length} anúncios aprovados com sucesso!`, 'success');
+            fetchProperties();
+        } catch (error: any) {
+            console.error('Error bulk approving:', error);
+            addToast('Erro ao aprovar em massa', 'error');
+        }
     };
 
     // Filter displayed list
@@ -488,6 +517,30 @@ export const AdminApprovals: React.FC = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Bulk Actions Bar */}
+                {(filter === 'rascunho' || filter === 'pendente') && filteredProperties.length > 0 && (
+                    <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-emerald-500/20 rounded-lg">
+                                <CheckCircle className="text-emerald-400" size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-bold text-sm">Aprovação em Massa Disponível</h3>
+                                <p className="text-slate-400 text-xs">
+                                    Existem <b>{filteredProperties.length}</b> imóveis listados nesta categoria.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleBulkApprove}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition-colors shadow-lg shadow-emerald-900/20 flex items-center gap-2"
+                        >
+                            <CheckCircle size={16} />
+                            Aprovar Todos ({filteredProperties.length})
+                        </button>
+                    </div>
+                )}
 
                 {/* Properties Display */}
                 {loading ? (

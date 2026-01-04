@@ -1,14 +1,21 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
 import { useHeader } from '../components/HeaderContext';
-import { User, Lock, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, Lightbulb, AlertTriangle, ExternalLink, MapPin, Phone, Share2, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign, Download, Search, Copy, MessageSquare, Zap, Check, Info, ArrowRight, Bot, Sparkles, MessageCircle, QrCode, X, BadgeCheck } from 'lucide-react';
+import {
+  User, Lock, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, Lightbulb, AlertTriangle, ExternalLink, MessageCircle, Play, Info, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign,
+  MessageSquare, Zap, Sparkles, Bot, Check, X, UserMinus, Download, Upload,
+  ShieldCheck, Eraser, MapPin, Rocket, CheckCircle, AlertCircle, Share2, Search
+} from 'lucide-react';
+import { processXMLImport, cleanupHtmlArtifacts, batchGeocodeProperties, massPublishProperties } from '../api/import-xml/client';
 import { useNavigate } from 'react-router-dom';
 import { geocodeAddress } from '../lib/geocodingHelper';
 import { checkPasswordStrength, validateEmail, validatePhone, validateCRECI, sanitizeInput } from '../lib/validation';
 import { PasswordStrengthIndicator } from '../components/PasswordStrengthIndicator';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
+import { UploadDialog } from '../components/ImportXML/UploadDialog';
 import { getVerificationConfig } from '../lib/verificationHelper';
 
 export const Settings: React.FC = () => {
@@ -16,7 +23,7 @@ export const Settings: React.FC = () => {
   const { addToast } = useToast();
   const { setHeaderContent } = useHeader();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'account' | 'page' | 'branding' | 'whatsapp'>('account');
+  const [activeTab, setActiveTab] = useState<'account' | 'page' | 'branding' | 'whatsapp' | 'importXml'>('account');
 
   // Loading States
   const [loading, setLoading] = useState(false);
@@ -42,6 +49,16 @@ export const Settings: React.FC = () => {
   // Check if user has Avançado or Profissional plan (for IA features)
   const isPlanAvancadoOrPro = userProfile?.plano_id === '55de4ee5-c2f1-4f9d-b466-7e08138854f0' ||
     userProfile?.plano_id === 'edf90163-d554-4f8e-bfe9-7d9e98fc4450';
+
+  // Import Limits Logic
+  const importConfig = React.useMemo(() => {
+    const planId = userProfile?.plano_id;
+    if (planId === 'ad586103-eb71-4ad0-af95-38a9e16b3c8f') return { canImport: false, limit: 0 }; // Básico
+    if (planId === 'b974682b-cb4e-4a93-86ef-1efa47a2813c') return { canImport: true, limit: 20 }; // Intermediário
+    if (planId === '55de4ee5-c2f1-4f9d-b466-7e08138854f0') return { canImport: true, limit: 30 }; // Avançado
+    if (planId === 'edf90163-d554-4f8e-bfe9-7d9e98fc4450') return { canImport: true, limit: 50 }; // Profissional
+    return { canImport: false, limit: 0 }; // Fallback
+  }, [userProfile?.plano_id]);
 
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -106,6 +123,59 @@ export const Settings: React.FC = () => {
 
   // LGPD States
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+
+  // Admin Tools State
+  const [cleanupResult, setCleanupResult] = useState<{ fixed: number, total: number } | null>(null);
+  const [cleanupStatus, setCleanupStatus] = useState<'idle' | 'cleaning' | 'success' | 'error'>('idle');
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
+  const [geoProgress, setGeoProgress] = useState<{ current: number, total: number, message: string }>({ current: 0, total: 0, message: '' });
+  const [geoResult, setGeoResult] = useState<{ success: number, failed: number } | null>(null);
+  const [publishStatus, setPublishStatus] = useState<'idle' | 'publishing' | 'success' | 'error'>('idle');
+  const [publishResult, setPublishResult] = useState<{ published: number, total: number } | null>(null);
+
+  // Admin Tools Handlers
+  const handleCleanup = async () => {
+    setCleanupStatus('cleaning');
+    try {
+      const res = await cleanupHtmlArtifacts(supabase, user?.id || '');
+      setCleanupResult(res);
+      setCleanupStatus('success');
+    } catch (e: any) {
+      console.error(e);
+      setCleanupStatus('error');
+    }
+  };
+
+  const handleGeocode = async () => {
+    setGeoStatus('running');
+    setGeoProgress({ current: 0, total: 0, message: 'Iniciando...' });
+    try {
+      const res = await batchGeocodeProperties(
+        supabase,
+        user?.id || '',
+        (current, total, message) => setGeoProgress({ current, total, message })
+      );
+      setGeoResult(res);
+      setGeoStatus('success');
+    } catch (e: any) {
+      console.error(e);
+      setGeoStatus('error');
+    }
+  }
+
+  const handlePublish = async () => {
+    setPublishStatus('publishing');
+    try {
+      const res = await massPublishProperties(supabase, user?.id || '');
+      setPublishResult(res);
+      setPublishStatus('success');
+    } catch (e: any) {
+      console.error(e);
+      setPublishStatus('error');
+    }
+  };
+
   const [exportingData, setExportingData] = useState(false);
 
   // Slug availability check
@@ -250,7 +320,7 @@ export const Settings: React.FC = () => {
 
   const checkWahaStatus = async (sessionName: string) => {
     try {
-      const response = await fetch(`${WAHA_API_URL}/api/sessions/${sessionName}`, {
+      const response = await fetch(`${WAHA_API_URL} /api/sessions / ${sessionName} `, {
         headers: { 'X-Api-Key': WAHA_API_KEY }
       });
       const data = await response.json();
@@ -291,7 +361,7 @@ export const Settings: React.FC = () => {
       const sessionName = 'default';
 
       // 1. First, check if session exists and try to stop it if FAILED
-      const statusRes = await fetch(`${WAHA_API_URL}/api/sessions/${sessionName}`, {
+      const statusRes = await fetch(`${WAHA_API_URL} /api/sessions / ${sessionName} `, {
         headers: { 'X-Api-Key': WAHA_API_KEY }
       });
 
@@ -302,7 +372,7 @@ export const Settings: React.FC = () => {
         // If session is FAILED or STOPPED, restart it
         if (statusData.status === 'FAILED' || statusData.status === 'STOPPED') {
           console.log('Session is FAILED/STOPPED, restarting...');
-          await fetch(`${WAHA_API_URL}/api/sessions/${sessionName}/stop`, {
+          await fetch(`${WAHA_API_URL} /api/sessions / ${sessionName}/stop`, {
             method: 'POST',
             headers: { 'X-Api-Key': WAHA_API_KEY }
           });
@@ -929,7 +999,8 @@ export const Settings: React.FC = () => {
                 <Share2 size={16} />
                 <span>Marca & Redes</span>
               </button>
-              {/* WhatsApp & IA - Visible to all plans (encourages upgrades) */}
+
+              {/* WhatsApp & IA */}
               <button
                 onClick={() => setActiveTab('whatsapp')}
                 className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap text-sm font-medium
@@ -945,6 +1016,23 @@ export const Settings: React.FC = () => {
                 <span>WhatsApp & IA</span>
               </button>
             </>
+          )}
+
+          {/* XML Import Tab - Visible if plan allows */}
+          {importConfig.canImport && (
+            <button
+              onClick={() => setActiveTab('importXml')}
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap text-sm font-medium
+                  ${activeTab === 'importXml'
+                  ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-600/50'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                }`}
+            >
+              <div className="relative">
+                <Upload size={16} />
+              </div>
+              <span>Importação XML</span>
+            </button>
           )}
 
         </div>
@@ -1195,9 +1283,13 @@ export const Settings: React.FC = () => {
                   Excluir Conta
                 </button>
               </div>
+
+              {/* Importação de Dados MOVED to separate tab */}
             </div>
 
+            {/* Modals */}
             <DeleteAccountModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} />
+
 
             {/* Sticky Save Button (at the bottom of tab content) */}
             <div className="sticky bottom-0 bg-slate-800/95 backdrop-blur-sm p-4 -mx-6 -mb-6 md:-mx-8 md:-mb-8 border-t border-slate-700 mt-4 rounded-b-3xl flex justify-end z-10">
@@ -1923,7 +2015,164 @@ export const Settings: React.FC = () => {
             </div>
           </div>
         )}
+
+        {activeTab === 'importXml' && importConfig.canImport && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <h3 className="text-2xl font-bold text-white mb-2">Importação de Dados (XML)</h3>
+            <p className="text-slate-400 mb-8">Traga seus imóveis de outras plataformas (Tecimob).</p>
+
+            {/* Main Upload Section - Hidden for Admin */}
+            {role !== 'Admin' && (
+              <div className="p-8 bg-slate-800/50 rounded-3xl border border-slate-700 text-center">
+                <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Upload size={40} className="text-emerald-500" />
+                </div>
+
+                <h4 className="text-xl font-bold text-white mb-3">
+                  Migração Automática de Imóveis
+                </h4>
+
+                <p className="text-slate-400 mb-8 max-w-lg mx-auto leading-relaxed">
+                  Importe todo o seu portfólio via arquivo XML. Suportamos o padrão <b>Tecimob</b> e outros compatíveis.
+                  Imóveis são importados como <span className="text-white font-bold bg-slate-700 px-2 py-0.5 rounded text-sm">Rascunho</span> para sua segurança.
+                </p>
+
+                <div className="inline-block p-4 bg-slate-900 rounded-2xl border border-slate-700 mb-8">
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="text-right border-r border-slate-700 pr-4">
+                      <div className="text-slate-500">Seu Plano</div>
+                      <div className="font-bold text-white max-w-[150px] truncate">{planInfo.name}</div>
+                    </div>
+                    <div className="text-left pl-2">
+                      <div className="text-slate-500">Limite de Importação</div>
+                      <div className="font-bold text-emerald-400">{importConfig.limit} imóveis / vez</div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowImportDialog(true)}
+                  className="w-full md:w-auto px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-3 mx-auto"
+                >
+                  <Upload size={20} />
+                  Iniciar Importação Agora
+                </button>
+              </div>
+            )}
+
+            {/* Admin Tools Section */}
+            {role === 'Admin' && (
+              <div className="mt-12 pt-8 border-t border-slate-700 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150 text-left">
+                <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-emerald-500" /> Ferramentas Administrativas
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* 1. Cleanup Tool */}
+                  <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-5 hover:border-slate-600 transition-colors">
+                    <div className="p-3 bg-blue-500/10 rounded-xl w-fit mb-4">
+                      <Eraser className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <h5 className="font-bold text-white mb-2">Limpar HTML</h5>
+                    <p className="text-xs text-slate-400 mb-4 h-10">Remove formatação quebrada dos textos importados (bolds, tags, etc).</p>
+
+                    {cleanupStatus === 'cleaning' ? (
+                      <div className="flex items-center gap-2 text-xs text-blue-400 animate-pulse font-medium">
+                        <Loader2 size={14} className="animate-spin" /> Limpando...
+                      </div>
+                    ) : cleanupStatus === 'success' && cleanupResult ? (
+                      <div className="text-xs text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle size={14} /> {cleanupResult.fixed} limpos!
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleCleanup}
+                        className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg border border-slate-700 transition-all"
+                      >
+                        Executar Limpeza
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 2. Geocoding Tool */}
+                  <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-5 hover:border-slate-600 transition-colors">
+                    <div className="p-3 bg-purple-500/10 rounded-xl w-fit mb-4">
+                      <MapPin className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <h5 className="font-bold text-white mb-2">Auto Geomapping</h5>
+                    <p className="text-xs text-slate-400 mb-4 h-10">Busca latitude/longitude automática baseada no endereço dos imóveis.</p>
+
+                    {geoStatus === 'running' ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs text-purple-400 font-medium">
+                          <span className="flex items-center gap-2"><Loader2 size={12} className="animate-spin" /> Processando...</span>
+                          <span>{Math.round((geoProgress.current / (geoProgress.total || 1)) * 100)}%</span>
+                        </div>
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                          <div className="bg-purple-500 h-full rounded-full transition-all duration-300" style={{ width: `${(geoProgress.current / (geoProgress.total || 1)) * 100}%` }}></div>
+                        </div>
+                        <p className="text-[10px] text-slate-500 truncate">{geoProgress.message}</p>
+                      </div>
+                    ) : geoStatus === 'success' && geoResult ? (
+                      <div className="text-xs text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle size={14} /> {geoResult.success} geolocalizados!
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleGeocode}
+                        className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg border border-slate-700 transition-all"
+                      >
+                        Iniciar Mapeamento
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 3. Mass Publish Tool */}
+                  <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-5 hover:border-slate-600 transition-colors">
+                    <div className="p-3 bg-emerald-500/10 rounded-xl w-fit mb-4">
+                      <Rocket className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <h5 className="font-bold text-white mb-2">Publicar em Massa</h5>
+                    <p className="text-xs text-slate-400 mb-4 h-10">Converte todos os anúncios de 'Rascunho' para 'Ativo' de uma vez.</p>
+
+                    {publishStatus === 'publishing' ? (
+                      <div className="flex items-center gap-2 text-xs text-emerald-400 animate-pulse font-medium">
+                        <Loader2 size={14} className="animate-spin" /> Publicando...
+                      </div>
+                    ) : publishStatus === 'success' && publishResult ? (
+                      <div className="text-xs text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle size={14} /> {publishResult.published} publicados!
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handlePublish}
+                        className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-emerald-900/20 transition-all"
+                      >
+                        Publicar Todos
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {(cleanupStatus === 'error' || geoStatus === 'error' || publishStatus === 'error') && (
+                  <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400 flex items-center gap-2">
+                    <AlertCircle size={14} /> Erro na execução da ferramenta. Verifique o console.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+
+      {/* Global Modals */}
+      < UploadDialog
+        isOpen={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        userId={user?.id || ''}
+        limit={importConfig.limit}
+        isAdmin={role === 'Admin'}
+      />
+    </div >
   );
 };

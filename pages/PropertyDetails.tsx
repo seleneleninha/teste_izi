@@ -992,6 +992,8 @@ export const PropertyDetails: React.FC = () => {
                                             : 'border-2 border-primary-500'
                                             }`} />
                                     </div>
+
+
                                     <div>
                                         <p className="text-sm text-slate-400">Anunciante</p>
                                         <Link
@@ -1000,7 +1002,6 @@ export const PropertyDetails: React.FC = () => {
                                             rel="noopener noreferrer"
                                             className="text-lg font-bold text-white cursor-pointer hover:text-primary-500 transition-colors flex items-center gap-1"
                                         >
-                                            {property.agent.name}
                                             {property.agent.name}
                                             {getVerificationConfig(property.agent.plano_id) && (
                                                 <img
