@@ -383,69 +383,107 @@ export const BrokerPage: React.FC = () => {
                 </div>
             </section>
 
-            {/* Imóveis em Destaque (Featured) */}
-            <section className="py-24 bg-midnight-900 relative border-t border-white/5">
-                <div className="container mx-auto px-4 relative z-10">
-                    <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-                        <div>
-                            <h3 className="text-3xl font-bold mb-2 text-white flex items-center gap-3">
-                                <span className="w-2 h-8 bg-red-500 rounded-full" /> Imóveis em <span className="text-red-400">Destaque</span>
-                            </h3>
-                            <p className="text-xl text-gray-400 font-bold max-w-lg">
-                                As melhores oportunidades selecionadas para você.
-                            </p>
-                        </div>
-
-                        <button
-                            onClick={() => setShowMap(!showMap)}
-                            className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300 ${showMap
-                                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
-                                : 'bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-emerald-500/50'
-                                }`}
-                        >
-                            <MapIcon size={18} />
-                            {showMap ? 'Ocultar Mapa' : 'Ver no Mapa'}
-                        </button>
-                    </div>
-
-                    {/* Map View */}
-                    {showMap && PropertyMap && (
-                        <div className="mb-12 h-[400px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-20">
-                            <PropertyMap properties={allProperties} brokerSlug={slug} />
-                        </div>
-                    )}
-
-                    <HorizontalScroll itemWidth={330} gap={24} itemsPerPage={4}>
-                        {ownProperties.map((property) => (
-                            <div key={property.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
-                                <PropertyCard property={property} brokerSlug={slug} />
-                            </div>
-                        ))}
-                        {ownProperties.length === 0 && broker && (
-                            <>
-                                {console.log('BrokerPage - broker.id:', broker.id)}
-                                <NoPropertiesFound
-                                    message="Você ainda não cadastrou imóveis próprios"
-                                    subtitle="Que tal começar adicionando seu primeiro imóvel? Ou então, explore oportunidades de parceria com outros corretores."
-                                    onShowMore={() => window.location.href = `/${broker.slug}`}
-                                    brokerId={broker.id}
-                                    hideActions={true}
-                                />
-                            </>
-                        )}
-                    </HorizontalScroll>
-                </div>
-            </section>
-
-            {/* Veja Outras Opções - Imóveis de Parceria */}
-            {partneredProperties.length > 0 && (
-                <section className="py-24 bg-midnight-950/50 relative">
+            {/* Imóveis em Destaque (Featured) - Hidden when no own properties but has partnerships */}
+            {!(ownProperties.length === 0 && partneredProperties.length > 0) && (
+                <section className="py-24 bg-midnight-900 relative border-t border-white/5">
                     <div className="container mx-auto px-4 relative z-10">
-                        <div className="flex items-center gap-3 mb-12">
-                            <h3 className="text-3xl font-bold text-white flex items-center gap-3">
-                                <span className="w-2 h-8 bg-purple-500 rounded-full" /> Veja Outras <span className="text-purple-400">Opções</span>
-                            </h3>
+                        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                            <div>
+                                <h3 className="text-3xl font-bold mb-2 text-white flex items-center gap-3">
+                                    <span className="w-2 h-8 bg-red-500 rounded-full" /> Imóveis em <span className="text-red-400">Destaque</span>
+                                </h3>
+                                <p className="text-xl text-gray-400 font-bold max-w-lg">
+                                    As melhores oportunidades selecionadas para você.
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={() => setShowMap(!showMap)}
+                                className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300 ${showMap
+                                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                                    : 'bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-emerald-500/50'
+                                    }`}
+                            >
+                                <MapIcon size={18} />
+                                {showMap ? 'Ocultar Mapa' : 'Ver no Mapa'}
+                            </button>
                         </div>
+
+                        {/* Map View */}
+                        {showMap && PropertyMap && (
+                            <div className="mb-12 h-[400px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-20">
+                                <PropertyMap properties={allProperties} brokerSlug={slug} />
+                            </div>
+                        )}
+
+                        <HorizontalScroll itemWidth={330} gap={24} itemsPerPage={4}>
+                            {ownProperties.map((property) => (
+                                <div key={property.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
+                                    <PropertyCard property={property} brokerSlug={slug} />
+                                </div>
+                            ))}
+                            {ownProperties.length === 0 && broker && (
+                                <>
+                                    {console.log('BrokerPage - broker.id:', broker.id)}
+                                    <NoPropertiesFound
+                                        message="Você ainda não cadastrou imóveis próprios"
+                                        subtitle="Que tal começar adicionando seu primeiro imóvel? Ou então, explore oportunidades de parceria com outros corretores."
+                                        onShowMore={() => window.location.href = `/${broker.slug}`}
+                                        brokerId={broker.id}
+                                        hideActions={true}
+                                    />
+                                </>
+                            )}
+                        </HorizontalScroll>
+                    </div>
+                </section>
+            )}
+
+            {/* Veja Outras Opções - Imóveis de Parceria (renamed to "Imóveis em Destaque" when no own properties) */}
+            {partneredProperties.length > 0 && (
+                <section className={`py-24 relative ${ownProperties.length === 0 ? 'bg-midnight-900 border-t border-white/5' : 'bg-midnight-950/50'}`}>
+                    <div className="container mx-auto px-4 relative z-10">
+                        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                            <div>
+                                <h3 className="text-3xl font-bold mb-2 text-white flex items-center gap-3">
+                                    {ownProperties.length === 0 ? (
+                                        <>
+                                            <span className="w-2 h-8 bg-red-500 rounded-full" /> Imóveis em <span className="text-red-400">Destaque</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="w-2 h-8 bg-purple-500 rounded-full" /> Veja Outras <span className="text-purple-400">Opções</span>
+                                        </>
+                                    )}
+                                </h3>
+                                {ownProperties.length === 0 && (
+                                    <p className="text-xl text-gray-400 font-bold max-w-lg">
+                                        As melhores oportunidades selecionadas para você.
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Ver no Mapa button - only when showing as "Imóveis em Destaque" */}
+                            {ownProperties.length === 0 && (
+                                <button
+                                    onClick={() => setShowMap(!showMap)}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300 ${showMap
+                                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                                        : 'bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-emerald-500/50'
+                                        }`}
+                                >
+                                    <MapIcon size={18} />
+                                    {showMap ? 'Ocultar Mapa' : 'Ver no Mapa'}
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Map View - only when showing as "Imóveis em Destaque" */}
+                        {ownProperties.length === 0 && showMap && PropertyMap && (
+                            <div className="mb-12 h-[400px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative z-20">
+                                <PropertyMap properties={partneredProperties} brokerSlug={slug} />
+                            </div>
+                        )}
 
                         <HorizontalScroll itemWidth={330} gap={24} itemsPerPage={4}>
                             {partneredProperties.map((property) => (
