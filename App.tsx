@@ -36,6 +36,8 @@ const About = lazy(() => import('./pages/About').then(module => ({ default: modu
 const Favorites = lazy(() => import('./pages/Favorites').then(module => ({ default: module.Favorites })));
 
 const AvailabilityCheck = lazy(() => import('./pages/AvailabilityCheck').then(module => ({ default: module.AvailabilityCheck })));
+const MyPropertiesPage = lazy(() => import('./pages/MyPropertiesPage').then(module => ({ default: module.MyPropertiesPage })));
+const MarketPage = lazy(() => import('./pages/MarketPage').then(module => ({ default: module.MarketPage })));
 
 
 import { ToastProvider } from './components/ToastContext';
@@ -124,7 +126,8 @@ const App: React.FC = () => {
                               <Route path="/admin/financial" element={<AdminFinancial />} />
                               <Route path="/admin/trial-settings" element={<AdminTrialSettings />} />
                               <Route path="/dashboard" element={<Dashboard />} />
-                              <Route path="/properties" element={<PropertiesList />} />
+                              <Route path="/myproperties" element={<MyPropertiesPage />} />
+                              <Route path="/market" element={<MarketPage />} />
                               <Route path="/properties/:slug" element={<PropertyDetails />} />
                               <Route path="/add-property" element={<AddProperty />} />
                               <Route path="/partner-properties" element={<PartnerProperties />} />

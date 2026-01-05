@@ -35,9 +35,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ isAdmin = fals
         if (path.includes('?')) {
             return location.pathname + location.search === path;
         }
-        if (path === '/properties') {
-            return location.pathname === '/properties' && !location.search.includes('mode=market');
-        }
         return location.pathname === path;
     };
 
@@ -64,7 +61,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ isAdmin = fals
         // Broker Nav Items (Default)
         navItems = [
             { icon: LayoutDashboard, label: 'Home', path: '/dashboard' },
-            { icon: Building2, label: 'Imóveis', path: '/properties' },
+            { icon: Building2, label: 'Imóveis', path: '/myproperties' },
             { icon: Handshake, label: 'Parceiros', path: '/partner-properties' },
             { icon: Users, label: 'Leads', path: '/leads' },
         ];

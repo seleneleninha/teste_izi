@@ -58,6 +58,8 @@ export const DashboardLayout: React.FC = () => {
         const base = path.split('/')[0];
         if (base === 'add-property') return ''; // Hide title, form has its own
         if (base === 'properties') return 'Meus Imóveis';
+        if (base === 'myproperties') return 'Meus Imóveis';
+        if (base === 'market') return 'Mercado Imobiliário';
         if (base === 'leads') return 'Meus Leads';
         if (base === 'settings') return 'Configurações';
         if (base === 'partner-properties') return 'Parcerias';

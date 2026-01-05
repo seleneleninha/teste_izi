@@ -63,9 +63,6 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
     if (path.includes('?')) {
       return location.pathname + location.search === path;
     }
-    if (path === '/properties') {
-      return location.pathname === '/properties' && !location.search.includes('mode=market');
-    }
     return location.pathname === path;
   };
 
@@ -89,11 +86,11 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
     { icon: UserCircle, label: 'Meu Perfil', path: '/settings' },
   ] : [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: Building2, label: 'Meus Imóveis', path: '/properties' },
+    { icon: Building2, label: 'Meus Imóveis', path: '/myproperties' },
     { icon: Handshake, label: 'Imóveis Parceiros', path: '/partner-properties' },
     { icon: Users, label: 'Leads (CRM)', path: '/leads' },
     { icon: CheckCircle, label: 'Comparativo', path: '/favorites' },
-    { icon: Globe, label: 'Mercado', path: '/properties?mode=market' }, // New Link
+    { icon: Globe, label: 'Mercado', path: '/market' }, // New Link
     { icon: Settings, label: 'Configurações', path: '/settings' },
 
 

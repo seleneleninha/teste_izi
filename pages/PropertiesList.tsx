@@ -23,10 +23,7 @@ export const PropertiesList: React.FC = () => {
     const { user, role } = useAuth();
     const { addToast } = useToast();
 
-    // Determine context based on route
-    const isDashboardRoute = location.pathname === '/properties';
-
-    const [view, setView] = useState<'grid' | 'map' | 'list'>(role === 'Cliente' ? 'grid' : (isDashboardRoute ? 'list' : 'grid'));
+    const [view, setView] = useState<'grid' | 'map' | 'list'>('grid');
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
     const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
     const [properties, setProperties] = useState<any[]>([]);
@@ -125,26 +122,23 @@ export const PropertiesList: React.FC = () => {
     const [showMobileFilter, setShowMobileFilter] = useState(false);
     const [showMap, setShowMap] = useState(true); // Default map open on desktop
 
-    const isMarketMode = searchParams.get('mode') === 'market';
-    const isMyProperties = isDashboardRoute && role !== 'Cliente' && !isMarketMode;
-
     // Fetch initial data (types, neighborhoods)
     useEffect(() => {
         fetchPropertyTypes();
         fetchNeighborhoods();
     }, []);
 
-    // Fetch properties
+    // Fetch properties (public search only - all active)
     useEffect(() => {
         fetchProperties();
-    }, [isMyProperties, user]);
+    }, []);
 
 
-    // Dynamic Header
+    // Dynamic Header - Public search only
     const { setHeaderContent } = useHeader();
     useEffect(() => {
-        const title = isMyProperties ? 'Meus Imóveis' : isMarketMode ? 'Mercado Imobiliário' : 'Buscar Imóveis';
-        const subtitle = isMyProperties ? 'Gerencie e mantenha seus anúncios atualizados.' : isMarketMode ? 'Você está visualizando todos os imóveis de sua Cidade' : 'Encontre o imóvel ideal para sua Família.';
+        const title = 'Buscar Imóveis';
+        const subtitle = 'Encontre o imóvel ideal para sua Família.';
 
         setHeaderContent(
             <div className="flex flex-col justify-center">
@@ -157,7 +151,7 @@ export const PropertiesList: React.FC = () => {
             </div>
         );
         return () => setHeaderContent(null);
-    }, [isMyProperties, isMarketMode, setHeaderContent]);
+    }, [setHeaderContent]);
 
 
     const fetchPropertyTypes = async () => {
@@ -194,13 +188,8 @@ export const PropertiesList: React.FC = () => {
                 `)
                 .order('created_at', { ascending: false });
 
-            // Base Filters
-            if (isMyProperties && user) {
-                query = query.eq('user_id', user.id).neq('status', 'inativo');
-            } else {
-                query = query.eq('status', 'ativo');
-                // Market mode logic would go here
-            }
+            // Base Filters - Public search only shows active properties
+            query = query.eq('status', 'ativo');
 
             const { data, error } = await query;
             if (error) throw error;
@@ -364,38 +353,36 @@ export const PropertiesList: React.FC = () => {
     return (
         <div className="bg-slate-950 min-h-screen flex flex-col">
 
-            {/* Hero Section (Search Route Only) */}
-            {!isDashboardRoute && (
-                <div className="relative py-24 md:py-32 bg-slate-900">
-                    <div
-                        className="absolute inset-0 bg-cover bg-center opacity-50"
-                        style={{ backgroundImage: `url(${heroBackground})` }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent"></div>
+            {/* Hero Section - Public Search */}
+            <div className="relative py-24 md:py-32 bg-slate-900">
+                <div
+                    className="absolute inset-0 bg-cover bg-center opacity-50"
+                    style={{ backgroundImage: `url(${heroBackground})` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent"></div>
 
-                    {/* Botão Voltar */}
-                    <div className="container mx-auto px-4 relative z-10 mb-12">
-                        <div className="absolute top-0 left-4 md:left-8">
-                            <button
-                                onClick={() => navigate(-1)}
-                                className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-sm font-medium backdrop-blur-md transition-all hover:scale-105 active:scale-95"
-                            >
-                                <ArrowLeft size={18} />
-                                Voltar
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="container mx-auto px-4 relative z-10 text-center mt-8">
-                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-                            Encontre <span className="text-emerald-400">seu Imóvel</span>
-                        </h2>
-                        <p className="text-slate-200 max-w- text-center text-xl">
-                            Utilize os filtros para encontrar o imóvel ideal para você e sua Família.
-                        </p>
+                {/* Botão Voltar */}
+                <div className="container mx-auto px-4 relative z-10 mb-12">
+                    <div className="absolute top-0 left-4 md:left-8">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white text-sm font-medium backdrop-blur-md transition-all hover:scale-105 active:scale-95"
+                        >
+                            <ArrowLeft size={18} />
+                            Voltar
+                        </button>
                     </div>
                 </div>
-            )}
+
+                <div className="container mx-auto px-4 relative z-10 text-center mt-8">
+                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+                        Encontre <span className="text-emerald-400">seu Imóvel</span>
+                    </h2>
+                    <p className="text-slate-200 max-w- text-center text-xl">
+                        Utilize os filtros para encontrar o imóvel ideal para você e sua Família.
+                    </p>
+                </div>
+            </div>
 
             <div className="flex-1 container mx-auto px-4 py-8">
                 <div className="flex flex-col lg:flex-row gap-8">

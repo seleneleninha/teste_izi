@@ -44,7 +44,7 @@ export const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, i
     } else {
         // Broker (Default)
         menuItems = [
-            { icon: Globe, label: 'Mercado', path: '/properties?mode=market', color: 'blue', onClick: null },
+            { icon: Globe, label: 'Mercado', path: '/market', color: 'blue', onClick: null },
             { icon: CheckCircle, label: 'Comparativo', path: '/favorites', color: 'emerald', onClick: null },
             { icon: Settings, label: 'Ajustes', path: '/settings', color: 'slate', onClick: null },
             { icon: LogOut, label: 'Sair', path: null, color: 'red', onClick: handleLogout },
