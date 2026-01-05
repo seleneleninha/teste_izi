@@ -12,6 +12,7 @@ import { geocodeAddress } from '../lib/geocodingHelper';
 import { DraggableMap } from '../components/DraggableMap';
 import { formatCurrencyInput, formatAreaInput } from '../lib/formatters';
 import imageCompression from 'browser-image-compression';
+import { PriceSuggestion } from '../components/PriceSuggestion';
 import { div } from 'framer-motion/client';
 
 // Interface for the form data
@@ -124,6 +125,14 @@ export default function AddProperty() {
 
     // Temporada state - detect if operation is vacation rental
     const [isTemporada, setIsTemporada] = useState(false);
+
+    // Price suggestion data for comparison
+    const [priceSuggestionData, setPriceSuggestionData] = useState<{
+        mediaM2Venda: number | null;
+        mediaM2Locacao: number | null;
+        sugestaoVenda: number | null;
+        sugestaoLocacao: number | null;
+    } | null>(null);
 
     // Trial status state
     const [isTrial, setIsTrial] = useState(false);
@@ -485,8 +494,8 @@ export default function AddProperty() {
 
     const steps = [
         { num: 1, label: 'Endereço', icon: MapPin },
-        { num: 2, label: 'Financeiro', icon: DollarSign },
-        { num: 3, label: 'Detalhes', icon: Home },
+        { num: 2, label: 'Detalhes', icon: Home },
+        { num: 3, label: 'Financeiro', icon: DollarSign },
         { num: 4, label: 'Fotos', icon: UploadCloud },
         { num: 5, label: 'Revisão', icon: Check }
     ];
@@ -1319,8 +1328,8 @@ export default function AddProperty() {
                     </div>
                 )}
 
-                {/* STEP 2: FINANCEIRO */}
-                {step === 2 && (
+                {/* STEP 3: FINANCEIRO */}
+                {step === 3 && (
                     <div className="space-y-10">
                         {/* Header Section */}
                         <div className="flex items-center gap-4 mb-10">
@@ -1332,6 +1341,18 @@ export default function AddProperty() {
                                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Valores, taxas e condições de negócio</p>
                             </div>
                         </div>
+
+                        {/* Price Suggestion Component */}
+                        {formData.city && formData.neighborhood && formData.privateArea && (
+                            <PriceSuggestion
+                                cidade={formData.city}
+                                bairro={formData.neighborhood}
+                                areaPrivativa={parseFloat(String(formData.privateArea).replace(/\./g, '').replace(',', '.')) || 0}
+                                tipoImovel={tiposImovel.find(t => t.id === formData.tipoImovelId)?.tipo}
+                                operacao={isTemporada ? 'ambos' : operacoes.find(o => o.id === formData.operacaoId)?.tipo?.toLowerCase().includes('venda') ? 'venda' : operacoes.find(o => o.id === formData.operacaoId)?.tipo?.toLowerCase().includes('locação') ? 'locacao' : 'ambos'}
+                                onSuggestionReady={(suggestion) => setPriceSuggestionData(suggestion)}
+                            />
+                        )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                             {/* Lógica para determinar visibilidade baseada na operação */}
@@ -1396,6 +1417,21 @@ export default function AddProperty() {
                                                             placeholder="0,00"
                                                         />
                                                     </div>
+                                                    {/* Market Comparison Indicator */}
+                                                    {priceSuggestionData?.sugestaoVenda && formData.salePrice && (() => {
+                                                        const valorInserido = parseFloat(String(formData.salePrice).replace(/\./g, '').replace(',', '.')) || 0;
+                                                        const valorSugerido = priceSuggestionData.sugestaoVenda;
+                                                        if (valorInserido <= 0 || valorSugerido <= 0) return null;
+                                                        const diferenca = ((valorInserido - valorSugerido) / valorSugerido) * 100;
+                                                        const isAbove = diferenca > 0;
+                                                        const absPerc = Math.abs(diferenca).toFixed(1);
+                                                        if (Math.abs(diferenca) < 1) return null; // Don't show for tiny differences
+                                                        return (
+                                                            <p className={`text-[11px] font-bold mt-2 ml-1 flex items-center gap-1 ${isAbove ? 'text-red-400' : 'text-green-400'}`}>
+                                                                {isAbove ? '⬆️' : '⬇️'} Valor {absPerc}% {isAbove ? 'acima' : 'abaixo'} da média do mercado
+                                                            </p>
+                                                        );
+                                                    })()}
                                                 </div>
                                             )}
 
@@ -1414,6 +1450,21 @@ export default function AddProperty() {
                                                             placeholder="0,00"
                                                         />
                                                     </div>
+                                                    {/* Market Comparison Indicator */}
+                                                    {priceSuggestionData?.sugestaoLocacao && formData.rentPrice && (() => {
+                                                        const valorInserido = parseFloat(String(formData.rentPrice).replace(/\./g, '').replace(',', '.')) || 0;
+                                                        const valorSugerido = priceSuggestionData.sugestaoLocacao;
+                                                        if (valorInserido <= 0 || valorSugerido <= 0) return null;
+                                                        const diferenca = ((valorInserido - valorSugerido) / valorSugerido) * 100;
+                                                        const isAbove = diferenca > 0;
+                                                        const absPerc = Math.abs(diferenca).toFixed(1);
+                                                        if (Math.abs(diferenca) < 1) return null;
+                                                        return (
+                                                            <p className={`text-[11px] font-bold mt-2 ml-1 flex items-center gap-1 ${isAbove ? 'text-red-400' : 'text-green-400'}`}>
+                                                                {isAbove ? '⬆️' : '⬇️'} Valor {absPerc}% {isAbove ? 'acima' : 'abaixo'} da média do mercado
+                                                            </p>
+                                                        );
+                                                    })()}
                                                 </div>
                                             )}
                                         </div>
@@ -1580,8 +1631,8 @@ export default function AddProperty() {
                     </div>
                 )}
 
-                {/* STEP 3: DETALHES DO IMÓVEL */}
-                {step === 3 && (
+                {/* STEP 2: DETALHES DO IMÓVEL */}
+                {step === 2 && (
                     <div className="space-y-10">
                         {/* Header Section */}
                         <div className="flex items-center gap-4 mb-10">

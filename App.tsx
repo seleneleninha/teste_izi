@@ -38,6 +38,7 @@ const Favorites = lazy(() => import('./pages/Favorites').then(module => ({ defau
 const AvailabilityCheck = lazy(() => import('./pages/AvailabilityCheck').then(module => ({ default: module.AvailabilityCheck })));
 const MyPropertiesPage = lazy(() => import('./pages/MyPropertiesPage').then(module => ({ default: module.MyPropertiesPage })));
 const MarketPage = lazy(() => import('./pages/MarketPage').then(module => ({ default: module.MarketPage })));
+const MarketStudyPage = lazy(() => import('./pages/admin/MarketStudyPage').then(module => ({ default: module.MarketStudyPage })));
 
 
 import { ToastProvider } from './components/ToastContext';
@@ -124,6 +125,7 @@ const App: React.FC = () => {
                               <Route path="/admin/benefits" element={<AdminBeneficios />} />
                               <Route path="/admin/coupons" element={<AdminCoupons />} />
                               <Route path="/admin/financial" element={<AdminFinancial />} />
+                              <Route path="/admin/study" element={<MarketStudyPage />} />
                               <Route path="/admin/trial-settings" element={<AdminTrialSettings />} />
                               <Route path="/dashboard" element={<Dashboard />} />
                               <Route path="/myproperties" element={<MyPropertiesPage />} />
