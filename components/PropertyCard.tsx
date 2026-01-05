@@ -426,7 +426,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
 
                         <p className="text-gray-200 text-sm mb-3 flex items-center gap-1.5 drop-shadow-sm">
                             <MapPin size={14} className="text-emerald-400" />
-                            <span className="truncate">{property.bairro}, {property.cidade}</span>
+                            <span className="truncate">{property.bairro}, {property.cidade} | Cód: {property.cod_imovel}</span>
                         </p>
 
                         <div className="flex items-center gap-4 text-gray-100 text-sm font-medium mb-3">

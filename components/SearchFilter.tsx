@@ -8,13 +8,29 @@ interface PropertyType {
     disponivel_temporada: boolean;
 }
 
-export const SearchFilter = ({ brokerSlug }: { brokerSlug?: string }) => {
-    const [activeTab, setActiveTab] = useState<'buy' | 'rent' | 'temporada'>('buy');
+export const SearchFilter = ({ brokerSlug, availableOperations }: { brokerSlug?: string, availableOperations?: string[] }) => {
+    // Determine default tab based on priority: 'buy' > 'rent' > 'temporada'
+    const getDefaultTab = () => {
+        if (!availableOperations || availableOperations.length === 0) return 'buy';
+        if (availableOperations.includes('buy')) return 'buy';
+        if (availableOperations.includes('rent')) return 'rent';
+        if (availableOperations.includes('temporada')) return 'temporada';
+        return 'buy';
+    };
+
+    const [activeTab, setActiveTab] = useState<'buy' | 'rent' | 'temporada'>(getDefaultTab());
     const [allPropertyTypes, setAllPropertyTypes] = useState<PropertyType[]>([]);
     const [selectedType, setSelectedType] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [showMap, setShowMap] = useState(false);
     const navigate = useNavigate();
+
+    // Reset activeTab if availableOperations changes and current tab is invalid
+    useEffect(() => {
+        if (availableOperations && availableOperations.length > 0 && !availableOperations.includes(activeTab)) {
+            setActiveTab(getDefaultTab());
+        }
+    }, [availableOperations]);
 
     // Tipos padrão para Comprar/Alugar (sem temporada)
     const standardTypes = ['Apartamento', 'Casa', 'Comercial', 'Rural', 'Terreno'];
@@ -78,49 +94,62 @@ export const SearchFilter = ({ brokerSlug }: { brokerSlug?: string }) => {
         }
     };
 
+    const showTab = (op: string) => !availableOperations || availableOperations.includes(op);
+
     return (
 
         <div className="bg-midnight-950/50 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-8 max-w-4xl mx-auto -mt-12 md:-mt-24 relative z-20 mx-4 md:mx-auto group">
             {/* Decorative sheen */}
             <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-3xl" />
 
-            <div className="flex gap-4 mb-6 border-b border-white/10 pb-4 relative z-10">
-                <button
-                    className={`pb-2 font-bold tracking-wide text-sm uppercase transition-colors relative ${activeTab === 'rent'
-                        ? 'text-blue-400'
-                        : 'text-gray-400 hover:text-white'
-                        }`}
-                    onClick={() => setActiveTab('rent')}
-                >
-                    Alugar
-                    {activeTab === 'rent' && (
-                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-400 rounded-full shadow-[0_0_10px_rgba(96,165,250,0.5)]"></span>
-                    )}
-                </button>
-                <button
-                    className={`pb-2 font-bold tracking-wide text-sm uppercase transition-colors relative ${activeTab === 'buy'
-                        ? 'text-red-400'
-                        : 'text-gray-400 hover:text-white'
-                        }`}
-                    onClick={() => setActiveTab('buy')}
-                >
-                    Comprar
-                    {activeTab === 'buy' && (
-                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-red-400 rounded-full shadow-[0_0_10px_rgba(248,113,113,0.5)]"></span>
-                    )}
-                </button>
-                <button
-                    className={`pb-2 font-bold tracking-wide text-sm uppercase transition-colors relative ${activeTab === 'temporada'
-                        ? 'text-orange-400'
-                        : 'text-gray-400 hover:text-white'
-                        }`}
-                    onClick={() => setActiveTab('temporada')}
-                >
-                    Temporada
-                    {activeTab === 'temporada' && (
-                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-400 rounded-full shadow-[0_0_10px_rgba(251,146,60,0.5)]"></span>
-                    )}
-                </button>
+            <div className="flex gap-4 mb-6 border-b border-white/10 pb-4 relative z-10 overflow-x-auto">
+                {/* Only show 'Alugar' if available */}
+                {showTab('rent') && (
+                    <button
+                        className={`pb-2 font-bold tracking-wide text-sm uppercase transition-colors relative whitespace-nowrap ${activeTab === 'rent'
+                            ? 'text-blue-400'
+                            : 'text-gray-400 hover:text-white'
+                            }`}
+                        onClick={() => setActiveTab('rent')}
+                    >
+                        Alugar
+                        {activeTab === 'rent' && (
+                            <span className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-400 rounded-full shadow-[0_0_10px_rgba(96,165,250,0.5)]"></span>
+                        )}
+                    </button>
+                )}
+
+                {/* Only show 'Comprar' if available */}
+                {showTab('buy') && (
+                    <button
+                        className={`pb-2 font-bold tracking-wide text-sm uppercase transition-colors relative whitespace-nowrap ${activeTab === 'buy'
+                            ? 'text-red-400'
+                            : 'text-gray-400 hover:text-white'
+                            }`}
+                        onClick={() => setActiveTab('buy')}
+                    >
+                        Comprar
+                        {activeTab === 'buy' && (
+                            <span className="absolute bottom-0 left-0 w-full h-0.5 bg-red-400 rounded-full shadow-[0_0_10px_rgba(248,113,113,0.5)]"></span>
+                        )}
+                    </button>
+                )}
+
+                {/* Only show 'Temporada' if available */}
+                {showTab('temporada') && (
+                    <button
+                        className={`pb-2 font-bold tracking-wide text-sm uppercase transition-colors relative whitespace-nowrap ${activeTab === 'temporada'
+                            ? 'text-orange-400'
+                            : 'text-gray-400 hover:text-white'
+                            }`}
+                        onClick={() => setActiveTab('temporada')}
+                    >
+                        Temporada
+                        {activeTab === 'temporada' && (
+                            <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-400 rounded-full shadow-[0_0_10px_rgba(251,146,60,0.5)]"></span>
+                        )}
+                    </button>
+                )}
             </div>
 
             <div className="flex flex-col md:flex-row gap-4 relative z-10">

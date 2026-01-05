@@ -52,6 +52,8 @@ export const PublicHome: React.FC = () => {
         'natal': '/cities/natal.png',
         'parnamirim': '/cities/parnamirim.png',
         'macaíba': '/cities/macaiba.png',
+        'ceará mirim': '/cities/ceara_mirim.png',
+        'ceará-mirim': '/cities/ceara_mirim.png',
         'nísia floresta': '/cities/nisia_floresta.png',
         'são gonçalo do amarante': '/cities/sao_goncalo_amarante.png',
         'extremoz': '/cities/extremoz.png',

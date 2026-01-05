@@ -410,19 +410,19 @@ export default function AddProperty() {
                 suites: formData.suites ? Number(formData.suites) : null,
                 banheiros: formData.bathrooms ? Number(formData.bathrooms) : null,
                 vagas: formData.garage ? Number(formData.garage) : null,
-                area_priv: formData.privateArea ? parseFloat(formData.privateArea.replace(/\./g, '').replace(',', '.')) : 0,
-                area_total: formData.totalArea ? parseFloat(formData.totalArea.replace(/\./g, '').replace(',', '.')) : null,
+                area_priv: formData.privateArea ? parseFloat(String(formData.privateArea).replace(/\./g, '').replace(',', '.')) : 0,
+                area_total: formData.totalArea ? parseFloat(String(formData.totalArea).replace(/\./g, '').replace(',', '.')) : null,
                 descricao: formData.description,
                 caracteristicas: formData.features.join(', '),
                 fotos: images.join(','),
                 // Valores normais (Venda/Locação)
-                valor_venda: isTemporada ? null : (formData.salePrice ? parseFloat(formData.salePrice.replace(/\./g, '').replace(',', '.')) : null),
-                valor_locacao: isTemporada ? null : (formData.rentPrice ? parseFloat(formData.rentPrice.replace(/\./g, '').replace(',', '.')) : null),
+                valor_venda: isTemporada ? null : (formData.salePrice ? parseFloat(String(formData.salePrice).replace(/\./g, '').replace(',', '.')) : null),
+                valor_locacao: isTemporada ? null : (formData.rentPrice ? parseFloat(String(formData.rentPrice).replace(/\./g, '').replace(',', '.')) : null),
                 // Valores Temporada
-                valor_diaria: isTemporada && formData.valorDiaria ? parseFloat(formData.valorDiaria.replace(/\./g, '').replace(',', '.')) : null,
-                valor_mensal: isTemporada && formData.valorMensal ? parseFloat(formData.valorMensal.replace(/\./g, '').replace(',', '.')) : null,
-                // valor_condo: formData.condoFee ? parseFloat(formData.condoFee.replace(/\./g, '').replace(',', '.')) : null, // Comentado - trigger do banco busca valor_condominio
-                valor_iptu: formData.iptu ? parseFloat(formData.iptu.replace(/\./g, '').replace(',', '.')) : null,
+                valor_diaria: isTemporada && formData.valorDiaria ? parseFloat(String(formData.valorDiaria).replace(/\./g, '').replace(',', '.')) : null,
+                valor_mensal: isTemporada && formData.valorMensal ? parseFloat(String(formData.valorMensal).replace(/\./g, '').replace(',', '.')) : null,
+                // valor_condo: formData.condoFee ? parseFloat(String(formData.condoFee).replace(/\./g, '').replace(',', '.')) : null, // Comentado - trigger do banco busca valor_condominio
+                valor_iptu: formData.iptu ? parseFloat(String(formData.iptu).replace(/\./g, '').replace(',', '.')) : null,
                 aceita_parceria: formData.aceitaParceria,
                 taxas_inclusas: isTemporada ? null : formData.taxasInclusas,
                 aceita_financiamento: isTemporada ? null : formData.aceitaFinanciamento,

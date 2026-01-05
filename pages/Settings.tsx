@@ -7,9 +7,9 @@ import { useHeader } from '../components/HeaderContext';
 import {
   User, Lock, Shield, Camera, Trash2, Save, Loader2, Eye, EyeOff, Lightbulb, AlertTriangle, ExternalLink, MessageCircle, Play, Info, Instagram, Facebook, Linkedin, Youtube, Twitter, AtSign,
   MessageSquare, Zap, Sparkles, Bot, Check, X, UserMinus, Download, Upload,
-  ShieldCheck, Eraser, MapPin, Rocket, CheckCircle, AlertCircle, Share2, Search
+  ShieldCheck, Eraser, MapPin, Rocket, CheckCircle, AlertCircle, Share2, Search, ImageIcon, Copy, QrCode
 } from 'lucide-react';
-import { processXMLImport, cleanupHtmlArtifacts, batchGeocodeProperties, massPublishProperties } from '../api/import-xml/client';
+import { processXMLImport, cleanupHtmlArtifacts, batchGeocodeProperties, massPublishProperties, migrateExternalImages } from '../api/import-xml/client';
 import { useNavigate } from 'react-router-dom';
 import { geocodeAddress } from '../lib/geocodingHelper';
 import { checkPasswordStrength, validateEmail, validatePhone, validateCRECI, sanitizeInput } from '../lib/validation';
@@ -134,6 +134,13 @@ export const Settings: React.FC = () => {
   const [publishStatus, setPublishStatus] = useState<'idle' | 'publishing' | 'success' | 'error'>('idle');
   const [publishResult, setPublishResult] = useState<{ published: number, total: number } | null>(null);
 
+  // State for Image Migration
+  const [migrateStatus, setMigrateStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle');
+  const [migrateResult, setMigrateResult] = useState<{ success: number, errors: number } | null>(null);
+  const [migrateProgress, setMigrateProgress] = useState<{ current: number, total: number, message: string }>({ current: 0, total: 0, message: '' });
+
+
+
   // Admin Tools Handlers
   const handleCleanup = async () => {
     setCleanupStatus('cleaning');
@@ -154,7 +161,8 @@ export const Settings: React.FC = () => {
       const res = await batchGeocodeProperties(
         supabase,
         user?.id || '',
-        (current, total, message) => setGeoProgress({ current, total, message })
+        (current, total, message) => setGeoProgress({ current, total, message }),
+        role === 'Admin' // isAdmin flag
       );
       setGeoResult(res);
       setGeoStatus('success');
@@ -167,12 +175,40 @@ export const Settings: React.FC = () => {
   const handlePublish = async () => {
     setPublishStatus('publishing');
     try {
-      const res = await massPublishProperties(supabase, user?.id || '');
+      const res = await massPublishProperties(
+        supabase,
+        user?.id || '',
+        role === 'Admin' // isAdmin flag
+      );
       setPublishResult(res);
       setPublishStatus('success');
     } catch (e: any) {
       console.error(e);
       setPublishStatus('error');
+    }
+  };
+
+  const handleMigrateImages = async () => {
+    setMigrateStatus('running');
+    try {
+      const result = await migrateExternalImages(
+        user?.id || '',
+        (p) => {
+          setMigrateProgress({
+            current: p.current,
+            total: p.total,
+            message: p.currentFile || `Processando ${p.current}/${p.total}`
+          });
+        },
+        role === 'Admin' // isAdmin flag
+      );
+      setMigrateResult({ success: result.success, errors: result.errors.length });
+      setMigrateStatus('success');
+      addToast(`Migração concluída! ${result.success} imagens salvas no Supabase.`, 'success');
+    } catch (error: any) {
+      console.error(error);
+      setMigrateStatus('error');
+      addToast('Erro na migração de imagens.', 'error');
     }
   };
 
@@ -555,7 +591,7 @@ export const Settings: React.FC = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('perfis')
-        .select('nome, sobrenome, email, whatsapp, cpf, creci, uf_creci, avatar, role, slug, cep, logradouro, numero, complemento, bairro, cidade, uf, show_address, raio_atuacao, watermark_dark, marca_dagua, instagram, facebook, threads, youtube, linkedin, x, mensagem_boasvindas, boasvindas2, sobre_mim, imoveis_vendidos, clientes_atendidos, anos_experiencia, plano_id')
+        .select('nome, sobrenome, email, whatsapp, cpf, creci, uf_creci, avatar, slug, cep, logradouro, numero, complemento, bairro, cidade, uf, show_address, raio_atuacao, watermark_dark, marca_dagua, instagram, facebook, threads, youtube, linkedin, x, mensagem_boasvindas, boasvindas2, sobre_mim, imoveis_vendidos, clientes_atendidos, anos_experiencia, plano_id')
         .eq('id', user?.id)
         .single();
 
@@ -2152,9 +2188,41 @@ export const Settings: React.FC = () => {
                       </button>
                     )}
                   </div>
+
+                  {/* 4. Image Migration Tool */}
+                  <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-5 hover:border-slate-600 transition-colors">
+                    <div className="p-3 bg-orange-500/10 rounded-xl w-fit mb-4">
+                      <ImageIcon className="w-6 h-6 text-orange-400" />
+                    </div>
+                    <h5 className="font-bold text-white mb-2">Migrar Imagens</h5>
+                    <p className="text-xs text-slate-400 mb-4 h-10">Baixa fotos externas (Tecimob) e salva no Supabase Storage.</p>
+
+                    {migrateStatus === 'running' ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs text-orange-400 font-medium">
+                          <span className="flex items-center gap-2"><Loader2 size={12} className="animate-spin" /> {migrateProgress.message}</span>
+                          <span>{Math.round((migrateProgress.current / (migrateProgress.total || 1)) * 100)}%</span>
+                        </div>
+                        <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                          <div className="bg-orange-500 h-full rounded-full transition-all duration-300" style={{ width: `${(migrateProgress.current / (migrateProgress.total || 1)) * 100}%` }}></div>
+                        </div>
+                      </div>
+                    ) : migrateStatus === 'success' && migrateResult ? (
+                      <div className="text-xs text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle size={14} /> {migrateResult.success} migradas!
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleMigrateImages}
+                        className="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-lg border border-slate-700 transition-all"
+                      >
+                        Iniciar Migração
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                {(cleanupStatus === 'error' || geoStatus === 'error' || publishStatus === 'error') && (
+                {(cleanupStatus === 'error' || geoStatus === 'error' || publishStatus === 'error' || migrateStatus === 'error') && (
                   <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400 flex items-center gap-2">
                     <AlertCircle size={14} /> Erro na execução da ferramenta. Verifique o console.
                   </div>

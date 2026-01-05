@@ -144,32 +144,35 @@ function extractFotos(node: Element) {
 
 function extractCaracteristicas(node: Element): string[] {
     const features: string[] = [];
-    const mapping: Record<string, string> = {
-        Interfone: "Interfone",
-        Academia: "Academia",
-        Cerca: "Cerca",
-        Churrasqueira: "Churrasqueira",
-        Piscina: "Piscina",
-        Playground: "Playground",
-        Acesso24Horas: "Acesso 24h",
-        QuadraPoliEsportiva: "Quadra Poliesportiva",
-        SalaoFestas: "Salão de Festas",
-        SalaoJogos: "Salão de Jogos",
-        Sauna: "Sauna",
-        Hidromassagem: "Hidromassagem",
-        CampoFutebol: "Campo de Futebol",
-        QuadraTenis: "Quadra de Tênis",
-        Jardim: "Jardim",
-        Quintal: "Quintal",
-        EspacoGourmet: "Espaço Gourmet",
-        AreaLazer: "Área de Lazer",
-        Elevador: "Elevador",
-        ArCondicionado: "Ar Condicionado"
-    };
 
-    for (const [tag, label] of Object.entries(mapping)) {
-        if (node.getElementsByTagName(tag)[0]?.textContent === "1") {
-            features.push(label);
+    // Lista de campos que NÃO são características (metadata, preços, etc)
+    const ignoredTags = new Set([
+        'CodigoImovel', 'TipoImovel', 'SubTipoImovel', 'CategoriaImovel', 'Modelo',
+        'TituloImovel', 'Observacao', 'PrecoVenda', 'PrecoLocacao', 'PrecoCondominio', 'PrecoIptu',
+        'PrecoTemporada', 'PrecoDiaria', 'ValorVenda', 'ValorLocacao', 'ValorCondominio', 'ValorIptu',
+        'Cidade', 'Bairro', 'Endereco', 'Numero', 'Complemento', 'CEP', 'UF', 'Estado',
+        'AreaUtil', 'AreaTotal', 'AreaPrivativa', 'AreaTerreno', 'AreaConstruida',
+        'QtdDormitorios', 'QtdSuites', 'QtdBanheiros', 'QtdVagas', 'QtdSalas',
+        'Fotos', 'Videos', 'UrlVideo', 'TourVirtual', 'Mapa', 'Latitude', 'Longitude',
+        'DataCadastro', 'DataAtualizacao', 'Destaque', 'SuperDestaque', 'Lancamento',
+        'ProntoMorar', 'EmConstrucao', 'NaPlanta', 'Ocupado', 'Reservado', 'Vendido',
+        'Permuta', 'Financiamento', 'AceitaPermuta', 'AceitaFinanciamento',
+        'NomeCondominio', 'AnoConstrucao', 'Construtora', 'InscricaoMunicipal'
+    ]);
+
+    // Itera sobre todos os filhos diretos do nó Imóvel
+    const children = node.children;
+    for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        const tagName = child.tagName;
+        const textContent = child.textContent;
+
+        // Se o valor for "1" (true) e não estiver na lista de ignorados
+        if (textContent === "1" && !ignoredTags.has(tagName)) {
+            // Formata o nome da tag (Ex: "SalaoFestas" -> "Salao Festas")
+            // Insere espaço antes de letras maiúsculas (exceto a primeira)
+            const formatted = tagName.replace(/([A-Z])/g, ' $1').trim();
+            features.push(formatted);
         }
     }
 

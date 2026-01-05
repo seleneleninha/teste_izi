@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { detectXMLFormat, parsers } from "./parsers";
 import { ImportedImovel } from "./parsers/tecimob";
+import { migrateExternalImages, ProgressCallback } from './migrate-images';
 
 // Supabase client instance should be passed or imported from context/config
 // Assuming we pass it or import a singleton if available. 
@@ -229,16 +230,23 @@ export const cleanupHtmlArtifacts = async (
 export const batchGeocodeProperties = async (
     supabaseClient: any,
     userId: string,
-    onProgress: (current: number, total: number, message: string) => void
+    onProgress: (current: number, total: number, message: string) => void,
+    isAdmin: boolean = false
 ): Promise<{ success: number, failed: number, total: number }> => {
 
     // 1. Fetch properties needing geocoding (valid CEP, no lat/lng, only drafts)
-    const { data: properties, error } = await supabaseClient
+    let query = supabaseClient
         .from('anuncios')
         .select('id, cep, logradouro, cidade, uf, bairro') // Fetch address fields for fallback/better search
-        .eq('user_id', userId)
         .eq('status', 'rascunho')
         .is('latitude', null);
+
+    // If NOT admin, filter by user. If Admin, fetch ALL drafts.
+    if (!isAdmin) {
+        query = query.eq('user_id', userId);
+    }
+
+    const { data: properties, error } = await query;
 
     if (error) throw error;
     if (!properties || properties.length === 0) return { success: 0, failed: 0, total: 0 };
@@ -353,27 +361,41 @@ export const batchGeocodeProperties = async (
 // Mass Publish Tool
 export const massPublishProperties = async (
     supabaseClient: any,
-    userId: string
+    userId: string,
+    isAdmin: boolean = false
 ): Promise<{ published: number, total: number }> => {
+
     // 1. Fetch drafts
-    const { data: drafts, error } = await supabaseClient
+    let queryDrafts = supabaseClient
         .from('anuncios')
         .select('id')
-        .eq('user_id', userId)
         .eq('status', 'rascunho');
+
+    if (!isAdmin) {
+        queryDrafts = queryDrafts.eq('user_id', userId);
+    }
+
+    const { data: drafts, error } = await queryDrafts;
 
     if (error) throw error;
     if (!drafts || drafts.length === 0) return { published: 0, total: 0 };
 
     // 2. Update all to 'ativo'
-    const { error: updateError, count } = await supabaseClient
+    let updateQuery = supabaseClient
         .from('anuncios')
         .update({ status: 'ativo', updated_at: new Date().toISOString() })
-        .eq('user_id', userId)
-        .eq('status', 'rascunho')
-        .select('id', { count: 'exact' });
+        .eq('status', 'rascunho');
+
+    if (!isAdmin) {
+        updateQuery = updateQuery.eq('user_id', userId);
+    }
+
+    const { error: updateError, count } = await updateQuery.select('id', { count: 'exact' });
 
     if (updateError) throw updateError;
 
     return { published: count || drafts.length, total: drafts.length };
 };
+
+export { migrateExternalImages };
+export type { ProgressCallback };

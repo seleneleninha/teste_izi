@@ -276,12 +276,23 @@ const PropertyMarkers: React.FC<{ properties: Property[]; brokerSlug?: string }>
 const MapInvalidator = () => {
   const map = useMap();
   useEffect(() => {
-    // Force map invalidation after mount and small delay
-    // This fixes the "grey area" issue when map renders inside a hidden/resized container
-    const timer = setTimeout(() => {
-      map.invalidateSize();
-    }, 100);
-    return () => clearTimeout(timer);
+    // Force map invalidation after mount with multiple delays
+    // This fixes the "grey area" issue when map renders inside animated/resized containers
+    const timers = [
+      setTimeout(() => map.invalidateSize(), 0),
+      setTimeout(() => map.invalidateSize(), 100),
+      setTimeout(() => map.invalidateSize(), 300),
+      setTimeout(() => map.invalidateSize(), 500),
+    ];
+
+    // Also invalidate on window resize
+    const handleResize = () => map.invalidateSize();
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      window.removeEventListener('resize', handleResize);
+    };
   }, [map]);
   return null;
 };

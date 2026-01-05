@@ -88,6 +88,8 @@ export const BrokerPage: React.FC = () => {
     const cityImages: Record<string, string> = {
         'natal': '/cities/natal.png',
         'parnamirim': '/cities/parnamirim.png',
+        'ceará mirim': '/cities/ceara_mirim.png',
+        'ceará-mirim': '/cities/ceara_mirim.png',
         'macaíba': '/cities/macaiba.png',
         'nísia floresta': '/cities/nisia_floresta.png',
         'são gonçalo do amarante': '/cities/sao_goncalo_amarante.png',
@@ -314,7 +316,21 @@ export const BrokerPage: React.FC = () => {
 
             {/* Search Filter Component - Floating & Glass */}
             <div className="container mx-auto px-4 relative z-20 -mt-32 mb-0">
-                <SearchFilter brokerSlug={slug} />
+                <SearchFilter
+                    brokerSlug={slug}
+                    availableOperations={(() => {
+                        const ops = new Set<string>();
+                        allProperties.forEach(p => {
+                            const op = p.operacao?.toString().toLowerCase();
+                            if (!op) return;
+                            if (op === 'venda' || op === 'venda/locação') ops.add('buy');
+                            if (op === 'locação' || op === 'venda/locação') ops.add('rent');
+                            if (op === 'temporada') ops.add('temporada');
+                        });
+                        // If no properties, default to buy. If there are properties, convert Set to array.
+                        return ops.size > 0 ? Array.from(ops) : ['buy'];
+                    })()}
+                />
             </div>
 
             {/* Browse by Type Section */}
@@ -457,7 +473,7 @@ export const BrokerPage: React.FC = () => {
                                     <div
                                         className="relative h-[400px] rounded-3xl overflow-hidden cursor-pointer group hover:-translate-y-2 transition-transform duration-500 isolate"
                                         style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
-                                        onClick={() => navigate(`/${slug}/buscar?q=${encodeURIComponent(city)}`)}
+                                        onClick={() => navigate(`/${slug}/buscar?cidade=${encodeURIComponent(city)}`)}
                                     >
                                         <div
                                             className={`absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110`}
@@ -510,7 +526,7 @@ export const BrokerPage: React.FC = () => {
                             {topNeighborhoods.map((bairro, idx) => (
                                 <button
                                     key={idx}
-                                    onClick={() => navigate(`/${slug}/buscar?q=${encodeURIComponent(bairro)}`)}
+                                    onClick={() => navigate(`/${slug}/buscar?bairro=${encodeURIComponent(bairro)}`)}
                                     className="group relative px-6 py-3 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:border-emerald-500/50 hover:text-white hover:scale-105 transition-all duration-300 font-medium"
                                 >
                                     {bairro}
