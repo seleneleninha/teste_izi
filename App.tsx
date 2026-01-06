@@ -112,6 +112,9 @@ const App: React.FC = () => {
                             <Route path="/:slug/buscar" element={<BrokerSearchPage />} />
                             <Route path="/:slug/sobre" element={<BrokerAboutPage />} />
 
+                            {/* Corretor - Página Comparativo Público */}
+                            <Route path="/:slug/comparativo" element={<PropertyComparison />} />
+
                             {/* Corretor - Página Principal (último, pega qualquer slug) */}
                             <Route path="/:slug" element={<BrokerPage />} />
                           </Route>

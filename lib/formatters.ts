@@ -93,3 +93,51 @@ export const generatePropertySlug = (property: any): string => {
 
     return `${tipo}-${quartos}-quartos-${bairro}-${cidade}${garagem}-${area}m2-${operacao}-RS${valor}-cod${codigo}`;
 };
+
+/**
+ * Converte URLs de vídeo (YouTube/Vimeo) para formato embed
+ */
+export const getEmbedUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+
+    try {
+        // YouTube
+        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+            let videoId = '';
+
+            // Handle youtu.be/ID
+            if (url.includes('youtu.be')) {
+                videoId = url.split('youtu.be/')[1]?.split('?')[0];
+            }
+            // Handle youtube.com/watch?v=ID
+            else if (url.includes('watch?v=')) {
+                videoId = url.split('watch?v=')[1]?.split('&')[0];
+            }
+            // Handle youtube.com/embed/ID
+            else if (url.includes('embed/')) {
+                videoId = url.split('embed/')[1]?.split('?')[0];
+            }
+            // Handle youtube.com/shorts/ID
+            else if (url.includes('shorts/')) {
+                videoId = url.split('shorts/')[1]?.split('?')[0];
+            }
+
+            if (videoId) {
+                return `https://www.youtube.com/embed/${videoId}`;
+            }
+        }
+
+        // Vimeo
+        if (url.includes('vimeo.com')) {
+            const vimeoId = url.split('vimeo.com/')[1]?.split('?')[0];
+            if (vimeoId) {
+                return `https://player.vimeo.com/video/${vimeoId}`;
+            }
+        }
+
+        return url; // Retorna original se não reconhecer, ou null? Melhor original caso seja um link direto de mp4 válido ou outro player.
+    } catch (e) {
+        console.error('Error parsing video URL:', e);
+        return null;
+    }
+};

@@ -26,6 +26,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 interface PropertyMapProps {
   properties: Property[];
   brokerSlug?: string;
+  isDashboard?: boolean;
 }
 
 const defaultCenter: [number, number] = [-5.79448, -35.211]; // Natal, RN
@@ -94,7 +95,7 @@ const ImageCarousel: React.FC<{ images: string[]; title: string }> = ({ images, 
 };
 
 // Component to handle markers rendering and map interaction
-const PropertyMarkers: React.FC<{ properties: Property[]; brokerSlug?: string }> = ({ properties, brokerSlug }) => {
+const PropertyMarkers: React.FC<{ properties: Property[]; brokerSlug?: string; isDashboard?: boolean }> = ({ properties, brokerSlug, isDashboard }) => {
   const map = useMap();
   const navigate = useNavigate();
 
@@ -111,8 +112,11 @@ const PropertyMarkers: React.FC<{ properties: Property[]; brokerSlug?: string }>
         // Determinar o preço a exibir
         const priceValue = p.valor_venda || p.valor_locacao || p.valor_diaria || p.valor_mensal || 0;
         const priceLabel = p.valor_diaria ? '/dia' : (p.valor_mensal ? '/mês' : '');
-        const operation = p.operacao;
-        const type = p.tipo_imovel;
+
+        // Fix: Handle object vs string for relations
+        const operation = typeof p.operacao === 'object' ? p.operacao?.tipo : p.operacao;
+        const type = typeof p.tipo_imovel === 'object' ? p.tipo_imovel?.tipo : p.tipo_imovel;
+
         const location = `${p.bairro}, ${p.cidade}`;
 
         // Handle both string (comma-separated) and array formats for fotos
@@ -257,7 +261,7 @@ const PropertyMarkers: React.FC<{ properties: Property[]; brokerSlug?: string }>
                 {/* Ver Detalhes Button */}
                 <div className="flex justify-start mt-3">
                   <button
-                    onClick={() => navigateToProperty(navigate, p, false, brokerSlug)}
+                    onClick={() => navigateToProperty(navigate, p, isDashboard, brokerSlug)}
                     className="text-sm bg-emerald-600 text-white px-4 py-2 rounded-full hover:bg-emerald-700 font-bold shadow-md shadow-black"
                   >
                     VER DETALHES
@@ -297,7 +301,7 @@ const MapInvalidator = () => {
   return null;
 };
 
-export const PropertyMap: React.FC<PropertyMapProps> = ({ properties, brokerSlug }) => {
+export const PropertyMap: React.FC<PropertyMapProps> = ({ properties, brokerSlug, isDashboard }) => {
   // Debug: Log properties to check coordinates
   const propertiesWithCoords = properties.filter(p => {
     const prop = p as any;
@@ -317,7 +321,7 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({ properties, brokerSlug
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <PropertyMarkers properties={properties} brokerSlug={brokerSlug} />
+        <PropertyMarkers properties={properties} brokerSlug={brokerSlug} isDashboard={isDashboard} />
       </MapContainer>
 
       <div className="absolute bottom-4 left-4 bg-[#ab0505] border-white border-2 backdrop-blur px-4 py-2 rounded-3xl text-xs font-bold text-white shadow-[4px_4px_5px_rgba(0,0,0,0.9)] z-[1000]">

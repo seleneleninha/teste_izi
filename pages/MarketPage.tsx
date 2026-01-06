@@ -6,6 +6,7 @@ import { useToast } from '../components/ToastContext';
 import { PropertyCard } from '../components/PropertyCard';
 import { PropertyMap } from '../components/PropertyMap';
 import { formatCurrency } from '../lib/formatters';
+import { useHeader } from '../components/HeaderContext';
 import {
     Grid, List, Map, Search, Loader2, MapPin, Home, Building, ChevronDown,
     ArrowUpDown, ChevronUp, Users, Handshake
@@ -13,6 +14,7 @@ import {
 
 export const MarketPage: React.FC = () => {
     const navigate = useNavigate();
+    const { setHeaderContent } = useHeader();
     const { user, profile } = useAuth();
     const { addToast } = useToast();
 
@@ -24,6 +26,21 @@ export const MarketPage: React.FC = () => {
     const [filterOperation, setFilterOperation] = useState<string>('');
     const [filterType, setFilterType] = useState<string>('');
     const [filterCity, setFilterCity] = useState<string>('');
+
+    // Set up Header
+    useEffect(() => {
+        setHeaderContent(
+            <div className="flex flex-col justify-center">
+                <h1 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
+                    Mercado Imobiliário
+                </h1>
+                <p className="text-slate-400 text-xs font-medium leading-tight">
+                    Visualize imóveis disponíveis na plataforma
+                </p>
+            </div>
+        );
+        return () => setHeaderContent(null);
+    }, [setHeaderContent]);
 
     // Fetch all active properties from the market
     useEffect(() => {
@@ -173,19 +190,8 @@ export const MarketPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-white">Mercado Imobiliário</h1>
-                    <p className="text-slate-400">
-                        Você está visualizando imóveis {profile?.estado || profile?.uf ? `do estado de ${profile?.estado || profile?.uf}` : 'disponíveis na plataforma, EXCETO OS SEUS ANÚNCIOS.'}.
-                    </p>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-slate-400">
-                    <Users size={18} className="text-emerald-400" />
-                    <span>{filteredProperties.length} imóveis de outros corretores</span>
-                </div>
-            </div>
+            {/* Header removido - agora via useHeader Context */}
+
 
             {/* Filters & View Toggle */}
             <div className="bg-slate-800/50 border border-white/5 rounded-2xl p-4">

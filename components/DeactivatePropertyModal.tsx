@@ -97,7 +97,7 @@ export const DeactivatePropertyModal: React.FC<DeactivatePropertyModalProps> = (
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg p-6 border border-slate-700">
+            <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg p-6 border border-slate-700 max-h-[90vh] overflow-y-auto w-[95%]">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-6">
                     <div>

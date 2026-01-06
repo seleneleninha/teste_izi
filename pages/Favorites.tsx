@@ -262,7 +262,7 @@ export const Favorites: React.FC = () => {
                             <p className="text-slate-300">
                                 {isClient
                                     ? 'Selecione até 3 imóveis para ver os detalhes lado a lado.'
-                                    : 'Abaixo listamos seu estoque e parcerias. Clique em "Comparar" e envie a melhor seleção para seu lead.'}
+                                    : 'Abaixo listamos seu estoque e parcerias. Clique em "Comparar" e envie a melhor seleção para seu Cliente.'}
                             </p>
                         </div>
                     </div>

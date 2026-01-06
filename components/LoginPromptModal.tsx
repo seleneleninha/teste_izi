@@ -27,7 +27,7 @@ export const LoginPromptModal: React.FC<LoginPromptModalProps> = ({ isOpen, onCl
             />
 
             {/* Modal */}
-            <div className="relative bg-[#1a1f2e] rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-700 animate-scale-in z-10">
+            <div className="relative bg-[#1a1f2e] rounded-3xl p-8 max-w-md w-[300px] shadow-2xl border border-slate-700 animate-scale-in z-10">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
@@ -43,25 +43,22 @@ export const LoginPromptModal: React.FC<LoginPromptModalProps> = ({ isOpen, onCl
 
                 {/* Content */}
                 <div className="text-center space-y-4">
-                    <h1 className="text-xl font-bold text-white">
-                        Para favoritar imóveis você precisa se cadastrar ou estar logado na plataforma.
+                    <h1 className="text-md font-bold text-white">
+                        Para favoritar você precisa se cadastrar na plataforma.
                     </h1>
 
-                    <p className="text-gray-300 text-md">
-                        <p className="text-yellow-300 text-lg font-bold">Porquê se cadastrar?</p>
-                        <p>É <span className="text-emerald-400 font-semibold">grátis</span> e <span className="text-emerald-400 font-semibold">super rápido</span>.</p>
-                        <p>Você pode <span className="text-emerald-400 font-semibold">COMPARAR até 3 imóveis </span> lado a lado!</p>
-                        <p>Favoritar quantos <span className="text-emerald-400 font-semibold">imóveis </span> quiser!</p>
-                        <p><span className="text-emerald-400 font-semibold">ENCOMENDAR </span> seu imóvel e ser <span className="text-emerald-400 font-semibold">notificado</span>.</p>
-                        <p>Agendar <span className="text-emerald-400 font-semibold">visitas </span> muito + <span className="text-emerald-400 font-semibold">rápido</span>.</p>
+                    <p className="text-gray-300 text-sm">
+                        <p className="text-yellow-300 font-bold">Porquê se cadastrar?</p>
+                        <p><span className="text-emerald-400 font-semibold">É GRÁTIS, SUPER RÁPIDO</span></p>
+                        <p>e você pode <span className="text-emerald-400 font-semibold">COMPARAR até 3 imóveis lado a lado!</span></p>
                     </p>
                 </div>
 
                 {/* Buttons */}
-                <div className="mt-8">
+                <div className="mt-4">
                     <button
                         onClick={handleSignup}
-                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 animate-pulse mb-1"
+                        className="w-[240px] bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 animate-pulse mb-1"
                     >
                         <UserPlus size={20} />
                         CADASTRE-SE
@@ -69,13 +66,13 @@ export const LoginPromptModal: React.FC<LoginPromptModalProps> = ({ isOpen, onCl
 
                     {/* Login link for existing users */}
                     <div className="text-center mb-4">
-                        <span className="text-md text-white">Já tenho conta. </span>
+                        <span className="text-sm text-white">Já tenho conta. </span>
                         <button
                             onClick={() => {
                                 const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
                                 navigate(`/login?returnUrl=${returnUrl}&type=client`);
                             }}
-                            className="text-emerald-400 hover:text-emerald-300 font-bold text-lg underline transition-colors"
+                            className="text-emerald-400 hover:text-emerald-300 font-bold text-sm underline transition-colors"
                         >
                             LOGAR
                         </button>
@@ -83,9 +80,9 @@ export const LoginPromptModal: React.FC<LoginPromptModalProps> = ({ isOpen, onCl
 
                     <button
                         onClick={onClose}
-                        className="w-full bg-slate-700 hover:bg-slate-600 text-gray-300 font-medium py-3 rounded-full transition-colors border border-slate-600"
+                        className="w-[240px] bg-slate-700 hover:bg-slate-600 text-gray-300 py-2 rounded-full transition-colors"
                     >
-                        <strong>Não obrigado,</strong> vou pesquisar + opções.
+                        <strong>Não obrigado.</strong>
                     </button>
                 </div>
             </div>

@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, X, Loader2, Heart, Video, Globe, Car, Share2 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
+
 import { useToast } from '../components/ToastContext';
-import { generatePropertySlug } from '../lib/formatters';
+import { useHeader } from '../components/HeaderContext';
+import { generatePropertySlug, getEmbedUrl } from '../lib/formatters';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { ComparisonPDF } from '../components/ComparisonPDF';
 
 interface ComparisonProperty {
     id: string;
@@ -46,15 +50,35 @@ interface ComparisonProperty {
 export const PropertyComparison: React.FC = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { user, role } = useAuth();
+    const { slug } = useParams(); // Public route slug
+    const { setHeaderContent } = useHeader();
+    const { user, role, userProfile } = useAuth();
     const { addToast } = useToast();
     const isClient = role === 'Cliente';
+    const isPublicView = !!slug;
+
     const [properties, setProperties] = useState<ComparisonProperty[]>([]);
     const [loading, setLoading] = useState(true);
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
     const idsString = searchParams.get('ids');
     const ids = idsString?.split(',') || [];
+
+    useEffect(() => {
+        if (!isPublicView) {
+            setHeaderContent(
+                <div className="flex flex-col justify-center">
+                    <h1 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
+                        Comparativo de Imóveis
+                    </h1>
+                    <p className="text-slate-400 text-xs font-medium leading-tight">
+                        Analise os detalhes lado a lado
+                    </p>
+                </div>
+            );
+        }
+        return () => setHeaderContent(null);
+    }, [setHeaderContent, isPublicView]);
 
     useEffect(() => {
         if (ids.length > 0) {
@@ -132,16 +156,23 @@ export const PropertyComparison: React.FC = () => {
     };
 
     const handleShare = () => {
-        const url = window.location.href;
-        navigator.clipboard.writeText(url);
-        addToast('Link de comparação copiado! Agora você pode enviar para seu cliente.', 'success');
+        let shareUrl = window.location.href;
+
+        // Construct public smart link if we have the broker profile
+        if (userProfile?.slug) {
+            const baseUrl = window.location.origin;
+            shareUrl = `${baseUrl}/${userProfile.slug}/comparativo?ids=${ids.join(',')}`;
+        }
+
+        navigator.clipboard.writeText(shareUrl);
+        addToast('Link público copiado! Agora seu cliente pode ver sem login.', 'success');
 
         // Optional: Use Web Share API if available
         if (navigator.share) {
             navigator.share({
                 title: 'Comparativo de Imóveis - iziBrokerz',
                 text: 'Confira estes imóveis que selecionei para você comparar:',
-                url: url
+                url: shareUrl
             }).catch(() => { });
         }
     };
@@ -187,10 +218,10 @@ export const PropertyComparison: React.FC = () => {
 
     const getOperationBadgeClass = (operacao: string) => {
         const op = operacao.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        if (op === 'venda') return 'bg-red-500 text-white';
-        if (op === 'locacao' || op === 'locação') return 'bg-blue-600 text-white';
-        if (op === 'temporada') return 'bg-orange-500 text-white';
-        if (op.includes('venda') && op.includes('locacao')) return 'bg-emerald-600 text-white';
+        if (op.includes('venda') && op.includes('loca')) return 'bg-emerald-600 text-white'; // Green
+        if (op.includes('venda')) return 'bg-red-500 text-white'; // Red
+        if (op.includes('locac') || op.includes('locaç')) return 'bg-blue-600 text-white'; // Blue
+        if (op.includes('temporada')) return 'bg-orange-500 text-white'; // Orange
         return 'bg-gray-700 text-white';
     };
 
@@ -227,28 +258,77 @@ export const PropertyComparison: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto pb-12">
-            <div className="flex items-center mb-8">
+            {/* Header público se necessário */}
+            {isPublicView && (
+                <div className="flex flex-col mb-8 pt-4">
+                    <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight">
+                        Comparativo de Imóveis
+                    </h1>
+                    <p className="text-slate-400 text-sm font-medium leading-tight">
+                        Detalhes lado a lado
+                    </p>
+                </div>
+            )}
+
+            <div className="flex items-center justify-end mb-8 gap-4">
                 <button
                     onClick={() => navigate(-1)}
-                    className="mr-4 p-2 hover:bg-slate-800 rounded-full transition-colors"
+                    className="p-2 hover:bg-slate-800 rounded-full transition-colors hidden md:block border border-slate-700"
                 >
-                    <ArrowLeft />
+                    <ArrowLeft className="text-slate-400" />
                 </button>
-                <div>
-                    <h2 className="text-2xl font-bold text-white">Comparativo de Imóveis</h2>
-                    <p className="text-slate-400 text-sm">Comparando {properties.length} imóveis lado a lado.</p>
-                    <p className="text-yellow-500 text-sm md:hidden">💡 Gire o celular para ver melhor.</p>
-                </div>
 
-                {!isClient && (
+
+                {/* Show Share button for Broker in Dashboard OR for anyone in Public view (generic share) */}
+                {(!isClient || isPublicView) && (
                     <button
                         onClick={handleShare}
-                        className="ml-auto flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-full transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-full transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
                     >
                         <Share2 size={18} />
-                        <span className="hidden sm:inline">Compartilhar com Cliente</span>
-                        <span className="sm:hidden">Enviar</span>
+                        <span className="hidden sm:inline">
+                            {isPublicView ? 'Compartilhar' : 'Compartilhar com Cliente'}
+                        </span>
+                        <span className="sm:hidden">
+                            <Share2 size={18} />
+                        </span>
                     </button>
+                )}
+
+                {/* Botão Gerar PDF (Apenas Desktop por enquanto, ou mobile também se o dispositivo suportar) */}
+                {properties.length > 0 && (
+                    <PDFDownloadLink
+                        document={
+                            <ComparisonPDF
+                                properties={properties}
+                                broker={userProfile ? {
+                                    name: `${userProfile.nome} ${userProfile.sobrenome}`,
+                                    email: userProfile.email,
+                                    phone: userProfile.whatsapp,
+                                    creci: `${userProfile.creci}/${userProfile.uf_creci}`,
+                                    avatar: userProfile.avatar,
+                                    logo: userProfile.watermark_dark || userProfile.marca_dagua, // Preferência por logo escura para fundo branco
+                                    slug: userProfile.slug
+                                } : null}
+                            />
+                        }
+                        fileName={`comparativo_imoveis_${new Date().toISOString().split('T')[0]}.pdf`}
+                        className="flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-full transition-all shadow-lg shadow-red-500/20 active:scale-95"
+                    >
+                        {({ blob, url, loading, error }) =>
+                            loading ? (
+                                <>
+                                    <Loader2 size={18} className="animate-spin" />
+                                    <span className="hidden sm:inline">Gerando PDF...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="font-bold">PDF</span>
+                                    <span className="hidden sm:inline">Baixar Apresentação</span>
+                                </>
+                            )
+                        }
+                    </PDFDownloadLink>
                 )}
             </div>
 
@@ -460,7 +540,7 @@ export const PropertyComparison: React.FC = () => {
                                         {prop.video ? (
                                             <div className="aspect-video rounded-2xl overflow-hidden bg-black">
                                                 <iframe
-                                                    src={prop.video.replace('watch?v=', 'embed/').replace('vimeo.com/', 'player.vimeo.com/video/')}
+                                                    src={getEmbedUrl(prop.video) || ''}
                                                     title="Vídeo do Imóvel"
                                                     className="w-full h-full"
                                                     allowFullScreen

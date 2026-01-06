@@ -178,6 +178,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
         } else {
             const slug = generatePropertySlug(property);
             if (isDashboard) {
+                // Modified: Broker dashboard should stay in protected route
                 navigate(`/properties/${slug}`);
             } else if (brokerSlug) {
                 navigate(`/${brokerSlug}/imovel/${slug}`);
@@ -420,16 +421,16 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                                 {typeof property.tipo_imovel === 'string' ? property.tipo_imovel : property.tipo_imovel?.tipo}
                             </span>
                         </div>
-                        <h3 className={`font-bold text-white mb-1 drop-shadow-md truncate ${compact ? 'text-lg line-clamp-1' : 'text-xl line-clamp-2'}`}>
+                        <h3 className={`font-bold text-white mb-1 drop-shadow-md truncate ${compact ? 'text-md line-clamp-1' : 'text-md line-clamp-2'}`}>
                             {property.titulo}
                         </h3>
 
-                        <p className="text-gray-200 text-sm mb-3 flex items-center gap-1.5 drop-shadow-sm">
+                        <p className="text-gray-200 text-xs mb-3 flex items-center gap-1.5 drop-shadow-sm">
                             <MapPin size={14} className="text-emerald-400" />
                             <span className="truncate">{property.bairro}, {property.cidade} | Cód: {property.cod_imovel}</span>
                         </p>
 
-                        <div className="flex items-center gap-4 text-gray-100 text-sm font-medium mb-3">
+                        <div className="flex items-center gap-2 text-gray-100 text-xs font-medium mb-3">
                             {(property.quartos || 0) > 0 && (
                                 <span className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full backdrop-blur-sm">
                                     <Bed size={14} /> {property.quartos}

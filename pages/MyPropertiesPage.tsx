@@ -6,14 +6,17 @@ import { useToast } from '../components/ToastContext';
 import { PropertyCard } from '../components/PropertyCard';
 import { PropertyMap } from '../components/PropertyMap';
 import { formatCurrency } from '../lib/formatters';
+import { useHeader } from '../components/HeaderContext';
+import { DeactivatePropertyModal } from '../components/DeactivatePropertyModal';
 import {
     Grid, List, Map, Search, Filter, Loader2, Plus, Edit, Trash2, Eye, EyeOff,
     ChevronUp, ChevronDown, Check, X, ArrowUpDown, Home, Building, MapPin,
-    Bed, Bath, Car, Maximize2
+    Bed, Bath, Car, Maximize2, AlertTriangle, DollarSign, XCircle, Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const MyPropertiesPage: React.FC = () => {
+    const { setHeaderContent } = useHeader();
     const navigate = useNavigate();
     const { user, role } = useAuth();
     const { addToast } = useToast();
@@ -24,9 +27,30 @@ export const MyPropertiesPage: React.FC = () => {
     const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState<'all' | 'ativo' | 'inativo'>('all');
+
+    // Status filter
+    const [filterStatus, setFilterStatus] = useState<string>('all');
     const [filterOperation, setFilterOperation] = useState<string>('');
     const [filterType, setFilterType] = useState<string>('');
+
+    // Inactivation Modal State
+    const [inactivationModalOpen, setInactivationModalOpen] = useState(false);
+    const [selectedPropertyToInactivate, setSelectedPropertyToInactivate] = useState<any>(null);
+
+    // Set Header
+    useEffect(() => {
+        setHeaderContent(
+            <div className="flex flex-col justify-center">
+                <h1 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
+                    Meus Imóveis
+                </h1>
+                <p className="text-slate-400 text-xs font-medium leading-tight">
+                    Gerencie seu portfólio de imóveis
+                </p>
+            </div>
+        );
+        return () => setHeaderContent(null);
+    }, [setHeaderContent]);
 
     // Fetch properties
     useEffect(() => {
@@ -68,17 +92,38 @@ export const MyPropertiesPage: React.FC = () => {
         }
     };
 
-    // Toggle property status (ativo/inativo)
-    const togglePropertyStatus = async (propertyId: string, currentStatus: string) => {
-        const newStatus = currentStatus === 'ativo' ? 'inativo' : 'ativo';
+    // Start inactivation process
+    const handleInactivateClick = (property: any) => {
+        setSelectedPropertyToInactivate(property);
+        setInactivationModalOpen(true);
+    };
+
+    // Confirm status change (reactivate or set specific inactive status)
+    const handleChangeStatus = async (propertyId: string, newStatus: string) => {
         try {
+            // Se estiver reativando, volta para pendente (regras de negócio: qualquer reativação passa por aprovação)
+            // Se for reprovado e o usuário editar, também deve voltar para pendente (isso deve ser feito no form de edição)
+            // Aqui estamos lidando com inativação ou reativação via dashboard
+
+            const effectiveStatus = (newStatus === 'ativo' || newStatus === 'reativar') ? 'pendente' : newStatus;
+
             const { error } = await supabase
                 .from('anuncios')
-                .update({ status: newStatus })
+                .update({ status: effectiveStatus })
                 .eq('id', propertyId);
 
             if (error) throw error;
-            addToast(`Imóvel ${newStatus === 'ativo' ? 'ativado' : 'inativado'} com sucesso!`, 'success');
+
+            let message = '';
+            if (effectiveStatus === 'pendente') message = 'Imóvel reativado! Ele ficará como Pendente aguardando nova aprovação.';
+            else if (effectiveStatus === 'venda_faturada') message = 'Parabéns pela venda! Imóvel marcado como Vendido.';
+            else if (effectiveStatus === 'locacao_faturada') message = 'Parabéns pela locação! Imóvel marcado como Alugado.';
+            else if (effectiveStatus === 'imovel_espera') message = 'Imóvel colocado em Standby.';
+            else if (effectiveStatus === 'imovel_perdido') message = 'Imóvel marcado como Perdido.';
+
+            addToast(message, 'success');
+            setInactivationModalOpen(false);
+            setSelectedPropertyToInactivate(null);
             fetchProperties();
         } catch (error) {
             console.error('Erro ao atualizar status:', error);
@@ -198,6 +243,27 @@ export const MyPropertiesPage: React.FC = () => {
             : <ChevronDown size={14} className="text-emerald-400" />;
     };
 
+    // Helper to render status badge
+    const renderStatusBadge = (status: string) => {
+        const config: any = {
+            'ativo': { bg: 'bg-emerald-500/80', text: 'Ativo' },
+            'pendente': { bg: 'bg-yellow-500/80', text: 'Pendente' },
+            'reprovado': { bg: 'bg-red-500/80', text: 'Reprovado' },
+            'venda_faturada': { bg: 'bg-purple-600/80', text: 'Vendido' },
+            'locacao_faturada': { bg: 'bg-blue-600/80', text: 'Alugado' },
+            'imovel_perdido': { bg: 'bg-slate-600/80', text: 'Perdido' },
+            'imovel_espera': { bg: 'bg-orange-500/80', text: 'Standby' },
+            'inativo': { bg: 'bg-slate-500/80', text: 'Inativo' }
+        };
+        const style = config[status] || config['inativo'];
+
+        return (
+            <span className={`px-2 py-1 rounded-full text-xs font-bold text-white ${style.bg}`}>
+                {style.text}
+            </span>
+        );
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -208,20 +274,8 @@ export const MyPropertiesPage: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-white">Meus Imóveis</h1>
-                    <p className="text-slate-400">Gerencie e mantenha seus anúncios atualizados.</p>
-                </div>
-                <button
-                    onClick={() => navigate('/add-property')}
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition-all"
-                >
-                    <Plus size={20} />
-                    Novo Anúncio
-                </button>
-            </div>
+            {/* Header removido - agora via useHeader */}
+
 
             {/* Filters & View Toggle */}
             <div className="bg-slate-800/50 border border-white/5 rounded-2xl p-4">
@@ -247,7 +301,13 @@ export const MyPropertiesPage: React.FC = () => {
                         >
                             <option value="all">Todos Status</option>
                             <option value="ativo">Ativos</option>
-                            <option value="inativo">Inativos</option>
+                            <option value="pendente">Pendentes</option>
+                            <option value="reprovado">Reprovados</option>
+                            <option value="venda_faturada">Vendidos</option>
+                            <option value="locacao_faturada">Alugados</option>
+                            <option value="imovel_perdido">Perdidos</option>
+                            <option value="imovel_espera">Standby</option>
+                            <option value="inativo">Inativos (Antigo)</option>
                         </select>
 
                         {/* View Toggle */}
@@ -274,314 +334,306 @@ export const MyPropertiesPage: React.FC = () => {
                                 <Map size={18} />
                             </button>
                         </div>
+
+                        {/* Add Property Button - Moved here */}
+                        <button
+                            onClick={() => navigate('/add-property')}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-xl transition-all shadow-lg active:scale-95 flex items-center gap-2"
+                            title="Novo Anúncio"
+                        >
+                            <Plus size={20} />
+                            <span className="hidden sm:inline font-bold">Anunciar</span>
+                        </button>
                     </div>
                 </div>
 
-                {/* Bulk Actions */}
-                {selectedProperties.length > 0 && (
-                    <div className="mt-4 flex items-center gap-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-                        <span className="text-emerald-400 font-medium">
-                            {selectedProperties.length} selecionado(s)
-                        </span>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => handleBulkAction('activate')}
-                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-all"
-                            >
-                                Ativar
-                            </button>
-                            <button
-                                onClick={() => handleBulkAction('deactivate')}
-                                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg text-sm font-medium transition-all"
-                            >
-                                Inativar
-                            </button>
-                            <button
-                                onClick={() => handleBulkAction('delete')}
-                                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-all"
-                            >
-                                Excluir
-                            </button>
+                {/* Results Count */}
+                <div className="flex items-center justify-between mb-2 mt-4">
+                    <p className="text-slate-400">
+                        <span className="text-white font-bold">{filteredProperties.length}</span> imóveis encontrados
+                    </p>
+                </div>
+
+                {/* Content */}
+                {view === 'grid' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        {filteredProperties.map(property => (
+                            <div key={property.id} className="relative group">
+                                <PropertyCard
+                                    property={property}
+                                    isDashboard={true}
+                                    showStatus={true}
+                                    actions={
+                                        <>
+                                            {/* Edit Button */}
+                                            {property.status !== 'excluido' && (
+                                                <button
+                                                    onClick={() => navigate(`/add-property?edit=${property.id}`)}
+                                                    className="p-2 bg-slate-700 hover:bg-emerald-600 rounded-full text-white transition-all shadow-lg"
+                                                    title={property.status === 'pendente' ? 'Editar (Aguardando Aprovação)' : 'Editar'}
+                                                >
+                                                    <Edit size={16} />
+                                                </button>
+                                            )}
+
+                                            {/* Action Button: Inactivate vs Reactivate */}
+                                            {property.status === 'ativo' ? (
+                                                <button
+                                                    onClick={() => handleInactivateClick(property)}
+                                                    className="p-2 bg-slate-700 hover:bg-yellow-600 rounded-full text-white transition-all shadow-lg"
+                                                    title="Inativar / Baixar"
+                                                >
+                                                    <EyeOff size={16} />
+                                                </button>
+                                            ) : (property.status !== 'pendente') && (
+                                                <button
+                                                    onClick={() => handleChangeStatus(property.id, 'reativar')}
+                                                    className="p-2 bg-slate-700 hover:bg-emerald-600 rounded-full text-white transition-all shadow-lg"
+                                                    title="Reativar e Enviar para Aprovação"
+                                                >
+                                                    <Eye size={16} />
+                                                </button>
+                                            )}
+                                        </>
+                                    }
+                                />
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {view === 'list' && (
+                    <div className="bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="bg-slate-900/80 border-b border-white/10 text-xs uppercase tracking-wider">
+                                        <th className="p-3 text-center text-slate-400 font-semibold w-16">AÇÕES</th>
+                                        <th className="p-3 text-center text-slate-400 font-semibold w-16">
+                                            <button onClick={() => handleSort('cod_imovel')} className="flex items-center gap-1 mx-auto text-slate-400 hover:text-white">
+                                                CÓD. {getSortIcon('cod_imovel')}
+                                            </button>
+                                        </th>
+                                        <th className="p-3 text-left text-slate-400 font-semibold min-w-[200px]">
+                                            <button onClick={() => handleSort('titulo')} className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors">
+                                                IMÓVEL {getSortIcon('titulo')}
+                                            </button>
+                                        </th>
+                                        <th className="p-3 text-left text-slate-400 font-semibold min-w-[120px]">
+                                            <button onClick={() => handleSort('cidade')} className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors">
+                                                CIDADE {getSortIcon('cidade')}
+                                            </button>
+                                        </th>
+                                        <th className="p-3 text-left text-slate-400 font-semibold min-w-[120px]">
+                                            <button onClick={() => handleSort('bairro')} className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors">
+                                                BAIRRO {getSortIcon('bairro')}
+                                            </button>
+                                        </th>
+                                        <th className="p-3 text-center text-slate-400 font-semibold w-10" title="Quartos">
+                                            <button onClick={() => handleSort('quartos')} className="mx-auto flex items-center justify-center hover:text-white transition-colors">
+                                                <Bed size={14} />
+                                            </button>
+                                        </th>
+                                        <th className="p-3 text-center text-slate-400 font-semibold w-10" title="Banheiros">
+                                            <button onClick={() => handleSort('banheiros')} className="mx-auto flex items-center justify-center hover:text-white transition-colors">
+                                                <Bath size={14} />
+                                            </button>
+                                        </th>
+                                        <th className="p-3 text-center text-slate-400 font-semibold w-10" title="Vagas">
+                                            <button onClick={() => handleSort('vagas')} className="mx-auto flex items-center justify-center hover:text-white transition-colors">
+                                                <Car size={14} />
+                                            </button>
+                                        </th>
+                                        <th className="p-3 text-center text-slate-400 font-semibold w-16" title="Área Privativa">
+                                            <button onClick={() => handleSort('area_priv')} className="mx-auto flex items-center justify-center gap-1 hover:text-white transition-colors">
+                                                <Maximize2 size={14} />
+                                            </button>
+                                        </th>
+                                        <th className="p-3 text-right text-slate-400 font-semibold min-w-[120px]">
+                                            <button onClick={() => handleSort('valor_venda')} className="flex items-center gap-1 ml-auto text-slate-400 hover:text-white transition-colors">
+                                                VALORES {getSortIcon('valor_venda')}
+                                            </button>
+                                        </th>
+                                        <th className="p-3 text-center text-slate-400 font-semibold w-20">STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredProperties.map((property) => {
+                                        const tipoImovel = typeof property.tipo_imovel === 'string' ? property.tipo_imovel : property.tipo_imovel?.tipo || '';
+                                        const operacao = property.operacao || '';
+
+                                        return (
+                                            <tr
+                                                key={property.id}
+                                                className="border-b border-white/5 hover:bg-slate-800/50 transition-colors"
+                                            >
+                                                {/* Ações */}
+                                                <td className="p-3">
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <button
+                                                            onClick={() => navigate(`/properties/${property.slug || property.id}`)}
+                                                            className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-400 transition-all"
+                                                            title="Ver Detalhes"
+                                                        >
+                                                            <Eye size={14} />
+                                                        </button>
+                                                        {property.status !== 'excluido' && (
+                                                            <button
+                                                                onClick={() => navigate(`/add-property?edit=${property.id}`)}
+                                                                className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-emerald-400 transition-all"
+                                                                title={property.status === 'pendente' ? 'Editar (Aguardando Aprovação)' : 'Editar'}
+                                                            >
+                                                                <Edit size={14} />
+                                                            </button>
+                                                        )}
+                                                        {property.status === 'ativo' ? (
+                                                            <button
+                                                                onClick={() => handleInactivateClick(property)}
+                                                                className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-yellow-400 transition-all"
+                                                                title="Inativar"
+                                                            >
+                                                                <EyeOff size={14} />
+                                                            </button>
+                                                        ) : (property.status !== 'pendente') && (
+                                                            <button
+                                                                onClick={() => handleChangeStatus(property.id, 'reativar')}
+                                                                className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-emerald-400 transition-all"
+                                                                title="Reativar"
+                                                            >
+                                                                <Eye size={14} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+
+                                                {/* Código */}
+                                                <td className="p-3 text-center">
+                                                    <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded text-xs font-mono">
+                                                        {property.cod_imovel || property.id?.slice(0, 6)}
+                                                    </span>
+                                                </td>
+
+                                                {/* Imóvel (Título + Badges) */}
+                                                <td className="p-3">
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-white font-medium line-clamp-1">
+                                                            {property.titulo || 'Sem título'}
+                                                        </span>
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            {tipoImovel && (
+                                                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-600 text-slate-200 uppercase tracking-wider">
+                                                                    {tipoImovel}
+                                                                </span>
+                                                            )}
+                                                            {operacao && (
+                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${(() => {
+                                                                    const op = operacao.toLowerCase();
+                                                                    if (op.includes('venda') && op.includes('loca')) return 'bg-emerald-600 text-white'; // Green
+                                                                    if (op.includes('venda')) return 'bg-red-500 text-white'; // Red
+                                                                    if (op.includes('temporada')) return 'bg-orange-500 text-white'; // Orange
+                                                                    return 'bg-blue-600 text-white'; // Blue (Locacao default)
+                                                                })()}`}>
+                                                                    {operacao}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                {/* Cidade */}
+                                                <td className="p-3 text-slate-300 font-medium">
+                                                    {property.cidade || '-'}
+                                                </td>
+
+                                                {/* Bairro */}
+                                                <td className="p-3 text-slate-300">
+                                                    {property.bairro || '-'}
+                                                </td>
+
+                                                {/* Quartos */}
+                                                <td className="p-3 text-center text-slate-300">
+                                                    {property.quartos || '-'}
+                                                </td>
+
+                                                {/* Banheiros */}
+                                                <td className="p-3 text-center text-slate-300">
+                                                    {property.banheiros || '-'}
+                                                </td>
+
+                                                {/* Vagas */}
+                                                <td className="p-3 text-center text-slate-300">
+                                                    {property.vagas || '-'}
+                                                </td>
+
+                                                {/* Área */}
+                                                <td className="p-3 text-center text-slate-300">
+                                                    {property.area_priv ? `${property.area_priv}m²` : '-'}
+                                                </td>
+
+                                                {/* Valores */}
+                                                <td className="p-3 text-right">
+                                                    <span className="text-emerald-400 font-bold">
+                                                        {property.valor_venda
+                                                            ? formatCurrency(property.valor_venda)
+                                                            : property.valor_locacao
+                                                                ? formatCurrency(property.valor_locacao)
+                                                                : '-'}
+                                                    </span>
+                                                </td>
+
+                                                {/* Status */}
+                                                <td className="p-3 text-center">
+                                                    {renderStatusBadge(property.status)}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
                         </div>
-                        <button
-                            onClick={() => setSelectedProperties([])}
-                            className="ml-auto text-slate-400 hover:text-white"
-                        >
-                            <X size={18} />
-                        </button>
+                        {filteredProperties.length === 0 && (
+                            <div className="p-12 text-center">
+                                <Home size={48} className="text-slate-600 mx-auto mb-4" />
+                                <h3 className="text-xl font-bold text-white mb-2">Nenhum imóvel encontrado</h3>
+                                <p className="text-slate-400 mb-6">Comece adicionando seu primeiro anúncio!</p>
+                                <button
+                                    onClick={() => navigate('/add-property')}
+                                    className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition-all"
+                                >
+                                    <Plus size={20} />
+                                    Novo Anúncio
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {view === 'map' && (
+                    <div className="bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden h-[450px] md:h-[500px]">
+                        <PropertyMap
+                            properties={filteredProperties}
+                            isDashboard={true}
+                        />
                     </div>
                 )}
             </div>
 
-            {/* Results Count */}
-            <div className="flex items-center justify-between">
-                <p className="text-slate-400">
-                    <span className="text-white font-bold">{filteredProperties.length}</span> imóveis encontrados
-                </p>
-            </div>
-
-            {/* Content */}
-            {view === 'grid' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {filteredProperties.map(property => (
-                        <div key={property.id} className="relative group">
-                            {/* Checkbox */}
-                            <div className="absolute top-3 left-3 z-10">
-                                <button
-                                    onClick={() => toggleSelect(property.id)}
-                                    className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${selectedProperties.includes(property.id)
-                                        ? 'bg-emerald-500 border-emerald-500'
-                                        : 'bg-black/50 border-white/50 hover:border-emerald-400'
-                                        }`}
-                                >
-                                    {selectedProperties.includes(property.id) && <Check size={14} className="text-white" />}
-                                </button>
-                            </div>
-                            {/* Status Badge */}
-                            <div className="absolute top-3 right-3 z-10">
-                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${property.status === 'ativo' ? 'bg-emerald-500/80 text-white' : 'bg-red-500/80 text-white'
-                                    }`}>
-                                    {property.status === 'ativo' ? 'Ativo' : 'Inativo'}
-                                </span>
-                            </div>
-                            <PropertyCard property={property} />
-                            {/* Quick Actions */}
-                            <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                <button
-                                    onClick={() => navigate(`/add-property?edit=${property.id}`)}
-                                    className="p-2 bg-slate-900/90 hover:bg-emerald-600 rounded-lg text-white transition-all"
-                                    title="Editar"
-                                >
-                                    <Edit size={16} />
-                                </button>
-                                <button
-                                    onClick={() => togglePropertyStatus(property.id, property.status)}
-                                    className="p-2 bg-slate-900/90 hover:bg-yellow-600 rounded-lg text-white transition-all"
-                                    title={property.status === 'ativo' ? 'Inativar' : 'Ativar'}
-                                >
-                                    {property.status === 'ativo' ? <EyeOff size={16} /> : <Eye size={16} />}
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {view === 'list' && (
-                <div className="bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="bg-slate-900/80 border-b border-white/10 text-xs uppercase tracking-wider">
-                                    <th className="p-3 text-left w-16">
-                                        <button
-                                            onClick={toggleSelectAll}
-                                            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${selectedProperties.length === filteredProperties.length && filteredProperties.length > 0
-                                                ? 'bg-emerald-500 border-emerald-500'
-                                                : 'border-slate-600 hover:border-emerald-400'
-                                                }`}
-                                        >
-                                            {selectedProperties.length === filteredProperties.length && filteredProperties.length > 0 && (
-                                                <Check size={12} className="text-white" />
-                                            )}
-                                        </button>
-                                    </th>
-                                    <th className="p-3 text-center text-slate-400 font-semibold w-16">AÇÕES</th>
-                                    <th className="p-3 text-center text-slate-400 font-semibold w-16">
-                                        <button onClick={() => handleSort('cod_imovel')} className="flex items-center gap-1 mx-auto text-slate-400 hover:text-white">
-                                            CÓD. {getSortIcon('cod_imovel')}
-                                        </button>
-                                    </th>
-                                    <th className="p-3 text-left text-slate-400 font-semibold min-w-[200px]">
-                                        <button onClick={() => handleSort('titulo')} className="flex items-center gap-1 text-slate-400 hover:text-white">
-                                            IMÓVEL {getSortIcon('titulo')}
-                                        </button>
-                                    </th>
-                                    <th className="p-3 text-left text-slate-400 font-semibold min-w-[140px]">
-                                        <button onClick={() => handleSort('cidade')} className="flex items-center gap-1 text-slate-400 hover:text-white">
-                                            LOCALIZAÇÃO {getSortIcon('cidade')}
-                                        </button>
-                                    </th>
-                                    <th className="p-3 text-center text-slate-400 font-semibold w-10" title="Quartos">
-                                        <Bed size={14} className="mx-auto" />
-                                    </th>
-                                    <th className="p-3 text-center text-slate-400 font-semibold w-10" title="Banheiros">
-                                        <Bath size={14} className="mx-auto" />
-                                    </th>
-                                    <th className="p-3 text-center text-slate-400 font-semibold w-10" title="Vagas">
-                                        <Car size={14} className="mx-auto" />
-                                    </th>
-                                    <th className="p-3 text-center text-slate-400 font-semibold w-16" title="Área">
-                                        <Maximize2 size={14} className="mx-auto" />
-                                    </th>
-                                    <th className="p-3 text-right text-slate-400 font-semibold min-w-[120px]">
-                                        <button onClick={() => handleSort('valor_venda')} className="flex items-center gap-1 ml-auto text-slate-400 hover:text-white">
-                                            VALORES {getSortIcon('valor_venda')}
-                                        </button>
-                                    </th>
-                                    <th className="p-3 text-center text-slate-400 font-semibold w-20">STATUS</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredProperties.map((property) => {
-                                    const tipoImovel = typeof property.tipo_imovel === 'string' ? property.tipo_imovel : property.tipo_imovel?.tipo || '';
-                                    const operacao = property.operacao || '';
-
-                                    return (
-                                        <tr
-                                            key={property.id}
-                                            className={`border-b border-white/5 hover:bg-slate-800/50 transition-colors ${selectedProperties.includes(property.id) ? 'bg-emerald-500/10' : ''}`}
-                                        >
-                                            {/* Checkbox */}
-                                            <td className="p-3">
-                                                <button
-                                                    onClick={() => toggleSelect(property.id)}
-                                                    className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${selectedProperties.includes(property.id)
-                                                        ? 'bg-emerald-500 border-emerald-500'
-                                                        : 'border-slate-600 hover:border-emerald-400'
-                                                        }`}
-                                                >
-                                                    {selectedProperties.includes(property.id) && <Check size={12} className="text-white" />}
-                                                </button>
-                                            </td>
-
-                                            {/* Ações */}
-                                            <td className="p-3">
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <button
-                                                        onClick={() => navigate(`/properties/${property.slug || property.id}`)}
-                                                        className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-400 transition-all"
-                                                        title="Ver Detalhes"
-                                                    >
-                                                        <Eye size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => navigate(`/add-property?edit=${property.id}`)}
-                                                        className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-emerald-400 transition-all"
-                                                        title="Editar"
-                                                    >
-                                                        <Edit size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => togglePropertyStatus(property.id, property.status)}
-                                                        className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-yellow-400 transition-all"
-                                                        title={property.status === 'ativo' ? 'Inativar' : 'Ativar'}
-                                                    >
-                                                        {property.status === 'ativo' ? <EyeOff size={14} /> : <Eye size={14} />}
-                                                    </button>
-                                                </div>
-                                            </td>
-
-                                            {/* Código */}
-                                            <td className="p-3 text-center">
-                                                <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded text-xs font-mono">
-                                                    {property.cod_imovel || property.id?.slice(0, 6)}
-                                                </span>
-                                            </td>
-
-                                            {/* Imóvel (Título + Badges) */}
-                                            <td className="p-3">
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="text-white font-medium line-clamp-1">
-                                                        {property.titulo || 'Sem título'}
-                                                    </span>
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        {tipoImovel && (
-                                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-600 text-slate-200">
-                                                                {tipoImovel}
-                                                            </span>
-                                                        )}
-                                                        {operacao && (
-                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${operacao.toLowerCase().includes('venda')
-                                                                    ? 'bg-emerald-600 text-white'
-                                                                    : 'bg-blue-600 text-white'
-                                                                }`}>
-                                                                {operacao}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </td>
-
-                                            {/* Localização */}
-                                            <td className="p-3">
-                                                <div className="flex flex-col text-slate-300">
-                                                    <span className="font-medium">{property.cidade || '-'}</span>
-                                                    <span className="text-xs text-slate-500">{property.bairro || '-'}</span>
-                                                </div>
-                                            </td>
-
-                                            {/* Quartos */}
-                                            <td className="p-3 text-center text-slate-300">
-                                                {property.quartos || '-'}
-                                            </td>
-
-                                            {/* Banheiros */}
-                                            <td className="p-3 text-center text-slate-300">
-                                                {property.banheiros || '-'}
-                                            </td>
-
-                                            {/* Vagas */}
-                                            <td className="p-3 text-center text-slate-300">
-                                                {property.vagas || '-'}
-                                            </td>
-
-                                            {/* Área */}
-                                            <td className="p-3 text-center text-slate-300">
-                                                {property.area_priv ? `${property.area_priv}m²` : '-'}
-                                            </td>
-
-                                            {/* Valores */}
-                                            <td className="p-3 text-right">
-                                                <span className="text-emerald-400 font-bold">
-                                                    {property.valor_venda
-                                                        ? formatCurrency(property.valor_venda)
-                                                        : property.valor_locacao
-                                                            ? formatCurrency(property.valor_locacao)
-                                                            : '-'}
-                                                </span>
-                                            </td>
-
-                                            {/* Status */}
-                                            <td className="p-3 text-center">
-                                                <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${property.status === 'ativo'
-                                                        ? 'bg-emerald-500/20 text-emerald-400'
-                                                        : 'bg-red-500/20 text-red-400'
-                                                    }`}>
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${property.status === 'ativo' ? 'bg-emerald-400' : 'bg-red-400'}`}></span>
-                                                    {property.status === 'ativo' ? 'Ativo' : 'Inativo'}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                    {filteredProperties.length === 0 && (
-                        <div className="p-12 text-center">
-                            <Home size={48} className="text-slate-600 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-white mb-2">Nenhum imóvel encontrado</h3>
-                            <p className="text-slate-400 mb-6">Comece adicionando seu primeiro anúncio!</p>
-                            <button
-                                onClick={() => navigate('/add-property')}
-                                className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl transition-all"
-                            >
-                                <Plus size={20} />
-                                Novo Anúncio
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {view === 'map' && (
-                <div className="bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden" style={{ height: '600px' }}>
-                    <PropertyMap
-                        properties={filteredProperties}
-                    />
-                </div>
-            )}
+            {/* Inactivation Modal */}
+            <DeactivatePropertyModal
+                isOpen={inactivationModalOpen}
+                onClose={() => {
+                    setInactivationModalOpen(false);
+                    setSelectedPropertyToInactivate(null);
+                }}
+                propertyId={selectedPropertyToInactivate?.id || ''}
+                propertyTitle={selectedPropertyToInactivate?.titulo || ''}
+                onSuccess={() => {
+                    fetchProperties();
+                    setSelectedPropertyToInactivate(null);
+                }}
+            />
         </div>
     );
-};
+}
+
+export default MyPropertiesPage;

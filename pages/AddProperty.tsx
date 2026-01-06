@@ -229,14 +229,13 @@ export default function AddProperty() {
 
     // Fetch existing property data for editing
     useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const id = params.get('id');
+        const id = searchParams.get('id') || searchParams.get('edit');
 
         if (id) {
             setEditingId(id);
             fetchPropertyDetails(id);
         }
-    }, [location.search]);
+    }, [searchParams]);
 
     const fetchPropertyDetails = async (id: string) => {
         setLoading(true);
@@ -461,7 +460,7 @@ export default function AddProperty() {
             // Notifications for admins will be handled via WAHA in the future.
 
             addToast(editingId ? 'Imóvel atualizado com sucesso! Aguardando nova aprovação.' : 'Imóvel cadastrado com sucesso! Aguardando aprovação.', 'success');
-            navigate('/properties');
+            navigate('/myproperties');
         } catch (error: any) {
             console.error('Error submitting property:', error);
             addToast('Erro ao cadastrar imóvel: ' + error.message, 'error');

@@ -13,6 +13,7 @@ import { analyzeNeighborhood } from '../lib/geminiHelper';
 import { useAuth } from '../components/AuthContext'; // Import useAuth
 import { useToast } from '../components/ToastContext'; // Import useToast
 import { getOptimizedImageUrl } from '../lib/imageUtils';
+import { getEmbedUrl } from '../lib/formatters';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -907,7 +908,7 @@ export const PropertyDetails: React.FC = () => {
                                                 </h3>
                                                 <div className="aspect-video rounded-3xl overflow-hidden bg-black">
                                                     <iframe
-                                                        src={property.video.replace('watch?v=', 'embed/').replace('vimeo.com/', 'player.vimeo.com/video/')}
+                                                        src={getEmbedUrl(property.video) || ''}
                                                         title="Vídeo do Imóvel"
                                                         className="w-full h-full"
                                                         allowFullScreen

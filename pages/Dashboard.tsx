@@ -1055,7 +1055,7 @@ export const Dashboard: React.FC = () => {
                                 </h3>
                                 {recentProperties.length > 0 && (
                                     <button
-                                        onClick={() => navigate('/properties')}
+                                        onClick={() => navigate('/myproperties')}
                                         className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
                                     >
                                         Ver todos
@@ -1070,7 +1070,7 @@ export const Dashboard: React.FC = () => {
                                         <div className="flex gap-4 snap-x snap-mandatory w-max">
                                             {recentProperties.map((property) => (
                                                 <div key={property.id} className="w-[85vw] max-w-[320px] snap-center">
-                                                    <PropertyCard property={property} />
+                                                    <PropertyCard property={property} isDashboard={true} />
                                                 </div>
                                             ))}
                                         </div>
@@ -1079,7 +1079,7 @@ export const Dashboard: React.FC = () => {
                                     {/* Desktop: Grid */}
                                     <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-6">
                                         {recentProperties.map((property) => (
-                                            <PropertyCard key={property.id} property={property} />
+                                            <PropertyCard key={property.id} property={property} isDashboard={true} />
                                         ))}
                                     </div>
                                 </>

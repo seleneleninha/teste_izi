@@ -729,6 +729,7 @@ export const PartnerProperties: React.FC = () => {
                             <div className="bg-slate-800 rounded-3xl border border-slate-700 overflow-hidden" style={{ height: '400px' }}>
                                 <PropertyMap
                                     properties={availableProperties as any}
+                                    isDashboard={true}
                                 />
                             </div>
                         )}
@@ -767,6 +768,7 @@ export const PartnerProperties: React.FC = () => {
                                 <div key={property.id} className="flex-none w-80" style={{ scrollSnapAlign: 'start' }}>
                                     <PropertyCard
                                         property={property}
+                                        isDashboard={true}
                                         onToggle={onToggle}
                                         actions={
                                             <div className="flex gap-2">

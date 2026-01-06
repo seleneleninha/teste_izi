@@ -63,7 +63,7 @@ export const PublicHome: React.FC = () => {
     useEffect(() => {
         if (location.loading) return; // Wait for location check to finish
 
-        fetchData(location.city);
+        fetchData(location.city, location.latitude, location.longitude);
         fetchCategoryCounts();
 
         // Dynamically import PropertyMap to avoid SSR issues
@@ -71,7 +71,7 @@ export const PublicHome: React.FC = () => {
             setPropertyMap(() => module.PropertyMap);
         });
 
-    }, [location.loading, location.city]);
+    }, [location.loading, location.city, location.latitude, location.longitude]);
 
     const fetchCategoryCounts = async () => {
         try {
@@ -168,22 +168,38 @@ export const PublicHome: React.FC = () => {
         }
     };
 
-    const fetchData = async (cityFilter?: string | null) => {
+    const fetchData = async (cityFilter?: string | null, lat?: number | null, long?: number | null) => {
         setLoading(true);
         try {
-            // 1. Fetch 16 Recent Properties (Filtered by city if exists)
-            const recentQuery = supabase
-                .from('anuncios')
-                .select(`
-                    id, cod_imovel, titulo, cidade, bairro, valor_venda, valor_locacao, valor_diaria, valor_mensal, 
-                    fotos, quartos, banheiros, vagas, area_priv, latitude, longitude, operacao(tipo), tipo_imovel(tipo)
-                `)
-                .eq('status', 'ativo')
-                .order('created_at', { ascending: false })
-                .limit(16);
+            // Determine search mode: Radius vs City Text
+            // Use Radius if: We have lat/long AND (no filter provided OR filter matches current location city)
+            const shouldUseRadius = lat && long && (!cityFilter || cityFilter === location.city);
 
-            if (cityFilter) {
-                recentQuery.ilike('cidade', cityFilter);
+            // 1. Fetch 16 Recent Properties
+            let recentQuery;
+
+            if (shouldUseRadius) {
+                // Geo-Spatial Search (20km Radius)
+                recentQuery = supabase.rpc('get_nearby_properties', {
+                    lat: lat,
+                    long: long,
+                    radius_km: 20
+                }).select('*, operacao(tipo), tipo_imovel(tipo)');
+            } else {
+                // Standard Text Search
+                recentQuery = supabase
+                    .from('anuncios')
+                    .select(`
+                        id, cod_imovel, titulo, cidade, bairro, valor_venda, valor_locacao, valor_diaria, valor_mensal, 
+                        fotos, quartos, banheiros, vagas, area_priv, latitude, longitude, operacao(tipo), tipo_imovel(tipo)
+                    `)
+                    .eq('status', 'ativo')
+                    .order('created_at', { ascending: false })
+                    .limit(16);
+
+                if (cityFilter) {
+                    recentQuery.ilike('cidade', cityFilter);
+                }
             }
 
             // 2. Fetch ALL Map Markers (Global - no limit, no city filter to show platform scale)
@@ -208,7 +224,13 @@ export const PublicHome: React.FC = () => {
                     tipo_imovel: (p.tipo_imovel as any)?.tipo || ''
                 }));
                 setRecentProperties(transformed as any);
-                setActiveCity(cityFilter || null);
+
+                // Set active city display
+                if (shouldUseRadius && location.city) {
+                    setActiveCity(`${location.city} e Região`);
+                } else {
+                    setActiveCity(cityFilter || null);
+                }
 
                 // If not in city mode, use these as fallback for city/neighborhood lists
                 if (!cityFilter) {
