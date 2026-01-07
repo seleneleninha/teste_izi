@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Building2, Settings, LogOut, Users, X, Handshake, CreditCard, Ticket, DollarSign, CheckCircle, Search, Heart, UserCircle, Home, Globe, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Building2, Settings, LogOut, Users, X, Handshake, CreditCard, Ticket, DollarSign, CheckCircle, Search, Heart, UserCircle, Home, Globe, BarChart3, Lock } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { getVerificationConfig } from '../lib/verificationHelper';
@@ -79,12 +79,14 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
     { icon: DollarSign, label: 'Financeiro', path: '/admin/financial' },
     { icon: BarChart3, label: 'Estudo de Mercado', path: '/admin/study' },
     { icon: Settings, label: 'Configurações', path: '/settings' },
+    { icon: Lock, label: 'Segurança', path: '/security' },
     // Mercado removed - causes freezing issues in admin context
   ] : isClient ? [
     { icon: Home, label: 'Início', path: '/dashboard' },
     { icon: Search, label: 'Buscar Imóveis', path: '/properties' },
     { icon: Heart, label: 'Favoritos', path: '/favorites' },
     { icon: UserCircle, label: 'Meu Perfil', path: '/settings' },
+    { icon: Lock, label: 'Segurança', path: '/security' },
   ] : [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Building2, label: 'Meus Imóveis', path: '/myproperties' },
@@ -93,6 +95,7 @@ export const Sidebar: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
     { icon: CheckCircle, label: 'Comparativo', path: '/favorites' },
     { icon: Globe, label: 'Mercado', path: '/market' }, // New Link
     { icon: Settings, label: 'Configurações', path: '/settings' },
+    { icon: Lock, label: 'Segurança', path: '/security' },
 
 
   ];

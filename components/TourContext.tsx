@@ -10,6 +10,11 @@ interface TourContextType {
     skipTour: () => void;
     hasPremiumPlan: boolean;
     userSlug: string;
+    currentStep: number;
+    setCurrentStep: (step: number) => void;
+    showMobileWelcome: boolean;
+    closeMobileWelcome: () => void;
+    userName: string;
 }
 
 const TourContext = createContext<TourContextType | undefined>(undefined);
@@ -23,9 +28,12 @@ const PREMIUM_PLAN_IDS = [
 export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const [showTour, setShowTour] = useState(false);
+    const [showMobileWelcome, setShowMobileWelcome] = useState(false);
     const [onboardingCompleted, setOnboardingCompleted] = useState(true);
     const [userPlanoId, setUserPlanoId] = useState<string | null>(null);
     const [userSlug, setUserSlug] = useState('');
+    const [userName, setUserName] = useState('');
+    const [currentStep, setCurrentStep] = useState(0);
 
     const hasPremiumPlan = userPlanoId ? PREMIUM_PLAN_IDS.includes(userPlanoId) : false;
 
@@ -45,6 +53,12 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setOnboardingCompleted(data.onboarding_completed || false);
                     setUserPlanoId(data.plano_id || null);
                     setUserSlug(data.slug || '');
+                    setUserName(data.nome || '');
+
+                    // Show welcome modal for first-time users (mobile AND desktop)
+                    if (!data.onboarding_completed) {
+                        setShowMobileWelcome(true);
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching onboarding status:', error);
@@ -55,6 +69,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [user]);
 
     const startTour = useCallback(() => {
+        setCurrentStep(0); // Reset to first step
         setShowTour(true);
     }, []);
 
@@ -98,6 +113,26 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [user]);
 
+    const closeMobileWelcome = useCallback(async () => {
+        setShowMobileWelcome(false);
+
+        if (!user) return;
+
+        try {
+            await supabase
+                .from('perfis')
+                .update({
+                    onboarding_completed: true,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id);
+
+            setOnboardingCompleted(true);
+        } catch (error) {
+            console.error('Error closing mobile welcome:', error);
+        }
+    }, [user]);
+
     return (
         <TourContext.Provider value={{
             showTour,
@@ -106,7 +141,12 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
             completeTour,
             skipTour,
             hasPremiumPlan,
-            userSlug
+            userSlug,
+            currentStep,
+            setCurrentStep,
+            showMobileWelcome,
+            closeMobileWelcome,
+            userName
         }}>
             {children}
         </TourContext.Provider>

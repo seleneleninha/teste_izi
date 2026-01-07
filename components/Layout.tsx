@@ -11,6 +11,9 @@ import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { MobileBottomNav } from './MobileBottomNav';
 import { useHeader } from './HeaderContext';
+import { useTour } from './TourContext';
+import { SpotlightTour, getOnboardingSteps } from './SpotlightTour';
+import { MobileWelcomeModal } from './MobileWelcomeModal';
 
 export const DashboardLayout: React.FC = () => {
     const { theme } = useTheme();
@@ -28,6 +31,9 @@ export const DashboardLayout: React.FC = () => {
     }, [searchParams]);
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Tour context for persistent tour state
+    const { showTour, completeTour, skipTour, hasPremiumPlan, userSlug, currentStep, setCurrentStep, startTour, showMobileWelcome, closeMobileWelcome, userName } = useTour();
 
     useEffect(() => {
         if (user) {
@@ -89,11 +95,7 @@ export const DashboardLayout: React.FC = () => {
                         {/* Tour Button */}
                         <button
                             onClick={() => {
-                                // Navigate to dashboard and trigger tour
-                                if (typeof window !== 'undefined') {
-                                    // Dispatch custom event to trigger tour
-                                    window.dispatchEvent(new CustomEvent('startOnboardingTour'));
-                                }
+                                startTour();
                             }}
                             className="p-2 rounded-full bg-slate-800 text-gray-300 hover:bg-slate-700 shadow-sm transition-colors relative group"
                             title="Tour Guiado"
@@ -122,6 +124,25 @@ export const DashboardLayout: React.FC = () => {
                 {/* Mobile Bottom Navigation */}
                 <MobileBottomNav isClient={role === 'Cliente'} isAdmin={role === 'Admin' || role === 'admin'} />
             </div>
+
+            {/* Spotlight Tour - Rendered at Layout level for persistence across routes */}
+            <SpotlightTour
+                steps={getOnboardingSteps(hasPremiumPlan)}
+                isOpen={showTour}
+                onComplete={completeTour}
+                onSkip={skipTour}
+                brokerSlug={userSlug}
+                hasPremiumPlan={hasPremiumPlan}
+                currentStep={currentStep}
+                onStepChange={setCurrentStep}
+            />
+
+            {/* Mobile Welcome Modal - First-time mobile users */}
+            <MobileWelcomeModal
+                isOpen={showMobileWelcome}
+                onClose={closeMobileWelcome}
+                userName={userName}
+            />
         </div>
     );
 };

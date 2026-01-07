@@ -22,6 +22,7 @@ const AdminFinancial = lazy(() => import('./pages/admin/AdminFinancial').then(mo
 const AdminTrialSettings = lazy(() => import('./pages/admin/AdminTrialSettings').then(module => ({ default: module.AdminTrialSettings })));
 const Login = lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
 const Settings = lazy(() => import('./pages/Settings').then(module => ({ default: module.Settings })));
+const Security = lazy(() => import('./pages/Security').then(module => ({ default: module.Security })));
 const AgentProfile = lazy(() => import('./pages/AgentProfile').then(module => ({ default: module.AgentProfile })));
 const PropertyComparison = lazy(() => import('./pages/PropertyComparison').then(module => ({ default: module.PropertyComparison })));
 const Leads = lazy(() => import('./pages/Leads').then(module => ({ default: module.Leads })));
@@ -137,6 +138,7 @@ const App: React.FC = () => {
                               <Route path="/add-property" element={<AddProperty />} />
                               <Route path="/partner-properties" element={<PartnerProperties />} />
                               <Route path="/settings" element={<Settings />} />
+                              <Route path="/security" element={<Security />} />
                               <Route path="/compare" element={<PropertyComparison />} />
                               <Route path="/leads" element={<Leads />} />
                               <Route path="/favorites" element={<Favorites />} />

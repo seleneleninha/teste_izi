@@ -46,9 +46,9 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
 
     return (
         <>
-            <footer className="bg-midnight-950 text-white py-20 border-t border-white/10">
-                <div className="container mx-auto px-4">
-                    <div className="grid md:grid-cols-4 gap-12 mb-16">
+            <footer className="bg-gradient-to-b from-midnight-950 to-midnight-900 text-white py-16 md:py-20 border-t border-emerald-500/20">
+                <div className="container mx-auto px-6 lg:px-8">
+                    <div className="grid md:grid-cols-4 gap-10 lg:gap-14 mb-12">
                         <div className="col-span-1 md:col-span-1">
 
                             <img
@@ -66,12 +66,12 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
 
                             <div>
                                 {isBrokerPage ? (
-                                    <p className="text-gray-400 text-sm mb-6">
-                                        Atendimento personalizado para encontrar o imóvel dos seus sonhos. <strong className="text-emerald-400">Vamos agendar uma visita?</strong>
+                                    <p className="text-slate-300 text-sm mb-6 leading-relaxed">
+                                        Atendimento personalizado para encontrar o imóvel dos seus sonhos. <strong className="text-emerald-400 font-semibold">Vamos agendar uma visita?</strong>
                                     </p>
                                 ) : (
-                                    <p className="text-gray-400 text-sm mb-6">
-                                        A Plataforma Imobiliária que chegou para facilitar sua busca pelo imóvel ideal. <br /><strong className="text-emerald-400">Fale com nossos Corretores Parceiros!</strong>
+                                    <p className="text-slate-300 text-sm mb-6 leading-relaxed">
+                                        A Plataforma Imobiliária que chegou para facilitar sua busca pelo imóvel ideal. <br /><strong className="text-emerald-400 font-semibold">Fale com nossos Corretores Parceiros!</strong>
                                     </p>
                                 )}
                             </div>
@@ -122,7 +122,7 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
 
                         {/* Column 2: Broker Links or Platform Explore */}
                         <div>
-                            <h3 className="text-lg font-bold mb-6 text-gray-200">{isBrokerPage ? 'Navegação' : 'Explorar'}</h3>
+                            <h3 className="text-lg font-bold mb-5 text-white tracking-wide">{isBrokerPage ? 'Navegação' : 'Explorar'}</h3>
                             <ul className="space-y-3 text-gray-400 text-sm">
                                 {isBrokerPage && brokerSlug ? (
                                     <>
@@ -143,7 +143,7 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
 
                         {/* Column 3: Contact or Institutional */}
                         <div>
-                            <h3 className="text-lg font-bold mb-6 text-gray-200">{isBrokerPage ? 'Fale Comigo' : 'Institucional'}</h3>
+                            <h3 className="text-lg font-bold mb-5 text-white tracking-wide">{isBrokerPage ? 'Fale Comigo' : 'Institucional'}</h3>
                             <ul className="space-y-3 text-gray-400 text-sm">
                                 {isBrokerPage && partner ? (
                                     <>
@@ -178,10 +178,10 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
                         </div>
 
                         {/* Column 4: CTA or Location */}
-                        <div className={isBrokerPage ? "" : "bg-white/5 p-6 rounded-3xl border border-white/10"}>
+                        <div className={isBrokerPage ? "" : "bg-gradient-to-br from-white/10 to-white/5 p-6 rounded-2xl border border-emerald-500/20 shadow-lg shadow-emerald-500/5"}>
                             {isBrokerPage ? (
                                 <div>
-                                    <h3 className="text-lg font-bold mb-6 text-gray-200">Localização</h3>
+                                    <h3 className="text-lg font-bold mb-5 text-white tracking-wide">Localização</h3>
                                     {partner?.endereço ? (
                                         <div className="text-gray-400 text-sm space-y-1">
                                             <p>{partner.endereço}, {partner.numero}</p>
@@ -196,40 +196,40 @@ export const Footer: React.FC<FooterProps> = ({ partner, isBrokerPage: propIsBro
                                 </div>
                             ) : (
                                 <>
-                                    <h3 className="text-lg font-bold mb-2 text-white">Ainda com dúvidas?</h3>
-                                    <p className="text-gray-400 text-sm mb-4">Teste nossa Plataforma GRATUITAMENTE por 14 dias. Sem cartão de crédito e sem compromisso. Cancele quando quiser.</p>
+                                    <h3 className="text-lg font-bold mb-3 text-white">CORRETOR(A)... ainda com dúvidas?</h3>
+                                    <p className="text-slate-300 text-sm mb-5 leading-relaxed">Teste nossa Plataforma <span className="font-bold text-emerald-400">GRATUITAMENTE POR 14 DIAS</span>. Sem cartão de crédito. Cancele quando quiser.</p>
                                     <button
-                                        onClick={() => window.open('http://localhost:3000/partner', '_blank')}
-                                        className="w-full rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 -lg transition-all text-sm shadow-lg shadow-emerald-500/20"
+                                        onClick={() => window.open('/partner', '_blank')}
+                                        className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold py-3.5 transition-all text-sm shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98]"
                                     >
-                                        QUERO TESTAR!
+                                        VAMOS NESSA!
                                     </button>
                                 </>
                             )}
                         </div>
                     </div>
 
-                    <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-md text-gray-600">
+                    <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-400">
                         <div className="text-center">
-                            <p>© 2025 <a href="/" className="text-emerald-500 hover:text-emerald-400 font-bold transition-colors"> iziBrokerz</a>. Todos os direitos reservados.</p>
+                            <p>© 2026 <a href="/" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">iziBrokerz</a>. Todos os direitos reservados.</p>
                         </div>
 
-                        <div className="flex gap-6 mt-4 md:mt-0">
+                        <div className="flex gap-4 md:gap-6 mt-4 md:mt-0">
                             <button
                                 onClick={() => { setLegalDocType('terms'); setLegalModalOpen(true); }}
-                                className="hover:text-gray-400 transition-colors cursor-pointer"
+                                className="hover:text-emerald-400 transition-colors cursor-pointer text-slate-400"
                             >
                                 Termos de Uso
                             </button>
                             <button
                                 onClick={() => { setLegalDocType('privacy'); setLegalModalOpen(true); }}
-                                className="hover:text-gray-400 transition-colors cursor-pointer"
+                                className="hover:text-emerald-400 transition-colors cursor-pointer text-slate-400"
                             >
                                 Privacidade
                             </button>
                             <button
                                 onClick={() => { setLegalDocType('lgpd'); setLegalModalOpen(true); }}
-                                className="hover:text-gray-400 transition-colors cursor-pointer"
+                                className="hover:text-emerald-400 transition-colors cursor-pointer text-slate-400"
                             >
                                 LGPD
                             </button>

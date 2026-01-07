@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Globe, Heart, Users, LogOut, ShoppingCart, User, CheckSquare, CreditCard, Clock, Percent, DollarSign, LayoutDashboard, Settings, CheckCircle } from 'lucide-react';
+import { X, Globe, Heart, Users, LogOut, ShoppingCart, User, CheckSquare, CreditCard, Clock, Percent, DollarSign, LayoutDashboard, Settings, CheckCircle, Lock } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
 interface MoreMenuSheetProps {
@@ -34,11 +34,13 @@ export const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, i
             { icon: Clock, label: 'Trial', path: '/admin/trial-settings', color: 'amber', onClick: null },
             { icon: Percent, label: 'Cupons', path: '/admin/coupons', color: 'emerald', onClick: null },
             { icon: Settings, label: 'Configs', path: '/settings', color: 'slate', onClick: null },
+            { icon: Lock, label: 'Segurança', path: '/security', color: 'amber', onClick: null },
             { icon: LogOut, label: 'Sair', path: null, color: 'red', onClick: handleLogout },
         ];
     } else if (isClient) {
         menuItems = [
             { icon: User, label: 'Meu Perfil', path: '/settings', color: 'blue', onClick: null },
+            { icon: Lock, label: 'Segurança', path: '/security', color: 'amber', onClick: null },
             { icon: LogOut, label: 'Sair', path: null, color: 'red', onClick: handleLogout },
         ];
     } else {
@@ -46,7 +48,8 @@ export const MoreMenuSheet: React.FC<MoreMenuSheetProps> = ({ isOpen, onClose, i
         menuItems = [
             { icon: Globe, label: 'Mercado', path: '/market', color: 'blue', onClick: null },
             { icon: CheckCircle, label: 'Comparativo', path: '/favorites', color: 'emerald', onClick: null },
-            { icon: Settings, label: 'Ajustes', path: '/settings', color: 'slate', onClick: null },
+            { icon: Settings, label: 'Configs', path: '/settings', color: 'slate', onClick: null },
+            { icon: Lock, label: 'Segurança', path: '/security', color: 'amber', onClick: null },
             { icon: LogOut, label: 'Sair', path: null, color: 'red', onClick: handleLogout },
         ];
     }

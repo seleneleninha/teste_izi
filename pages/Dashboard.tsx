@@ -8,11 +8,9 @@ import { useHeader } from '../components/HeaderContext';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
-import { OnboardingTour } from '../components/OnboardingTour';
-import { SpotlightTour, getOnboardingSteps } from '../components/SpotlightTour';
 import { TourPrompt } from '../components/TourPrompt';
-import { ONBOARDING_TOUR_STEPS } from '../config/tourSteps';
 import { ClientDashboardView } from '../components/ClientDashboardView';
+import { useTour } from '../components/TourContext';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 export const Dashboard: React.FC = () => {
@@ -33,6 +31,8 @@ export const Dashboard: React.FC = () => {
         propertiesReprovados: 0,
         vendasFechadas: 0,
         locacoesFechadas: 0,
+        totalVendasValor: 0,
+        totalLocacoesValor: 0,
         leads: 0,
         messages: 0,
         acceptedPartnerships: 0,
@@ -48,7 +48,13 @@ export const Dashboard: React.FC = () => {
         estimatedMRR: 0,
         conversionRate: 0,
         activeProperties: 0,
-        staleProperties: 0
+        staleProperties: 0,
+        vendasPlataforma: 0,
+        totalVendasPlataforma: 0,
+        locacoesPlataforma: 0,
+        totalLocacoesPlataforma: 0,
+        imoveisVenda: 0,
+        imoveisLocacao: 0
     });
 
     const [growthData, setGrowthData] = useState<any[]>([]);
@@ -56,30 +62,12 @@ export const Dashboard: React.FC = () => {
     const [topBrokers, setTopBrokers] = useState<any[]>([]);
 
     const [recentProperties, setRecentProperties] = useState<any[]>([]);
-    // Onboarding Tour State
-    const [showTour, setShowTour] = useState(false);
+    // Tour context for TourPrompt integration
+    const { onboardingCompleted, startTour } = useTour();
+
+    // Local state for TourPrompt visibility
     const [showTourPrompt, setShowTourPrompt] = useState(false);
     const [tourDismissCount, setTourDismissCount] = useState(0);
-    const [onboardingCompleted, setOnboardingCompleted] = useState(false);
-    const [userPlanoId, setUserPlanoId] = useState<string | null>(null);
-
-    // Premium plan IDs for tour step 9
-    const PREMIUM_PLAN_IDS = [
-        '55de4ee5-c2f1-4f9d-b466-7e08138854f0', // Avançado
-        'edf90163-d554-4f8e-bfe9-7d9e98fc4450'  // Profissional
-    ];
-    const hasPremiumPlan = userPlanoId && PREMIUM_PLAN_IDS.includes(userPlanoId);
-
-    // Listen for tour trigger from header button
-    useEffect(() => {
-        const handleStartTour = () => {
-            setShowTour(true);
-            setShowTourPrompt(false);
-        };
-
-        window.addEventListener('startOnboardingTour', handleStartTour);
-        return () => window.removeEventListener('startOnboardingTour', handleStartTour);
-    }, []);
 
     // Control header tour indicator visibility
     useEffect(() => {
@@ -112,7 +100,7 @@ export const Dashboard: React.FC = () => {
 
                 // 1. Vital Metrics
                 const { count: userCount, data: allUsers } = await supabase.from('perfis').select('*', { count: 'exact' });
-                const { count: propCount, data: allProps } = await supabase.from('anuncios').select('*', { count: 'exact' });
+                const { count: propCount, data: allProps } = await supabase.from('anuncios').select('*, operacao(tipo)', { count: 'exact' });
                 const { count: partCount } = await supabase.from('parcerias').select('*', { count: 'exact', head: true });
 
                 // Calculate Active vs Stale Properties (Simulated stale for now)
@@ -130,6 +118,49 @@ export const Dashboard: React.FC = () => {
                 const activeBrokers = userIdsWithProps.size;
                 const convRate = userCount ? ((activeBrokers / userCount) * 100).toFixed(1) : '0';
 
+                // Platform-wide Vendas and Locações Faturadas
+                const { data: vendasPlataformaData, count: vendasPlataformaCount } = await supabase
+                    .from('anuncios')
+                    .select('valor_venda', { count: 'exact' })
+                    .eq('status', 'venda_faturada');
+
+                const { data: locacoesPlataformaData, count: locacoesPlataformaCount } = await supabase
+                    .from('anuncios')
+                    .select('valor_locacao', { count: 'exact' })
+                    .eq('status', 'locacao_faturada');
+
+                const totalVendasPlataforma = vendasPlataformaData?.reduce((sum, item) => sum + (item.valor_venda || 0), 0) || 0;
+                const totalLocacoesPlataforma = locacoesPlataformaData?.reduce((sum, item) => sum + (item.valor_locacao || 0), 0) || 0;
+
+                // Count active properties by operation type using operacao_id UUIDs
+                // IDs from operacao table:
+                // venda: c49610e3-d467-479f-b861-9328e81...
+                // venda/locacao: 1d7d86f5-646b-46bc-be97-c8f61170f891
+                // locacao: b45542f7-8ce8-4e87-aaf1-272491fbc974
+                // temporada: de11f481-1e1b-4d11-9b4d-0d9443d7654c
+
+                const VENDA_ID = 'c49610e3-d467-479f-b861-9328e8113126';
+                const VENDA_LOCACAO_ID = '1d7d86f5-646b-46bc-be97-c8f61170f891';
+                const LOCACAO_ID = 'b45542f7-8ce8-4e87-aaf1-272491fbc974';
+                const TEMPORADA_ID = 'de11f481-1e1b-4d11-9b4d-0d9443d7654c';
+
+                // Imóveis à Venda: operacao = venda OR venda/locacao (status = ativo)
+                const { count: imoveisVendaCount } = await supabase
+                    .from('anuncios')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'ativo')
+                    .in('operacao', [VENDA_ID, VENDA_LOCACAO_ID]);
+
+                // Imóveis para Locação: operacao = locacao OR venda/locacao OR temporada (status = ativo)
+                const { count: imoveisLocacaoCount } = await supabase
+                    .from('anuncios')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'ativo')
+                    .in('operacao', [LOCACAO_ID, VENDA_LOCACAO_ID, TEMPORADA_ID]);
+
+                const imoveisVenda = imoveisVendaCount || 0;
+                const imoveisLocacao = imoveisLocacaoCount || 0;
+
                 setAdminStats({
                     totalUsers: userCount || 0,
                     totalProperties: propCount || 0,
@@ -138,7 +169,13 @@ export const Dashboard: React.FC = () => {
                     estimatedMRR: mrrEstimate,
                     conversionRate: Number(convRate),
                     activeProperties: activeProps,
-                    staleProperties: staleProps
+                    staleProperties: staleProps,
+                    vendasPlataforma: vendasPlataformaCount || 0,
+                    totalVendasPlataforma,
+                    locacoesPlataforma: locacoesPlataformaCount || 0,
+                    totalLocacoesPlataforma,
+                    imoveisVenda,
+                    imoveisLocacao
                 });
 
                 // 2. Growth Data (Last 6 Months)
@@ -226,18 +263,22 @@ export const Dashboard: React.FC = () => {
                 .eq('user_id', user.id)
                 .eq('status', 'reprovado');
 
-            // Vendas e Locações Fechadas
-            const { count: vendasCount } = await supabase
+            // Vendas e Locações Fechadas - Buscar também os valores
+            const { data: vendasData, count: vendasCount } = await supabase
                 .from('anuncios')
-                .select('*', { count: 'exact', head: true })
+                .select('valor_venda', { count: 'exact' })
                 .eq('user_id', user.id)
                 .eq('status', 'venda_faturada');
 
-            const { count: locacoesCount } = await supabase
+            const { data: locacoesData, count: locacoesCount } = await supabase
                 .from('anuncios')
-                .select('*', { count: 'exact', head: true })
+                .select('valor_locacao', { count: 'exact' })
                 .eq('user_id', user.id)
                 .eq('status', 'locacao_faturada');
+
+            // Somar valores de vendas e locações
+            const totalVendasValor = vendasData?.reduce((sum, item) => sum + (item.valor_venda || 0), 0) || 0;
+            const totalLocacoesValor = locacoesData?.reduce((sum, item) => sum + (item.valor_locacao || 0), 0) || 0;
 
             const { count: leadCount } = await supabase
                 .from('leads')
@@ -287,6 +328,8 @@ export const Dashboard: React.FC = () => {
                 propertiesReprovados: reprovadosCount || 0,
                 vendasFechadas: vendasCount || 0,
                 locacoesFechadas: locacoesCount || 0,
+                totalVendasValor,
+                totalLocacoesValor,
                 leads: leadCount || 0,
                 messages: msgCount || 0,
                 acceptedPartnerships: acceptedCount || 0,
@@ -321,7 +364,6 @@ export const Dashboard: React.FC = () => {
             if (profile) {
                 setUserName(profile.nome || user?.user_metadata?.name || 'Corretor');
                 setUserSlug(profile.slug || '');
-                setUserPlanoId(profile.plano_id || null);
                 setOnboardingCompleted(profile.onboarding_completed || false);
                 setTourDismissCount(profile.onboarding_dismissed_count || 0);
 
@@ -350,44 +392,7 @@ export const Dashboard: React.FC = () => {
     // Tour Control Functions
     const handleStartTour = () => {
         setShowTourPrompt(false);
-        setShowTour(true);
-    };
-
-    const handleCompleteTour = async () => {
-        setShowTour(false);
-
-        try {
-            await supabase
-                .from('perfis')
-                .update({
-                    onboarding_completed: true,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', user?.id);
-
-            setOnboardingCompleted(true);
-            addToast('Tour concluído! Bem-vindo(a) à iziBrokerz! 🎉', 'success');
-        } catch (error) {
-            console.error('Error completing tour:', error);
-        }
-    };
-
-    const handleSkipTour = async () => {
-        setShowTour(false);
-
-        try {
-            await supabase
-                .from('perfis')
-                .update({
-                    onboarding_completed: true,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', user?.id);
-
-            setOnboardingCompleted(true);
-        } catch (error) {
-            console.error('Error skipping tour:', error);
-        }
+        startTour(); // Use context function
     };
 
     const handleDismissTourPrompt = async () => {
@@ -539,6 +544,92 @@ export const Dashboard: React.FC = () => {
                                 </div>
                                 <div className="mt-2 text-xs text-slate-400">
                                     Parcerias firmadas na plataforma
+                                </div>
+                            </div>
+
+                            {/* Platform Vendas Realizadas */}
+                            <div className="relative overflow-hidden bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 group hover:border-green-500/50 transition-colors">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <DollarSign size={80} className="text-green-500" />
+                                </div>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="p-3 bg-green-500/20 rounded-2xl">
+                                        <DollarSign className="text-green-400" size={24} />
+                                    </div>
+                                    <span className="text-slate-400 font-medium text-sm">Vendas Plataforma</span>
+                                </div>
+                                <div className="text-3xl font-black text-white group-hover:text-green-400 transition-colors">
+                                    {adminStats.vendasPlataforma}
+                                </div>
+                                {adminStats.totalVendasPlataforma > 0 && (
+                                    <div className="text-lg font-bold text-green-400 mt-1">
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(adminStats.totalVendasPlataforma)}
+                                    </div>
+                                )}
+                                <div className="mt-2 text-xs font-bold text-slate-400">
+                                    VENDAS REALIZADAS
+                                </div>
+                            </div>
+
+                            {/* Platform Locações Finalizadas */}
+                            <div className="relative overflow-hidden bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 group hover:border-cyan-500/50 transition-colors">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <Key size={80} className="text-cyan-500" />
+                                </div>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="p-3 bg-cyan-500/20 rounded-2xl">
+                                        <Key className="text-cyan-400" size={24} />
+                                    </div>
+                                    <span className="text-slate-400 font-medium text-sm">Locações Plataforma</span>
+                                </div>
+                                <div className="text-3xl font-black text-white group-hover:text-cyan-400 transition-colors">
+                                    {adminStats.locacoesPlataforma}
+                                </div>
+                                {adminStats.totalLocacoesPlataforma > 0 && (
+                                    <div className="text-lg font-bold text-cyan-400 mt-1">
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(adminStats.totalLocacoesPlataforma)}
+                                    </div>
+                                )}
+                                <div className="mt-2 text-xs font-bold text-slate-400">
+                                    LOCAÇÕES FINALIZADAS
+                                </div>
+                            </div>
+
+                            {/* Imóveis à Venda */}
+                            <div className="relative overflow-hidden bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 group hover:border-orange-500/50 transition-colors">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <Home size={80} className="text-orange-500" />
+                                </div>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="p-3 bg-orange-500/20 rounded-2xl">
+                                        <Home className="text-orange-400" size={24} />
+                                    </div>
+                                    <span className="text-slate-400 font-medium text-sm">Imóveis à Venda</span>
+                                </div>
+                                <div className="text-3xl font-black text-white group-hover:text-orange-400 transition-colors">
+                                    {adminStats.imoveisVenda}
+                                </div>
+                                <div className="mt-2 text-xs text-slate-400">
+                                    Anúncios com operação venda
+                                </div>
+                            </div>
+
+                            {/* Imóveis para Locação */}
+                            <div className="relative overflow-hidden bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-700 group hover:border-teal-500/50 transition-colors">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <Building2 size={80} className="text-teal-500" />
+                                </div>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="p-3 bg-teal-500/20 rounded-2xl">
+                                        <Building2 className="text-teal-400" size={24} />
+                                    </div>
+                                    <span className="text-slate-400 font-medium text-sm">Imóveis para Locação</span>
+                                </div>
+                                <div className="text-3xl font-black text-white group-hover:text-teal-400 transition-colors">
+                                    {adminStats.imoveisLocacao}
+                                </div>
+                                <div className="mt-2 text-xs text-slate-400">
+                                    Anúncios com operação locação
                                 </div>
                             </div>
                         </div>
@@ -1016,7 +1107,12 @@ export const Dashboard: React.FC = () => {
                                     <div className="text-3xl font-black text-white group-hover:text-green-400 transition-colors">
                                         {stats.vendasFechadas}
                                     </div>
-                                    <div className="mt-2 text-sm font-bold text-white">
+                                    {stats.totalVendasValor > 0 && (
+                                        <div className="text-lg font-bold text-green-400 mt-1">
+                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(stats.totalVendasValor)}
+                                        </div>
+                                    )}
+                                    <div className="mt-2 text-xs font-bold text-slate-400">
                                         VENDAS REALIZADAS
                                     </div>
                                 </div>
@@ -1038,7 +1134,12 @@ export const Dashboard: React.FC = () => {
                                     <div className="text-3xl font-black text-white group-hover:text-cyan-400 transition-colors">
                                         {stats.locacoesFechadas}
                                     </div>
-                                    <div className="mt-2 text-sm font-bold text-white">
+                                    {stats.totalLocacoesValor > 0 && (
+                                        <div className="text-lg font-bold text-cyan-400 mt-1">
+                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(stats.totalLocacoesValor)}
+                                        </div>
+                                    )}
+                                    <div className="mt-2 text-xs font-bold text-slate-400">
                                         LOCAÇÕES FINALIZADAS
                                     </div>
                                 </div>
@@ -1103,15 +1204,7 @@ export const Dashboard: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Onboarding Tour - Spotlight Style */}
-                        <SpotlightTour
-                            steps={getOnboardingSteps(hasPremiumPlan)}
-                            isOpen={showTour}
-                            onComplete={handleCompleteTour}
-                            onSkip={handleSkipTour}
-                            brokerSlug={userSlug}
-                            hasPremiumPlan={hasPremiumPlan}
-                        />
+                        {/* SpotlightTour moved to Layout.tsx for route persistence */}
 
                         {/* Tour Prompt */}
                         {showTourPrompt && (

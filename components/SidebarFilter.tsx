@@ -14,6 +14,7 @@ export interface FilterState {
     maxArea: number | '';
     cities: string[];
     neighborhoods: string[];
+    searchQuery: string; // Text search for city, neighborhood, or title
 }
 
 interface SidebarFilterProps {
@@ -363,7 +364,7 @@ export const SidebarFilter: React.FC<SidebarFilterProps> = ({
                 <button
                     onClick={() => setFilters({
                         operations: [], types: [], bedrooms: null, bathrooms: null, parking: null,
-                        minPrice: '', maxPrice: '', minArea: '', maxArea: '', cities: [], neighborhoods: []
+                        minPrice: '', maxPrice: '', minArea: '', maxArea: '', cities: [], neighborhoods: [], searchQuery: ''
                     })}
                     className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl border border-white/10 transition-colors"
                 >

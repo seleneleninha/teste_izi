@@ -245,15 +245,22 @@ export const PartnerPage: React.FC = () => {
             </section>
 
             {/* Features Section */}
-            <section className="py-20 bg-slate-900">
-                <div className="container mx-auto px-4">
+            <section className="py-20 bg-gradient-to-b from-slate-900 via-slate-900 to-midnight-950 relative overflow-hidden">
+                {/* Decorative background elements */}
+                <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-20 right-10 w-72 h-72 bg-emerald-500/5 rounded-full blur-3xl"></div>
+
+                <div className="container mx-auto px-4 relative z-10">
                     <div className="text-center mb-16">
+                        <span className="inline-block px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-semibold mb-4 border border-emerald-500/20">
+                            Recursos Exclusivos
+                        </span>
                         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Por que escolher a <span className="text-red-500 font-bold">izi</span><span className="text-white font-bold">Brokerz.</span>?</h2>
-                        <p className="text-gray-400 text-xl max-w-2xl mx-auto">
-                            Nossa Plataforma foi desenvolvida de <span className="text-yellow-500 font-bold"> CORRETORES PARA CORRETORES!</span> Focando no que realmente importa:
-                            <p className="text-emerald-500 text-xl font-bold max-w-2xl mx-auto">
-                                FECHAR + NEGÓCIOS E COLOCAR + DINHEIRO NO SEU BOLSO!!!
-                            </p>
+                        <p className="text-slate-300 text-xl max-w-2xl mx-auto">
+                            Nossa Plataforma foi desenvolvida de <span className="text-yellow-400 font-bold">CORRETORES PARA CORRETORES!</span> Focando no que realmente importa:
+                        </p>
+                        <p className="text-emerald-400 text-xl font-bold max-w-2xl mx-auto mt-2">
+                            FECHAR + NEGÓCIOS E COLOCAR + DINHEIRO NO SEU BOLSO!!!
                         </p>
                     </div>
 
@@ -290,12 +297,12 @@ export const PartnerPage: React.FC = () => {
                                 description: "Você poderá importar seus imóveis de outros portais com poucos cliques, facilitando a gestão do seu portfólio."
                             }
                         ].map((feature, idx) => (
-                            <div key={idx} className="bg-slate-800 p-8 rounded-3xl hover:shadow-lg transition-all border border-slate-700 group">
-                                <div className="mb-6 p-3 bg-slate-700 rounded-full w-fit group-hover:scale-110 transition-transform shadow-sm">
+                            <div key={idx} className="bg-gradient-to-br from-slate-800/80 to-slate-800/40 p-8 rounded-2xl hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 border border-slate-700/50 hover:border-emerald-500/30 group backdrop-blur-sm">
+                                <div className="mb-6 p-4 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 rounded-2xl w-fit group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-emerald-500/20 transition-all duration-300">
                                     {feature.icon}
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
-                                <p className="text-gray-400 leading-relaxed">
+                                <h3 className="text-xl font-bold text-white mb-3 group-hover:text-emerald-400 transition-colors">{feature.title}</h3>
+                                <p className="text-slate-300 leading-relaxed">
                                     {feature.description}
                                 </p>
                             </div>

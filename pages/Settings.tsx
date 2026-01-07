@@ -1036,21 +1036,23 @@ export const Settings: React.FC = () => {
                 <span>Marca & Redes</span>
               </button>
 
-              {/* WhatsApp & IA */}
-              <button
-                onClick={() => setActiveTab('whatsapp')}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap text-sm font-medium
+              {/* WhatsApp & IA - Only for Avançado and Profissional plans */}
+              {isPlanAvancadoOrPro && (
+                <button
+                  onClick={() => setActiveTab('whatsapp')}
+                  className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl transition-all whitespace-nowrap text-sm font-medium
                   ${activeTab === 'whatsapp'
-                    ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-600/50'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-                  }`}
-              >
-                <div className="relative">
-                  <MessageSquare size={16} />
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-pink-500 rounded-full animate-ping"></span>
-                </div>
-                <span>WhatsApp & IA</span>
-              </button>
+                      ? 'bg-slate-800 text-emerald-400 shadow-sm border border-slate-600/50'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                    }`}
+                >
+                  <div className="relative">
+                    <MessageSquare size={16} />
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-pink-500 rounded-full animate-ping"></span>
+                  </div>
+                  <span>WhatsApp & IA</span>
+                </button>
+              )}
             </>
           )}
 
@@ -1262,66 +1264,7 @@ export const Settings: React.FC = () => {
               )}
             </div>
 
-            {/* 4. Security Section */}
-            <div className="mb-8 pt-6 border-t border-slate-700/50">
-              <h4 className="text-lg font-bold text-white mb-4 flex items-center">
-                <Lock size={20} className="mr-2 text-emerald-500" /> Segurança
-              </h4>
-
-              <div className="bg-slate-900/30 rounded-2xl p-5 border border-slate-700/50 mb-6 font-geist">
-                <h5 className="font-medium text-white mb-3">Alterar Senha</h5>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
-                  <div className="w-full">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Nova Senha"
-                      value={passwords.newPassword}
-                      onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
-                      autoComplete="new-password"
-                      className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-600 focus:border-emerald-500 outline-none text-white text-sm"
-                    />
-                    {passwords.newPassword && <div className="mt-2"><PasswordStrengthIndicator password={passwords.newPassword} /></div>}
-                  </div>
-                  <div className="w-full">
-                    <input
-                      type="password"
-                      placeholder="Confirmar Senha"
-                      value={passwords.confirmPassword}
-                      onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
-                      autoComplete="new-password"
-                      className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-600 focus:border-emerald-500 outline-none text-white text-sm"
-                    />
-                  </div>
-                  <button
-                    onClick={handleChangePassword}
-                    disabled={saving || !passwords.newPassword}
-                    className="w-full h-[42px] bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold transition-all disabled:opacity-50 whitespace-nowrap shadow-lg shadow-black/20"
-                  >
-                    {saving ? <Loader2 size={18} className="animate-spin mx-auto" /> : 'Atualizar'}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex flex-col md:flex-row gap-4 mb-8">
-                <button
-                  onClick={handleExportData}
-                  disabled={exportingData}
-                  className="flex-1 px-4 py-3 bg-slate-900/50 hover:bg-slate-800 border border-slate-700 text-emerald-400 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  {exportingData ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-                  Baixar meus Dados (LGPD)
-                </button>
-                <button
-                  onClick={() => setShowDeleteModal(true)}
-                  className="flex-1 px-4 py-3 bg-red-900/10 hover:bg-red-900/20 border border-red-900/30 text-red-400 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  <Trash2 size={16} />
-                  Excluir Conta
-                </button>
-              </div>
-
-              {/* Importação de Dados MOVED to separate tab */}
-            </div>
+            {/* Security Section moved to /security page */}
 
             {/* Modals */}
             <DeleteAccountModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} />
@@ -1395,7 +1338,7 @@ export const Settings: React.FC = () => {
                     Crie o endereço exclusivo da sua página profissional:
                   </label>
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-slate-200 text-lg font-medium whitespace-nowrap">
+                    <span className="text-red-200 text-xs md:text-lg font-medium whitespace-nowrap">
                       {window.location.origin}/
                     </span>
                     <div className="flex-1 relative">

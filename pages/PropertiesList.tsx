@@ -54,6 +54,7 @@ export const PropertiesList: React.FC = () => {
         const tipoParam = searchParams.get('tipo');
         const bairroParam = searchParams.get('bairro'); // From PublicHome "Bairros em Alta"
         const cidadeParam = searchParams.get('cidade'); // From PublicHome "Principais Cidades"
+        const queryParam = searchParams.get('q'); // Text search from SearchFilter
 
         // Map operacao from SearchFilter to internal format
         let operations = getParamArray('ops');
@@ -90,7 +91,8 @@ export const PropertiesList: React.FC = () => {
             minArea: getParamStringNum('minArea'),
             maxArea: getParamStringNum('maxArea'),
             cities,
-            neighborhoods
+            neighborhoods,
+            searchQuery: queryParam || ''
         };
     });
 
@@ -112,6 +114,7 @@ export const PropertiesList: React.FC = () => {
         if (filters.maxArea !== '') params.maxArea = filters.maxArea;
         if (filters.cities.length) params.cities = filters.cities.join(',');
         if (filters.neighborhoods.length) params.neighborhoods = filters.neighborhoods.join(',');
+        if (filters.searchQuery) params.q = filters.searchQuery;
 
         // Preserve mode param for dashboard (market mode)
         if (modeParam) params.mode = modeParam;
@@ -202,6 +205,7 @@ export const PropertiesList: React.FC = () => {
                     titulo: p.titulo,
                     cidade: p.cidade,
                     bairro: p.bairro,
+                    logradouro: p.logradouro, // Endereco
                     valor_venda: p.valor_venda,
                     valor_locacao: p.valor_locacao,
                     valor_diaria: p.valor_diaria,
@@ -209,6 +213,7 @@ export const PropertiesList: React.FC = () => {
                     fotos: p.fotos ? p.fotos.split(',') : [],
                     operacao: p.operacao?.tipo || p.operacao,
                     tipo_imovel: p.tipo_imovel?.tipo || p.tipo_imovel,
+                    caracteristicas: p.caracteristicas || '', // Amenidades como piscina, churrasqueira, etc
                     quartos: p.quartos,
                     banheiros: p.banheiros,
                     vagas: p.vagas,
@@ -297,6 +302,21 @@ export const PropertiesList: React.FC = () => {
             // Neighborhoods
             if (filters.neighborhoods.length > 0) {
                 if (!filters.neighborhoods.includes(p.bairro)) return false;
+            }
+
+            // Text Search (searchQuery) - matches cidade, bairro, titulo, endereco, tipo_imovel, caracteristicas
+            if (filters.searchQuery && filters.searchQuery.trim() !== '') {
+                const query = filters.searchQuery.toLowerCase().trim();
+                const matchesCidade = p.cidade?.toLowerCase().includes(query);
+                const matchesBairro = p.bairro?.toLowerCase().includes(query);
+                const matchesTitulo = p.titulo?.toLowerCase().includes(query);
+                const matchesEndereco = p.logradouro?.toLowerCase().includes(query);
+                const matchesTipo = (typeof p.tipo_imovel === 'string' ? p.tipo_imovel : p.tipo_imovel?.tipo)?.toLowerCase().includes(query);
+                const matchesCaracteristicas = p.caracteristicas?.toLowerCase().includes(query);
+
+                if (!matchesCidade && !matchesBairro && !matchesTitulo && !matchesEndereco && !matchesTipo && !matchesCaracteristicas) {
+                    return false;
+                }
             }
 
             // Rooms (Bedrooms, Bathrooms, Parking - Logic 4+ matches >= 4)
@@ -499,7 +519,7 @@ export const PropertiesList: React.FC = () => {
                                 <button
                                     onClick={() => setFilters({
                                         operations: [], types: [], bedrooms: null, bathrooms: null, parking: null,
-                                        minPrice: '', maxPrice: '', minArea: '', maxArea: '', neighborhoods: []
+                                        minPrice: '', maxPrice: '', minArea: '', maxArea: '', cities: [], neighborhoods: [], searchQuery: ''
                                     })}
                                     className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all"
                                 >

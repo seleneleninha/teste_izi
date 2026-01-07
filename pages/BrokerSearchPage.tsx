@@ -79,6 +79,7 @@ export const BrokerSearchPage: React.FC = () => {
         const tipoParam = searchParams.get('tipo');
         const bairroParam = searchParams.get('bairro'); // From BrokerPage "Bairros em Alta"
         const cidadeParam = searchParams.get('cidade'); // From BrokerPage "Principais Cidades"
+        const queryParam = searchParams.get('q'); // Text search from SearchFilter
 
         // Map operacao from SearchFilter to internal format
         let operations = getParamArray('ops');
@@ -115,7 +116,8 @@ export const BrokerSearchPage: React.FC = () => {
             minArea: getParamStringNum('minArea'),
             maxArea: getParamStringNum('maxArea'),
             cities,
-            neighborhoods
+            neighborhoods,
+            searchQuery: queryParam || ''
         };
     });
 
@@ -133,6 +135,7 @@ export const BrokerSearchPage: React.FC = () => {
         if (filters.maxArea !== '') params.maxArea = filters.maxArea;
         if (filters.cities.length) params.cities = filters.cities.join(',');
         if (filters.neighborhoods.length) params.neighborhoods = filters.neighborhoods.join(',');
+        if (filters.searchQuery) params.q = filters.searchQuery;
 
         setSearchParams(params, { replace: true });
     }, [filters, setSearchParams]);
@@ -211,6 +214,7 @@ export const BrokerSearchPage: React.FC = () => {
                 titulo: p.titulo,
                 cidade: p.cidade,
                 bairro: p.bairro,
+                logradouro: p.logradouro, // Endereco
                 valor_venda: p.valor_venda,
                 valor_locacao: p.valor_locacao,
                 valor_diaria: p.valor_diaria,
@@ -218,6 +222,7 @@ export const BrokerSearchPage: React.FC = () => {
                 fotos: p.fotos ? p.fotos.split(',') : [],
                 operacao: p.operacao?.tipo || p.operacao,
                 tipo_imovel: p.tipo_imovel?.tipo || p.tipo_imovel,
+                caracteristicas: p.caracteristicas || '', // Amenidades
                 quartos: p.quartos,
                 banheiros: p.banheiros,
                 vagas: p.vagas,
@@ -295,6 +300,21 @@ export const BrokerSearchPage: React.FC = () => {
 
             if (filters.neighborhoods.length > 0) {
                 if (!filters.neighborhoods.includes(p.bairro)) return false;
+            }
+
+            // Text Search (searchQuery) - matches cidade, bairro, titulo, endereco, tipo_imovel, caracteristicas
+            if (filters.searchQuery && filters.searchQuery.trim() !== '') {
+                const query = filters.searchQuery.toLowerCase().trim();
+                const matchesCidade = p.cidade?.toLowerCase().includes(query);
+                const matchesBairro = p.bairro?.toLowerCase().includes(query);
+                const matchesTitulo = p.titulo?.toLowerCase().includes(query);
+                const matchesEndereco = p.logradouro?.toLowerCase().includes(query);
+                const matchesTipo = (typeof p.tipo_imovel === 'string' ? p.tipo_imovel : p.tipo_imovel?.tipo)?.toLowerCase().includes(query);
+                const matchesCaracteristicas = p.caracteristicas?.toLowerCase().includes(query);
+
+                if (!matchesCidade && !matchesBairro && !matchesTitulo && !matchesEndereco && !matchesTipo && !matchesCaracteristicas) {
+                    return false;
+                }
             }
 
             if (filters.bedrooms !== null) {
@@ -483,7 +503,7 @@ export const BrokerSearchPage: React.FC = () => {
                                 }}
                                 onShowMore={() => setFilters({
                                     operations: [], types: [], bedrooms: null, bathrooms: null, parking: null,
-                                    minPrice: '', maxPrice: '', minArea: '', maxArea: '', neighborhoods: []
+                                    minPrice: '', maxPrice: '', minArea: '', maxArea: '', cities: [], neighborhoods: [], searchQuery: ''
                                 })}
                             />
                         )}
