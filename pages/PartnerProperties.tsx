@@ -490,9 +490,12 @@ export const PartnerProperties: React.FC = () => {
                     <div className="mb-12">
                         <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
                             <div>
-                                <h2 className="text-2xl font-bold text-white">
-                                    {availableProperties.length} {availableProperties.length === 1 ? 'imóvel disponível' : 'imóveis disponíveis para Parceria'}
-                                </h2>
+                                {/* Results Count */}
+                                <div className="flex items-center justify-between mb-2 mt-4">
+                                    <p className="text-slate-400">
+                                        <span className="text-white font-bold">{availableProperties.length}</span> imóveis disponíveis para Parceria
+                                    </p>
+                                </div>
                                 {isTrialUser && (
                                     <p className="text-sm font-bold text-amber-500 mt-1 animate-pulse">
                                         No período de teste, você NÃO PODE OFERECER/ACEITAR PARCERIAS, somente ver.
@@ -577,147 +580,173 @@ export const PartnerProperties: React.FC = () => {
 
                         {/* List View */}
                         {viewMode === 'list' && (
-                            <div className="bg-slate-800 rounded-3xl shadow-sm border border-slate-700 overflow-hidden">
+                            <div className="bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden">
                                 <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[1000px]">
+                                    <table className="w-full text-sm">
                                         <thead>
-                                            <tr className="border-b border-slate-700/50 text-left">
-                                                <th onClick={() => handleSort('titulo')} className="p-4 font-semibold text-slate-400 text-xs uppercase cursor-pointer hover:text-white transition-colors group">
-                                                    Imóvel / Código {sortConfig?.key === 'titulo' && (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="inline ml-1 rotate-180" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                            <tr className="bg-slate-900/80 border-b border-white/10 text-xs uppercase tracking-wider">
+                                                <th className="p-3 text-center text-slate-400 font-semibold w-16">AÇÕES</th>
+                                                <th className="p-3 text-center text-slate-400 font-semibold w-16">
+                                                    <button onClick={() => handleSort('cod_imovel' as any)} className="flex items-center gap-1 mx-auto text-slate-400 hover:text-white">
+                                                        CÓD. {sortConfig?.key === 'cod_imovel' ? (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="rotate-180" /> : <ArrowDown size={12} />) : <ArrowDown size={12} className="opacity-30" />}
+                                                    </button>
                                                 </th>
-                                                <th onClick={() => handleSort('tipo_imovel')} className="p-4 font-semibold text-slate-400 text-xs uppercase cursor-pointer hover:text-white transition-colors group">
-                                                    Tipo {sortConfig?.key === 'tipo_imovel' && (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="inline ml-1 rotate-180" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                <th className="p-3 text-left text-slate-400 font-semibold min-w-[150px]">
+                                                    <button onClick={() => handleSort('titulo')} className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors">
+                                                        IMÓVEL {sortConfig?.key === 'titulo' ? (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="rotate-180" /> : <ArrowDown size={12} />) : <ArrowDown size={12} className="opacity-30" />}
+                                                    </button>
                                                 </th>
-                                                <th onClick={() => handleSort('operacao')} className="p-4 font-semibold text-slate-400 text-xs uppercase cursor-pointer hover:text-white transition-colors group">
-                                                    Op. {sortConfig?.key === 'operacao' && (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="inline ml-1 rotate-180" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                <th className="p-3 text-left text-slate-400 font-semibold">
+                                                    <button onClick={() => handleSort('cidade')} className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors">
+                                                        CIDADE {sortConfig?.key === 'cidade' ? (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="rotate-180" /> : <ArrowDown size={12} />) : <ArrowDown size={12} className="opacity-30" />}
+                                                    </button>
                                                 </th>
-                                                <th onClick={() => handleSort('cidade')} className="p-4 font-semibold text-slate-400 text-xs uppercase cursor-pointer hover:text-white transition-colors group">
-                                                    Cidade {sortConfig?.key === 'cidade' && (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="inline ml-1 rotate-180" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                <th className="p-3 text-left text-slate-400 font-semibold">
+                                                    <button onClick={() => handleSort('bairro')} className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors">
+                                                        BAIRRO {sortConfig?.key === 'bairro' ? (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="rotate-180" /> : <ArrowDown size={12} />) : <ArrowDown size={12} className="opacity-30" />}
+                                                    </button>
                                                 </th>
-                                                <th onClick={() => handleSort('bairro')} className="p-4 font-semibold text-slate-400 text-xs uppercase cursor-pointer hover:text-white transition-colors group">
-                                                    Bairro {sortConfig?.key === 'bairro' && (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="inline ml-1 rotate-180" /> : <ArrowDown size={12} className="inline ml-1" />)}
+                                                <th className="p-3 text-center text-slate-400 font-semibold w-10" title="Quartos">
+                                                    <button onClick={() => handleSort('quartos')} className="mx-auto flex items-center justify-center gap-1 hover:text-white transition-colors">
+                                                        <BedDouble size={14} /> {sortConfig?.key === 'quartos' ? (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="rotate-180" /> : <ArrowDown size={12} />) : <ArrowDown size={12} className="opacity-30" />}
+                                                    </button>
                                                 </th>
-                                                <th className="p-4 font-semibold text-slate-400 text-xs uppercase text-center">
-                                                    Características
+                                                <th className="p-3 text-center text-slate-400 font-semibold w-10" title="Banheiros">
+                                                    <button onClick={() => handleSort('banheiros')} className="mx-auto flex items-center justify-center gap-1 hover:text-white transition-colors">
+                                                        <Bath size={14} /> {sortConfig?.key === 'banheiros' ? (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="rotate-180" /> : <ArrowDown size={12} />) : <ArrowDown size={12} className="opacity-30" />}
+                                                    </button>
                                                 </th>
-                                                <th className="p-4 font-semibold text-slate-400 text-xs uppercase text-right">
-                                                    Valores
+                                                <th className="p-3 text-center text-slate-400 font-semibold w-10" title="Vagas">
+                                                    <button onClick={() => handleSort('vagas')} className="mx-auto flex items-center justify-center gap-1 hover:text-white transition-colors">
+                                                        <Car size={14} /> {sortConfig?.key === 'vagas' ? (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="rotate-180" /> : <ArrowDown size={12} />) : <ArrowDown size={12} className="opacity-30" />}
+                                                    </button>
                                                 </th>
-                                                <th className="p-4 font-semibold text-slate-400 text-xs uppercase text-right">
-                                                    Ações
+                                                <th className="p-3 text-center text-slate-400 font-semibold w-16" title="Área Privativa">
+                                                    <button onClick={() => handleSort('area_priv')} className="mx-auto flex items-center justify-center gap-1 hover:text-white transition-colors">
+                                                        <Ruler size={14} /> {sortConfig?.key === 'area_priv' ? (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="rotate-180" /> : <ArrowDown size={12} />) : <ArrowDown size={12} className="opacity-30" />}
+                                                    </button>
+                                                </th>
+                                                <th className="p-3 text-right text-slate-400 font-semibold min-w-[100px]">
+                                                    <button onClick={() => handleSort('valor_venda')} className="flex items-center gap-1 ml-auto text-slate-400 hover:text-white transition-colors">
+                                                        VALORES {sortConfig?.key === 'valor_venda' ? (sortConfig.direction === 'asc' ? <ArrowDown size={12} className="rotate-180" /> : <ArrowDown size={12} />) : <ArrowDown size={12} className="opacity-30" />}
+                                                    </button>
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-700/50">
-                                            {sortProperties(availableProperties).map((property) => (
-                                                <tr key={property.id} className="hover:bg-slate-700/30 transition-colors group">
-                                                    {/* Imóvel / Código */}
-                                                    <td className="p-4">
-                                                        <div>
-                                                            <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigateToProperty(navigate, property, true); }} className="font-bold text-white text-sm hover:text-emerald-400 cursor-pointer transition-colors max-w-[175px] truncate" title={property.titulo}>
-                                                                {property.titulo || 'Sem título'}
-                                                            </div>
-                                                            <div className="mt-1">
-                                                                <span className="text-[10px] font-mono text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                                                                    CÓD: {property.cod_imovel}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </td>
+                                        <tbody>
+                                            {sortProperties(availableProperties).map((property) => {
+                                                const tipoImovel = typeof property.tipo_imovel === 'string' ? property.tipo_imovel : property.tipo_imovel?.tipo || '';
+                                                const operacao = property.operacao || '';
 
-                                                    {/* Tipo */}
-                                                    <td className="p-4 text-sm text-slate-300 capitalize">
-                                                        {property.tipo_imovel}
-                                                    </td>
-
-                                                    {/* Operação */}
-                                                    <td className="p-4">
-                                                        <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${(property.operacao === 'Venda/Locação' || property.operacao === 'Venda/Locacao')
-                                                            ? 'bg-green-500/10 text-green-500 border-green-500/20'
-                                                            : getOperationBadge(property.operacao)
-                                                            }`}>
-                                                            {property.operacao}
-                                                        </span>
-                                                    </td>
-
-                                                    {/* Cidade */}
-                                                    <td className="p-4 text-sm text-slate-300">
-                                                        {property.cidade || 'N/D'}
-                                                    </td>
-
-                                                    {/* Bairro */}
-                                                    <td className="p-4 text-sm text-slate-300">
-                                                        {property.bairro || 'N/D'}
-                                                    </td>
-
-                                                    {/* Features Icons */}
-                                                    <td className="p-4">
-                                                        <div className="flex justify-center items-center gap-2 text-slate-400 text-xs">
-                                                            <div className="flex items-center gap-1" title="Quartos"><BedDouble size={14} /> {property.quartos || '-'}</div>
-                                                            <div className="flex items-center gap-1" title="Banheiros"><Bath size={14} /> {property.banheiros || '-'}</div>
-                                                            <div className="flex items-center gap-1" title="Vagas"><Car size={14} /> {property.vagas || '-'}</div>
-                                                            <div className="flex items-center gap-1" title="Área"><Ruler size={14} /> {formatArea(property.area_priv)}</div>
-                                                        </div>
-                                                    </td>
-
-                                                    {/* Valores Stacked */}
-                                                    <td className="p-4 text-right">
-                                                        <div className="flex flex-col items-end gap-1">
-                                                            {(property.valor_venda > 0) && (
-                                                                <div className="text-red-500 font-bold text-sm tracking-tight flex items-center gap-1">
-                                                                    {formatCurrency(property.valor_venda)}
-                                                                    <span className="text-[10px] text-red-500/50 font-mono">V</span>
-                                                                </div>
-                                                            )}
-                                                            {(property.valor_locacao > 0) && (
-                                                                <div className="text-blue-500 font-bold text-sm tracking-tight flex items-center gap-1">
-                                                                    {formatCurrency(property.valor_locacao)}
-                                                                    <span className="text-[10px] text-blue-500/50 font-mono">L</span>
-                                                                </div>
-                                                            )}
-                                                            {(property.operacao?.toLowerCase().includes('temporada')) && (
-                                                                <>
-                                                                    {property.valor_diaria > 0 && (
-                                                                        <div className="text-orange-500 font-bold text-sm tracking-tight flex items-center gap-1">
-                                                                            {formatCurrency(property.valor_diaria)}
-                                                                            <span className="text-[10px] text-orange-500/50 font-mono">/dia</span>
-                                                                        </div>
-                                                                    )}
-                                                                    {property.valor_mensal > 0 && (
-                                                                        <div className="text-orange-500 font-bold text-sm tracking-tight flex items-center gap-1">
-                                                                            {formatCurrency(property.valor_mensal)}
-                                                                            <span className="text-[10px] text-orange-500/50 font-mono">/mês</span>
-                                                                        </div>
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    </td>
-
-                                                    {/* Ações */}
-                                                    <td className="p-4 text-right">
-                                                        <div className="flex items-center justify-end gap-2">
-                                                            <button
-                                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigateToProperty(navigate, property, true); }}
-                                                                className="p-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors border border-slate-600"
-                                                                title="Ver Anúncio"
-                                                            >
-                                                                <Eye size={16} />
-                                                            </button>
-                                                            {!isTrialUser && (
+                                                return (
+                                                    <tr
+                                                        key={property.id}
+                                                        className="border-b border-white/5 hover:bg-slate-800/50 transition-colors"
+                                                    >
+                                                        {/* Ações */}
+                                                        <td className="p-3">
+                                                            <div className="flex items-center justify-center gap-1">
                                                                 <button
-                                                                    onClick={() => onToggle(property, false)}
-                                                                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-lg transition-colors font-medium flex items-center gap-1 shadow-lg shadow-emerald-500/20"
-                                                                    title="Aceitar Parceria"
+                                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigateToProperty(navigate, property, true); }}
+                                                                    className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-400 transition-all"
+                                                                    title="Ver Anúncio"
                                                                 >
-                                                                    <Handshake size={14} />
-                                                                    Aceitar
+                                                                    <Eye size={14} />
                                                                 </button>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                                                {!isTrialUser ? (
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); onToggle(property, false); }}
+                                                                        className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-emerald-400 transition-all"
+                                                                        title="Aceitar Parceria"
+                                                                    >
+                                                                        <Handshake size={14} />
+                                                                    </button>
+                                                                ) : (
+                                                                    <span className="text-xs text-amber-500 font-medium px-1">Trial</span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Código */}
+                                                        <td className="p-3 text-center">
+                                                            <span className="bg-slate-700 text-slate-300 px-2 py-1 rounded text-xs font-mono">
+                                                                {property.cod_imovel || property.id?.slice(0, 6)}
+                                                            </span>
+                                                        </td>
+
+                                                        {/* Imóvel (Título + Badges) */}
+                                                        <td className="p-3">
+                                                            <div className="flex flex-col gap-1">
+                                                                <span
+                                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigateToProperty(navigate, property, true); }}
+                                                                    className="text-white font-medium line-clamp-1 hover:text-emerald-400 cursor-pointer transition-colors"
+                                                                >
+                                                                    {property.titulo || 'Sem título'}
+                                                                </span>
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    {tipoImovel && (
+                                                                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-600 text-slate-200 uppercase tracking-wider">
+                                                                            {tipoImovel}
+                                                                        </span>
+                                                                    )}
+                                                                    {operacao && (
+                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${(() => {
+                                                                            const op = operacao.toLowerCase();
+                                                                            if (op.includes('venda') && op.includes('loca')) return 'bg-emerald-600 text-white';
+                                                                            if (op.includes('venda')) return 'bg-red-500 text-white';
+                                                                            if (op.includes('temporada')) return 'bg-orange-500 text-white';
+                                                                            return 'bg-blue-600 text-white';
+                                                                        })()}`}>
+                                                                            {operacao}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Cidade */}
+                                                        <td className="p-3 text-slate-300 font-medium">
+                                                            {property.cidade || '-'}
+                                                        </td>
+
+                                                        {/* Bairro */}
+                                                        <td className="p-3 text-slate-300">
+                                                            {property.bairro || '-'}
+                                                        </td>
+
+                                                        {/* Quartos */}
+                                                        <td className="p-3 text-center text-slate-300">
+                                                            {property.quartos || '-'}
+                                                        </td>
+
+                                                        {/* Banheiros */}
+                                                        <td className="p-3 text-center text-slate-300">
+                                                            {property.banheiros || '-'}
+                                                        </td>
+
+                                                        {/* Vagas */}
+                                                        <td className="p-3 text-center text-slate-300">
+                                                            {property.vagas || '-'}
+                                                        </td>
+
+                                                        {/* Área */}
+                                                        <td className="p-3 text-center text-slate-300">
+                                                            {property.area_priv ? `${property.area_priv}m²` : '-'}
+                                                        </td>
+
+                                                        {/* Valores */}
+                                                        <td className="p-3 text-right">
+                                                            <span className="text-emerald-400 font-bold">
+                                                                {property.valor_venda
+                                                                    ? formatCurrency(property.valor_venda)
+                                                                    : property.valor_locacao
+                                                                        ? formatCurrency(property.valor_locacao)
+                                                                        : '-'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>

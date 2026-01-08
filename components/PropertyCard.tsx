@@ -324,7 +324,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, actions, s
                 {/* Selection Checkbox - Enhanced for Comparison */}
                 {onSelect && (
                     <div
-                        className={`absolute z-20 cursor-pointer flex flex-col items-center gap-1 ${onFavoriteRemove ? 'top-16 left-4' : 'top-4 left-4'}`}
+                        className={`absolute z-20 cursor-pointer flex flex-col items-center gap-1 ${onFavoriteRemove ? 'top-16 left-56' : 'top-4 left-56'}`}
                         onClick={(e) => {
                             e.stopPropagation();
                             onSelect(e);

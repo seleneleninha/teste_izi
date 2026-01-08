@@ -720,8 +720,6 @@ export const Settings: React.FC = () => {
         uf: profile.uf,
         show_address: profile.showAddress,
         raio_atuacao: profile.raioAtuacao || null,
-        show_address: profile.showAddress,
-        raio_atuacao: profile.raioAtuacao || null,
         watermark_dark: profile.watermarkDark || null,
         marca_dagua: profile.marcaDagua || null,
         instagram: profile.instagram || null,

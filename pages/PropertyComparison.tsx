@@ -289,9 +289,6 @@ export const PropertyComparison: React.FC = () => {
                         <span className="hidden sm:inline">
                             {isPublicView ? 'Compartilhar' : 'Compartilhar com Cliente'}
                         </span>
-                        <span className="sm:hidden">
-                            <Share2 size={18} />
-                        </span>
                     </button>
                 )}
 

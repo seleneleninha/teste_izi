@@ -119,11 +119,14 @@ const styles = StyleSheet.create({
         marginTop: 8,
         marginBottom: 8,
         minHeight: 60,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
     },
     featureItem: {
         fontSize: 8,
         color: '#94a3b8', // slate-400
         marginBottom: 2,
+        width: '33%', // 3 columns
     },
     buttonsRow: {
         flexDirection: 'row',
@@ -243,9 +246,9 @@ export const ComparisonPDF: React.FC<ComparisonPDFProps> = ({ properties, broker
 
                                         <View style={styles.specsRow}>
                                             <Text style={styles.specItem}>{prop.area_priv} m²</Text>
-                                            <Text style={styles.specItem}>{prop.quartos} Bed</Text>
-                                            <Text style={styles.specItem}>{prop.banheiros} Bath</Text>
-                                            <Text style={styles.specItem}>{prop.vagas} Car</Text>
+                                            <Text style={styles.specItem}>{prop.quartos} Qts</Text>
+                                            <Text style={styles.specItem}>{prop.banheiros} Bnh</Text>
+                                            <Text style={styles.specItem}>{prop.vagas} Vag</Text>
                                         </View>
 
                                         <View style={styles.featuresList}>

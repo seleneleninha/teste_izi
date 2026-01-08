@@ -6,12 +6,31 @@ import { HorizontalScroll } from '../components/HorizontalScroll';
 import { Heart, Search, X, Loader2, Check, CheckCircle, Building2, Handshake } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/ToastContext';
+import { useHeader } from '../components/HeaderContext';
 
 export const Favorites: React.FC = () => {
     const { user, role } = useAuth();
     const isClient = role === 'Cliente';
     const navigate = useNavigate();
     const { addToast } = useToast();
+    const { setHeaderContent } = useHeader();
+
+    // Set Header Content
+    useEffect(() => {
+        setHeaderContent(
+            <div className="flex flex-col justify-center">
+                <h1 className="text-lg md:text-xl font-bold text-white tracking-tight leading-tight">
+                    {isClient ? 'Meus Favoritos' : 'Comparativo de Imóveis'}
+                </h1>
+                <p className="text-slate-400 text-xs font-medium leading-tight">
+                    {isClient
+                        ? 'Imóveis que você salvou para ver depois.'
+                        : 'Ferramenta de seleção para criar apresentações aos seus clientes.'}
+                </p>
+            </div>
+        );
+        return () => setHeaderContent(null);
+    }, [setHeaderContent, isClient]);
 
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'meus' | 'parcerias' | 'favoritos'>(isClient ? 'favoritos' : 'meus');
@@ -193,27 +212,29 @@ export const Favorites: React.FC = () => {
     }
 
     return (
-        <div className="pt-6 pb-24 md:pb-8">
-            <div className="mb-8">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                    {isClient ? (
-                        <>
-                            <Heart className="text-red-500 fill-current" size={28} />
-                            Meus Favoritos
-                        </>
-                    ) : (
-                        <>
-                            <CheckCircle className="text-emerald-400" size={28} />
-                            Comparativo de Imóveis
-                        </>
-                    )}
-                </h2>
-                <p className="text-slate-400 mt-1">
-                    {isClient
-                        ? 'Imóveis que você salvou para ver depois.'
-                        : 'Ferramenta de seleção para criar apresentações aos seus clientes.'}
-                </p>
-            </div>
+        <div className="pb-24 md:pb-8">
+
+            {/* Comparison Logic Tip */}
+            {hasAnyData && (
+                <div className="mb-8 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/30 rounded-3xl p-6 relative overflow-hidden group">
+                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+                    <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 shadow-inner">
+                            <Check className="text-emerald-400" size={24} strokeWidth={3} />
+                        </div>
+                        <div>
+                            <h3 className="text-white font-bold text-xl mb-1">
+                                {isClient ? 'Compare seus favoritos!' : 'Monte seu Comparativo Campeão!'}
+                            </h3>
+                            <p className="text-slate-300">
+                                {isClient
+                                    ? 'Selecione até 3 imóveis para ver os detalhes lado a lado.'
+                                    : 'Abaixo listamos seu estoque e parcerias. Clique em "Comparar" e envie a melhor seleção para seu Cliente.'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Broker Tabs */}
             {!isClient && (
@@ -244,28 +265,6 @@ export const Favorites: React.FC = () => {
                             <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-[10px]">{partnershipProperties.length}</span>
                         )}
                     </button>
-                </div>
-            )}
-
-            {/* Comparison Logic Tip */}
-            {hasAnyData && (
-                <div className="mb-8 bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/30 rounded-3xl p-6 relative overflow-hidden group">
-                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
-                    <div className="flex items-start gap-4">
-                        <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 shadow-inner">
-                            <Check className="text-emerald-400" size={24} strokeWidth={3} />
-                        </div>
-                        <div>
-                            <h3 className="text-white font-bold text-xl mb-1">
-                                {isClient ? 'Compare seus favoritos!' : 'Monte seu Comparativo Campeão!'}
-                            </h3>
-                            <p className="text-slate-300">
-                                {isClient
-                                    ? 'Selecione até 3 imóveis para ver os detalhes lado a lado.'
-                                    : 'Abaixo listamos seu estoque e parcerias. Clique em "Comparar" e envie a melhor seleção para seu Cliente.'}
-                            </p>
-                        </div>
-                    </div>
                 </div>
             )}
 

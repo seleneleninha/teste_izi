@@ -5,11 +5,12 @@ import { useAuth } from '../components/AuthContext';
 import { useToast } from '../components/ToastContext';
 import { PropertyCard } from '../components/PropertyCard';
 import { PropertyMap } from '../components/PropertyMap';
+import { HorizontalScroll } from '../components/HorizontalScroll';
 import { formatCurrency } from '../lib/formatters';
 import { useHeader } from '../components/HeaderContext';
 import {
     Grid, List, Map, Search, Loader2, MapPin, Home, Building, ChevronDown,
-    ArrowUpDown, ChevronUp, Users, Handshake
+    ArrowUpDown, ChevronUp, Users, Handshake, Eye, Bed, Bath, Car, Maximize2
 } from 'lucide-react';
 
 export const MarketPage: React.FC = () => {
@@ -18,7 +19,7 @@ export const MarketPage: React.FC = () => {
     const { user, profile } = useAuth();
     const { addToast } = useToast();
 
-    const [view, setView] = useState<'grid' | 'list' | 'map'>('grid');
+    const [view, setView] = useState<'grid' | 'list' | 'map'>('list');
     const [properties, setProperties] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
@@ -280,12 +281,34 @@ export const MarketPage: React.FC = () => {
 
             {/* Content */}
             {view === 'grid' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <HorizontalScroll gap={24}>
                     {filteredProperties.map(property => (
-                        <div key={property.id} className="relative group">
-                            {/* Broker Badge */}
+                        <div key={property.id} className="relative group" style={{ minWidth: '320px', maxWidth: '360px' }}>
+                            <PropertyCard
+                                property={property}
+                                isDashboard={true}
+                                actions={
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); navigate(`/properties/${property.slug || property.id}`); }}
+                                            className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg shadow-emerald-500/30 transition-all"
+                                            title="Ver Detalhes"
+                                        >
+                                            <Eye size={20} />
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); navigate(`/partner-properties?request=${property.id}`); }}
+                                            className="p-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-lg shadow-emerald-500/30 transition-all"
+                                            title="Aceitar Parceria"
+                                        >
+                                            <Handshake size={20} />
+                                        </button>
+                                    </div>
+                                }
+                            />
+                            {/* Broker Badge - Below operation badge area */}
                             {property.usuario && (
-                                <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1.5">
+                                <div className="absolute top-16 left-3 z-10 flex items-center gap-2 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1.5">
                                     {property.usuario.avatar ? (
                                         <img src={property.usuario.avatar} alt="" className="w-5 h-5 rounded-full object-cover" />
                                     ) : (
@@ -300,120 +323,186 @@ export const MarketPage: React.FC = () => {
                                     </span>
                                 </div>
                             )}
-                            <PropertyCard property={property} />
-                            {/* Partnership Button */}
-                            <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-all">
-                                <button
-                                    onClick={() => navigate(`/partner-properties?request=${property.id}`)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white text-sm font-medium transition-all"
-                                    title="Solicitar Parceria"
-                                >
-                                    <Handshake size={16} />
-                                    Parceria
-                                </button>
-                            </div>
                         </div>
                     ))}
-                </div>
+                </HorizontalScroll>
             )}
 
             {view === 'list' && (
                 <div className="bg-slate-800/50 border border-white/5 rounded-2xl overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full text-sm">
                             <thead>
-                                <tr className="bg-slate-900/50 border-b border-white/5">
-                                    <th className="p-4 text-left">
-                                        <button onClick={() => handleSort('titulo')} className="flex items-center gap-2 text-slate-400 hover:text-white font-medium text-sm">
-                                            Imóvel {getSortIcon('titulo')}
+                                <tr className="bg-slate-900/80 border-b border-white/10 text-xs uppercase tracking-wider">
+                                    <th className="p-3 text-center text-slate-400 font-semibold w-20">AÇÕES</th>
+                                    <th className="p-3 text-left text-slate-400 font-semibold min-w-[150px]">
+                                        <button onClick={() => handleSort('titulo')} className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors">
+                                            IMÓVEL {getSortIcon('titulo')}
                                         </button>
                                     </th>
-                                    <th className="p-4 text-left">Corretor</th>
-                                    <th className="p-4 text-left">
-                                        <button onClick={() => handleSort('operacao')} className="flex items-center gap-2 text-slate-400 hover:text-white font-medium text-sm">
-                                            Operação {getSortIcon('operacao')}
+                                    <th className="p-3 text-left text-slate-400 font-semibold min-w-[140px]">
+                                        <button onClick={() => handleSort('usuario.nome')} className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors">
+                                            CORRETOR {getSortIcon('usuario.nome')}
                                         </button>
                                     </th>
-                                    <th className="p-4 text-left">
-                                        <button onClick={() => handleSort('bairro')} className="flex items-center gap-2 text-slate-400 hover:text-white font-medium text-sm">
-                                            Localização {getSortIcon('bairro')}
+                                    <th className="p-3 text-left text-slate-400 font-semibold">
+                                        <button onClick={() => handleSort('cidade')} className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors">
+                                            CIDADE {getSortIcon('cidade')}
                                         </button>
                                     </th>
-                                    <th className="p-4 text-right">
-                                        <button onClick={() => handleSort('valor_venda')} className="flex items-center gap-2 text-slate-400 hover:text-white font-medium text-sm ml-auto">
-                                            Valor {getSortIcon('valor_venda')}
+                                    <th className="p-3 text-left text-slate-400 font-semibold">
+                                        <button onClick={() => handleSort('bairro')} className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors">
+                                            BAIRRO {getSortIcon('bairro')}
                                         </button>
                                     </th>
-                                    <th className="p-4 text-center">Ação</th>
+                                    <th className="p-3 text-center text-slate-400 font-semibold w-10" title="Quartos">
+                                        <button onClick={() => handleSort('quartos')} className="flex items-center gap-1 mx-auto text-slate-400 hover:text-white transition-colors">
+                                            <Bed size={14} /> {getSortIcon('quartos')}
+                                        </button>
+                                    </th>
+                                    <th className="p-3 text-center text-slate-400 font-semibold w-10" title="Banheiros">
+                                        <button onClick={() => handleSort('banheiros')} className="flex items-center gap-1 mx-auto text-slate-400 hover:text-white transition-colors">
+                                            <Bath size={14} /> {getSortIcon('banheiros')}
+                                        </button>
+                                    </th>
+                                    <th className="p-3 text-center text-slate-400 font-semibold w-10" title="Vagas">
+                                        <button onClick={() => handleSort('vagas')} className="flex items-center gap-1 mx-auto text-slate-400 hover:text-white transition-colors">
+                                            <Car size={14} /> {getSortIcon('vagas')}
+                                        </button>
+                                    </th>
+                                    <th className="p-3 text-center text-slate-400 font-semibold w-16" title="Área">
+                                        <button onClick={() => handleSort('area_priv')} className="flex items-center gap-1 mx-auto text-slate-400 hover:text-white transition-colors">
+                                            <Maximize2 size={14} /> {getSortIcon('area_priv')}
+                                        </button>
+                                    </th>
+                                    <th className="p-3 text-right text-slate-400 font-semibold min-w-[100px]">
+                                        <button onClick={() => handleSort('valor_venda')} className="flex items-center gap-1 ml-auto text-slate-400 hover:text-white transition-colors">
+                                            VALORES {getSortIcon('valor_venda')}
+                                        </button>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredProperties.map((property) => (
-                                    <tr
-                                        key={property.id}
-                                        className="border-b border-white/5 hover:bg-slate-800/50 transition-colors"
-                                    >
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-lg bg-slate-700 overflow-hidden flex-shrink-0">
-                                                    {property.fotos?.[0] ? (
-                                                        <img src={property.fotos[0]} alt="" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center">
-                                                            <Home size={20} className="text-slate-500" />
-                                                        </div>
-                                                    )}
+                                {filteredProperties.map((property) => {
+                                    const tipoImovel = typeof property.tipo_imovel === 'string' ? property.tipo_imovel : property.tipo_imovel?.tipo || '';
+                                    const operacao = property.operacao || '';
+
+                                    return (
+                                        <tr
+                                            key={property.id}
+                                            className="border-b border-white/5 hover:bg-slate-800/50 transition-colors"
+                                        >
+                                            {/* Ações */}
+                                            <td className="p-3">
+                                                <div className="flex items-center justify-center gap-1">
+                                                    <button
+                                                        onClick={() => navigate(`/properties/${property.slug || property.id}`)}
+                                                        className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-400 transition-all"
+                                                        title="Ver Detalhes"
+                                                    >
+                                                        <Eye size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => navigate(`/partner-properties?request=${property.id}`)}
+                                                        className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-emerald-400 transition-all"
+                                                        title="Aceitar Parceria"
+                                                    >
+                                                        <Handshake size={14} />
+                                                    </button>
                                                 </div>
-                                                <div>
-                                                    <p className="text-white font-medium line-clamp-1">{property.titulo || 'Sem título'}</p>
-                                                    <p className="text-slate-500 text-sm">
-                                                        {typeof property.tipo_imovel === 'string' ? property.tipo_imovel : property.tipo_imovel?.tipo}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-4">
-                                            {property.usuario && (
-                                                <div className="flex items-center gap-2">
-                                                    {property.usuario.avatar ? (
-                                                        <img src={property.usuario.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center">
-                                                            <span className="text-sm text-white font-bold">{property.usuario.nome?.[0]}</span>
-                                                        </div>
-                                                    )}
-                                                    <span className="text-slate-300 text-sm">
-                                                        {property.usuario.nome} {property.usuario.sobrenome?.[0]}.
+                                            </td>
+
+                                            {/* Imóvel (Título + Badges) */}
+                                            <td className="p-3">
+                                                <div className="flex flex-col gap-1">
+                                                    <span
+                                                        onClick={() => navigate(`/properties/${property.slug || property.id}`)}
+                                                        className="text-white font-medium line-clamp-1 hover:text-emerald-400 cursor-pointer transition-colors"
+                                                    >
+                                                        {property.titulo || 'Sem título'}
                                                     </span>
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        {tipoImovel && (
+                                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-600 text-slate-200 uppercase tracking-wider">
+                                                                {tipoImovel}
+                                                            </span>
+                                                        )}
+                                                        {operacao && (
+                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${(() => {
+                                                                const op = operacao.toLowerCase();
+                                                                if (op.includes('venda') && op.includes('loca')) return 'bg-emerald-600 text-white';
+                                                                if (op.includes('venda')) return 'bg-red-500 text-white';
+                                                                if (op.includes('temporada')) return 'bg-orange-500 text-white';
+                                                                return 'bg-blue-600 text-white';
+                                                            })()}`}>
+                                                                {operacao}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            )}
-                                        </td>
-                                        <td className="p-4">
-                                            <span className="text-slate-300 capitalize">{typeof property.operacao === 'string' ? property.operacao : property.operacao?.tipo || '-'}</span>
-                                        </td>
-                                        <td className="p-4">
-                                            <div className="flex items-center gap-2 text-slate-300">
-                                                <MapPin size={14} className="text-slate-500" />
-                                                <span>{property.bairro || '-'}, {property.cidade || '-'}</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-4 text-right">
-                                            <span className="text-emerald-400 font-bold">
-                                                {property.valor_venda ? formatCurrency(property.valor_venda) :
-                                                    property.valor_locacao ? formatCurrency(property.valor_locacao) : '-'}
-                                            </span>
-                                        </td>
-                                        <td className="p-4 text-center">
-                                            <button
-                                                onClick={() => navigate(`/partner-properties?request=${property.id}`)}
-                                                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white text-sm font-medium transition-all"
-                                            >
-                                                <Handshake size={14} />
-                                                Parceria
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                            </td>
+
+                                            {/* Corretor */}
+                                            <td className="p-3">
+                                                {property.usuario && (
+                                                    <div className="flex items-center gap-2">
+                                                        {property.usuario.avatar ? (
+                                                            <img src={property.usuario.avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center">
+                                                                <span className="text-xs text-white font-bold">{property.usuario.nome?.[0]}</span>
+                                                            </div>
+                                                        )}
+                                                        <span className="text-slate-300 text-sm">
+                                                            {property.usuario.nome} {property.usuario.sobrenome?.[0]}.
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </td>
+
+                                            {/* Cidade */}
+                                            <td className="p-3 text-slate-300 font-medium">
+                                                {property.cidade || '-'}
+                                            </td>
+
+                                            {/* Bairro */}
+                                            <td className="p-3 text-slate-300">
+                                                {property.bairro || '-'}
+                                            </td>
+
+                                            {/* Quartos */}
+                                            <td className="p-3 text-center text-slate-300">
+                                                {property.quartos || '-'}
+                                            </td>
+
+                                            {/* Banheiros */}
+                                            <td className="p-3 text-center text-slate-300">
+                                                {property.banheiros || '-'}
+                                            </td>
+
+                                            {/* Vagas */}
+                                            <td className="p-3 text-center text-slate-300">
+                                                {property.vagas || '-'}
+                                            </td>
+
+                                            {/* Área */}
+                                            <td className="p-3 text-center text-slate-300">
+                                                {property.area_priv ? `${property.area_priv}m²` : '-'}
+                                            </td>
+
+                                            {/* Valores */}
+                                            <td className="p-3 text-right">
+                                                <span className="text-emerald-400 font-bold">
+                                                    {property.valor_venda
+                                                        ? formatCurrency(property.valor_venda)
+                                                        : property.valor_locacao
+                                                            ? formatCurrency(property.valor_locacao)
+                                                            : '-'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

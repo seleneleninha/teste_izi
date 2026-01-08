@@ -1082,11 +1082,11 @@ export const Dashboard: React.FC = () => {
                                         </div>
                                         <span className="text-slate-400 font-medium text-sm">Leads (CRM)</span>
                                     </div>
-                                    <div className="text-xl font-black text-white group-hover:text-pink-400 transition-colors">
-                                        Gerenciar
+                                    <div className="text-3xl font-black text-white group-hover:text-pink-400 transition-colors">
+                                        {stats.leads}
                                     </div>
                                     <div className="mt-2 text-xs text-slate-500">
-                                        Ver todos os leads
+                                        Leads cadastrados
                                     </div>
                                 </div>
 
